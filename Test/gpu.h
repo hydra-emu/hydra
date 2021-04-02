@@ -103,6 +103,7 @@ public:
 	void FillSprite(int spriteIndex);
 	void DrawBackground0();
 	void DrawSprites();
+	void DrawPalletes();
 	void DrawGUI();
 	void PreDraw();
 	void PostDraw();

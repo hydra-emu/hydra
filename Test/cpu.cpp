@@ -649,6 +649,7 @@ void CPU::POPBC() {
 
 void CPU::POPAF() {
 	F = cpuBus->Read(SP);
+	F &= 0xF0;
 	SP++;
 	A = cpuBus->Read(SP);
 	SP++;
@@ -1499,7 +1500,7 @@ void CPU::ORL() {
 void CPU::ORHL() {
 	A |= cpuBus->Read((H << 8) | L);
 	A &= 0xFF;
-	FZ(A);
+	F = A ? 0 : 0x80;
 	mTemp = 2; tTemp = 8;
 }
 
@@ -2148,10 +2149,10 @@ void CPU::RRCHL() {
 	int i = cpuBus->Read((H << 8) | L);
 	int ci = i & 1 ? 0x80 : 0;
 	int co = i & 1 ? 0x10 : 0;
-	i = (i << 1) + ci;
+	i = (i >> 1) + ci;
 	i &= 0xFF;
 	cpuBus->Write((H << 8) | L, i);
-	FZ(i);
+	F = (i) ? 0 : 0x80;
 	F = (F & 0xEF) + co;
 	mTemp = 4; tTemp = 16;
 }
@@ -2885,6 +2886,9 @@ void CPU::Reset() {
 	L = 0x4D;
 	SP = 0xFFFE;
 	PC = 0x101;
+	IME = 1;
+	cpuBus->SetIF(0xE1);
+	cpuBus->SetIE(0);
 	gpu->Reset();
 	mClock = 0; tClock = 0;
 	halt = false; stop = false;
@@ -2896,12 +2900,13 @@ void CPU::Update() {
 	}
 	else {
 		(this->*instructions[cpuBus->Read(PC++)].op)();
+		F &= 0xF0;
 		PC &= 0xFFFF;
 	}
 	int ieT, ifT;
 	ieT = cpuBus->GetIE();
 	ifT = cpuBus->GetIF();
-	if (IME && ieT && ifT) { // TODO: timer sets if to escape interrupt
+	if (IME && ieT && ifT) { 
 		halt = 0; IME = 0;
 		bool ifired = ieT & ifT;
 		if (ifired & 1) {

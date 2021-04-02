@@ -71,6 +71,9 @@ uint8_t Bus::Read(uint16_t address) {
 
 				case 0xF00:
 				{
+					if (address == 0xFF41) {
+						return ((mem[0xFF44] == mem[0xFF45]) ? 4 : 0) | mem[0xFF41];
+					}
 					return mem[address] & 0xFFFF;
 				}
 			}
@@ -139,7 +142,7 @@ void Bus::Write(uint16_t address, uint8_t data) {
 
 				case 0xE00: {
 					// OAM
-					if (address <= OAM_END && canWriteToOam) {
+					if (address <= OAM_END) {
 						spriteDataChanged = true;
 						int index = address - OAM_START;
 						int i = (index / 4);
@@ -173,6 +176,26 @@ void Bus::Write(uint16_t address, uint8_t data) {
 								keyPressed = false;
 							}
 						break;
+						case 0xFF04:
+							// DIV
+							mem[address] = 0;
+						break;
+						case 0xFF05:
+						case 0xFF06:
+							// Timer tima, tma
+							mem[address] = data;
+						break;
+						case 0xFF07:
+							mem[address] = data & 7;
+						break;
+						case 0xFF40:
+							mem[address] = data;
+						break;
+						case 0xFF42:
+						case 0xFF43:
+							spriteDataChanged = true;
+							mem[address] = data;
+						break;
 						case 0xFF46:
 							// Update oam
 							
@@ -187,18 +210,23 @@ void Bus::Write(uint16_t address, uint8_t data) {
 							backgroundPalette[1] = palette[(data >> 2) & 0x3];
 							backgroundPalette[2] = palette[(data >> 4) & 0x3];
 							backgroundPalette[3] = palette[(data >> 6)];
+							mem[address] = data;
 						break;
 						case 0xFF48:
 							// Set sprite palette (OBJ0)
+							spriteDataChanged = true;
 							obj0Palette[0] = palette[(data >> 2) & 0x3];
 							obj0Palette[1] = palette[(data >> 4) & 0x3];
 							obj0Palette[2] = palette[(data >> 6)];
+							mem[address] = data;
 						break;
 						case 0xFF49:
 							// Set sprite palette (OBJ1)
+							spriteDataChanged = true;
 							obj1Palette[0] = palette[(data >> 2) & 0x3];
 							obj1Palette[1] = palette[(data >> 4) & 0x3];
 							obj1Palette[2] = palette[(data >> 6)];
+							mem[address] = data;
 						break;
 						default:
 							mem[address] = data;

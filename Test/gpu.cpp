@@ -66,6 +66,7 @@ void GPU::Reset() {
 
 void GPU::Update(int mTemp) {
 	modeClock += mTemp * 4;
+	cpuBus->Write(0xFF41, mode);
 	switch (mode) {
 		case 0:
 		{
@@ -76,7 +77,9 @@ void GPU::Update(int mTemp) {
 				if (GetLine() == 143) {
 					mode = 1;
 					// TODO: putimagedata here instead
-					 cpuBus->SetIF(cpuBus->GetIF() | 1);
+					int ift = cpuBus->GetIF();
+					ift |= 1;
+					cpuBus->SetIF(ift);
 				}
 				else {
 					mode = 2;
@@ -91,7 +94,6 @@ void GPU::Update(int mTemp) {
 			if (modeClock >= 456) {
 				modeClock = 0;
 				SetLine(GetLine() + 1);
-				
 				if (GetLine() > 153) {
 					mode = 2;
 					SetLine(0);
@@ -189,6 +191,34 @@ void GPU::DrawSprites() {
 	SDL_RenderCopy(gRenderer, spriteTexture, NULL, &rect);
 }
 
+void GPU::DrawPalletes() {
+	SDL_Rect recta;
+	recta.x = 100;
+	recta.y = 400;
+	recta.w = 32;
+	recta.h = 32;
+
+	for (int i = 0; i < 4; i++) {
+		SDL_SetRenderDrawColor(gRenderer, cpuBus->backgroundPalette[i].r, cpuBus->backgroundPalette[i].g , cpuBus->backgroundPalette[i].b, 0xFF);
+		SDL_RenderFillRect(gRenderer, &recta);
+		recta.x += 32;
+	}
+	recta.y += 32;
+	recta.x = 100;
+	for (int i = 0; i < 3; i++) {
+		SDL_SetRenderDrawColor(gRenderer, cpuBus->obj0Palette[i].r, cpuBus->obj0Palette[i].g, cpuBus->obj0Palette[i].b, 0xFF);
+		SDL_RenderFillRect(gRenderer, &recta);
+		recta.x += 32;
+	}
+	recta.y += 32;
+	recta.x = 100;
+	for (int i = 0; i < 3; i++) {
+		SDL_SetRenderDrawColor(gRenderer, cpuBus->obj1Palette[i].r, cpuBus->obj1Palette[i].g, cpuBus->obj1Palette[i].b, 0xFF);
+		SDL_RenderFillRect(gRenderer, &recta);
+		recta.x += 32;
+	}
+}
+
 void GPU::FillTile(int tileIndex, int x, int y) {
 	int base = GetBackgroundTile() ? 0x8000 : 0x8800;
 	if (base == 0x8800){
@@ -205,10 +235,10 @@ void GPU::FillTile(int tileIndex, int x, int y) {
 		int byte1 = cpuBus->Read(k);
 		int byte2 = cpuBus->Read(k + 1);
 		for (int j = 0; j < 8; j++) {
-			int tileIndex = (((byte1 >> 7 - j) & 1) << 1) | ((byte2 >> 7 - j) & 1);
-			backgroundPixels0[l] = cpuBus->backgroundPalette[tileIndex].b;
-			backgroundPixels0[l + 1] = cpuBus->backgroundPalette[tileIndex].g;
-			backgroundPixels0[l + 2] = cpuBus->backgroundPalette[tileIndex].r;
+			int _tileIndex = (((byte2 >> (7 - j)) & 1) << 1) | ((byte1 >> (7 - j)) & 1);
+			backgroundPixels0[l] = cpuBus->backgroundPalette[_tileIndex].b;
+			backgroundPixels0[l + 1] = cpuBus->backgroundPalette[_tileIndex].g;
+			backgroundPixels0[l + 2] = cpuBus->backgroundPalette[_tileIndex].r;
 			backgroundPixels0[l + 3] = SDL_ALPHA_OPAQUE;
 			l += 4;
 		}
@@ -219,32 +249,67 @@ void GPU::FillTile(int tileIndex, int x, int y) {
 
 void GPU::FillSprite(int spriteIndex) {
 	Sprite* s = &cpuBus->sprites[spriteIndex];
-	int x = (s->xPosition - 8) & 0xFF;
-	int y = (s->yPosition - 16) & 0xFF; 
+	int x = ((s->xPosition - 8) & 0xFF) + GetScrollX();
+	int y = ((s->yPosition - 16) & 0xFF) + GetScrollY(); 
 	if (y >= GAMEBOY_HEIGHT)
 		return;
 	if (x >= GAMEBOY_WIDTH)
 		return;
-	int tileIndex = s->tileNumber & 0xFF;
-	int i = (0x8000 + tileIndex * 16) & (0xFFFF);
+	
+	int _tileIndex = s->tileNumber & 0xFF;
+	int i = (0x8000 + _tileIndex * 16) & (0xFFFF);
 	int l = ((x + y * 0xff) * 4);
-	for (int k = i; k < i + 16; k += 2) {
+
+	bool hflip = (s->spriteFlags & 0x20);
+	bool vflip = (s->spriteFlags & 0x40);
+	bool usepal1 = (s->spriteFlags & 0x10);
+
+	int jInitial = 0;
+	int jMax = 8;
+	int jInc = 1;
+
+	int kInitial = i;
+	int kMax = i + 16;
+	int kInc = 2;
+
+	if (hflip) {
+		jInitial = 7;
+		jMax = -1;
+		jInc = -1;
+	}
+
+	if (vflip) {
+		kInitial = i + 14;
+		kMax = i - 2;
+		kInc = -2;
+	}
+
+
+	for (int k = kInitial; k != kMax; k += kInc) {
 		int byte1 = cpuBus->Read(k);
 		int byte2 = cpuBus->Read(k + 1);
-		for (int j = 0; j < 8; j++) {
-			int tileIndex = (((byte1 >> 7 - j) & 1) << 1) | ((byte2 >> 7 - j) & 1);
+		for (int j = jInitial; j != jMax; j += jInc) {
+			int tileIndex = (((byte2 >> 7 - j) & 1) << 1) | ((byte1 >> 7 - j) & 1);
 			tileIndex--;
 			if (tileIndex != -1) {
-				spritePixels[l] = cpuBus->obj0Palette[tileIndex].b;
-				spritePixels[l + 1] = cpuBus->obj0Palette[tileIndex].g;
-				spritePixels[l + 2] = cpuBus->obj0Palette[tileIndex].r;
-				spritePixels[l + 3] = SDL_ALPHA_OPAQUE;
+				if (!usepal1) {
+					spritePixels[l] = cpuBus->obj0Palette[tileIndex].b;
+					spritePixels[l + 1] = cpuBus->obj0Palette[tileIndex].g;
+					spritePixels[l + 2] = cpuBus->obj0Palette[tileIndex].r;
+					spritePixels[l + 3] = SDL_ALPHA_OPAQUE;
+				}
+				else {
+					spritePixels[l] = cpuBus->obj1Palette[tileIndex].b;
+					spritePixels[l + 1] = cpuBus->obj1Palette[tileIndex].g;
+					spritePixels[l + 2] = cpuBus->obj1Palette[tileIndex].r;
+					spritePixels[l + 3] = SDL_ALPHA_OPAQUE;
+				}
 			}
 			else {
-				//spritePixels[l] = 0;
-				//spritePixels[l + 1] = 0;
-				//spritePixels[l + 2] = 0;
-				//spritePixels[l + 3] = SDL_ALPHA_TRANSPARENT;
+				spritePixels[l] = 0;
+				spritePixels[l + 1] = 0;
+				spritePixels[l + 2] = 0;
+				spritePixels[l + 3] = 0;
 			}
 			l += 4;
 		}

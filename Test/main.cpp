@@ -17,7 +17,13 @@
 #define BG_MAP0_END 0x9C00
 #define MAX_FPS 60
 
+struct Timer
+{
+	int div, tma, tima, tac, cmain, csub, cdiv;
+};
+
 CPU c;
+Timer tData;
 
 bool pause = false;
 bool quit = false;
@@ -42,6 +48,8 @@ std::vector<Object*> objects;
 void dispose();
 void frame();
 void fpscalc();
+void timerinc(int mTemp);
+void timerstep();
 
 int main() {
 	
@@ -61,9 +69,9 @@ int main() {
 	objects.push_back(minAddr);
 	objects.push_back(maxAddr);
 	objects.push_back(addressShow);
-	c.cpuBus->Write(0xFF00, 0xEF); //TODO: Temporary input solution
+	c.cpuBus->Write(0xFF00, 0xFF); //TODO: Temporary input solution
 	disassembler d;
-	c.cpuBus->LoadCartridge("tetris.gb");
+	c.cpuBus->LoadCartridge("inter.gb");
 	c.Reset();
 	SDL_Event e;
 
@@ -120,7 +128,7 @@ int main() {
 								next = true;
 						break;
 						case SDLK_f:
-							find = !find;
+							c.IME = 1;
 						break;
 						case SDLK_p:
 							pause = !pause;
@@ -164,10 +172,10 @@ int main() {
 
 			ss << "PC:0x" << std::hex << 0u + c.PC << "\nA:0x" << std::hex << 0u + c.A << "\nB:0x" << std::hex << 0u + c.B << "\nC:0x" << std::hex << 0u + c.C
 				<< "\nD:0x" << std::hex << 0u + c.D << "\nE:0x" << std::hex << 0u + c.E << "\nH:0x" << std::hex << 0u + c.H << "\nL:0x" << std::hex << 0u + c.L
-				<< "\nSP:0x" << std::hex << 0u + c.SP << "\nCURLINE:" << std::hex << c.cpuBus->Read(0xFF44) << "\nWindow:" << c.gpu->GetWindowDisplayEnable();
+				<< "\nSP:0x" << std::hex << 0u + c.SP << "\nIE:" << std::bitset<8>(c.cpuBus->GetIE()) << "\nIF:" << std::bitset<8>(c.cpuBus->GetIF()) << "\nIME:" << c.IME;
 			c.gpu->DrawMemoryArea(memstart,memend, 400, 300);
 			std::string x(ss.str());
-			c.gpu->DrawString(x, 555, 2);
+			c.gpu->DrawString(x, 530, 2);
 			auto t = std::to_string(fps);
 			t = "FPS:" + t;
 			c.gpu->DrawString(t, 2, 2);
@@ -190,6 +198,7 @@ int main() {
 			}	
 
 			if (c.cpuBus->spriteDataChanged) {
+				//TODO: uncomment or delete
 				int v = 0;
 				c.gpu->spritePixels.fill(0);
 				for (Sprite s : c.cpuBus->sprites) {
@@ -199,10 +208,12 @@ int main() {
 					v++;
 				}
 				c.cpuBus->spriteDataChanged = false;
+				
 			}
 			c.gpu->DrawBackground0();
 			c.gpu->DrawSprites();
 			c.gpu->DrawGUI();
+			c.gpu->DrawPalletes();
 			for (auto o : objects) {
 				o->Draw(c.gpu->GetRenderer());
 			}
@@ -225,7 +236,9 @@ void dispose() {
 void frame() {
 	int most = c.tClock + 70224;
 	do {
+		int mClockOld = c.mClock;
 		c.Update();
+		timerinc(mClockOld - c.mClock);
 	} while (c.tClock < most);
 }
 
@@ -238,5 +251,52 @@ void fpscalc() {
 		ftime = 0;
 		fps = fps_a;
 		fps_a = 0;
+	}
+}
+
+void timerinc(int mTemp) {
+	tData.div = c.cpuBus->Read(0xFF04);
+	tData.tima = c.cpuBus->Read(0xFF05);
+	tData.tma = c.cpuBus->Read(0xFF06);
+	tData.tac = c.cpuBus->Read(0xFF07);
+
+	int oldclk = tData.cmain;
+	tData.csub += mTemp;
+	if (tData.csub > 3) {
+		tData.cmain++;
+		tData.csub -= 4;
+		tData.cdiv++;
+		if (tData.cdiv == 16) {
+			tData.cdiv = 0;
+			c.cpuBus->Write(0xFF04, (tData.div + 1) & 0xFF);
+		}
+		if (tData.tac & 4) {
+			switch (tData.tac & 3) {
+			case 0:
+				if (tData.cmain >= 64) timerstep();
+			break;
+			case 1:
+				if (tData.cmain >= 1) timerstep();
+			break;
+			case 2:
+				if (tData.cmain >= 4) timerstep();
+			break;
+			case 3:
+				if (tData.cmain >= 16) timerstep();
+			break;
+			}
+		}
+	}
+}
+
+void timerstep() {
+	tData.tima = c.cpuBus->Read(0xFF05) + 1;
+	tData.cmain = 0;
+	if (tData.tima > 0xFF) {
+		c.cpuBus->Write(0xFF05, tData.tma);
+		c.cpuBus->SetIF(c.cpuBus->GetIF() | 4);
+	}
+	else {
+		c.cpuBus->Write(0xFF05, tData.tima);
 	}
 }

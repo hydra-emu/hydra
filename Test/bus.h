@@ -38,7 +38,7 @@ private:
     SDL_Color dColor = { 118, 68, 98 };
     SDL_Color lColor = { 169, 104, 104 };
     SDL_Color vlColor = { 237, 180, 161 };
-    SDL_Color palette[4] = { vlColor, dColor, lColor, vdColor };
+    SDL_Color palette[4] = { vlColor, lColor, dColor, vdColor };
     std::unique_ptr<Cartridge> cartridge = NULL;
 public:
     bool backgroundMapChanged = false;

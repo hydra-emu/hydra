@@ -338,3 +338,14 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/Test/testroms/dmg.gb
+/Test/testroms
+/Test/bit.gb
+/Test/instr.gb
+/Test/inter.gb
+/Test/jr.gb
+/Test/ld.gb
+/Test/op3.gb
+/Test/op2.gb
+/Test/op.gb
+/Test/misc.gb

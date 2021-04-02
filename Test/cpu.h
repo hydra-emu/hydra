@@ -30,7 +30,6 @@ private:
 		0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50,
 	};
 
-	bool IME;
 	int R;
 	int mTemp;
 	int tTemp;
@@ -83,6 +82,7 @@ public:
 	int16_t rsvA, rsvB, rsvC, rsvD, rsvE, rsvH, rsvL;
 	int16_t F, rsvF;
 	uint16_t SP;
+	bool IME;
 	int mClock;
 	int tClock;
 
