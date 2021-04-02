@@ -1,0 +1,61 @@
+{
+    "0": {
+        "Name": "Gameboy",
+        "SettingsFile": "gameboy.json",
+        "Extensions": [
+            ".gb",
+            ".gbc"
+        ],
+        "DefaultWidth": 160,
+        "DefaultHeight": 144,
+        "HasDebugger": false,
+        "HasTracelogger": true,
+        "LoggingOptions": [
+            "Registers"
+        ]
+    },
+    "1": {
+        "Name": "Nintendo Entertainment System",
+        "SettingsFile": "nes.json",
+        "Extensions": [
+            ".nes"
+        ],
+        "DefaultWidth": 256,
+        "DefaultHeight": 240,
+        "HasDebugger": false,
+        "HasTracelogger": true,
+        "LoggingOptions": [
+            "Registers",
+            "Cycles"
+        ]
+    },
+    "2": {
+        "Name": "Nintendo 64",
+        "SettingsFile": "n64.json",
+        "Extensions": [
+            ".n64",
+            ".z64"
+        ],
+        "DefaultWidth": 320,
+        "DefaultHeight": 240,
+        "HasDebugger": false,
+        "HasTracelogger": false,
+        "LoggingOptions": [
+            "Registers"
+        ]
+    },
+    "3": {
+        "Name": "Chip 8",
+        "SettingsFile": "chip8.json",
+        "Extensions": [
+            ".ch8"
+        ],
+        "DefaultWidth": 64,
+        "DefaultHeight": 32,
+        "HasDebugger": false,
+        "HasTracelogger": true,
+        "LoggingOptions": [
+            "Registers"
+        ]
+    }
+}

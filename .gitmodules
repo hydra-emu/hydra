@@ -1,0 +1,12 @@
+[submodule "TKPEmu/GameboyTKP"]
+	path = hydra/GameboyTKP
+	url = https://github.com/OFFTKP/GameboyTKP
+[submodule "TKPEmu/NESTKP"]
+	path = hydra/NESTKP
+	url = http://github.com/offtkp/NESTKP
+[submodule "TKPEmu/N64TKP"]
+	path = hydra/N64TKP
+	url = https://github.com/OFFTKP/N64TKP
+[submodule "TKPEmu/chip8"]
+	path = hydra/chip8
+	url = https://github.com/OFFTKP/chip8
