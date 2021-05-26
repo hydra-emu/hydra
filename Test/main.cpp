@@ -25,7 +25,7 @@ struct Timer
 CPU c;
 Timer tData;
 
-bool pause = false;
+bool pause = !true;
 bool quit = false;
 bool find = false;
 bool next = false;
@@ -69,10 +69,11 @@ int main() {
 	objects.push_back(minAddr);
 	objects.push_back(maxAddr);
 	objects.push_back(addressShow);
-	c.cpuBus->Write(0xFF00, 0xFF); //TODO: Temporary input solution
+	
 	disassembler d;
-	c.cpuBus->LoadCartridge("inter.gb");
+	c.cpuBus->LoadCartridge("tetris.gb");
 	c.Reset();
+	c.cpuBus->mem[0xFF00] = 0xDF; //TODO: Temporary input solution
 	SDL_Event e;
 
 	bool useLockTexture = false;
@@ -142,7 +143,7 @@ int main() {
 			else if (e.type == SDL_KEYUP) {
 				switch (e.key.keysym.sym) {
 					case SDLK_RETURN:
-						//c.cpuBus->RemoveInput(e.key.keysym.sym);
+						c.cpuBus->RemoveInput(e.key.keysym.sym);
 					break;
 				}
 			}
@@ -172,7 +173,7 @@ int main() {
 
 			ss << "PC:0x" << std::hex << 0u + c.PC << "\nA:0x" << std::hex << 0u + c.A << "\nB:0x" << std::hex << 0u + c.B << "\nC:0x" << std::hex << 0u + c.C
 				<< "\nD:0x" << std::hex << 0u + c.D << "\nE:0x" << std::hex << 0u + c.E << "\nH:0x" << std::hex << 0u + c.H << "\nL:0x" << std::hex << 0u + c.L
-				<< "\nSP:0x" << std::hex << 0u + c.SP << "\nIE:" << std::bitset<8>(c.cpuBus->GetIE()) << "\nIF:" << std::bitset<8>(c.cpuBus->GetIF()) << "\nIME:" << c.IME;
+				<< "\nSP:0x" << std::hex << 0u + c.SP << "\nIE:" << std::bitset<8>(c.cpuBus->GetIE()) << "\nIF:" << std::bitset<8>(c.cpuBus->GetIF()) << "\nINP:" << std::bitset<8>(c.cpuBus->Read(0xFF00));
 			c.gpu->DrawMemoryArea(memstart,memend, 400, 300);
 			std::string x(ss.str());
 			c.gpu->DrawString(x, 530, 2);

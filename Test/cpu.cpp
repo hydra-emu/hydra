@@ -1970,9 +1970,9 @@ void CPU::CP8() {
 	F = (i < 0) ? 0x50 : 0x40;
 	i &= 0xFF;
 	if (!i) {
-		F |= 0x80;
+		F += 0x80;
 	}
-	if ((A ^ i ^ m) & 0x10) F |= 0x20;
+	if ((A ^ i ^ m) & 0x10) F += 0x20;
 	mTemp = 2; tTemp = 8;
 }
 

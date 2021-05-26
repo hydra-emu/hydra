@@ -169,12 +169,6 @@ void Bus::Write(uint16_t address, uint8_t data) {
 				{
 					switch (address) {
 						case 0xFF00:
-							if (!keyPressed)
-								mem[address] = 0xEF; // TODO: Implement INPUTs
-							else {
-								mem[address] = data;
-								keyPressed = false;
-							}
 						break;
 						case 0xFF04:
 							// DIV
@@ -245,10 +239,9 @@ void Bus::WriteL(uint16_t address, uint16_t data) {
 }
 
 void Bus::WriteInput(int key) {
-	keyPressed = true;
 	switch (key) {
 		case 13:
-			Write(0xFF00, Read(0xFF00) & 0xD7); // TODO: temporary input
+			mem[0xFF00] &= 0xD7;
 		break;
 	}
 }
@@ -256,7 +249,7 @@ void Bus::WriteInput(int key) {
 void Bus::RemoveInput(int key) {
 	switch (key) {
 		case 13:
-			Write(0xFF00, Read(0xFF00) | 0x8); 
+			mem[0xFF00] |= 0x8;
 		break;
 	}
 }
