@@ -85,6 +85,7 @@ void GPU::Update(int mTemp) {
 					mode = 2;
 				}
 				SetLine(GetLine() + 1);
+
 			}
 			break;
 		}

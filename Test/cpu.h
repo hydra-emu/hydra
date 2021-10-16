@@ -4,11 +4,14 @@
 #include <string>
 #include <vector>
 #include <array>
-
+#include <iomanip>
+#include <fstream>
 #include "bus.h"
 #include "gpu.h"
-
+#include "cpu_const.h"
 class CPU {
+private:
+	using RegisterType = uint16_t;
 private:
 
 	int bios[256] = {
@@ -40,7 +43,7 @@ private:
 	// Instruction functions
 	void NOP(); void LDBC16(); void LDBCA(); void INCBC(); void INCB(); void DECB(); void LDB8(); void RLCA(); void LD16SP(); void ADDHLBC(); void LDABC(); void DECBC(); void INCC(); void DECC(); void LDC8(); void RRCA();
 	void STOP(); void LDDE16(); void LDDEA(); void INCDE(); void INCD(); void DECD(); void LDD8(); void RLA(); void JR8(); void ADDHLDE(); void LDADE(); void DECDE(); void INCE(); void DECE(); void LDE8(); void RRA();
-	void JRNZ8(); void LDHL16(); void LDIHLA(); void INCHL(); void INCH(); void DECH(); void LDH8(); /*void DAA();*/ void JRZ8(); void ADDHLHL(); void LDIAHL(); void DECHL(); void INCL(); void DECL(); void LDL8(); void CPL();
+	void JRNZ8(); void LDHL16(); void LDIHLA(); void INCHL(); void INCH(); void DECH(); void LDH8(); void DAA(); void JRZ8(); void ADDHLHL(); void LDIAHL(); void DECHL(); void INCL(); void DECL(); void LDL8(); void CPL();
 	void JRNC8(); void LDSP16(); void LDDHLA(); void INCSP(); void INCHLR(); void DECHLR(); void LDHL8(); void SCF(); void JRC8(); void ADDHLSP(); void LDDAHL(); void DECSP(); void INCA(); void DECA(); void LDA8(); void CCF();
 	void LDBB(); void LDBC(); void LDBD(); void LDBE(); void LDBH(); void LDBL(); void LDBHL(); void LDBA(); void LDCB(); void LDCC(); void LDCD(); void LDCE(); void LDCH(); void LDCL(); void LDCHL(); void LDCA();
 	void LDDB(); void LDDC(); void LDDD(); void LDDE(); void LDDH(); void LDDL(); void LDDHL(); void LDDA(); void LDEB(); void LDEC(); void LDED(); void LDEE(); void LDEH(); void LDEL(); void LDEHL(); void LDEA();
@@ -50,10 +53,10 @@ private:
 	void SUBAB(); void SUBAC(); void SUBAD(); void SUBAE(); void SUBAH(); void SUBAL(); void SUBAHL(); void SUBAA(); void SBCAB(); void SBCAC(); void SBCAD(); void SBCAE(); void SBCAH(); void SBCAL(); void SBCAHL(); void SBCAA();
 	void ANDB(); void ANDC(); void ANDD(); void ANDE(); void ANDH(); void ANDL(); void ANDHL(); void ANDA(); void XORB(); void XORC(); void XORD(); void XORE(); void XORH(); void XORL(); void XORHL(); void XORA();
 	void ORB(); void ORC(); void ORD(); void ORE(); void ORH(); void ORL(); void ORHL(); void ORA(); void CPAB(); void CPAC(); void CPAD(); void CPAE(); void CPAH(); void CPAL(); void CPAHL(); void CPAA();
-	void RETNZ(); void POPBC(); void JPNZ16(); void JP16(); void CALLNZ16(); void PUSHBC(); void ADDA8(); void RST0(); void RETZ(); void RET(); void JPZ16(); void EXT(); void CALLZ16(); void CALL16(); void ADCA16(); void RST8();
+	void RETNZ(); void POPBC(); void JPNZ16(); void JP16(); void CALLNZ16(); void PUSHBC(); void ADDA8(); void RST0(); void RETZ(); void RET(); void JPZ16(); void EXT(); void CALLZ16(); void CALL16(); void ADCA8(); void RST8();
 	void RETNC(); void POPDE(); void JPNC16();void CALLNC16(); void PUSHDE(); void SUBA8(); void RST10(); void RETC(); void RETI(); void JPC16();  void CALLC16();  void SBCA8(); void RST18();
 	void LDH8A(); void POPHL(); void LDHCA(); void PUSHHL(); void AND8(); void RST20(); void ADDSPD(); void JPHL(); void LD16A(); void XOR8(); void RST28();
-	void LDHA8(); void POPAF();  void DI();  void PUSHAF(); void OR8(); void RST30(); void LDHLSPD(); /*void LDSPHL();*/ void LDA16(); void EI(); void CP8(); void RST38();
+	void LDHA8(); void POPAF();  void DI();  void PUSHAF(); void OR8(); void RST30(); void LDHLSPD(); void LDSPHL(); void LDA16(); void EI(); void CP8(); void RST38();
 
 	void RST40(); void RST48(); void RST50(); void RST58(); void RST60();
 	
@@ -72,17 +75,42 @@ private:
 	// Undefined instructions
 	void XXX();
 
+	// Helper functions that also deal with the flags
+	inline void reg_dec(RegisterType& reg);
+	inline void reg_inc(RegisterType& reg);
+	inline void reg_sub(RegisterType& reg);
+	inline void reg_and(RegisterType& reg);
+	inline void bit_ch(RegisterType reg, unsigned shift);
+
+	// TODO: remove FZ
 	void FZ(int i, bool as = false);
 	void RSV();
 	void RRS();
+	/// <summary>Flag 7 0x80</summary>
+	void SetFlagZero(unsigned long value) {
+		F = (F & ~(1UL << 7)) | (value << 7);
+	}
+	/// <summary>Flag 6 0x40</summary>
+	void SetFlagSubtract(unsigned long value) {
+		F = (F & ~(1UL << 6)) | (value << 6);
+	}
+	/// <summary>Flag 5 0x20</summary>
+	void SetFlagHalfCarry(unsigned long value) {
+		F = (F & ~(1UL << 5)) | (value << 5);
+	}
+	/// <summary>Flag 4 0x10</summary>
+	void SetFlagCarry(unsigned long value) {
+		F = (F & ~(1UL << 4)) | (value << 4);
+	}
 
 public:
-	uint16_t PC;
-	int16_t A, B, C, D, E, H, L;
-	int16_t rsvA, rsvB, rsvC, rsvD, rsvE, rsvH, rsvL;
-	int16_t F, rsvF;
-	uint16_t SP;
+	RegisterType A, B, C, D, E, H, L, F, PC, SP;
+	RegisterType rsvA, rsvB, rsvC, rsvD, rsvE, rsvH, rsvL, rsvF;
 	bool IME;
+	// TODO: remove once testing is over
+	bool cpuDebugPause = !false;
+	std::ofstream debugLog;
+	unsigned totalClock = 0;
 	int mClock;
 	int tClock;
 

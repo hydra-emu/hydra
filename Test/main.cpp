@@ -71,7 +71,7 @@ int main() {
 	objects.push_back(addressShow);
 	
 	disassembler d;
-	c.cpuBus->LoadCartridge("tetris.gb");
+	c.cpuBus->LoadCartridge("C:\\Users\\ilive\\Desktop\\test8.gb");
 	c.Reset();
 	c.cpuBus->mem[0xFF00] = 0xDF; //TODO: Temporary input solution
 	SDL_Event e;
@@ -160,7 +160,7 @@ int main() {
 			}
 		}
 		
-		if (pause && next) {
+		if ((pause) && next) {
 			next = false;
 			c.Update();
 		}
@@ -171,9 +171,9 @@ int main() {
 
 			std::stringstream ss;
 
-			ss << "PC:0x" << std::hex << 0u + c.PC << "\nA:0x" << std::hex << 0u + c.A << "\nB:0x" << std::hex << 0u + c.B << "\nC:0x" << std::hex << 0u + c.C
+			ss << "PC:0x" << std::hex << 0u + c.PC << "\nA:0x" << std::hex << 0u + c.A << "\nF:0x" << std::hex << 0u + c.F << "\nB:0x" << std::hex << 0u + c.B << "\nC:0x" << std::hex << 0u + c.C
 				<< "\nD:0x" << std::hex << 0u + c.D << "\nE:0x" << std::hex << 0u + c.E << "\nH:0x" << std::hex << 0u + c.H << "\nL:0x" << std::hex << 0u + c.L
-				<< "\nSP:0x" << std::hex << 0u + c.SP << "\nIE:" << std::bitset<8>(c.cpuBus->GetIE()) << "\nIF:" << std::bitset<8>(c.cpuBus->GetIF()) << "\nINP:" << std::bitset<8>(c.cpuBus->Read(0xFF00));
+				<< "\nSP:0x" << std::hex << 0u + c.SP << "\nIE:" << std::bitset<8>(c.cpuBus->GetIE()) << "\nIF:" << std::bitset<8>(c.cpuBus->GetIF()) << "\nINP:" << std::bitset<8>(c.cpuBus->Read(0xFF00)) << "\nTot:" << c.mClock;
 			c.gpu->DrawMemoryArea(memstart,memend, 400, 300);
 			std::string x(ss.str());
 			c.gpu->DrawString(x, 530, 2);
@@ -238,7 +238,9 @@ void frame() {
 	int most = c.tClock + 70224;
 	do {
 		int mClockOld = c.mClock;
-		c.Update();
+		if (!c.cpuDebugPause)
+			c.Update();
+		else { pause = true; c.cpuDebugPause = false; return; };
 		timerinc(mClockOld - c.mClock);
 	} while (c.tClock < most);
 }

@@ -138,6 +138,7 @@ void Bus::Write(uint16_t address, uint8_t data) {
 				case 0xC00:
 				case 0xD00: {
 					mem[address] = data;
+					break;
 				}
 
 				case 0xE00: {
@@ -163,6 +164,7 @@ void Bus::Write(uint16_t address, uint8_t data) {
 						}
 					}
 					mem[address] = data;
+					break;
 				}
 
 				case 0xF00:
@@ -170,6 +172,10 @@ void Bus::Write(uint16_t address, uint8_t data) {
 					switch (address) {
 						case 0xFF00:
 						break;
+						case 0xFF01:
+							// TODO: implement serial
+							//std::cout << data;
+							break;
 						case 0xFF04:
 							// DIV
 							mem[address] = 0;
@@ -192,7 +198,6 @@ void Bus::Write(uint16_t address, uint8_t data) {
 						break;
 						case 0xFF46:
 							// Update oam
-							
 							for (int i = 0; i < 160; i++) {
 								int v = Read((data << 8) + i) ;
 								Write(OAM_START + i, v);

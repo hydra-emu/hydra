@@ -1,8 +1,9 @@
 #include "cpu.h"
 #include <stdexcept>
 #include <iostream>
-
-CPU::CPU() {
+//TODO: remove DEBUG_LOG_FILE
+//#define DEBUG_LOG_FILE
+CPU::CPU() : debugLog("D:/gblogs/tkp_3_1.txt") {
 	A = 0; B = 0; C = 0; D = 0; E = 0; H = 0; L = 0;
 	F = 0; SP = 0; PC = 0x0; IME = 1; R = 0;
 	mClock = 0; tClock = 0;
@@ -12,7 +13,7 @@ CPU::CPU() {
 	{
 		{ "NOP" , &CPU::NOP }, { "LDBC16" , &CPU::LDBC16 , 2}, { "LDBCA" , &CPU::LDBCA }, { "INCBC" , &CPU::INCBC }, { "INCB" , &CPU::INCB }, { "DECB" , &CPU::DECB }, { "LDB8" , &CPU::LDB8 , 1}, { "RLCA" , &CPU::RLCA }, { "LD16SP" , &CPU::LD16SP }, { "ADDHLBC" , &CPU::ADDHLBC }, { "LDABC" , &CPU::LDABC }, { "DECBC" , &CPU::DECBC }, { "INCC" , &CPU::INCC }, { "DECC" , &CPU::DECC }, { "LDC8" , &CPU::LDC8 , 1}, { "RRCA" , &CPU::RRCA },
 		{ "STOP" , &CPU::STOP }, { "LDDE16" , &CPU::LDDE16 , 2}, { "LDDEA" , &CPU::LDDEA }, { "INCDE" , &CPU::INCDE }, { "INCD" , &CPU::INCD }, { "DECD" , &CPU::DECD }, { "LDD8" , &CPU::LDD8 , 1}, { "RLA" , &CPU::RLA }, { "JR8" , &CPU::JR8 , 1}, { "ADDHLDE" , &CPU::ADDHLDE }, { "LDADE" , &CPU::LDADE }, { "DECDE" , &CPU::DECDE }, { "INCE" , &CPU::INCE }, { "DECE" , &CPU::DECE }, { "LDE8" , &CPU::LDE8 , 1}, { "RRA" , &CPU::RRA },
-		{ "JRNZ8" , &CPU::JRNZ8 , 1}, { "LDHL16" , &CPU::LDHL16 , 2}, { "LDIHLA" , &CPU::LDIHLA }, { "INCHL" , &CPU::INCHL }, { "INCH" , &CPU::INCH }, { "DECH" , &CPU::DECH }, { "LDH8" , &CPU::LDH8 , 1}, { "???" , &CPU::XXX }, { "JRZ8" , &CPU::JRZ8 , 1}, { "ADDHLHL" , &CPU::ADDHLHL }, { "LDIAHL" , &CPU::LDIAHL }, { "DECHL" , &CPU::DECHL }, { "INCL" , &CPU::INCL }, { "DECL" , &CPU::DECL }, { "LDL8" , &CPU::LDL8 , 1}, { "CPL" , &CPU::CPL },
+		{ "JRNZ8" , &CPU::JRNZ8 , 1}, { "LDHL16" , &CPU::LDHL16 , 2}, { "LDIHLA" , &CPU::LDIHLA }, { "INCHL" , &CPU::INCHL }, { "INCH" , &CPU::INCH }, { "DECH" , &CPU::DECH }, { "LDH8" , &CPU::LDH8 , 1}, { "DAA" , &CPU::DAA }, { "JRZ8" , &CPU::JRZ8 , 1}, { "ADDHLHL" , &CPU::ADDHLHL }, { "LDIAHL" , &CPU::LDIAHL }, { "DECHL" , &CPU::DECHL }, { "INCL" , &CPU::INCL }, { "DECL" , &CPU::DECL }, { "LDL8" , &CPU::LDL8 , 1}, { "CPL" , &CPU::CPL },
 		{ "JRNC8" , &CPU::JRNC8 , 1}, { "LDSP16" , &CPU::LDSP16 , 2}, { "LDDHLA" , &CPU::LDDHLA }, { "INCSP" , &CPU::INCSP }, { "INCHLR" , &CPU::INCHLR }, { "DECHLR" , &CPU::DECHLR }, { "LDHL8" , &CPU::LDHL8 , 1}, { "SCF" , &CPU::SCF }, { "JRC8" , &CPU::JRC8 , 1}, { "ADDHLSP" , &CPU::ADDHLSP }, { "LDDAHL" , &CPU::LDDAHL }, { "DECSP" , &CPU::DECSP }, { "INCA" , &CPU::INCA }, { "DECA" , &CPU::DECA }, { "LDA8" , &CPU::LDA8 , 1}, { "CCF" , &CPU::CCF },
 		{ "LDBB" , &CPU::LDBB }, { "LDBC" , &CPU::LDBC }, { "LDBD" , &CPU::LDBD }, { "LDBE" , &CPU::LDBE }, { "LDBH" , &CPU::LDBH }, { "LDBL" , &CPU::LDBL }, { "LDBHL" , &CPU::LDBHL }, { "LDBA" , &CPU::LDBA }, { "LDCB" , &CPU::LDCB }, { "LDCC" , &CPU::LDCC }, { "LDCD" , &CPU::LDCD }, { "LDCE" , &CPU::LDCE }, { "LDCH" , &CPU::LDCH }, { "LDCL" , &CPU::LDCL }, { "LDCHL" , &CPU::LDCHL }, { "LDCA" , &CPU::LDCA },
 		{ "LDDB" , &CPU::LDDB }, { "LDDC" , &CPU::LDDC }, { "LDDD" , &CPU::LDDD }, { "LDDE" , &CPU::LDDE }, { "LDDH" , &CPU::LDDH }, { "LDDL" , &CPU::LDDL }, { "LDDHL" , &CPU::LDDHL }, { "LDDA" , &CPU::LDDA }, { "LDEB" , &CPU::LDEB }, { "LDEC" , &CPU::LDEC }, { "LDED" , &CPU::LDED }, { "LDEE" , &CPU::LDEE }, { "LDEH" , &CPU::LDEH }, { "LDEL" , &CPU::LDEL }, { "LDEHL" , &CPU::LDEHL }, { "LDEA" , &CPU::LDEA },
@@ -22,10 +23,10 @@ CPU::CPU() {
 		{ "SUBAB" , &CPU::SUBAB }, { "SUBAC" , &CPU::SUBAC }, { "SUBAD" , &CPU::SUBAD }, { "SUBAE" , &CPU::SUBAE }, { "SUBAH" , &CPU::SUBAH }, { "SUBAL" , &CPU::SUBAL }, { "SUBAHL" , &CPU::SUBAHL }, { "SUBAA" , &CPU::SUBAA }, { "SBCAB" , &CPU::SBCAB }, { "SBCAC" , &CPU::SBCAC }, { "SBCAD" , &CPU::SBCAD }, { "SBCAE" , &CPU::SBCAE }, { "SBCAH" , &CPU::SBCAH }, { "SBCAL" , &CPU::SBCAL }, { "SBCAHL" , &CPU::SBCAHL }, { "SBCAA" , &CPU::SBCAA },
 		{ "ANDB" , &CPU::ANDB }, { "ANDC" , &CPU::ANDC }, { "ANDD" , &CPU::ANDD }, { "ANDE" , &CPU::ANDE }, { "ANDH" , &CPU::ANDH }, { "ANDL" , &CPU::ANDL }, { "ANDHL" , &CPU::ANDHL }, { "ANDA" , &CPU::ANDA }, { "XORB" , &CPU::XORB }, { "XORC" , &CPU::XORC }, { "XORD" , &CPU::XORD }, { "XORE" , &CPU::XORE }, { "XORH" , &CPU::XORH }, { "XORL" , &CPU::XORL }, { "XORHL" , &CPU::XORHL }, { "XORA" , &CPU::XORA },
 		{ "ORB" , &CPU::ORB }, { "ORC" , &CPU::ORC }, { "ORD" , &CPU::ORD }, { "ORE" , &CPU::ORE }, { "ORH" , &CPU::ORH }, { "ORL" , &CPU::ORL }, { "ORHL" , &CPU::ORHL }, { "ORA" , &CPU::ORA }, { "CPAB" , &CPU::CPAB }, { "CPAC" , &CPU::CPAC }, { "CPAD" , &CPU::CPAD }, { "CPAE" , &CPU::CPAE }, { "CPAH" , &CPU::CPAH }, { "CPAL" , &CPU::CPAL }, { "CPAHL" , &CPU::CPAHL }, { "CPAA" , &CPU::CPAA },
-		{ "RETNZ" , &CPU::RETNZ }, { "POPBC" , &CPU::POPBC }, { "JPNZ16" , &CPU::JPNZ16 , 2}, { "JP16" , &CPU::JP16 , 2}, { "CALLNZ16" , &CPU::CALLNZ16 , 2}, { "PUSHBC" , &CPU::PUSHBC }, { "ADDA8" , &CPU::ADDA8 , 1}, { "RST0" , &CPU::RST0 }, { "RETZ" , &CPU::RETZ }, { "RET" , &CPU::RET }, { "JPZ16" , &CPU::JPZ16 , 2}, { "EXT" , &CPU::EXT , 1 }, { "CALLZ16" , &CPU::CALLZ16 , 2}, { "CALL16" , &CPU::CALL16 , 2}, { "ADCA16" , &CPU::ADCA16 , 2}, { "RST8" , &CPU::RST8 },
+		{ "RETNZ" , &CPU::RETNZ }, { "POPBC" , &CPU::POPBC }, { "JPNZ16" , &CPU::JPNZ16 , 2}, { "JP16" , &CPU::JP16 , 2}, { "CALLNZ16" , &CPU::CALLNZ16 , 2}, { "PUSHBC" , &CPU::PUSHBC }, { "ADDA8" , &CPU::ADDA8 , 1}, { "RST0" , &CPU::RST0 }, { "RETZ" , &CPU::RETZ }, { "RET" , &CPU::RET }, { "JPZ16" , &CPU::JPZ16 , 2}, { "EXT" , &CPU::EXT , 1 }, { "CALLZ16" , &CPU::CALLZ16 , 2}, { "CALL16" , &CPU::CALL16 , 2}, { "ADCA8" , &CPU::ADCA8 , 2}, { "RST8" , &CPU::RST8 },
 		{ "RETNC" , &CPU::RETNC }, { "POPDE" , &CPU::POPDE }, { "JPNC16" , &CPU::JPNC16 , 2}, { "???" , &CPU::XXX }, { "CALLNC16" , &CPU::CALLNC16 , 2}, { "PUSHDE" , &CPU::PUSHDE }, { "SUBA8" , &CPU::SUBA8 , 1}, { "RST10" , &CPU::RST10 }, { "RETC" , &CPU::RETC }, { "RETI" , &CPU::RETI }, { "JPC16" , &CPU::JPC16 , 2}, { "???" , &CPU::XXX }, { "CALLC16" , &CPU::CALLC16 , 2}, { "???" , &CPU::XXX }, { "SBCA8" , &CPU::SBCA8 , 1}, { "RST18" , &CPU::RST18 },
 		{ "LDH8A" , &CPU::LDH8A }, { "POPHL" , &CPU::POPHL }, { "LDHCA" , &CPU::LDHCA }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "PUSHHL" , &CPU::PUSHHL }, { "AND8" , &CPU::AND8 , 1}, { "RST20" , &CPU::RST20 }, { "ADDSPD" , &CPU::ADDSPD , 1}, { "JPHL" , &CPU::JPHL }, { "LD16A" , &CPU::LD16A }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "XOR8" , &CPU::XOR8 , 1}, { "RST28" , &CPU::RST28 },
-		{ "LDHA8" , &CPU::LDHA8 , 1}, { "POPAF" , &CPU::POPAF }, { "???" , &CPU::XXX }, { "DI" , &CPU::DI }, { "???" , &CPU::XXX }, { "PUSHAF" , &CPU::PUSHAF }, { "OR8" , &CPU::OR8 , 1}, { "RST30" , &CPU::RST30 }, { "LDHLSPD" , &CPU::LDHLSPD , 1 }, { "???" , &CPU::XXX }, { "LDA16" , &CPU::LDA16}, { "EI" , &CPU::EI }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "CP8" , &CPU::CP8 , 1}, { "RST38" , &CPU::RST38 }
+		{ "LDHA8" , &CPU::LDHA8 , 1}, { "POPAF" , &CPU::POPAF }, { "???" , &CPU::XXX }, { "DI" , &CPU::DI }, { "???" , &CPU::XXX }, { "PUSHAF" , &CPU::PUSHAF }, { "OR8" , &CPU::OR8, 1 }, { "RST30" , &CPU::RST30 }, { "LDHLSPD" , &CPU::LDHLSPD , 1 }, { "LDSPHL", &CPU::LDSPHL }, { "LDA16" , &CPU::LDA16 }, { "EI" , &CPU::EI }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "CP8" , &CPU::CP8 , 1}, { "RST38" , &CPU::RST38 }
 	};
 
 	cbMap = {
@@ -49,10 +50,11 @@ CPU::CPU() {
 
 	cpuBus = std::shared_ptr<Bus>(new Bus());
 	gpu = std::shared_ptr<GPU>(new GPU(cpuBus));
+	cpuBus->Write(0xFF44, 0x91);
 }
 
 CPU::~CPU() {
-
+	debugLog.close();
 }
 
 CPU::Instruction CPU::GetInstruction(int index) {
@@ -76,6 +78,60 @@ std::vector<CPU::Instruction> CPU::ConstructInstructionList(std::vector<int>& in
 		ret.push_back(temp);
 	}
 	return ret;
+}
+
+inline void CPU::reg_dec(RegisterType& reg) {
+	auto temp = reg - 1;
+	auto flag = FLAG_NEG_MASK;
+	flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+	// Carry doesn't reset after DEC
+	F &= FLAG_CARRY_MASK;
+	F |= flag;
+	temp &= 0xFF;
+	reg = temp;
+	mTemp = 1; tTemp = 4;
+}
+
+inline void CPU::reg_inc(RegisterType& reg) {
+	auto temp = reg + 1;
+	auto flag = FLAG_EMPTY_MASK;
+	flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+	// Carry doesn't reset after INC 
+	F &= FLAG_CARRY_MASK;
+	F |= flag;
+	temp &= 0xFF;
+	reg = temp;
+	mTemp = 1; tTemp = 4;
+}
+
+inline void CPU::reg_sub(RegisterType& reg) {
+	auto temp = A - reg;
+	auto flag = FLAG_NEG_MASK;
+	flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+	flag |= (A < reg) << FLAG_CARRY_SHIFT;
+	F = flag;
+	temp &= 0xFF;
+	A = temp;
+	mTemp = 1; tTemp = 4;
+}
+
+inline void CPU::reg_and(RegisterType& reg) {
+	auto temp = A & reg;
+	auto flag = FLAG_HCARRY_MASK;
+	flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+	F = flag;
+	temp &= 0xFF;
+	A = temp;
+	mTemp = 1; tTemp = 4;
+}
+
+inline void CPU::bit_ch(RegisterType reg, unsigned shift) {
+	auto temp = reg & (1 << shift);
+	auto flag = FLAG_HCARRY_MASK;
+	flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+	F &= FLAG_CARRY_MASK;
+	F |= flag;
+	mTemp = 2; tTemp = 8;
 }
 
 void CPU::FZ(int i, bool as) {
@@ -341,8 +397,8 @@ void CPU::ADCAHL() {
 	mTemp = 2; tTemp = 8;
 }
 
-void CPU::ADCA16() {
-	A += cpuBus->Read(PC);
+void CPU::ADCA8() {
+	/*A += cpuBus->Read(PC);
 	PC++;
 	A += (F & 0x10) ? 1 : 0;
 	FZ(A);
@@ -350,77 +406,47 @@ void CPU::ADCA16() {
 		F |= 0x10;
 	}
 	A &= 0xFF;
+	mTemp = 2; tTemp = 8;*/
+	auto ret = cpuBus->Read(PC++);
+	bool carry = F & FLAG_CARRY_MASK;
+	auto temp = A + ret + carry;
+	auto flag = FLAG_EMPTY_MASK;
+	// TODO: test with |= instead of +=
+	flag += ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+	flag += (((A & 0x0F) + (ret & 0x0F) + carry) > 0xF) << FLAG_HCARRY_SHIFT;
+	flag += (temp > 0xFF) << FLAG_CARRY_SHIFT;
+	F = flag;
+	temp &= 0xFF;
+	A = temp;
 	mTemp = 2; tTemp = 8;
 }
 
 void CPU::SUBAA() {
-	A -= A;
-	FZ(A, true);
-	if (A < 0) {
-		F |= 0x10;
-	}
-	A &= 0xFF;
-	mTemp = 1; tTemp = 4;
+	reg_sub(A);
 }
 
 void CPU::SUBAB() {
-	A -= B;
-	FZ(A, true);
-	if (A < 0) {
-		F |= 0x10;
-	}
-	A &= 0xFF;
-	mTemp = 1; tTemp = 4;
+	reg_sub(B);
 }
 
 void CPU::SUBAC() {
-	A -= C;
-	FZ(A, true);
-	if (A < 0) {
-		F |= 0x10;
-	}
-	A &= 0xFF;
-	mTemp = 1; tTemp = 4;
+	reg_sub(C);
 }
 
 void CPU::SUBAD() {
-	A -= D;
-	FZ(A, true);
-	if (A < 0) {
-		F |= 0x10;
-	}
-	A &= 0xFF;
-	mTemp = 1; tTemp = 4;
+	reg_sub(D);
 }
 
 void CPU::SUBAE() {
-	A -= E;
-	FZ(A, true);
-	if (A < 0) {
-		F |= 0x10;
-	}
-	A &= 0xFF;
-	mTemp = 1; tTemp = 4;
+	reg_sub(E);
 }
 
 void CPU::SUBAH() {
-	A -= H;
-	FZ(A, true);
-	if (A < 0) {
-		F |= 0x10;
-	}
-	A &= 0xFF;
-	mTemp = 1; tTemp = 4;
+	reg_sub(H);
 }
 
 void CPU::SUBAL() {
-	A -= L;
-	FZ(A, true);
-	if (A < 0) {
-		F |= 0x10;
-	}
-	A &= 0xFF;
-	mTemp = 1; tTemp = 4;
+	reg_sub(L);
 }
 
 void CPU::SUBAHL() {
@@ -429,18 +455,15 @@ void CPU::SUBAHL() {
 	if (A < 0) {
 		F |= 0x10;
 	}
+	SetFlagSubtract(true);
 	A &= 0xFF;
 	mTemp = 2; tTemp = 8;
 }
 
 void CPU::SUBA8() {
-	A -= cpuBus->Read(PC);
-	FZ(A, true);
+	uint16_t t = cpuBus->Read(PC);
+	reg_sub(t);
 	PC++;
-	if (A < 0) {
-		F |= 0x10;
-	}
-	A &= 0xFF;
 	mTemp = 2; tTemp = 8;
 }
 
@@ -650,9 +673,8 @@ void CPU::POPBC() {
 void CPU::POPAF() {
 	F = cpuBus->Read(SP);
 	F &= 0xF0;
-	SP++;
-	A = cpuBus->Read(SP);
-	SP++;
+	A = cpuBus->Read(SP + 1);
+	SP += 2;
 	mTemp = 3; tTemp = 12;
 }
 
@@ -1091,122 +1113,79 @@ void CPU::LDHL16() {
 }
 
 void CPU::LD16SP() {
-	SP = cpuBus->ReadL(PC);
+	cpuBus->Write(cpuBus->ReadL(PC), SP & 0xFF);
+	cpuBus->Write(cpuBus->ReadL(PC) + 1, (SP >> 8) & 0xFF);
 	PC += 2;
-	mTemp = 3; tTemp = 12;
+	mTemp = 5; tTemp = 20;
 }
 
 void CPU::INCA() {
-	A++;
-	A &= 0xFF;
-	FZ(A);
-	mTemp = 1; tTemp = 4;
+	reg_inc(A);
 }
 
 void CPU::INCB() {
-	B++;
-	B &= 0xFF;
-	FZ(B);
-	mTemp = 1; tTemp = 4;
+	reg_inc(B);
 }
 
 void CPU::INCC() {
-	C++;
-	C &= 0xFF;
-	FZ(C);
-	mTemp = 1; tTemp = 4;
+	reg_inc(C);
 }
 
 void CPU::INCD() {
-	D++;
-	D &= 0xFF;
-	FZ(D);
-	mTemp = 1; tTemp = 4;
+	reg_inc(D);
 }
 
 void CPU::INCE() {
-	E++;
-	E &= 0xFF;
-	FZ(E);
-	mTemp = 1; tTemp = 4;
+	reg_inc(E);
 }
 
 void CPU::INCH() {
-	H++;
-	H &= 0xFF;
-	FZ(H);
-	mTemp = 1; tTemp = 4;
+	reg_inc(H);
 }
 
 void CPU::INCL() {
-	L++;
-	L &= 0xFF;
-	FZ(L);
-	mTemp = 1; tTemp = 4;
+	reg_inc(L);
 }
 
 void CPU::INCHLR() {
-	int i = cpuBus->Read((H << 8) | L) + 1;
-	i &= 0xFF;
-	cpuBus->Write((H << 8) | L, i);
-	FZ(i);
+	uint16_t hl_r = cpuBus->Read((H << 8) | L);
+	reg_inc(hl_r);
+	cpuBus->Write((H << 8) | L, hl_r);
 	mTemp = 3; tTemp = 12;
 }
 
 void CPU::DECA() {
-	A--;
-	A &= 0xFF;
-	FZ(A);
-	mTemp = 1; tTemp = 4;
+	reg_dec(A);
 }
 
 void CPU::DECB() {
-	B--;
-	B &= 0xFF;
-	FZ(B);
-	mTemp = 1; tTemp = 4;
+	reg_dec(B);
 }
 
 void CPU::DECC() {
-	C--;
-	C &= 0xFF;
-	FZ(C);
-	mTemp = 1; tTemp = 4;
+	reg_dec(C);
 }
 
 void CPU::DECD() {
-	D--;
-	D &= 0xFF;
-	FZ(D);
-	mTemp = 1; tTemp = 4;
+	reg_dec(D);
 }
 
 void CPU::DECE() {
-	E--;
-	E &= 0xFF;
-	FZ(E);
-	mTemp = 1; tTemp = 4;
+	reg_dec(E);
 }
 
 void CPU::DECH() {
-	H--;
-	H &= 0xFF;
-	FZ(H);
-	mTemp = 1; tTemp = 4;
+	reg_dec(H);
 }
 
 void CPU::DECL() {
-	L--;
-	L &= 0xFF;
-	FZ(L);
-	mTemp = 1; tTemp = 4;
+	reg_dec(L);
 }
 
 void CPU::DECHLR() {
-	int i = cpuBus->Read((H << 8) | L) - 1;
-	i &= 0xFF;
-	cpuBus->Write((H << 8) | L, i);
-	FZ(i);
+	uint16_t hl_r = cpuBus->Read((H << 8) | L);
+	reg_dec(hl_r);
+	cpuBus->Write((H << 8) | L, hl_r);
 	mTemp = 3; tTemp = 12;
 }
 
@@ -1233,8 +1212,7 @@ void CPU::INCHL() {
 	if (!L) {
 		H = (H + 1) & 0xFF;
 	}
-	mTemp = 1;
-	tTemp = 4;
+	mTemp = 1; tTemp = 4;
 }
 
 void CPU::INCSP() {
@@ -1266,8 +1244,7 @@ void CPU::DECHL() {
 	if (L == 0xFF) {
 		H = (H - 1) & 0xFF;
 	}
-	mTemp = 1;
-	tTemp = 4;
+	mTemp = 1; tTemp = 4;
 }
 
 void CPU::DECSP() {
@@ -1278,7 +1255,7 @@ void CPU::DECSP() {
 
 void CPU::JP16() {
 	PC = cpuBus->ReadL(PC);
-	mTemp = 3; tTemp = 12;
+	mTemp = 4; tTemp = 16;
 }
 
 void CPU::JPHL() {
@@ -1338,13 +1315,13 @@ void CPU::JR8() {
 
 void CPU::JRNZ8() {
 	int i = cpuBus->Read(PC);
-	if (i > 127)
-		i = -((~i + 1) & 255);
 	PC++;
-	mTemp = 2; tTemp = 8;
-	if ((F & 0x80) == 0x00) { 
-		PC += i;
-		mTemp++; tTemp += 4;
+	if ((F & (FLAG_ZERO_MASK)) == 0) {
+		PC += ((i ^ 0x80) - 0x80);
+		mTemp = 3; tTemp = 12;
+	}
+	else {
+		mTemp = 2; tTemp = 8;
 	}
 }
 
@@ -1385,66 +1362,43 @@ void CPU::JRC8() {
 }
 
 void CPU::ANDA() {
-	A &= A;
-	A &= 0xFF;
-	FZ(A);
-	mTemp = 1; tTemp = 4;
+	reg_and(A);
 }
 
 void CPU::ANDB() {
-	A &= B;
-	A &= 0xFF;
-	FZ(A);
-	mTemp = 1; tTemp = 4;
+	reg_and(B);
 }
 
 void CPU::ANDC() {
-	A &= C;
-	A &= 0xFF;
-	FZ(A);
-	mTemp = 1; tTemp = 4;
+	reg_and(C);
 }
 
 void CPU::ANDD() {
-	A &= D;
-	A &= 0xFF;
-	FZ(A);
-	mTemp = 1; tTemp = 4;
+	reg_and(D);
 }
 
 void CPU::ANDE() {
-	A &= E;
-	A &= 0xFF;
-	FZ(A);
-	mTemp = 1; tTemp = 4;
+	reg_and(E);
 }
 
 void CPU::ANDH() {
-	A &= H;
-	A &= 0xFF;
-	FZ(A);
-	mTemp = 1; tTemp = 4;
+	reg_and(H);
 }
 
 void CPU::ANDL() {
-	A &= L;
-	A &= 0xFF;
-	FZ(A);
-	mTemp = 1; tTemp = 4;
+	reg_and(L);
 }
 
 void CPU::ANDHL() {
-	A &= cpuBus->Read((H << 8) | L);
-	A &= 0xFF;
-	FZ(A);
+	uint16_t t = cpuBus->Read((H << 8) | L);
+	reg_and(t);
 	mTemp = 2; tTemp = 8;
 }
 
 void CPU::AND8() {
-	A &= cpuBus->Read(PC);
-	A &= 0xFF;
+	uint16_t t = cpuBus->Read((H << 8) | L);
+	reg_and(t);
 	PC++;
-	F = (A ? 0 : 0x80);
 	mTemp = 2; tTemp = 8;
 }
 
@@ -1452,6 +1406,7 @@ void CPU::ORA() {
 	A |= A;
 	A &= 0xFF;
 	FZ(A);
+	SetFlagCarry(false);
 	mTemp = 1; tTemp = 4;
 }
 
@@ -1459,6 +1414,7 @@ void CPU::ORB() {
 	A |= B;
 	A &= 0xFF;
 	FZ(A);
+	SetFlagCarry(false);
 	mTemp = 1; tTemp = 4;
 }
 
@@ -1466,6 +1422,7 @@ void CPU::ORC() {
 	A |= C;
 	A &= 0xFF;
 	FZ(A);
+	SetFlagCarry(false);
 	mTemp = 1; tTemp = 4;
 }
 
@@ -1473,6 +1430,7 @@ void CPU::ORD() {
 	A |= D;
 	A &= 0xFF;
 	FZ(A);
+	SetFlagCarry(false);
 	mTemp = 1; tTemp = 4;
 }
 
@@ -1480,6 +1438,7 @@ void CPU::ORE() {
 	A |= E;
 	A &= 0xFF;
 	FZ(A);
+	SetFlagCarry(false);
 	mTemp = 1; tTemp = 4;
 }
 
@@ -1487,6 +1446,7 @@ void CPU::ORH() {
 	A |= H;
 	A &= 0xFF;
 	FZ(A);
+	SetFlagCarry(false);
 	mTemp = 1; tTemp = 4;
 }
 
@@ -1494,6 +1454,7 @@ void CPU::ORL() {
 	A |= L;
 	A &= 0xFF;
 	FZ(A);
+	SetFlagCarry(false);
 	mTemp = 1; tTemp = 4;
 }
 
@@ -1509,6 +1470,7 @@ void CPU::OR8() {
 	A &= 0xFF;
 	PC++;
 	FZ(A);
+	SetFlagCarry(false);
 	mTemp = 2; tTemp = 8;
 }
 
@@ -1701,6 +1663,11 @@ void CPU::RST30() {
 	mTemp = 3; tTemp = 12;
 }
 
+void CPU::LDSPHL() {
+	SP = (H << 8) | L;
+	mTemp = 2; tTemp = 4;
+}
+
 void CPU::RST38() {
 	RSV();
 	SP -= 2;
@@ -1776,20 +1743,38 @@ void CPU::RLCA() {
 }
 
 void CPU::RRA() {
-	int i = (F & 0x10) ? 0x80 : 0;
+	/*int i = (F & 0x10) ? 0x80 : 0;
 	int o = (A & 0x1) ? 0x10 : 0;
 	A = (A >> 1) + i;
 	A &= 0xFF;
 	F = (F & 0xEF) + o;
+	mTemp = 1; tTemp = 4;*/
+	auto temp = (A >> 1) + ((F & FLAG_CARRY_MASK) << 7) + ((A & 1) << 8);
+	auto flag = FLAG_EMPTY_MASK;
+	flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
+	F = flag;
+	temp &= 0xFF;
+	A = temp;
 	mTemp = 1; tTemp = 4;
 }
 
 void CPU::RRCA() {
-	int i = (A & 0x1) ? 0x80 : 0;
-	int o = (A & 0x1) ? 0x10 : 0;
-	A = (A >> 1) + i;
-	A &= 0xFF;
-	F = (F & 0xEF) + o;
+	//int i = (A & 0x1) ? 0x80 : 0;
+	//int o = (A & 0x1) ? 0x10 : 0;
+	//A = (A >> 1) + i;
+	//A &= 0xFF;
+	//F = (F & 0xEF) + o;
+
+	//uint8_t carry = A & 0x1;
+	//uint8_t trunc = A & 0x1;
+	//uint8_t res = static_cast<uint8_t>((A >> 1) | (trunc << 7));
+
+	auto temp = (A >> 1) + ((A & 1) << 7) + ((A & 1) << 8);
+	auto flag = FLAG_EMPTY_MASK;
+	flag += (temp > 0xFF) << FLAG_CARRY_SHIFT;
+	F = flag;
+	temp &= 0xFF;
+	A = temp;
 	mTemp = 1; tTemp = 4;
 }
 
@@ -1801,7 +1786,6 @@ void CPU::CALL16() {
 }
 
 void CPU::CALLNZ16() {
-	mTemp = 3; tTemp = 12;
 	if ((F & 0x80) == 0x00) {
 		SP -= 2;
 		cpuBus->WriteL(SP, PC + 2);
@@ -1811,10 +1795,10 @@ void CPU::CALLNZ16() {
 	else {
 		PC += 2;
 	}
+	mTemp = 3; tTemp = 12;
 }
 
 void CPU::CALLZ16() {
-	mTemp = 3; tTemp = 12;
 	if ((F & 0x80) == 0x80) {
 		SP -= 2;
 		cpuBus->WriteL(SP, PC + 2);
@@ -1824,10 +1808,10 @@ void CPU::CALLZ16() {
 	else {
 		PC += 2;
 	}
+	mTemp = 3; tTemp = 12;
 }
 
 void CPU::CALLNC16() {
-	mTemp = 3; tTemp = 12;
 	if ((F & 0x10) == 0x00) {
 		SP -= 2;
 		cpuBus->WriteL(SP, PC + 2);
@@ -1837,10 +1821,10 @@ void CPU::CALLNC16() {
 	else {
 		PC += 2;
 	}
+	mTemp = 3; tTemp = 12;
 }
 
 void CPU::CALLC16() {
-	mTemp = 3; tTemp = 12;
 	if ((F & 0x10) == 0x10) {
 		SP -= 2;
 		cpuBus->WriteL(SP, PC + 2);
@@ -1850,6 +1834,7 @@ void CPU::CALLC16() {
 	else {
 		PC += 2;
 	}
+	mTemp = 3; tTemp = 12;
 }
 
 void CPU::LDSP16() {
@@ -1892,6 +1877,29 @@ void CPU::LDIAHL() {
 		H = (H + 1) & 0xFF;
 	}
 	mTemp = 2; tTemp = 8;
+}
+
+void CPU::DAA() {
+	int temp = A;
+	uint16_t corr = 0;
+	corr |= ((F & FLAG_HCARRY_MASK) ? 0x06 : 0x00);
+	corr |= ((F & FLAG_CARRY_MASK) ? 0x60 : 0x00);
+	if (F & FLAG_NEG_MASK) {
+		temp -= corr;
+	}
+	else {
+		corr |= ((temp & 0x0F) > 0x09) ? 0x06 : 0;
+		corr |= (temp > 0x99) ? 0x60 : 0;
+		temp += corr;
+	}
+	uint16_t flag = FLAG_EMPTY_MASK;
+	flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+	flag |= ((corr & 0x60) != 0) << FLAG_CARRY_SHIFT;
+	F &= FLAG_NEG_MASK;
+	F |= flag;
+	temp &= 0xFF;
+	A = temp;
+	mTemp = 1; tTemp = 4;
 }
 
 void CPU::CPL() {
@@ -1963,17 +1971,23 @@ void CPU::CPAHL() {
 }
 
 void CPU::CP8() {
-	int i = A;
-	int m = cpuBus->Read(PC);
-	i -= m;
+	uint16_t m = cpuBus->Read(PC);
+	int temp = A - m;
+	auto flag = FLAG_NEG_MASK;
+	flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+	flag |= (((A & 0x0F) - (m & 0x0F)) < 0) << FLAG_HCARRY_SHIFT;
+	flag |= (temp < 0) << FLAG_CARRY_SHIFT;
+	F = flag;
 	PC++;
-	F = (i < 0) ? 0x50 : 0x40;
-	i &= 0xFF;
-	if (!i) {
-		F += 0x80;
-	}
-	if ((A ^ i ^ m) & 0x10) F += 0x20;
 	mTemp = 2; tTemp = 8;
+	//PC++;
+	//F = (i < 0) ? 0x50 : 0x40;
+	//i &= 0xFF;
+	//if (i == 0) {
+	//	SetFlagZero(true);
+	//}
+	//if ((A ^ i ^ m) & 0x10) F |= 0x20;
+	//SetFlagSubtract(true);
 }
 
 void CPU::HALT() {
@@ -2483,9 +2497,15 @@ void CPU::SWAPL() {
 }
 
 void CPU::SWAPA() {
-	int tr = A;
-	A = (cpuBus->Read((H << 8) | L));
-	cpuBus->Write((H << 8) | L, tr);
+	//int tr = A;
+	//A = (cpuBus->Read((H << 8) | L));
+	//cpuBus->Write((H << 8) | L, tr);
+	uint16_t temp = ((A & 0xF0) >> 4) | ((A & 0x0F) << 4);
+	uint16_t flag = FLAG_EMPTY_MASK;
+	flag += ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+	F = flag;
+	temp &= 0xFF;
+	A = temp;
 	mTemp = 4; tTemp = 16;
 }
 
@@ -2546,322 +2566,266 @@ void CPU::SRLA() {
 }
 
 void CPU::BIT0B() {
-	FZ(B & 1);
-	mTemp = 2; tTemp = 8;
+	bit_ch(B, 0);
 }
 
 void CPU::BIT0C() {
-	FZ(C & 1);
-	mTemp = 2; tTemp = 8;
+	bit_ch(C, 0);
 }
 
 void CPU::BIT0D() {
-	FZ(D & 1);
-	mTemp = 2; tTemp = 8;
+	bit_ch(D, 0);
 }
 
 void CPU::BIT0E() {
-	FZ(E & 1);
-	mTemp = 2; tTemp = 8;
+	bit_ch(E, 0);
 }
 
 void CPU::BIT0H() {
-	FZ(H & 1);
-	mTemp = 2; tTemp = 8;
+	bit_ch(H, 0);
 }
 
 void CPU::BIT0L() {
-	FZ(L & 1);
-	mTemp = 2; tTemp = 8;
+	bit_ch(L, 0);
 }
 
 void CPU::BIT0A() {
-	FZ(A & 1);
-	mTemp = 2; tTemp = 8;
+	bit_ch(A, 0);
 }
 
 void CPU::BIT0M() {
-	FZ(cpuBus->Read((H << 8) | L) & 1);
+	bit_ch(cpuBus->Read((H << 8) | L), 0);
 	mTemp = 3; tTemp = 12;
 }
 
 void CPU::BIT1B() {
-	FZ(B & 2);
-	mTemp = 2; tTemp = 8;
+	bit_ch(B, 1);
 }
 
 void CPU::BIT1C() {
-	FZ(C & 2);
-	mTemp = 2; tTemp = 8;
+	bit_ch(C, 1);
 }
 
 void CPU::BIT1D() {
-	FZ(D & 2);
-	mTemp = 2; tTemp = 8;
+	bit_ch(D, 1);
 }
 
 void CPU::BIT1E() {
-	FZ(E & 2);
-	mTemp = 2; tTemp = 8;
+	bit_ch(E, 1);
 }
 
 void CPU::BIT1H() {
-	FZ(H & 2);
-	mTemp = 2; tTemp = 8;
+	bit_ch(H, 1);
 }
 
 void CPU::BIT1L() {
-	FZ(L & 2);
-	mTemp = 2; tTemp = 8;
+	bit_ch(L, 1);
 }
 
 void CPU::BIT1A() {
-	FZ(A & 2);
-	mTemp = 2; tTemp = 8;
+	bit_ch(A, 1);
 }
 
 void CPU::BIT1M() {
-	FZ(cpuBus->Read((H << 8) | L) & 2);
+	bit_ch(cpuBus->Read((H << 8) | L), 1);
 	mTemp = 3; tTemp = 12;
 }
 
 void CPU::BIT2B() {
-	FZ(B & 4);
-	mTemp = 2; tTemp = 8;
+	bit_ch(B, 2);
 }
 
 void CPU::BIT2C() {
-	FZ(C & 4);
-	mTemp = 2; tTemp = 8;
+	bit_ch(C, 2);
 }
 
 void CPU::BIT2D() {
-	FZ(D & 4);
-	mTemp = 2; tTemp = 8;
+	bit_ch(D, 2);
 }
 
 void CPU::BIT2E() {
-	FZ(E & 4);
-	mTemp = 2; tTemp = 8;
+	bit_ch(E, 2);
 }
 
 void CPU::BIT2H() {
-	FZ(H & 4);
-	mTemp = 2; tTemp = 8;
+	bit_ch(H, 2);
 }
 
 void CPU::BIT2L() {
-	FZ(L & 4);
-	mTemp = 2; tTemp = 8;
+	bit_ch(L, 2);
 }
 
 void CPU::BIT2A() {
-	FZ(A & 4);
-	mTemp = 2; tTemp = 8;
+	bit_ch(A, 2);
 }
 
 void CPU::BIT2M() {
-	FZ(cpuBus->Read((H << 8) | L) & 4);
+	bit_ch(cpuBus->Read((H << 8) | L), 2);
 	mTemp = 3; tTemp = 12;
 }
 
 void CPU::BIT3B() {
-	FZ(B & 8);
-	mTemp = 2; tTemp = 8;
+	bit_ch(B, 3);
 }
 
 void CPU::BIT3C() {
-	FZ(C & 8);
-	mTemp = 2; tTemp = 8;
+	bit_ch(C, 3);
 }
 
 void CPU::BIT3D() {
-	FZ(D & 8);
-	mTemp = 2; tTemp = 8;
+	bit_ch(D, 3);
 }
 
 void CPU::BIT3E() {
-	FZ(E & 8);
-	mTemp = 2; tTemp = 8;
+	bit_ch(E, 3);
 }
 
 void CPU::BIT3H() {
-	FZ(H & 8);
-	mTemp = 2; tTemp = 8;
+	bit_ch(H, 3);
 }
 
 void CPU::BIT3L() {
-	FZ(L & 8);
-	mTemp = 2; tTemp = 8;
+	bit_ch(L, 3);
 }
 
 void CPU::BIT3A() {
-	FZ(A & 8);
-	mTemp = 2; tTemp = 8;
+	bit_ch(A, 3);
 }
 
 void CPU::BIT3M() {
-	FZ(cpuBus->Read((H << 8) | L) & 8);
+	bit_ch(cpuBus->Read((H << 8) | L), 3);
 	mTemp = 3; tTemp = 12;
 }
 
 void CPU::BIT4B() {
-	FZ(B & 0x10);
-	mTemp = 2; tTemp = 8;
+	bit_ch(B, 4);
 }
 
 void CPU::BIT4C() {
-	FZ(C & 0x10);
-	mTemp = 2; tTemp = 8;
+	bit_ch(C, 4);
 }
 
 void CPU::BIT4D() {
-	FZ(D & 0x10);
-	mTemp = 2; tTemp = 8;
+	bit_ch(D, 4);
 }
 
 void CPU::BIT4E() {
-	FZ(E & 0x10);
-	mTemp = 2; tTemp = 8;
+	bit_ch(E, 4);
 }
 
 void CPU::BIT4H() {
-	FZ(H & 0x10);
-	mTemp = 2; tTemp = 8;
+	bit_ch(H, 4);
 }
 
 void CPU::BIT4L() {
-	FZ(L & 0x10);
-	mTemp = 2; tTemp = 8;
+	bit_ch(L, 4);
 }
 
 void CPU::BIT4A() {
-	FZ(A & 0x10);
-	mTemp = 2; tTemp = 8;
+	bit_ch(A, 4);
 }
 
 void CPU::BIT4M() {
-	FZ(cpuBus->Read((H << 8) | L) & 0x10);
+	bit_ch(cpuBus->Read((H << 8) | L), 4);
 	mTemp = 3; tTemp = 12;
 }
 
 void CPU::BIT5B() {
-	FZ(B & 0x20);
-	mTemp = 2; tTemp = 8;
+	bit_ch(B, 5);
 }
 
 void CPU::BIT5C() {
-	FZ(C & 0x20);
-	mTemp = 2; tTemp = 8;
+	bit_ch(C, 5);
 }
 
 void CPU::BIT5D() {
-	FZ(D & 0x20);
-	mTemp = 2; tTemp = 8;
+	bit_ch(D, 5);
 }
 
 void CPU::BIT5E() {
-	FZ(E & 0x20);
-	mTemp = 2; tTemp = 8;
+	bit_ch(E, 5);
 }
 
 void CPU::BIT5H() {
-	FZ(H & 0x20);
-	mTemp = 2; tTemp = 8;
+	bit_ch(H, 5);
 }
 
 void CPU::BIT5L() {
-	FZ(L & 0x20);
-	mTemp = 2; tTemp = 8;
+	bit_ch(L, 5);
 }
 
 void CPU::BIT5A() {
-	FZ(A & 0x20);
-	mTemp = 2; tTemp = 8;
+	bit_ch(A, 5);
 }
 
 void CPU::BIT5M() {
-	FZ(cpuBus->Read((H << 8) | L) & 0x20);
+	bit_ch(cpuBus->Read((H << 8) | L), 5);
 	mTemp = 3; tTemp = 12;
 }
 
 void CPU::BIT6B() {
-	FZ(B & 0x40);
-	mTemp = 2; tTemp = 8;
+	bit_ch(B, 6);
 }
 
 void CPU::BIT6C() {
-	FZ(C & 0x40);
-	mTemp = 2; tTemp = 8;
+	bit_ch(C, 6);
 }
 
 void CPU::BIT6D() {
-	FZ(D & 0x40);
-	mTemp = 2; tTemp = 8;
+	bit_ch(D, 6);
 }
 
 void CPU::BIT6E() {
-	FZ(E & 0x40);
-	mTemp = 2; tTemp = 8;
+	bit_ch(E, 6);
 }
 
 void CPU::BIT6H() {
-	FZ(H & 0x40);
-	mTemp = 2; tTemp = 8;
+	bit_ch(H, 6);
 }
 
 void CPU::BIT6L() {
-	FZ(L & 0x40);
-	mTemp = 2; tTemp = 8;
+	bit_ch(L, 6);
 }
 
 void CPU::BIT6A() {
-	FZ(A & 0x40);
-	mTemp = 2; tTemp = 8;
+	bit_ch(A, 6);
 }
 
 void CPU::BIT6M() {
-	FZ(cpuBus->Read((H << 8) | L) & 0x40);
+	bit_ch(cpuBus->Read((H << 8) | L), 6);
 	mTemp = 3; tTemp = 12;
 }
 
 void CPU::BIT7B() {
-	FZ(B & 0x80);
-	mTemp = 2; tTemp = 8;
+	bit_ch(B, 7);
 }
 
 void CPU::BIT7C() {
-	FZ(C & 0x80);
-	mTemp = 2; tTemp = 8;
+	bit_ch(C, 7);
 }
 
 void CPU::BIT7D() {
-	FZ(D & 0x80);
-	mTemp = 2; tTemp = 8;
+	bit_ch(D, 7);
 }
 
 void CPU::BIT7E() {
-	FZ(E & 0x80);
-	mTemp = 2; tTemp = 8;
+	bit_ch(E, 7);
 }
 
 void CPU::BIT7H() {
-	FZ(H & 0x80);
-	mTemp = 2; tTemp = 8;
+	bit_ch(H, 7);
 }
 
 void CPU::BIT7L() {
-	FZ(L & 0x80);
-	mTemp = 2; tTemp = 8;
+	bit_ch(L, 7);
 }
 
 void CPU::BIT7A() {
-	FZ(A & 0x80);
-	mTemp = 2; tTemp = 8;
+	bit_ch(A, 7);
 }
 
 void CPU::BIT7M() {
-	FZ(cpuBus->Read((H << 8) | L) & 0x80);
+	bit_ch(cpuBus->Read((H << 8) | L), 7);
 	mTemp = 3; tTemp = 12;
 }
 
@@ -2881,7 +2845,7 @@ void CPU::Reset() {
 	C = 0x13;
 	D = 0x0;
 	E = 0xD8;
-	F = 0xB0;
+	F = 0x90;
 	H = 0x1;
 	L = 0x4D;
 	SP = 0xFFFE;
@@ -2890,7 +2854,7 @@ void CPU::Reset() {
 	cpuBus->SetIF(0xE1);
 	cpuBus->SetIE(0);
 	gpu->Reset();
-	mClock = 0; tClock = 0;
+	mClock = 0; tClock = 0; totalClock = 0;
 	halt = false; stop = false;
 }
 
@@ -2899,7 +2863,11 @@ void CPU::Update() {
 		mTemp = 1; tTemp = 4;
 	}
 	else {
+#ifdef DEBUG_LOG_FILE
+		debugLog << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << PC << ":" << std::nouppercase << " A:" << std::setfill('0') << std::setw(2) << A << " B:" << std::setfill('0') << std::setw(2) << B << " C:" << std::setfill('0') << std::setw(2) << C << " D:" << std::setfill('0') << std::setw(2) << D << " E:" << std::setfill('0') << std::setw(2) << E << " F:" << std::setfill('0') << std::setw(2) << F << " H:" << std::setfill('0') << std::setw(2) << H << " L:" << std::setfill('0') << std::setw(2) << L << " SP:" << std::setfill('0') << std::setw(4) << SP << "\r\n";
+#endif
 		(this->*instructions[cpuBus->Read(PC++)].op)();
+		totalClock++;
 		F &= 0xF0;
 		PC &= 0xFFFF;
 	}
