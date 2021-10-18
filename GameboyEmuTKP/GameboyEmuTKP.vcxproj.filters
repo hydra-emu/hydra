@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="gpu.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Bus\bus.cpp">
+      <Filter>Bus</Filter>
+    </ClCompile>
+    <ClCompile Include="Cartridge\cartridge.cpp">
+      <Filter>Cartridge</Filter>
+    </ClCompile>
+    <ClCompile Include="CPU\cpu.cpp">
+      <Filter>CPU</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_impl_opengl3.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_impl_sdl.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\prettyprinter.cpp" />
+    <ClCompile Include="ImGui\imgui.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_demo.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_draw.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_tables.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\imgui_widgets.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGui\glad.c">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Display\display.cpp">
+      <Filter>Display</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cpu_const.h" />
+    <ClInclude Include="gpu.h" />
+    <ClInclude Include="Bus\bus.h">
+      <Filter>Bus</Filter>
+    </ClInclude>
+    <ClInclude Include="Cartridge\cartridge.h">
+      <Filter>Cartridge</Filter>
+    </ClInclude>
+    <ClInclude Include="CPU\cpu.h">
+      <Filter>CPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Display\display.h">
+      <Filter>Display</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_impl_sdl.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_impl_opengl3.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\prettyprinter.h" />
+    <ClInclude Include="ImGui\imconfig.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imgui_internal.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imstb_rectpack.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imstb_textedit.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGui\imstb_truetype.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CPU">
+      <UniqueIdentifier>{735eb93b-2c15-442b-a760-582c860e779d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PPU">
+      <UniqueIdentifier>{babe1f19-f62a-40c5-82a7-267eacf0ebbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cartridge">
+      <UniqueIdentifier>{2cc6d9c9-7813-4254-a185-ff6c45c55ebe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Bus">
+      <UniqueIdentifier>{3a4bb32a-641d-4c2c-b7db-260596554b8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ImGui">
+      <UniqueIdentifier>{708ca9c6-b2cc-4b7f-a00d-aee9ab2ee5d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Display">
+      <UniqueIdentifier>{9dbb3ae6-ecc4-4f4f-88c2-2ecbc88eb033}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
