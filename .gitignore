@@ -87,7 +87,6 @@ StyleCopReport.xml
 *.pidb
 *.svclog
 *.scc
-*.ini
 
 # Chutzpah Test files
 _Chutzpah*
@@ -223,6 +222,7 @@ ClientBin/
 *.jfm
 *.pfx
 *.publishsettings
+*.ini
 orleans.codegen.cs
 
 # Including strong name files can present a security risk
