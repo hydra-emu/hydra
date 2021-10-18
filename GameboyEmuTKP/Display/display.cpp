@@ -35,7 +35,6 @@ namespace TKP::Graphics {
                 if (Buf[old_size] == '\n')
                     LineOffsets.push_back(old_size + 1);
         }
-
         void Draw(const char* title, bool* p_open = NULL)
         {
             if (!ImGui::Begin(title, p_open))
@@ -43,15 +42,11 @@ namespace TKP::Graphics {
                 ImGui::End();
                 return;
             }
-
-            // Options menu
             if (ImGui::BeginPopup("Options"))
             {
                 ImGui::Checkbox("Auto-scroll", &AutoScroll);
                 ImGui::EndPopup();
             }
-
-            // Main window
             if (ImGui::Button("Options"))
                 ImGui::OpenPopup("Options");
             ImGui::SameLine();
@@ -74,10 +69,6 @@ namespace TKP::Graphics {
             const char* buf_end = Buf.end();
             if (Filter.IsActive())
             {
-                // In this example we don't use the clipper when Filter is enabled.
-                // This is because we don't have a random access on the result on our filter.
-                // A real application processing logs with ten of thousands of entries may want to store the result of
-                // search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
                 for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
                 {
                     const char* line_start = buf + LineOffsets[line_no];
@@ -88,19 +79,6 @@ namespace TKP::Graphics {
             }
             else
             {
-                // The simplest and easy way to display the entire buffer:
-                //   ImGui::TextUnformatted(buf_begin, buf_end);
-                // And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward
-                // to skip non-visible lines. Here we instead demonstrate using the clipper to only process lines that are
-                // within the visible area.
-                // If you have tens of thousands of items and their processing cost is non-negligible, coarse clipping them
-                // on your side is recommended. Using ImGuiListClipper requires
-                // - A) random access into your data
-                // - B) items all being the  same height,
-                // both of which we can handle since we an array pointing to the beginning of each line of text.
-                // When using the filter (in the block of code above) we don't have random access into the data to display
-                // anymore, which is why we don't use the clipper. Storing or skimming through the search result would make
-                // it possible (and would be recommended if you want to search through tens of thousands of entries).
                 ImGuiListClipper clipper;
                 clipper.Begin(LineOffsets.Size);
                 while (clipper.Step())
@@ -124,6 +102,59 @@ namespace TKP::Graphics {
         }
     };
     
+    struct SettingsApp {
+        AppSettings* current_settings;
+        SettingsApp(AppSettings* cur) : current_settings(cur) {  }
+        void Draw(const char* title, bool* p_open = NULL)
+        {
+            if (!ImGui::Begin(title, p_open))
+            {
+                ImGui::End();
+                return;
+            }
+            if (ImGui::CollapsingHeader("Video")) {
+                ImGui::Text("General video settings:");
+                if (ImGui::Checkbox("VSync", (bool*)(&(current_settings->vsync)))) {
+                    SDL_GL_SetSwapInterval(current_settings->vsync);
+                };
+                if (ImGui::IsItemHovered()) {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("Enabling saves CPU cycles and prevents tearing.");
+                    ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f),"Make sure your GPU allows the application to decide.");
+                    ImGui::EndTooltip();
+                }
+                ImGui::Separator();
+                ImGui::Text("Set the 4 colors used by the Gameboy:");
+                static float c1[3] = { (float)current_settings->dmg_color0_r / 255, (float)current_settings->dmg_color0_g / 255, (float)current_settings->dmg_color0_b / 255 };
+                static float c2[3] = { (float)current_settings->dmg_color1_r / 255, (float)current_settings->dmg_color1_g / 255, (float)current_settings->dmg_color1_b / 255 };
+                static float c3[3] = { (float)current_settings->dmg_color2_r / 255, (float)current_settings->dmg_color2_g / 255, (float)current_settings->dmg_color2_b / 255 };
+                static float c4[3] = { (float)current_settings->dmg_color3_r / 255, (float)current_settings->dmg_color3_g / 255, (float)current_settings->dmg_color3_b / 255 };
+                if (ImGui::ColorEdit3("Color 1", c1)) {
+                    current_settings->dmg_color0_r = (int)(c1[0] * 255.0f);
+                    current_settings->dmg_color0_g = (int)(c1[1] * 255.0f);
+                    current_settings->dmg_color0_b = (int)(c1[2] * 255.0f);
+                }
+                if (ImGui::ColorEdit3("Color 2", c2)) {
+                    current_settings->dmg_color1_r = (int)(c2[0] * 255.0f);
+                    current_settings->dmg_color1_g = (int)(c2[1] * 255.0f);
+                    current_settings->dmg_color1_b = (int)(c2[2] * 255.0f);
+                }
+                if (ImGui::ColorEdit3("Color 3", c3)) {
+                    current_settings->dmg_color2_r = (int)(c3[0] * 255.0f);
+                    current_settings->dmg_color2_g = (int)(c3[1] * 255.0f);
+                    current_settings->dmg_color2_b = (int)(c3[2] * 255.0f);
+                }
+                if (ImGui::ColorEdit3("Color 4", c4)) {
+                    current_settings->dmg_color3_r = (int)(c4[0] * 255.0f);
+                    current_settings->dmg_color3_g = (int)(c4[1] * 255.0f);
+                    current_settings->dmg_color3_b = (int)(c4[2] * 255.0f);
+                }
+            }
+
+            ImGui::End();
+        }
+    };
+
 	Display::DisplayInitializer::DisplayInitializer(PrettyPrinter& pprinter) {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             pprinter.PrettyAdd<PPMessageType::ERROR>(SDL_GetError());
@@ -170,7 +201,6 @@ namespace TKP::Graphics {
         else {
             pretty_printer_.PrettyAdd<PPMessageType::SUCCESS>("Glad initialized successfully.");
         }
-        SDL_GL_SetSwapInterval(0);
     }
     void Display::EnterMainLoop() {
         main_loop();
@@ -178,9 +208,9 @@ namespace TKP::Graphics {
 
     void Display::draw_settings(bool* draw) {
         if (*draw) {
-            //static LogApp trace_logger;
-            //ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-            //trace_logger.Draw("Trace Logger", draw);
+            static SettingsApp settings(&app_settings_);
+            ImGui::SetNextWindowSize(ImVec2(500, 600), ImGuiCond_FirstUseEver);
+            settings.Draw("Settings", draw);
         }
     }
 
@@ -259,6 +289,13 @@ namespace TKP::Graphics {
         // TODO: implement save and load state, disable these buttons if no rom loaded
         if (ImGui::MenuItem("Save State", "Ctrl+S", false, rom_loaded_)) {}
         if (ImGui::MenuItem("Load State", "Ctrl+L", false, rom_loaded_)) {}
+        ImGui::Separator();
+        if (ImGui::MenuItem("Settings", NULL, window_settings_open_, true)) { 
+            window_settings_open_ ^= true; 
+            // Save user settings upon closing
+            if (window_settings_open_ == false) 
+                save_user_settings(); 
+        }
         ImGui::EndMenu();
     }
 
@@ -276,9 +313,7 @@ namespace TKP::Graphics {
     }
 
     void Display::draw_menu_bar_view() {
-        if (ImGui::MenuItem("FPS Counter", NULL, window_fpscounter_open_, true)) { 
-            window_fpscounter_open_ ^= true;
-        }
+        if (ImGui::MenuItem("FPS Counter", NULL, window_fpscounter_open_, true)) {  window_fpscounter_open_ ^= true; }
         ImGui::EndMenu();
     }
 
@@ -287,7 +322,7 @@ namespace TKP::Graphics {
         fopen_s(&file, UserSettingsFile, "r+");
         if (file) {
             fseek(file, 0, SEEK_SET);
-            set_user_settings<FileAccess::Read>(file);
+            access_file<FileAccess::Read>(&app_settings_, sizeof(AppSettingsType), AppSettingsSize, file);
             fclose(file);
         }
     }
@@ -296,7 +331,7 @@ namespace TKP::Graphics {
         FILE* file;
         fopen_s(&file, UserSettingsFile, "w+");
         fseek(file, 0, SEEK_SET);
-        set_user_settings<FileAccess::Write>(file);
+        access_file<FileAccess::Write>(&app_settings_, sizeof(AppSettingsType), AppSettingsSize, file);
         fclose(file);
     }
 
@@ -311,6 +346,7 @@ namespace TKP::Graphics {
         ImVec4 background = ImVec4(35 / 255.0f, 35 / 255.0f, 35 / 255.0f, 1.00f);
         glClearColor(background.x, background.y, background.z, background.w);
         load_user_settings();
+        SDL_GL_SetSwapInterval(app_settings_.vsync);
         bool loop = true;
         while (loop)
         {
@@ -360,6 +396,7 @@ namespace TKP::Graphics {
             draw_menu_bar(&menu_bar_open_);
             draw_trace_logger(&window_tracelogger_open_);
             draw_fps_counter(&window_fpscounter_open_);
+            draw_settings(&window_settings_open_);
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

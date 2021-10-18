@@ -24,6 +24,8 @@
 
 namespace TKP::Graphics {
     constexpr auto UserSettingsFile = "tkpuser.ini";
+    constexpr auto AppSettingsSize = 13;
+    using AppSettingsType = uint8_t;
     struct WindowSettings {
         int window_width = 640;
         int window_height = 480;
@@ -31,6 +33,22 @@ namespace TKP::Graphics {
         int minimum_height = 480;
         int maximum_width = 1920;
         int maximum_height = 1080;
+    };
+    // Do not change the order of these
+    struct AppSettings {
+        AppSettingsType vsync = 1;
+        AppSettingsType dmg_color0_r = 255;
+        AppSettingsType dmg_color0_g = 208;
+        AppSettingsType dmg_color0_b = 164;
+        AppSettingsType dmg_color1_r = 244;
+        AppSettingsType dmg_color1_g = 148;
+        AppSettingsType dmg_color1_b = 156;
+        AppSettingsType dmg_color2_r = 124;
+        AppSettingsType dmg_color2_g = 154;
+        AppSettingsType dmg_color2_b = 172;
+        AppSettingsType dmg_color3_r = 104;
+        AppSettingsType dmg_color3_g = 81;
+        AppSettingsType dmg_color3_b = 138;
     };
     enum class FileAccess { Read, Write };
 	class Display {
@@ -60,6 +78,7 @@ namespace TKP::Graphics {
         // the user can later get to print however they want.
         PrettyPrinter pretty_printer_;
         WindowSettings window_settings_;
+        AppSettings app_settings_;
 
         const std::string glsl_version = "#version 430";
 
@@ -75,6 +94,7 @@ namespace TKP::Graphics {
         bool menu_bar_open_ = true;
         bool window_tracelogger_open_ = false;
         bool window_fpscounter_open_ = false;
+        bool window_settings_open_ = false;
 
         // Window drawing functions for ImGui
         void draw_settings(bool* draw);
@@ -94,7 +114,7 @@ namespace TKP::Graphics {
         template<FileAccess acc>
         void access_file(void* item, size_t size, size_t count, FILE* stream);
         template<FileAccess acc>
-        void set_user_settings(FILE* file);
+        void set_user_settings(FILE* file, AppSettings* settings);
 
         // Mutex for writing and reading to gameboy screen buffer, since different
         // threads are going to be accessing it
@@ -109,10 +129,6 @@ namespace TKP::Graphics {
     template<>
     inline void Display::access_file<FileAccess::Write>(void* item, size_t size, size_t count, FILE* stream) {
         fwrite(item, size, count, stream);
-    }
-    template<FileAccess acc>
-    inline void Display::set_user_settings(FILE* file) {
-        access_file<acc>(&window_fpscounter_open_, sizeof(bool), size_t(1), file);
     }
 }
 #endif
