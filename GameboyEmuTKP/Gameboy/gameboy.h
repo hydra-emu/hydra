@@ -1,0 +1,3 @@
+namespace TKPEmu::Gameboy {
+
+}
