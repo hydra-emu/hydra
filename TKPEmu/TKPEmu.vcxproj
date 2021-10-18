@@ -23,7 +23,7 @@
     <ProjectGuid>{BD74CC53-2A83-40D9-838E-C6A5FE4727D9}</ProjectGuid>
     <RootNamespace>GameboyEmuTKP</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>GameboyEmuTKP</ProjectName>
+    <ProjectName>TKPEmu</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

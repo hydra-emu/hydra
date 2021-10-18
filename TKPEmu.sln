@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30002.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameboyEmuTKP", "GameboyEmuTKP\GameboyEmuTKP.vcxproj", "{BD74CC53-2A83-40D9-838E-C6A5FE4727D9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TKPEmu", "TKPEmu\TKPEmu.vcxproj", "{BD74CC53-2A83-40D9-838E-C6A5FE4727D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
