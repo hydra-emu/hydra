@@ -8,7 +8,6 @@
     <ClCompile Include="ImGui\imgui_impl_sdl.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Tools\prettyprinter.cpp" />
     <ClCompile Include="ImGui\imgui.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
@@ -30,21 +29,23 @@
     <ClCompile Include="Display\display.cpp">
       <Filter>Display</Filter>
     </ClCompile>
-    <ClCompile Include="Gameboy\Bus\bus.cpp" />
-    <ClCompile Include="Gameboy\Cartridge\cartridge.cpp" />
-    <ClCompile Include="Gameboy\CPU\cpu.cpp" />
-    <ClCompile Include="Gameboy\PPU\ppu.cpp" />
+    <ClCompile Include="Gameboy\Bus\bus.cpp">
+      <Filter>Gameboy\Bus</Filter>
+    </ClCompile>
+    <ClCompile Include="Gameboy\Cartridge\cartridge.cpp">
+      <Filter>Gameboy\Cartridge</Filter>
+    </ClCompile>
+    <ClCompile Include="Gameboy\CPU\cpu.cpp">
+      <Filter>Gameboy\CPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Gameboy\PPU\ppu.cpp">
+      <Filter>Gameboy\PPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\prettyprinter.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Bus\bus.h">
-      <Filter>Gameboy\Bus</Filter>
-    </ClInclude>
-    <ClInclude Include="Cartridge\cartridge.h">
-      <Filter>Gameboy\Cartridge</Filter>
-    </ClInclude>
-    <ClInclude Include="CPU\cpu.h">
-      <Filter>Gameboy\CPU</Filter>
-    </ClInclude>
     <ClInclude Include="Display\display.h">
       <Filter>Display</Filter>
     </ClInclude>
@@ -54,7 +55,6 @@
     <ClInclude Include="ImGui\imgui_impl_opengl3.h">
       <Filter>ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="Tools\prettyprinter.h" />
     <ClInclude Include="ImGui\imconfig.h">
       <Filter>ImGui</Filter>
     </ClInclude>
@@ -76,15 +76,31 @@
     <ClInclude Include="ImGui\stb_image.h">
       <Filter>ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="Gameboy\Bus\bus.h" />
-    <ClInclude Include="Gameboy\Cartridge\cartridge.h" />
-    <ClInclude Include="Gameboy\CPU\cpu.h" />
-    <ClInclude Include="Gameboy\PPU\ppu.h" />
-    <ClInclude Include="Gameboy\Utils\cpu_const.h" />
-    <ClInclude Include="Gameboy\gameboy.h" />
     <ClInclude Include="Display\Applications\imfilebrowser.h">
       <Filter>ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="Gameboy\Bus\bus.h">
+      <Filter>Gameboy\Bus</Filter>
+    </ClInclude>
+    <ClInclude Include="Gameboy\Cartridge\cartridge.h">
+      <Filter>Gameboy\Cartridge</Filter>
+    </ClInclude>
+    <ClInclude Include="Gameboy\CPU\cpu.h">
+      <Filter>Gameboy\CPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Gameboy\Utils\cpu_const.h">
+      <Filter>Gameboy\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Gameboy\gameboy.h">
+      <Filter>Gameboy</Filter>
+    </ClInclude>
+    <ClInclude Include="Gameboy\PPU\ppu.h">
+      <Filter>Gameboy\PPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\prettyprinter.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="emulator.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGui">
@@ -111,8 +127,19 @@
     <Filter Include="Gameboy\Utils">
       <UniqueIdentifier>{a79ab9a0-b38c-4b95-ad54-9cdf5ab602b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{3f2046c1-2ddd-446b-86ef-458edfcd7929}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{c1236ac6-c4d5-433c-9517-a0c0e0901592}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Images">
+      <UniqueIdentifier>{88867aed-f412-4add-bb7f-5065f1f8c021}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="Resources\Images\tkp_bg.jpg" />
+    <CopyFileToFolders Include="Resources\Images\tkp_bg.jpg">
+      <Filter>Resources\Images</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

@@ -179,10 +179,8 @@
     <ClCompile Include="Tools\prettyprinter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Bus\bus.h" />
-    <ClInclude Include="Cartridge\cartridge.h" />
-    <ClInclude Include="CPU\cpu.h" />
     <ClInclude Include="Display\display.h" />
+    <ClInclude Include="emulator.h" />
     <ClInclude Include="Gameboy\Bus\bus.h" />
     <ClInclude Include="Gameboy\Cartridge\cartridge.h" />
     <ClInclude Include="Gameboy\CPU\cpu.h" />
