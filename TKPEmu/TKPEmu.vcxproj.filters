@@ -44,6 +44,10 @@
     <ClCompile Include="Tools\prettyprinter.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
+    <ClCompile Include="emulator.cpp" />
+    <ClCompile Include="Gameboy\gameboy.cpp">
+      <Filter>Gameboy</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Display\display.h">
@@ -101,6 +105,9 @@
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="emulator.h" />
+    <ClInclude Include="Tools\TKPImage.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGui">

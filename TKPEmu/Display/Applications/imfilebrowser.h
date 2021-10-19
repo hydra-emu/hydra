@@ -60,6 +60,9 @@ namespace ImGui
         // display the browsing window if opened
         void Display();
 
+        // returns true if cancel key is pressed or the file dialog should close
+        bool ShouldClose();
+
         // returns true when there is a selected filename and the "ok" button was clicked
         bool HasSelected() const noexcept;
 
@@ -147,6 +150,7 @@ namespace ImGui
         bool closeFlag_;
         bool isOpened_;
         bool ok_;
+        bool shouldExit_;
 
         std::string statusStr_;
 
@@ -263,6 +267,7 @@ inline void ImGui::FileBrowser::Open()
     statusStr_ = std::string();
     openFlag_ = true;
     closeFlag_ = false;
+    shouldExit_ = false;
 }
 
 inline void ImGui::FileBrowser::Close()
@@ -610,12 +615,12 @@ inline void ImGui::FileBrowser::Display()
     SameLine();
 
     int escapeKey = GetIO().KeyMap[ImGuiKey_Escape];
-    bool shouldExit =
+    shouldExit_ =
         Button("cancel") || closeFlag_ ||
         ((flags_ & ImGuiFileBrowserFlags_CloseOnEsc) &&
             IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
             escapeKey >= 0 && IsKeyPressed(escapeKey));
-    if (shouldExit)
+    if (shouldExit_)
     {
         CloseCurrentPopup();
     }
@@ -646,6 +651,11 @@ inline void ImGui::FileBrowser::Display()
         }
         PopItemWidth();
     }
+}
+
+inline bool ImGui::FileBrowser::ShouldClose()
+{
+    return shouldExit_;
 }
 
 inline bool ImGui::FileBrowser::HasSelected() const noexcept

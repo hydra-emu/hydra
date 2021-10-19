@@ -14,7 +14,9 @@
 #include <linux/limits.h>
 static_assert(false);
 #endif
+#include "../emulator.h"
 #include "../Tools/prettyprinter.h"
+#include "../Tools/TKPImage.h"
 #include "../ImGui/imgui_impl_sdl.h"
 #include "../ImGui/imgui_impl_opengl3.h"
 #include "../ImGui/imgui_internal.h"
@@ -34,6 +36,7 @@ namespace TKPEmu::Graphics {
     constexpr auto GameboyWidth = 160;
     constexpr auto GameboyHeight = 144;
     using AppSettingsType = uint8_t;
+    using TKPImage = TKPEmu::Tools::TKPImage;
     struct WindowSettings {
         int window_width = GameboyWidth * 4;
         int window_height = GameboyHeight * 4;
@@ -62,24 +65,18 @@ namespace TKPEmu::Graphics {
         AppSettingsType window_fullscreen = 0;
     };
     constexpr auto AppSettingsSize = sizeof(AppSettings) / sizeof(AppSettingsType);
-    struct TKPImage {
-        GLuint texture = 0;
-        GLint width = 0;
-        GLint height = 0;
-        ImVec2 topleft;
-        ImVec2 botright;
-    };
     enum class FileAccess { Read, Write };
 	class Display {
     private:
         using PrettyPrinter = TKPEmu::Tools::PrettyPrinter;
         using SDL_GLContextType = std::remove_pointer_t<SDL_GLContext>;
         using PPMessageType = TKPEmu::Tools::PrettyPrinterMessageType;
+        const std::string glsl_version = "#version 430";
         std::string BackgroundImageFile = "tkp_bg.jpg";
         std::string ImGuiSettingsFile = "imgui.ini";
         std::string UserSettingsFile = "tkpuser.ini";
         std::string ResourcesDataDir = "\\Resources\\Data\\";
-        std::string ResourcesRomsDir = "\\Resources\\ROMs\\";
+        std::string ResourcesRomsDir = "\\Resources\\ROMs";
         std::string ResourcesImagesDir = "\\Resources\\Images\\";
         std::vector<std::string> SupportedRoms = { ".gb" };
         #ifdef _WIN32
@@ -113,26 +110,22 @@ namespace TKPEmu::Graphics {
         PrettyPrinter pretty_printer_;
         WindowSettings window_settings_;
         AppSettings app_settings_;
-        TKPImage game_image_;
+        TKPImage background_image_;
         ImGui::FileBrowser file_browser_;
 
-        const std::string glsl_version = "#version 430";
-
+        std::unique_ptr<Emulator> emulator_;
         std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window_ptr_;
-
-        // State bools
-        bool rom_loaded_ = false;
 
         // These bools determine whether certain windows are open
         // We aren't allowed to use static member variables so we use static functions that
         // return static members
+        bool rom_loaded_ = false;
         bool menu_bar_open_ = true;
         bool window_tracelogger_open_ = false;
         bool window_fpscounter_open_ = false;
         bool window_settings_open_ = false;
         bool window_file_browser_open_ = false;
-        bool fullscreen_game_open_ = true;
 
         // Window drawing functions for ImGui
         void draw_settings(bool* draw);
@@ -160,9 +153,6 @@ namespace TKPEmu::Graphics {
         template<FileAccess acc>
         void access_user_settings(void* item, size_t size, size_t count, FILE* stream);
 
-        // Mutex for writing and reading to gameboy screen buffer, since different
-        // threads are going to be accessing it
-        std::mutex graphics_mutex_;
         void main_loop();
 	};
     template<>

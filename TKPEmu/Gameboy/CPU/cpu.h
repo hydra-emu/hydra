@@ -115,12 +115,8 @@ namespace TKPEmu::Gameboy::Devices {
 		unsigned totalClock = 0;
 		int mClock;
 		int tClock;
-
-		CPU();
+		CPU(Bus* bus);
 		~CPU();
-
-		std::unique_ptr<Bus> cpuBus = nullptr;
-		std::unique_ptr<PPU> ppu = nullptr;
 
 		struct Instruction {
 			std::string name;
@@ -130,7 +126,7 @@ namespace TKPEmu::Gameboy::Devices {
 			int byte1 = 0;
 			int byte2 = 0;
 		};
-
+		Bus* bus_;
 		std::vector<Instruction> instructions;
 		std::vector<Instruction> cbMap;
 		std::vector<std::string> inst;

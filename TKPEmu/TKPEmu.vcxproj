@@ -158,9 +158,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Display\display.cpp" />
+    <ClCompile Include="emulator.cpp" />
     <ClCompile Include="Gameboy\Bus\bus.cpp" />
     <ClCompile Include="Gameboy\Cartridge\cartridge.cpp" />
     <ClCompile Include="Gameboy\CPU\cpu.cpp" />
+    <ClCompile Include="Gameboy\gameboy.cpp" />
     <ClCompile Include="Gameboy\PPU\ppu.cpp" />
     <ClCompile Include="ImGui\glad.c" />
     <ClCompile Include="ImGui\imgui.cpp" />
@@ -198,6 +200,7 @@
     <ClInclude Include="ImGui\imstb_truetype.h" />
     <ClInclude Include="ImGui\stb_image.h" />
     <ClInclude Include="Tools\prettyprinter.h" />
+    <ClInclude Include="Tools\TKPImage.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Resources\Images\tkp_bg.jpg">

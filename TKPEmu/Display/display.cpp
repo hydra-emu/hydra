@@ -210,6 +210,9 @@ namespace TKPEmu::Graphics {
         gl_context_ptr_.reset(SDL_GL_CreateContext(window_ptr_.get()));
         SDL_SetWindowMinimumSize(window_ptr_.get(), window_settings_.minimum_width, window_settings_.minimum_height);
         SDL_SetWindowMaximumSize(window_ptr_.get(), window_settings_.maximum_width, window_settings_.maximum_height);
+        std::filesystem::create_directory(ExecutableDirectory + ResourcesDataDir);
+        std::filesystem::create_directory(ExecutableDirectory + ResourcesImagesDir);
+        std::filesystem::create_directory(ExecutableDirectory + ResourcesRomsDir);
         SDL_GL_MakeCurrent(window_ptr_.get(), gl_context_ptr_.get());
         if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
             pretty_printer_.PrettyAdd<PPMessageType::Error>("Couldn't initialize glad.");
@@ -248,7 +251,7 @@ namespace TKPEmu::Graphics {
             {
                 const float PAD = 10.0f;
                 const ImGuiViewport* viewport = ImGui::GetMainViewport();
-                ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+                ImVec2 work_pos = viewport->WorkPos;
                 ImVec2 work_size = viewport->WorkSize;
                 ImVec2 window_pos, window_pos_pivot;
                 window_pos.x = (corner & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
@@ -281,12 +284,13 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_file_browser(bool* draw) {
         if (*draw) {
-            ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-            file_browser_.Open();
             file_browser_.Display();
             if (file_browser_.HasSelected()) {
                 std::cout << "Selected filename" << file_browser_.GetSelected().string() << std::endl;
                 file_browser_.ClearSelected();
+                window_file_browser_open_ = false;
+            }
+            if (file_browser_.ShouldClose()) {
                 window_file_browser_open_ = false;
             }
         }
@@ -294,7 +298,10 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_game_background(bool* draw) {
         if (*draw) {
-            ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(game_image_.texture), game_image_.topleft, game_image_.botright);
+            ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(emulator_->EmulatorImage->texture), emulator_->EmulatorImage->topleft, emulator_->EmulatorImage->botright);
+        }
+        else {
+            ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(background_image_.texture), background_image_.topleft, background_image_.botright);
         }
     }
 
@@ -322,6 +329,8 @@ namespace TKPEmu::Graphics {
             if (window_file_browser_open_) {
                 file_browser_.SetTitle("Select a ROM...");
                 file_browser_.SetTypeFilters(SupportedRoms);
+                file_browser_.SetPwd(ExecutableDirectory + ResourcesRomsDir);
+                file_browser_.Open();
             }
         }
         if (ImGui::BeginMenu("Open Recent")) {
@@ -447,9 +456,8 @@ namespace TKPEmu::Graphics {
         load_user_settings();
         SDL_GL_SetSwapInterval(app_settings_.vsync);
         ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
-        load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), game_image_);
+        load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_);
         file_browser_.SetWindowSize(300, 300);
-        file_browser_.SetPwd(ExecutableDirectory + ResourcesRomsDir);
         bool loop = true;
         while (loop)
         {
@@ -476,8 +484,8 @@ namespace TKPEmu::Graphics {
                     case SDL_WINDOWEVENT_RESIZED:
                         window_settings_.window_width = event.window.data1;
                         window_settings_.window_height = event.window.data2;
-                        image_scale_no_stretch_bot_right(game_image_.width, game_image_.height, game_image_.botright);
-                        image_scale_no_stretch_top_left(game_image_.width, game_image_.height, game_image_.topleft);
+                        image_scale_no_stretch_bot_right(background_image_.width, background_image_.height, background_image_.botright);
+                        image_scale_no_stretch_top_left(background_image_.width, background_image_.height, background_image_.topleft);
                         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
                         break;
                     }
@@ -497,7 +505,7 @@ namespace TKPEmu::Graphics {
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window_ptr_.get());
             ImGui::NewFrame();
-            draw_game_background(&fullscreen_game_open_);
+            draw_game_background(&rom_loaded_);
             draw_menu_bar(&menu_bar_open_);
             draw_trace_logger(&window_tracelogger_open_);
             draw_fps_counter(&window_fpscounter_open_);

@@ -1,6 +1,7 @@
 #ifndef TKP_TOOLS_PRETTYPRINTER_H
 #define TKP_TOOLS_PRETTYPRINTER_H
 #include <sstream>
+#include <string>
 namespace TKPEmu::Tools {
 	enum class PrettyPrinterMessageType {
 		Default,
