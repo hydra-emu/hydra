@@ -3,6 +3,7 @@
 #include <thread>
 #define STB_IMAGE_IMPLEMENTATION
 #include "../ImGui/stb_image.h"
+#include <iostream>
 namespace TKPEmu::Graphics {
     struct LogApp
     {
@@ -178,6 +179,21 @@ namespace TKPEmu::Graphics {
         gl_context_ptr_(nullptr, SDL_GL_DeleteContext),
         display_initializer_(pretty_printer_)
     {
+        #ifdef _WIN32
+        GetModuleFileNameW(NULL, exe_dir, MAX_PATH);
+        char DefChar = ' ';
+        char res[260];
+        WideCharToMultiByte(CP_ACP, 0, exe_dir, -1, res, MAX_PATH, &DefChar, NULL);
+        ExecutableDirectory = res;
+        const size_t last_slash_idx = ExecutableDirectory.rfind('\\');
+        if (std::string::npos != last_slash_idx)
+        {
+            ExecutableDirectory = ExecutableDirectory.substr(0, last_slash_idx);
+        }
+        ImGuiSettingsFile = ExecutableDirectory + ResourcesDataDir + ImGuiSettingsFile;
+        UserSettingsFile = ExecutableDirectory + ResourcesDataDir + UserSettingsFile;
+        #endif
+        // TODO: Implement linux path
         SDL_WindowFlags window_flags = (SDL_WindowFlags)(
             SDL_WINDOW_OPENGL
             | SDL_WINDOW_RESIZABLE
@@ -201,6 +217,7 @@ namespace TKPEmu::Graphics {
         else {
             pretty_printer_.PrettyAdd<PPMessageType::Success>("Glad initialized successfully.");
         }
+
     }
     void Display::EnterMainLoop() {
         main_loop();
@@ -209,7 +226,7 @@ namespace TKPEmu::Graphics {
     void Display::draw_settings(bool* draw) {
         if (*draw) {
             static SettingsApp settings(&app_settings_);
-            ImGui::SetNextWindowSize(ImVec2(500, 600), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSize(ImVec2(400,400), ImGuiCond_FirstUseEver);
             settings.Draw("Settings", draw);
         }
     }
@@ -217,7 +234,7 @@ namespace TKPEmu::Graphics {
     void Display::draw_trace_logger(bool* draw) {
         if (*draw) {
             static LogApp trace_logger;
-            ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
             trace_logger.Draw("Trace Logger", draw);
         }
     }
@@ -262,6 +279,19 @@ namespace TKPEmu::Graphics {
         }
     }
 
+    void Display::draw_file_browser(bool* draw) {
+        if (*draw) {
+            ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+            file_browser_.Open();
+            file_browser_.Display();
+            if (file_browser_.HasSelected()) {
+                std::cout << "Selected filename" << file_browser_.GetSelected().string() << std::endl;
+                file_browser_.ClearSelected();
+                window_file_browser_open_ = false;
+            }
+        }
+    }
+
     void Display::draw_game_background(bool* draw) {
         if (*draw) {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(game_image_.texture), game_image_.topleft, game_image_.botright);
@@ -287,7 +317,13 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::draw_menu_bar_file() {
-        if (ImGui::MenuItem("Open ROM", "Ctrl+O")) {}
+        if (ImGui::MenuItem("Open ROM", "Ctrl+O", window_file_browser_open_, true)) {
+            window_file_browser_open_ ^= true;
+            if (window_file_browser_open_) {
+                file_browser_.SetTitle("Select a ROM...");
+                file_browser_.SetTypeFilters(SupportedRoms);
+            }
+        }
         if (ImGui::BeginMenu("Open Recent")) {
             draw_menu_bar_file_recent();
         }
@@ -298,9 +334,6 @@ namespace TKPEmu::Graphics {
         ImGui::Separator();
         if (ImGui::MenuItem("Settings", NULL, window_settings_open_, true)) { 
             window_settings_open_ ^= true; 
-            // Save user settings upon closing
-            if (window_settings_open_ == false) 
-                save_user_settings(); 
         }
         ImGui::EndMenu();
     }
@@ -323,10 +356,9 @@ namespace TKPEmu::Graphics {
         ImGui::EndMenu();
     }
 
-    bool Display::load_image_from_file(const char* filename, TKPImage& out, int width, int height)
-    {
+    bool Display::load_image_from_file(const char* filename, TKPImage& out) {
         // Load from file
-        unsigned char* image_data = stbi_load(filename, &width, &height, NULL, 4);
+        unsigned char* image_data = stbi_load(filename, &out.width, &out.height, NULL, 4);
         if (image_data == NULL)
             return false;
 
@@ -345,12 +377,9 @@ namespace TKPEmu::Graphics {
         #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
                 glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         #endif
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, out.width, out.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
         stbi_image_free(image_data);
-
         out.texture = image_texture;
-        out.width = width;
-        out.height = height;
         image_scale_no_stretch_bot_right(out.width, out.height, out.botright);
         image_scale_no_stretch_top_left(out.width, out.height, out.topleft);
         return true;
@@ -386,7 +415,7 @@ namespace TKPEmu::Graphics {
 
     void Display::load_user_settings() {
         FILE* file;
-        fopen_s(&file, UserSettingsFile, "r+");
+        fopen_s(&file, UserSettingsFile.c_str(), "r+");
         if (file) {
             fseek(file, 0, SEEK_SET);
             access_user_settings<FileAccess::Read>(&app_settings_, sizeof(AppSettingsType), AppSettingsSize, file);
@@ -396,17 +425,20 @@ namespace TKPEmu::Graphics {
 
     void Display::save_user_settings() {
         FILE* file;
-        fopen_s(&file, UserSettingsFile, "w+");
-        fseek(file, 0, SEEK_SET);
-        access_user_settings<FileAccess::Write>(&app_settings_, sizeof(AppSettingsType), AppSettingsSize, file);
-        fclose(file);
+        fopen_s(&file, UserSettingsFile.c_str(), "w+");
+        if (file) {
+            fseek(file, 0, SEEK_SET);
+            access_user_settings<FileAccess::Write>(&app_settings_, sizeof(AppSettingsType), AppSettingsSize, file);
+            fclose(file);
+        }
     }
 
     void Display::main_loop() {
         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
         IMGUI_CHECKVERSION();
         auto g = ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        ImGuiIO& io = ImGui::GetIO();
+        io.IniFilename = NULL;
         ImGui::StyleColorsDark();
         ImGui_ImplOpenGL3_Init(glsl_version.c_str());
         ImGui_ImplSDL2_InitForOpenGL(window_ptr_.get(), gl_context_ptr_.get());
@@ -414,8 +446,10 @@ namespace TKPEmu::Graphics {
         glClearColor(background.x, background.y, background.z, background.w);
         load_user_settings();
         SDL_GL_SetSwapInterval(app_settings_.vsync);
-        // TODO: Give new image background with dynamic width height
-        load_image_from_file("test_img.jpg", game_image_, 255, 255);
+        ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
+        load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), game_image_);
+        file_browser_.SetWindowSize(300, 300);
+        file_browser_.SetPwd(ExecutableDirectory + ResourcesRomsDir);
         bool loop = true;
         while (loop)
         {
@@ -468,11 +502,15 @@ namespace TKPEmu::Graphics {
             draw_trace_logger(&window_tracelogger_open_);
             draw_fps_counter(&window_fpscounter_open_);
             draw_settings(&window_settings_open_);
+            // TODO: make this a ONTOPOFALL window
+            draw_file_browser(&window_file_browser_open_);
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             SDL_GL_SwapWindow(window_ptr_.get());
         }
+        save_user_settings();
+        ImGui::SaveIniSettingsToDisk(ImGuiSettingsFile.c_str());
     }
 }

@@ -6,11 +6,19 @@
 #include <type_traits>
 #include <mutex>
 #include <map>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#ifdef linux
+#include <unistd.h>
+#include <linux/limits.h>
+static_assert(false);
+#endif
 #include "../Tools/prettyprinter.h"
 #include "../ImGui/imgui_impl_sdl.h"
 #include "../ImGui/imgui_impl_opengl3.h"
 #include "../ImGui/imgui_internal.h"
-#include "../ImGui/imfilebrowser.h"
+#include "Applications/imfilebrowser.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__MINGW32__) && !defined(__clang__)
 #define IM_FMTARGS(FMT)             __attribute__((format(gnu_printf, FMT, FMT+1)))
@@ -23,17 +31,14 @@
 #define IM_FMTLIST(FMT)
 #endif
 namespace TKPEmu::Graphics {
-    constexpr auto UserSettingsFile = "tkpuser.ini";
-    constexpr auto AppSettingsSize = 13;
     constexpr auto GameboyWidth = 160;
     constexpr auto GameboyHeight = 144;
-    constexpr auto MenuBarHeight = 19;
     using AppSettingsType = uint8_t;
     struct WindowSettings {
         int window_width = GameboyWidth * 4;
         int window_height = GameboyHeight * 4;
         int minimum_width = GameboyWidth;
-        int minimum_height = GameboyHeight + MenuBarHeight;
+        int minimum_height = GameboyHeight;
         int maximum_width = 1920;
         int maximum_height = 1080;
     };
@@ -56,10 +61,11 @@ namespace TKPEmu::Graphics {
         AppSettingsType window_size_index = 0;
         AppSettingsType window_fullscreen = 0;
     };
+    constexpr auto AppSettingsSize = sizeof(AppSettings) / sizeof(AppSettingsType);
     struct TKPImage {
         GLuint texture = 0;
-        GLuint width = 0;
-        GLuint height = 0;
+        GLint width = 0;
+        GLint height = 0;
         ImVec2 topleft;
         ImVec2 botright;
     };
@@ -69,7 +75,22 @@ namespace TKPEmu::Graphics {
         using PrettyPrinter = TKPEmu::Tools::PrettyPrinter;
         using SDL_GLContextType = std::remove_pointer_t<SDL_GLContext>;
         using PPMessageType = TKPEmu::Tools::PrettyPrinterMessageType;
-    private:
+        std::string BackgroundImageFile = "tkp_bg.jpg";
+        std::string ImGuiSettingsFile = "imgui.ini";
+        std::string UserSettingsFile = "tkpuser.ini";
+        std::string ResourcesDataDir = "\\Resources\\Data\\";
+        std::string ResourcesRomsDir = "\\Resources\\ROMs\\";
+        std::string ResourcesImagesDir = "\\Resources\\Images\\";
+        std::vector<std::string> SupportedRoms = { ".gb" };
+        #ifdef _WIN32
+        wchar_t exe_dir[MAX_PATH];
+        #endif
+        #ifdef linux
+        char result[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+        std::string exe_dir = dirname(result);
+        #endif
+        std::string ExecutableDirectory;
     private:
         // RAII class for the initialization functions
         class DisplayInitializer {
@@ -93,6 +114,7 @@ namespace TKPEmu::Graphics {
         WindowSettings window_settings_;
         AppSettings app_settings_;
         TKPImage game_image_;
+        ImGui::FileBrowser file_browser_;
 
         const std::string glsl_version = "#version 430";
 
@@ -109,12 +131,14 @@ namespace TKPEmu::Graphics {
         bool window_tracelogger_open_ = false;
         bool window_fpscounter_open_ = false;
         bool window_settings_open_ = false;
+        bool window_file_browser_open_ = false;
         bool fullscreen_game_open_ = true;
 
         // Window drawing functions for ImGui
         void draw_settings(bool* draw);
         void draw_trace_logger(bool* draw);
         void draw_fps_counter(bool* draw);
+        void draw_file_browser(bool* draw);
         void draw_game_background(bool* draw);
         void draw_menu_bar(bool* draw);
         void draw_menu_bar_file();
@@ -123,7 +147,7 @@ namespace TKPEmu::Graphics {
         void draw_menu_bar_view();
         
         // Helper functions
-        bool load_image_from_file(const char* filename, TKPImage& out, int width, int height);
+        bool load_image_from_file(const char* filename, TKPImage& out);
 
         // These two functions deal with scaling the gameboy screen texture without stretching it
         // They are only called upon window resize

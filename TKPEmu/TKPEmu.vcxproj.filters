@@ -76,15 +76,15 @@
     <ClInclude Include="ImGui\stb_image.h">
       <Filter>ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="ImGui\imfilebrowser.h">
-      <Filter>ImGui</Filter>
-    </ClInclude>
     <ClInclude Include="Gameboy\Bus\bus.h" />
     <ClInclude Include="Gameboy\Cartridge\cartridge.h" />
     <ClInclude Include="Gameboy\CPU\cpu.h" />
     <ClInclude Include="Gameboy\PPU\ppu.h" />
     <ClInclude Include="Gameboy\Utils\cpu_const.h" />
     <ClInclude Include="Gameboy\gameboy.h" />
+    <ClInclude Include="Display\Applications\imfilebrowser.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGui">
@@ -111,5 +111,8 @@
     <Filter Include="Gameboy\Utils">
       <UniqueIdentifier>{a79ab9a0-b38c-4b95-ad54-9cdf5ab602b7}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Resources\Images\tkp_bg.jpg" />
   </ItemGroup>
 </Project>

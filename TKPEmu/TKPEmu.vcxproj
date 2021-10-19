@@ -144,14 +144,16 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\CppData\glad\include;C:\CppData\SDL2-2.0.14\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\CppData\SDL2-2.0.14\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -187,7 +189,7 @@
     <ClInclude Include="Gameboy\gameboy.h" />
     <ClInclude Include="Gameboy\PPU\ppu.h" />
     <ClInclude Include="Gameboy\Utils\cpu_const.h" />
-    <ClInclude Include="ImGui\imfilebrowser.h" />
+    <ClInclude Include="Display\Applications\imfilebrowser.h" />
     <ClInclude Include="ImGui\imconfig.h" />
     <ClInclude Include="ImGui\imgui.h" />
     <ClInclude Include="ImGui\imgui_impl_opengl3.h" />
@@ -198,6 +200,22 @@
     <ClInclude Include="ImGui\imstb_truetype.h" />
     <ClInclude Include="ImGui\stb_image.h" />
     <ClInclude Include="Tools\prettyprinter.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Resources\Images\tkp_bg.jpg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <RootFolder Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </RootFolder>
+      <RootFolder Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </RootFolder>
+      <DestinationFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename)%(Extension)</DestinationFileName>
+      <DestinationFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename)%(Extension)</DestinationFileName>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/Resources/Images/</DestinationFolders>
+      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)/Resources/Images/</DestinationFolders>
+    </CopyFileToFolders>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
