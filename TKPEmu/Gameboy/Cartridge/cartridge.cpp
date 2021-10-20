@@ -2,7 +2,7 @@
 #include <iostream>
 #include "cartridge.h"
 namespace TKPEmu::Gameboy::Devices {
-	void Cartridge::Load(std::string fileName, std::array<uint8_t, 0x10000>& rom) {
+	void Cartridge::Load(const std::string& fileName, std::array<uint8_t, 0x10000>& rom) {
 		std::ifstream is;
 		is.open(fileName, std::ios::binary);
 		if (is.is_open()) {

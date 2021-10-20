@@ -70,7 +70,7 @@ namespace TKPEmu::Gameboy::Devices {
 		Header header;
 		bool loaded;
 	public:
-		void Load(std::string fileName, std::array<uint8_t, 0x10000>& rom);
+		void Load(const std::string& fileName, std::array<uint8_t, 0x10000>& rom);
 		CartridgeType GetCartridgeType();
 		RamSize GetRamSize();
 		RomSize GetRomSize();

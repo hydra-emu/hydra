@@ -9,11 +9,14 @@ namespace TKPEmu::Gameboy {
 	}
 	void Gameboy::Update() {
 		cpu_.Update();
-		ppu_.Update();
-		if (ppu_.NeedsDraw()) {
-			ScreenDataMutex.lock();
-			ppu_.Draw(EmulatorImage);
-			ScreenDataMutex.unlock();
-		}
+		//ppu_.Update();
+		//if (ppu_.NeedsDraw()) {
+		//	ScreenDataMutex.lock();
+		//	ppu_.Draw(EmulatorImage);
+		//	ScreenDataMutex.unlock();
+		//}
+	}
+	void Gameboy::LoadFromFile(const std::string& path) {
+		cartridge_.Load(path, bus_.mem);
 	}
 }

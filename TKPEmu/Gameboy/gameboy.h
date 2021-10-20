@@ -14,6 +14,7 @@ namespace TKPEmu::Gameboy {
 		~Gameboy() = default;
 		void Reset() override;
 		void Update() override;
+		void LoadFromFile(const std::string& path) override;
 	private:
 		Bus bus_;
 		CPU cpu_;

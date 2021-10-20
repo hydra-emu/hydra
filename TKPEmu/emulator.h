@@ -12,6 +12,7 @@ namespace TKPEmu {
 		Emulator& operator=(const Emulator&) = delete;
 		virtual void Reset() = 0;
 		virtual void Update() = 0;
+		virtual void LoadFromFile(const std::string& path) = 0;
 		std::mutex ScreenDataMutex;
 		TKPImage* EmulatorImage = nullptr;
 	};
