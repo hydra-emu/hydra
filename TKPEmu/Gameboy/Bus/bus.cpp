@@ -11,12 +11,12 @@ namespace TKPEmu::Gameboy::Devices {
 		switch (address & 0xF000) {
 		case 0x0000: {
 			if (inBios) {
-				if (address <= BIOS_SIZE) {
-					return bios[address];
-				}
-				else {
+				//if (address <= BIOS_SIZE) {
+				//	return bios[address];
+				//}
+				//else {
 					inBios = false;
-				}
+				//}
 			}
 			return mem[address] & 0xFFFF;
 		}

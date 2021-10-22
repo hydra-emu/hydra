@@ -9,6 +9,7 @@
 #include "../Bus/bus.h"
 #include "../PPU/ppu.h"
 #include "../Utils/cpu_const.h"
+#include "../../Tools/disassembly_instr.h"
 namespace TKPEmu::Gameboy::Devices {
 	using namespace TKPEmu::Gameboy::Utils;
 	class CPU {

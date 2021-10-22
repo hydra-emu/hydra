@@ -9,11 +9,16 @@ namespace TKPEmu::Gameboy::Devices {
 			is.seekg(ENTRY_POINT, std::ios_base::beg);
 			is.read((char*)&header, sizeof(Header));
 			is.seekg(0, std::ios_base::beg);
-			if (GetCartridgeType() == CartridgeType::ROM_ONLY) {
-				is.read((char*)&rom, sizeof(uint8_t) * 0x8000);
-			}
-			else {
-				throw "This cartridge type is not implemented yet.";
+			auto ct = GetCartridgeType();
+			switch (ct) {
+				case CartridgeType::ROM_ONLY: {
+					is.read((char*)&rom, sizeof(uint8_t) * 0x8000);
+					break;
+				}
+				default: {
+					// TODO: better error or implement all cartridge types
+					throw("error rom not implemented");
+				}
 			}
 			is.close();
 			loaded = true;

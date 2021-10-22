@@ -3,8 +3,11 @@
 #include <thread>
 #define STB_IMAGE_IMPLEMENTATION
 #include "../ImGui/stb_image.h"
+#include "../Gameboy/gameboy.h"
+#include "../Tools/disassembly_instr.h"
 #include <iostream>
 namespace TKPEmu::Graphics {
+    using TKPEmu::Tools::DisInstr;
     struct LogApp
     {
         ImGuiTextBuffer     Buf;
@@ -156,6 +159,49 @@ namespace TKPEmu::Graphics {
         }
     };
 
+    struct Disassembler {
+        bool Loaded = false;
+        std::vector<DisInstr> Instrs;
+        Disassembler() {}
+        void Draw(const char* title, bool* p_open = NULL)
+        {
+            if (!Loaded)
+                return;
+            if (!ImGui::Begin(title, p_open)) {
+                ImGui::End();
+                return;
+            }
+            static ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit;
+            if (ImGui::BeginTable("table_advanced", 3, flags)) {
+                ImGui::TableSetupColumn("PC");
+                ImGui::TableSetupColumn("Instruction");
+                ImGui::TableSetupColumn("Description");
+                ImGui::TableHeadersRow();
+            }
+            ImGuiListClipper clipper;
+            clipper.Begin(Instrs.size());
+            while (clipper.Step())
+            {
+                for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
+                    DisInstr* ins = &Instrs[row_n];
+                    ImGui::PushID(ins->ID);
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    if (ImGui::Selectable(ins->InstructionPCHex.c_str(), ins->Selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+
+                    }
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::TextUnformatted(ins->InstructionHex.c_str());
+                    ImGui::TableSetColumnIndex(2);
+                    ImGui::TextUnformatted(ins->InstructionFull.c_str());
+                    ImGui::PopID();
+                }
+            }
+            ImGui::EndTable();
+
+            ImGui::End();
+        }
+    };
 	Display::DisplayInitializer::DisplayInitializer(PrettyPrinter& pprinter) {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             pprinter.PrettyAdd<PPMessageType::Error>(SDL_GetError());
@@ -242,6 +288,20 @@ namespace TKPEmu::Graphics {
         }
     }
 
+    // TODO: add filtering, breakpoints, searching
+    void Display::draw_disassembler(bool* draw) {
+        if (*draw) {
+            static Disassembler disassembler;
+            static bool loading = false;
+            if (disassembler.Loaded == false && !loading) {
+                loading = true;
+                emulator_->LoadInstrToVec(disassembler.Instrs, disassembler.Loaded);
+            }
+            ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
+            disassembler.Draw("Disassembler", draw);
+        }
+    }
+
     void Display::draw_fps_counter(bool* draw){
         if (*draw) {
             static int corner = 0;
@@ -287,8 +347,15 @@ namespace TKPEmu::Graphics {
             file_browser_.Display();
             if (file_browser_.HasSelected()) {
                 std::cout << "Selected filename" << file_browser_.GetSelected().string() << std::endl;
-                file_browser_.ClearSelected();
                 window_file_browser_open_ = false;
+                auto ext = file_browser_.GetSelected().extension();
+                auto t = file_browser_.GetSelected();
+                rom_loaded_ = true;
+                if (ext == ".gb") {
+                    emulator_ = std::make_unique<Gameboy::Gameboy>();
+                    emulator_->LoadFromFile(file_browser_.GetSelected().string());
+                }
+                file_browser_.ClearSelected();
             }
             if (file_browser_.ShouldClose()) {
                 window_file_browser_open_ = false;
@@ -298,7 +365,7 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_game_background(bool* draw) {
         if (*draw) {
-            ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(emulator_->EmulatorImage->texture), emulator_->EmulatorImage->topleft, emulator_->EmulatorImage->botright);
+            //ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(emulator_->EmulatorImage->texture), emulator_->EmulatorImage->topleft, emulator_->EmulatorImage->botright);
         }
         else {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(background_image_.texture), background_image_.topleft, background_image_.botright);
@@ -357,6 +424,7 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_menu_bar_tools() {
         if (ImGui::MenuItem("Trace Logger", NULL, window_tracelogger_open_, rom_loaded_)) { window_tracelogger_open_ ^= true; }
+        if (ImGui::MenuItem("Disassembler", NULL, window_disassembler_open_, rom_loaded_)) { window_disassembler_open_ ^= true; }
         ImGui::EndMenu();
     }
 
@@ -510,8 +578,8 @@ namespace TKPEmu::Graphics {
             draw_trace_logger(&window_tracelogger_open_);
             draw_fps_counter(&window_fpscounter_open_);
             draw_settings(&window_settings_open_);
-            // TODO: make this a ONTOPOFALL window
             draw_file_browser(&window_file_browser_open_);
+            draw_disassembler(&window_disassembler_open_);
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

@@ -64,6 +64,10 @@ namespace TKPEmu::Graphics {
         AppSettingsType window_size_index = 0;
         AppSettingsType window_fullscreen = 0;
     };
+    enum class EmulatorType {
+        None,
+        Gameboy,
+    };
     constexpr auto AppSettingsSize = sizeof(AppSettings) / sizeof(AppSettingsType);
     enum class FileAccess { Read, Write };
 	class Display {
@@ -121,15 +125,18 @@ namespace TKPEmu::Graphics {
         // We aren't allowed to use static member variables so we use static functions that
         // return static members
         bool rom_loaded_ = false;
+        EmulatorType emulator_type_ = EmulatorType::None;
         bool menu_bar_open_ = true;
         bool window_tracelogger_open_ = false;
         bool window_fpscounter_open_ = false;
         bool window_settings_open_ = false;
         bool window_file_browser_open_ = false;
+        bool window_disassembler_open_ = false;
 
         // Window drawing functions for ImGui
         void draw_settings(bool* draw);
         void draw_trace_logger(bool* draw);
+        void draw_disassembler(bool* draw);
         void draw_fps_counter(bool* draw);
         void draw_file_browser(bool* draw);
         void draw_game_background(bool* draw);

@@ -44,7 +44,6 @@
     <ClCompile Include="Tools\prettyprinter.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="emulator.cpp" />
     <ClCompile Include="Gameboy\gameboy.cpp">
       <Filter>Gameboy</Filter>
     </ClCompile>
@@ -108,6 +107,7 @@
     <ClInclude Include="Tools\TKPImage.h">
       <Filter>Tools</Filter>
     </ClInclude>
+    <ClInclude Include="Tools\disassembly_instr.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGui">
