@@ -2845,7 +2845,7 @@ namespace TKPEmu::Gameboy::Devices {
 		H = 0x1;
 		L = 0x4D;
 		SP = 0xFFFE;
-		PC = 0x101;
+		PC = 0x100;
 		IME = 1;
 		bus_->SetIF(0xE1);
 		bus_->SetIE(0);

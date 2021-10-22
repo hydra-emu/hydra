@@ -1,8 +1,37 @@
 #include "gameboy.h"
+#include <iostream>
 namespace TKPEmu::Gameboy {
 	Gameboy::Gameboy() : cpu_(&bus_), ppu_(&bus_), cartridge_() {
 
 	}
+	void Gameboy::Start() {
+		Reset();
+		auto func = [this]() {
+			while (!Stopped.load(std::memory_order_relaxed)) {
+				if (!Paused.load(std::memory_order_relaxed)) {
+					Update();
+				}
+			}
+		};
+		std::thread gb_start(func);
+		gb_start.detach();
+	}
+
+	void Gameboy::StartDebug() {
+		// TODO: StartDebug starts paused
+		Paused.store(true, std::memory_order_relaxed);
+		Reset();
+		auto func = [this]() {
+			while (!Stopped.load(std::memory_order_relaxed)) {
+				if (!Paused.load(std::memory_order_relaxed)) {
+					Update();
+				}
+			}
+		};
+		std::thread gb_start(func);
+		gb_start.detach();
+	}
+
 	void Gameboy::Reset() {
 		cpu_.Reset();
 		ppu_.Reset();
@@ -15,6 +44,9 @@ namespace TKPEmu::Gameboy {
 		//	ppu_.Draw(EmulatorImage);
 		//	ScreenDataMutex.unlock();
 		//}
+	}
+	void Gameboy::UpdateDebug() {
+		// TODO: implement updatedebug
 	}
 	void Gameboy::LoadFromFile(const std::string& path) {
 		cartridge_.Load(path, bus_.mem);

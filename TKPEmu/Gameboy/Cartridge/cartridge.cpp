@@ -8,8 +8,11 @@ namespace TKPEmu::Gameboy::Devices {
 		if (is.is_open()) {
 			is.seekg(ENTRY_POINT, std::ios_base::beg);
 			is.read((char*)&header, sizeof(Header));
+			loaded = true;
 			is.seekg(0, std::ios_base::beg);
 			auto ct = GetCartridgeType();
+			// TODO: remove ct = ROM_ONLY
+			ct = CartridgeType::ROM_ONLY;
 			switch (ct) {
 				case CartridgeType::ROM_ONLY: {
 					is.read((char*)&rom, sizeof(uint8_t) * 0x8000);
@@ -21,7 +24,6 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 			}
 			is.close();
-			loaded = true;
 		}
 	}
 

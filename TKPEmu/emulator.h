@@ -4,6 +4,7 @@
 #include "Tools/disassembly_instr.h"
 #include <mutex>
 #include <vector>
+#include <atomic>
 namespace TKPEmu {
 	using TKPImage = TKPEmu::Tools::TKPImage;
 	using DisInstr = TKPEmu::Tools::DisInstr;
@@ -13,8 +14,13 @@ namespace TKPEmu {
 		virtual ~Emulator() = default;
 		Emulator(const Emulator&) = delete;
 		Emulator& operator=(const Emulator&) = delete;
+		std::atomic_bool Stopped = false;
+		std::atomic_bool Paused = false;
+		virtual void Start() = 0;
+		virtual void StartDebug() = 0;
 		virtual void Reset() = 0;
 		virtual void Update() = 0;
+		virtual void UpdateDebug() = 0;
 		virtual void LoadFromFile(const std::string& path) = 0;
 		virtual void LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) = 0;
 		std::mutex ScreenDataMutex;

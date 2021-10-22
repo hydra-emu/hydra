@@ -14,8 +14,11 @@ namespace TKPEmu::Gameboy {
 	public:
 		Gameboy();
 		~Gameboy() = default;
+		void Start() override;
+		void StartDebug() override;
 		void Reset() override;
 		void Update() override;
+		void UpdateDebug() override;
 		void LoadFromFile(const std::string& path) override;
 		void LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) override;
 

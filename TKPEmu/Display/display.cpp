@@ -1,11 +1,13 @@
+#define NOMINMAX
+#define STB_IMAGE_IMPLEMENTATION
 #include "display.h"
 #include <memory>
 #include <thread>
-#define STB_IMAGE_IMPLEMENTATION
 #include "../ImGui/stb_image.h"
 #include "../Gameboy/gameboy.h"
 #include "../Tools/disassembly_instr.h"
 #include <iostream>
+#include <algorithm>
 namespace TKPEmu::Graphics {
     using TKPEmu::Tools::DisInstr;
     struct LogApp
@@ -108,7 +110,12 @@ namespace TKPEmu::Graphics {
     
     struct SettingsApp {
         AppSettings* current_settings;
-        SettingsApp(AppSettings* cur) : current_settings(cur) {  }
+        float* sleep_time;
+        SettingsApp(AppSettings* cur, float* sleep_time) : current_settings(cur), sleep_time(sleep_time) {  }
+        static auto GetFpsValue(int i) {
+            static const int fps_values[] = { 30, 60, 120, 144, 240 };
+            return fps_values[i];
+        }
         void Draw(const char* title, bool* p_open = NULL)
         {
             if (!ImGui::Begin(title, p_open))
@@ -118,14 +125,20 @@ namespace TKPEmu::Graphics {
             }
             if (ImGui::CollapsingHeader("Video")) {
                 ImGui::Text("General video settings:");
-                if (ImGui::Checkbox("VSync", (bool*)(&(current_settings->vsync)))) {
-                    SDL_GL_SetSwapInterval(current_settings->vsync);
-                };
+                if (ImGui::Checkbox("FPS Limit", (bool*)(&(current_settings->limit_fps)))) { };
                 if (ImGui::IsItemHovered()) {
                     ImGui::BeginTooltip();
-                    ImGui::Text("Enabling saves CPU cycles and prevents tearing.");
-                    ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f),"Make sure your GPU allows the application to decide.");
+                    ImGui::Text("Enable to save CPU cycles.");
                     ImGui::EndTooltip();
+                }
+                if (current_settings->limit_fps) {
+                    ImGui::SameLine();
+                    static const char* fps_types[] = { "30", "60", "120", "144", "240" };
+                    static int curr = ((int)current_settings->max_fps_index);
+                    if (ImGui::Combo("combo", &curr, fps_types, IM_ARRAYSIZE(fps_types))) {
+                        *sleep_time = 1000.0f / GetFpsValue(curr);
+                        current_settings->max_fps_index = curr;
+                    }
                 }
                 ImGui::Separator();
                 ImGui::Text("Set the 4 colors used by the Gameboy:");
@@ -154,50 +167,6 @@ namespace TKPEmu::Graphics {
                     current_settings->dmg_color3_b = (int)(c4[2] * 255.0f);
                 }
             }
-
-            ImGui::End();
-        }
-    };
-
-    struct Disassembler {
-        bool Loaded = false;
-        std::vector<DisInstr> Instrs;
-        Disassembler() {}
-        void Draw(const char* title, bool* p_open = NULL)
-        {
-            if (!Loaded)
-                return;
-            if (!ImGui::Begin(title, p_open)) {
-                ImGui::End();
-                return;
-            }
-            static ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit;
-            if (ImGui::BeginTable("table_advanced", 3, flags)) {
-                ImGui::TableSetupColumn("PC");
-                ImGui::TableSetupColumn("Instruction");
-                ImGui::TableSetupColumn("Description");
-                ImGui::TableHeadersRow();
-            }
-            ImGuiListClipper clipper;
-            clipper.Begin(Instrs.size());
-            while (clipper.Step())
-            {
-                for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
-                    DisInstr* ins = &Instrs[row_n];
-                    ImGui::PushID(ins->ID);
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    if (ImGui::Selectable(ins->InstructionPCHex.c_str(), ins->Selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-
-                    }
-                    ImGui::TableSetColumnIndex(1);
-                    ImGui::TextUnformatted(ins->InstructionHex.c_str());
-                    ImGui::TableSetColumnIndex(2);
-                    ImGui::TextUnformatted(ins->InstructionFull.c_str());
-                    ImGui::PopID();
-                }
-            }
-            ImGui::EndTable();
 
             ImGui::End();
         }
@@ -274,14 +243,14 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_settings(bool* draw) {
         if (*draw) {
-            static SettingsApp settings(&app_settings_);
+            static SettingsApp settings(&app_settings_, &sleep_time_);
             ImGui::SetNextWindowSize(ImVec2(400,400), ImGuiCond_FirstUseEver);
             settings.Draw("Settings", draw);
         }
     }
 
     void Display::draw_trace_logger(bool* draw) {
-        if (*draw) {
+        if (*draw && rom_loaded_) {
             static LogApp trace_logger;
             ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
             trace_logger.Draw("Trace Logger", draw);
@@ -290,15 +259,13 @@ namespace TKPEmu::Graphics {
 
     // TODO: add filtering, breakpoints, searching
     void Display::draw_disassembler(bool* draw) {
-        if (*draw) {
-            static Disassembler disassembler;
-            static bool loading = false;
-            if (disassembler.Loaded == false && !loading) {
-                loading = true;
-                emulator_->LoadInstrToVec(disassembler.Instrs, disassembler.Loaded);
+        if (*draw && rom_loaded_) {
+            if (disassembler_.Loaded == false && !disassembler_.Loading) {
+                disassembler_.Loading = true;
+                emulator_->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
             }
             ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
-            disassembler.Draw("Disassembler", draw);
+            disassembler_.Draw("Disassembler", draw);
         }
     }
 
@@ -354,6 +321,11 @@ namespace TKPEmu::Graphics {
                 if (ext == ".gb") {
                     emulator_ = std::make_unique<Gameboy::Gameboy>();
                     emulator_->LoadFromFile(file_browser_.GetSelected().string());
+                    emulator_->Paused.store(true);
+                    emulator_->Start();
+                    disassembler_.Loaded = false;
+                    disassembler_.Loading = false;
+                    disassembler_.Instrs.clear();
                 }
                 file_browser_.ClearSelected();
             }
@@ -369,6 +341,8 @@ namespace TKPEmu::Graphics {
         }
         else {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(background_image_.texture), background_image_.topleft, background_image_.botright);
+            if (rom_paused_)
+                ImGui::GetBackgroundDrawList()->AddText(background_image_.topleft, ImColor(255, 0, 0), "Paused.");
         }
     }
 
@@ -378,6 +352,9 @@ namespace TKPEmu::Graphics {
             {
                 if (ImGui::BeginMenu("File")) {
                     draw_menu_bar_file();
+                }
+                if (ImGui::BeginMenu("Emulation")) {
+                    draw_menu_bar_emulation();
                 }
                 if (ImGui::BeginMenu("View")) {
                     draw_menu_bar_view();
@@ -414,6 +391,18 @@ namespace TKPEmu::Graphics {
         ImGui::EndMenu();
     }
 
+    void Display::draw_menu_bar_emulation() {
+        if (ImGui::MenuItem("Stop", nullptr, false, rom_loaded_)) {
+            rom_loaded_ = false;
+            emulator_->Stopped.store(true, std::memory_order_relaxed);
+        }
+        if (ImGui::MenuItem("Pause", nullptr, rom_paused_, rom_loaded_)) {
+            rom_paused_ ^= true;
+            emulator_->Paused.store(rom_paused_, std::memory_order_relaxed);
+        }
+        ImGui::EndMenu();
+    }
+
     void Display::draw_menu_bar_file_recent() {
         // TODO: implement open recent (menu->file)
         ImGui::MenuItem("fish_hat.c");
@@ -423,8 +412,9 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::draw_menu_bar_tools() {
-        if (ImGui::MenuItem("Trace Logger", NULL, window_tracelogger_open_, rom_loaded_)) { window_tracelogger_open_ ^= true; }
-        if (ImGui::MenuItem("Disassembler", NULL, window_disassembler_open_, rom_loaded_)) { window_disassembler_open_ ^= true; }
+        // TODO: add seperator and text that tells you what to do to activate these
+        if (ImGui::MenuItem("Trace Logger", NULL, window_tracelogger_open_, rom_loaded_debug_)) { window_tracelogger_open_ ^= true; }
+        if (ImGui::MenuItem("Disassembler", NULL, window_disassembler_open_, rom_loaded_debug_)) { window_disassembler_open_ ^= true; }
         ImGui::EndMenu();
     }
 
@@ -457,37 +447,30 @@ namespace TKPEmu::Graphics {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, out.width, out.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
         stbi_image_free(image_data);
         out.texture = image_texture;
-        image_scale_no_stretch_bot_right(out.width, out.height, out.botright);
-        image_scale_no_stretch_top_left(out.width, out.height, out.topleft);
+        image_scale(out.topleft, out.botright);
         return true;
     }
 
-    inline void Display::image_scale_no_stretch_top_left(int width, int height, ImVec2& out)
+    inline void Display::image_scale(ImVec2& topleft, ImVec2& bottomright)
     {
-        float ratio = (float)width / height;
-        if (window_settings_.window_height <= window_settings_.window_width) {
-            out.x = ((window_settings_.window_width - ratio * (window_settings_.window_height)) / 2);
-            out.y = 0;
+        float wi = background_image_.width; float hi = background_image_.height;
+        float ws = window_settings_.window_width; float hs = window_settings_.window_height;
+        float ri = wi / hi;
+        float rs = ws / hs;
+        float new_w;
+        float new_h;
+        if (rs > ri) {
+            new_w = wi * (hs / hi);
+            new_h = hs;
         }
         else {
-            float ratio = (float)height / width;
-            out.x = 0;
-            out.y = ((window_settings_.window_height - ratio * (window_settings_.window_width)) / 2);
+            new_w = ws;
+            new_h = hi * (ws / wi);
         }
-    }
-
-    inline void Display::image_scale_no_stretch_bot_right(int width, int height, ImVec2& out)
-    {
-        if (window_settings_.window_height <= window_settings_.window_width){
-            float ratio = (float)width / height;
-            out.x = window_settings_.window_width - ((window_settings_.window_width - ratio * (window_settings_.window_height)) / 2);
-            out.y = window_settings_.window_height;
-        }
-        else {
-            float ratio = (float)height / width;
-            out.x = window_settings_.window_width;
-            out.y = window_settings_.window_height - ((window_settings_.window_height - ratio * (window_settings_.window_width)) / 2);
-        }
+        topleft.y = (hs - new_h) / 2 + MenuBarHeight / 2;
+        topleft.x = (ws - new_w) / 2;
+        bottomright.x = new_w + topleft.x;
+        bottomright.y = new_h + topleft.y;
     }
 
     void Display::load_user_settings() {
@@ -510,6 +493,21 @@ namespace TKPEmu::Graphics {
         }
     }
 
+    void Display::limit_fps() {
+        a = std::chrono::system_clock::now();
+        std::chrono::duration<double, std::milli> work_time = a - b;
+
+        if (work_time.count() < sleep_time_) {
+            std::chrono::duration<double, std::milli> delta_ms(sleep_time_ - work_time.count());
+            auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
+            std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
+        }
+
+        b = std::chrono::system_clock::now();
+        std::chrono::duration<double, std::milli> sleep_time = b - a;
+        
+    }
+
     void Display::main_loop() {
         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
         IMGUI_CHECKVERSION();
@@ -522,7 +520,8 @@ namespace TKPEmu::Graphics {
         ImVec4 background = ImVec4(35 / 255.0f, 35 / 255.0f, 35 / 255.0f, 1.00f);
         glClearColor(background.x, background.y, background.z, background.w);
         load_user_settings();
-        SDL_GL_SetSwapInterval(app_settings_.vsync);
+        SDL_GL_SetSwapInterval(0);
+        sleep_time_ = 1000.0f / SettingsApp::GetFpsValue(app_settings_.max_fps_index);
         ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
         load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_);
         file_browser_.SetWindowSize(300, 300);
@@ -552,8 +551,7 @@ namespace TKPEmu::Graphics {
                     case SDL_WINDOWEVENT_RESIZED:
                         window_settings_.window_width = event.window.data1;
                         window_settings_.window_height = event.window.data2;
-                        image_scale_no_stretch_bot_right(background_image_.width, background_image_.height, background_image_.botright);
-                        image_scale_no_stretch_top_left(background_image_.width, background_image_.height, background_image_.topleft);
+                        image_scale(background_image_.topleft, background_image_.botright);
                         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
                         break;
                     }
@@ -569,6 +567,9 @@ namespace TKPEmu::Graphics {
                     break;
                 }
             }
+            if (app_settings_.limit_fps) {
+                limit_fps();
+            }
 
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window_ptr_.get());
@@ -583,7 +584,6 @@ namespace TKPEmu::Graphics {
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
             SDL_GL_SwapWindow(window_ptr_.get());
         }
         save_user_settings();

@@ -35,19 +35,21 @@ static_assert(false);
 namespace TKPEmu::Graphics {
     constexpr auto GameboyWidth = 160;
     constexpr auto GameboyHeight = 144;
+    constexpr auto MenuBarHeight = 19;
     using AppSettingsType = uint8_t;
     using TKPImage = TKPEmu::Tools::TKPImage;
     struct WindowSettings {
         int window_width = GameboyWidth * 4;
         int window_height = GameboyHeight * 4;
         int minimum_width = GameboyWidth;
-        int minimum_height = GameboyHeight;
+        int minimum_height = GameboyHeight + MenuBarHeight;
         int maximum_width = 1920;
         int maximum_height = 1080;
     };
     // Do not change the order of these
     struct AppSettings {
-        AppSettingsType vsync = 1;
+        AppSettingsType limit_fps = 1;
+        AppSettingsType max_fps_index = 1;
         AppSettingsType dmg_color0_r = 255;
         AppSettingsType dmg_color0_g = 208;
         AppSettingsType dmg_color0_b = 164;
@@ -67,6 +69,50 @@ namespace TKPEmu::Graphics {
     enum class EmulatorType {
         None,
         Gameboy,
+    };
+    struct Disassembler {
+        bool Loaded = false;
+        bool Loading = false;
+        std::vector<DisInstr> Instrs;
+        Disassembler() {}
+        void Draw(const char* title, bool* p_open = NULL)
+        {
+            if (!Loaded)
+                return;
+            if (!ImGui::Begin(title, p_open)) {
+                ImGui::End();
+                return;
+            }
+            static ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit;
+            if (ImGui::BeginTable("table_advanced", 3, flags)) {
+                ImGui::TableSetupColumn("PC");
+                ImGui::TableSetupColumn("Instruction");
+                ImGui::TableSetupColumn("Description");
+                ImGui::TableHeadersRow();
+            }
+            ImGuiListClipper clipper;
+            clipper.Begin(Instrs.size());
+            while (clipper.Step())
+            {
+                for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
+                    DisInstr* ins = &Instrs[row_n];
+                    ImGui::PushID(ins->ID);
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    if (ImGui::Selectable(ins->InstructionPCHex.c_str(), ins->Selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+
+                    }
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::TextUnformatted(ins->InstructionHex.c_str());
+                    ImGui::TableSetColumnIndex(2);
+                    ImGui::TextUnformatted(ins->InstructionFull.c_str());
+                    ImGui::PopID();
+                }
+            }
+            ImGui::EndTable();
+
+            ImGui::End();
+        }
     };
     constexpr auto AppSettingsSize = sizeof(AppSettings) / sizeof(AppSettingsType);
     enum class FileAccess { Read, Write };
@@ -114,17 +160,23 @@ namespace TKPEmu::Graphics {
         PrettyPrinter pretty_printer_;
         WindowSettings window_settings_;
         AppSettings app_settings_;
+        Disassembler disassembler_;
         TKPImage background_image_;
         ImGui::FileBrowser file_browser_;
 
         std::unique_ptr<Emulator> emulator_;
         std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window_ptr_;
+        std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
+        std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
+        float sleep_time_ = 16.75f;
 
         // These bools determine whether certain windows are open
         // We aren't allowed to use static member variables so we use static functions that
         // return static members
         bool rom_loaded_ = false;
+        bool rom_loaded_debug_ = false;
+        bool rom_paused_ = false;
         EmulatorType emulator_type_ = EmulatorType::None;
         bool menu_bar_open_ = true;
         bool window_tracelogger_open_ = false;
@@ -142,17 +194,17 @@ namespace TKPEmu::Graphics {
         void draw_game_background(bool* draw);
         void draw_menu_bar(bool* draw);
         void draw_menu_bar_file();
+        void draw_menu_bar_emulation();
         void draw_menu_bar_file_recent();
         void draw_menu_bar_tools();
         void draw_menu_bar_view();
         
         // Helper functions
         bool load_image_from_file(const char* filename, TKPImage& out);
+        void limit_fps();
 
-        // These two functions deal with scaling the gameboy screen texture without stretching it
-        // They are only called upon window resize
-        inline void image_scale_no_stretch_top_left(int width, int height, ImVec2& out);
-        inline void image_scale_no_stretch_bot_right(int width, int height, ImVec2& out);
+        // This function deals with scaling the gameboy screen texture without stretching it
+        inline void image_scale(ImVec2& topleft, ImVec2& bottomright);
         // These two functions save and load user settings stored in the app_settings_ object
         void load_user_settings();
         void save_user_settings();

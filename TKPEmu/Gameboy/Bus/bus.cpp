@@ -174,7 +174,7 @@ namespace TKPEmu::Gameboy::Devices {
 					break;
 				case 0xFF01:
 					// TODO: implement serial
-					//std::cout << data;
+					std::cout << data;
 					break;
 				case 0xFF04:
 					// DIV
