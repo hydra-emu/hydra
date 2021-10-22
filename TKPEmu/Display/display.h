@@ -65,6 +65,7 @@ namespace TKPEmu::Graphics {
         // TODO: implement window size and fullscreen and widgets
         AppSettingsType window_size_index = 0;
         AppSettingsType window_fullscreen = 0;
+        AppSettingsType debug_mode = 1;
     };
     enum class EmulatorType {
         None,
@@ -75,13 +76,78 @@ namespace TKPEmu::Graphics {
         bool Loading = false;
         std::vector<DisInstr> Instrs;
         Disassembler() {}
-        void Draw(const char* title, bool* p_open = NULL)
-        {
+        void Focus(int item) {
+            ImGuiContext& g = *ImGui::GetCurrentContext();
+            ImGuiWindow* window = g.CurrentWindow;
+            // Item height is hard coded here
+            static const int item_height = 17;
+            static const int offset_y = 25;
+            window->Scroll.y = IM_FLOOR(item_height * item + offset_y);
+        }
+        void Draw(const char* title, Emulator* emulator, bool* p_open = NULL) {
             if (!Loaded)
                 return;
-            if (!ImGui::Begin(title, p_open)) {
+            if (!ImGui::Begin(title, p_open, ImGuiWindowFlags_MenuBar)) {
                 ImGui::End();
                 return;
+            }
+            bool goto_popup = false;
+            int goto_pc = -1;
+            if (ImGui::BeginMenuBar()) {
+                if (ImGui::BeginMenu("Navigation")) {
+                    if (ImGui::MenuItem("Step")) {
+                        emulator->Step.store(true);
+                    }
+                    if (ImGui::MenuItem("Pause", NULL, emulator->Paused.load(std::memory_order_relaxed))) {
+                        emulator->Paused.store(!emulator->Paused.load());
+                    }
+                    if (ImGui::MenuItem("Reset")) {
+                        // TODO: check if this works by breakpointing exit of thread!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        emulator->Stopped.store(true);
+                        // Waits for the current thread to exit, there may exist a less hacky way to do this
+                        // (Each debug thread sets stopped to false after exiting
+                        while (emulator->Stopped.load()) {}
+                        emulator->StartDebug();
+                    }
+                    if (ImGui::MenuItem("Goto PC")) {
+                        goto_popup = true;
+                    }
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("Breakpoints")) {
+
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMenuBar();
+            }
+            if (goto_popup) {
+                ImGui::OpenPopup("goto");
+                goto_popup = false;
+            }
+            ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+            ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+            if (ImGui::BeginPopupModal("goto", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::Text("Program Code (in hex) to go to:");
+                ImGui::Separator();
+                static char buf3[64] = ""; ImGui::InputText("hexadecimal", buf3, emulator->GetPCHexCharSize() + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+                if (ImGui::Button("OK", ImVec2(120, 0))) { 
+                    unsigned x;
+                    std::stringstream ss;
+                    ss << std::hex << buf3;
+                    ss >> x;
+                    int ind = 0;
+                    for (auto& k : Instrs) {
+                        if (k.InstructionProgramCode == x) {
+                            goto_pc = ind;
+                            break;
+                        }
+                        ind++;
+                    }
+                    ImGui::CloseCurrentPopup(); 
+                }
+
+                ImGui::EndPopup();
             }
             static ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit;
             if (ImGui::BeginTable("table_advanced", 3, flags)) {
@@ -89,6 +155,14 @@ namespace TKPEmu::Graphics {
                 ImGui::TableSetupColumn("Instruction");
                 ImGui::TableSetupColumn("Description");
                 ImGui::TableHeadersRow();
+            }
+            // TODO: implement breakpoint adder
+            if (emulator->Break.load(std::memory_order_relaxed)) {
+                emulator->Break.store(false, std::memory_order_relaxed);
+                Focus(emulator->InstructionBreak.load(std::memory_order_relaxed));
+            }
+            if (goto_pc != -1) {
+                Focus(goto_pc);
             }
             ImGuiListClipper clipper;
             clipper.Begin(Instrs.size());

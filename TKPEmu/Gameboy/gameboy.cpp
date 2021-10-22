@@ -4,6 +4,9 @@ namespace TKPEmu::Gameboy {
 	Gameboy::Gameboy() : cpu_(&bus_), ppu_(&bus_), cartridge_() {
 
 	}
+	Gameboy::~Gameboy() {
+		Stopped.store(true);
+	}
 	void Gameboy::Start() {
 		Reset();
 		auto func = [this]() {
@@ -13,8 +16,8 @@ namespace TKPEmu::Gameboy {
 				}
 			}
 		};
-		std::thread gb_start(func);
-		gb_start.detach();
+		UpdateThread = std::thread(func);
+		UpdateThread.detach();
 	}
 
 	void Gameboy::StartDebug() {
@@ -24,12 +27,37 @@ namespace TKPEmu::Gameboy {
 		auto func = [this]() {
 			while (!Stopped.load(std::memory_order_relaxed)) {
 				if (!Paused.load(std::memory_order_relaxed)) {
+					for (const auto& bp : Breakpoints) {
+						bool brk = true;
+						for (const auto& br : bp.BreakReqs) {
+							// Gets a reference of whatever we need to compare and
+							// compares it with the second member of the umap
+							if (load_break_req(br.first) != br.second) {
+								brk = false;
+							}
+						}
+						if (brk) {
+							Paused.store(true, std::memory_order_relaxed);
+							Break.store(true, std::memory_order_relaxed);
+							InstructionBreak.store(cpu_.PC, std::memory_order_relaxed);
+						}
+					}
+				}
+				else {
+					if (Step.load(std::memory_order_relaxed)) {
+						Update();
+						Step.store(false, std::memory_order_relaxed);
+					}
+				}
+				if (!Paused.load(std::memory_order_relaxed)) {
 					Update();
 				}
 			}
+			Stopped.store(false);
+			return;
 		};
-		std::thread gb_start(func);
-		gb_start.detach();
+		UpdateThread = std::thread(func);
+		UpdateThread.detach();
 	}
 
 	void Gameboy::Reset() {
@@ -44,9 +72,6 @@ namespace TKPEmu::Gameboy {
 		//	ppu_.Draw(EmulatorImage);
 		//	ScreenDataMutex.unlock();
 		//}
-	}
-	void Gameboy::UpdateDebug() {
-		// TODO: implement updatedebug
 	}
 	void Gameboy::LoadFromFile(const std::string& path) {
 		cartridge_.Load(path, bus_.mem);
@@ -96,5 +121,32 @@ namespace TKPEmu::Gameboy {
 		};
 		std::thread t1(func, std::ref(vec));
 		t1.detach();
+	}
+	uint16_t& Gameboy::load_break_req(const BreakReq req) {
+		switch (req) {
+		case BreakReq::RegA:
+			return cpu_.A;
+		case BreakReq::RegB:
+			return cpu_.B;
+		case BreakReq::RegC:
+			return cpu_.C;
+		case BreakReq::RegD:
+			return cpu_.D;
+		case BreakReq::RegE:
+			return cpu_.E;
+		case BreakReq::RegF:
+			return cpu_.F;
+		case BreakReq::RegH:
+			return cpu_.H;
+		case BreakReq::RegL:
+			return cpu_.L;
+		case BreakReq::PC:
+			return cpu_.PC;
+		case BreakReq::SP:
+			return cpu_.SP;
+		case BreakReq::LY:
+			throw("LY not impl");
+			// TODO: return bus_.Read(0xFF40); (make LY object in cpu that reads)
+		}
 	}
 }

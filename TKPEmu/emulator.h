@@ -8,6 +8,7 @@
 namespace TKPEmu {
 	using TKPImage = TKPEmu::Tools::TKPImage;
 	using DisInstr = TKPEmu::Tools::DisInstr;
+
 	class Emulator {
 	public:
 		Emulator() = default;
@@ -16,14 +17,18 @@ namespace TKPEmu {
 		Emulator& operator=(const Emulator&) = delete;
 		std::atomic_bool Stopped = false;
 		std::atomic_bool Paused = false;
+		std::atomic_bool Step = false;
+		std::atomic_bool Break = false;
+		std::atomic_int InstructionBreak = 0;
+		virtual int GetPCHexCharSize() { return 1; }
 		virtual void Start() = 0;
 		virtual void StartDebug() = 0;
 		virtual void Reset() = 0;
 		virtual void Update() = 0;
-		virtual void UpdateDebug() = 0;
 		virtual void LoadFromFile(const std::string& path) = 0;
 		virtual void LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) = 0;
-		std::mutex ScreenDataMutex;
+		std::mutex DataMutex;
+		std::thread UpdateThread;
 		TKPImage* EmulatorImage = nullptr;
 	};
 }

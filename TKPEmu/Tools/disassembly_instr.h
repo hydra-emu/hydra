@@ -9,6 +9,8 @@ namespace TKPEmu::Tools {
 	struct DisInstr {
 		DisInstr(uint16_t IPC, uint8_t Ins) {
 			ID = get_id();
+			InstructionProgramCode = IPC;
+			Instruction = Ins;
 			InstructionPCHex = int_to_hex(IPC, 4);
 			InstructionHex = int_to_hex(Ins, 2);
 		}

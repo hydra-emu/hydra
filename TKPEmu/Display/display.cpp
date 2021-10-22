@@ -125,7 +125,7 @@ namespace TKPEmu::Graphics {
             }
             if (ImGui::CollapsingHeader("Video")) {
                 ImGui::Text("General video settings:");
-                if (ImGui::Checkbox("FPS Limit", (bool*)(&(current_settings->limit_fps)))) { };
+                ImGui::Checkbox("FPS Limit", (bool*)(&(current_settings->limit_fps)));
                 if (ImGui::IsItemHovered()) {
                     ImGui::BeginTooltip();
                     ImGui::Text("Enable to save CPU cycles.");
@@ -134,10 +134,8 @@ namespace TKPEmu::Graphics {
                 if (current_settings->limit_fps) {
                     ImGui::SameLine();
                     static const char* fps_types[] = { "30", "60", "120", "144", "240" };
-                    static int curr = ((int)current_settings->max_fps_index);
-                    if (ImGui::Combo("combo", &curr, fps_types, IM_ARRAYSIZE(fps_types))) {
-                        *sleep_time = 1000.0f / GetFpsValue(curr);
-                        current_settings->max_fps_index = curr;
+                    if (ImGui::Combo(NULL, (int*)(&current_settings->max_fps_index), fps_types, IM_ARRAYSIZE(fps_types))) {
+                        *sleep_time = 1000.0f / GetFpsValue(current_settings->max_fps_index);
                     }
                 }
                 ImGui::Separator();
@@ -166,6 +164,10 @@ namespace TKPEmu::Graphics {
                     current_settings->dmg_color3_g = (int)(c4[1] * 255.0f);
                     current_settings->dmg_color3_b = (int)(c4[2] * 255.0f);
                 }
+            }
+
+            if (ImGui::CollapsingHeader("Emulation")) {
+                ImGui::Checkbox("Debug mode", (bool*)(&(current_settings->debug_mode)));
             }
 
             ImGui::End();
@@ -259,13 +261,9 @@ namespace TKPEmu::Graphics {
 
     // TODO: add filtering, breakpoints, searching
     void Display::draw_disassembler(bool* draw) {
-        if (*draw && rom_loaded_) {
-            if (disassembler_.Loaded == false && !disassembler_.Loading) {
-                disassembler_.Loading = true;
-                emulator_->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
-            }
+        if (*draw && rom_loaded_debug_) {
             ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
-            disassembler_.Draw("Disassembler", draw);
+            disassembler_.Draw("Disassembler", emulator_.get(), draw);
         }
     }
 
@@ -317,16 +315,29 @@ namespace TKPEmu::Graphics {
                 window_file_browser_open_ = false;
                 auto ext = file_browser_.GetSelected().extension();
                 auto t = file_browser_.GetSelected();
-                rom_loaded_ = true;
                 if (ext == ".gb") {
                     emulator_ = std::make_unique<Gameboy::Gameboy>();
-                    emulator_->LoadFromFile(file_browser_.GetSelected().string());
-                    emulator_->Paused.store(true);
-                    emulator_->Start();
-                    disassembler_.Loaded = false;
-                    disassembler_.Loading = false;
-                    disassembler_.Instrs.clear();
                 }
+                if (app_settings_.debug_mode) {
+                    rom_loaded_debug_ = true;
+                    rom_paused_ = true;
+                }
+                else {
+                    rom_loaded_ = true;
+                    rom_paused_ = false;
+                }
+                emulator_->Paused.store(rom_paused_);
+                emulator_->LoadFromFile(file_browser_.GetSelected().string());
+                if (app_settings_.debug_mode) {
+                    emulator_->StartDebug();
+                    disassembler_.Loaded = false;
+                    disassembler_.Loading = true;
+                    emulator_->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
+                }
+                else {
+                    emulator_->Start();
+                }
+                disassembler_.Instrs.clear();
                 file_browser_.ClearSelected();
             }
             if (file_browser_.ShouldClose()) {
@@ -341,8 +352,6 @@ namespace TKPEmu::Graphics {
         }
         else {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(background_image_.texture), background_image_.topleft, background_image_.botright);
-            if (rom_paused_)
-                ImGui::GetBackgroundDrawList()->AddText(background_image_.topleft, ImColor(255, 0, 0), "Paused.");
         }
     }
 
@@ -394,6 +403,7 @@ namespace TKPEmu::Graphics {
     void Display::draw_menu_bar_emulation() {
         if (ImGui::MenuItem("Stop", nullptr, false, rom_loaded_)) {
             rom_loaded_ = false;
+            rom_loaded_debug_ = false;
             emulator_->Stopped.store(true, std::memory_order_relaxed);
         }
         if (ImGui::MenuItem("Pause", nullptr, rom_paused_, rom_loaded_)) {
