@@ -3,10 +3,8 @@
 #include <glad/glad.h>
 #include <SDL.h>
 #include <string>
-#include <type_traits>
 #include <mutex>
 #include <atomic>
-#include <map>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -44,6 +42,7 @@ namespace TKPEmu::Graphics {
         int window_height = GameboyHeight * 4;
         int minimum_width = GameboyWidth;
         int minimum_height = GameboyHeight + MenuBarHeight;
+        // TODO: replace these magic numbers with screen height / width / -1
         int maximum_width = 1920;
         int maximum_height = 1080;
     };
