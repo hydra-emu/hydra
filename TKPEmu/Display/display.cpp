@@ -401,12 +401,12 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::draw_menu_bar_emulation() {
-        if (ImGui::MenuItem("Stop", nullptr, false, rom_loaded_)) {
+        if (ImGui::MenuItem("Stop", nullptr, false, rom_loaded_ || rom_loaded_debug_)) {
             rom_loaded_ = false;
             rom_loaded_debug_ = false;
             emulator_->Stopped.store(true, std::memory_order_relaxed);
         }
-        if (ImGui::MenuItem("Pause", nullptr, rom_paused_, rom_loaded_)) {
+        if (ImGui::MenuItem("Pause", nullptr, rom_paused_, rom_loaded_ || rom_loaded_debug_)) {
             rom_paused_ ^= true;
             emulator_->Paused.store(rom_paused_, std::memory_order_relaxed);
         }

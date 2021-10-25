@@ -10,8 +10,8 @@ namespace TKPEmu::Gameboy {
 	void Gameboy::Start() {
 		Reset();
 		auto func = [this]() {
-			while (!Stopped.load(std::memory_order_relaxed)) {
-				if (!Paused.load(std::memory_order_relaxed)) {
+			while (!Stopped.load()) {
+				if (!Paused.load()) {
 					Update();
 				}
 			}
@@ -22,11 +22,11 @@ namespace TKPEmu::Gameboy {
 
 	void Gameboy::StartDebug() {
 		// TODO: StartDebug starts paused
-		Paused.store(true, std::memory_order_relaxed);
+		Paused.store(true);
 		Reset();
 		auto func = [this]() {
-			while (!Stopped.load(std::memory_order_relaxed)) {
-				if (!Paused.load(std::memory_order_relaxed)) {
+			while (!Stopped.load()) {
+				if (!Paused.load()) {
 					for (const auto& bp : Breakpoints) {
 						bool brk = true;
 						for (const auto& br : bp.BreakReqs) {
@@ -37,23 +37,25 @@ namespace TKPEmu::Gameboy {
 							}
 						}
 						if (brk) {
-							Paused.store(true, std::memory_order_relaxed);
-							Break.store(true, std::memory_order_relaxed);
-							InstructionBreak.store(cpu_.PC, std::memory_order_relaxed);
+							Paused.store(true);
+							Break.store(true);
+							InstructionBreak.store(cpu_.PC);
 						}
 					}
 				}
 				else {
-					if (Step.load(std::memory_order_relaxed)) {
+					if (Step.load()) {
 						Update();
-						Step.store(false, std::memory_order_relaxed);
+						Step.store(false);
 					}
 				}
-				if (!Paused.load(std::memory_order_relaxed)) {
+				if (!Paused.load()) {
 					Update();
 				}
 			}
-			Stopped.store(false);
+			// Make sure store is executed before notify_all
+			Stopped.store(false, std::memory_order_seq_cst);
+			Stopped.notify_all();
 			return;
 		};
 		UpdateThread = std::thread(func);

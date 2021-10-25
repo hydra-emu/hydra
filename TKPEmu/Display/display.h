@@ -5,6 +5,7 @@
 #include <string>
 #include <type_traits>
 #include <mutex>
+#include <atomic>
 #include <map>
 #ifdef _WIN32
 #include <windows.h>
@@ -98,15 +99,14 @@ namespace TKPEmu::Graphics {
                     if (ImGui::MenuItem("Step")) {
                         emulator->Step.store(true);
                     }
-                    if (ImGui::MenuItem("Pause", NULL, emulator->Paused.load(std::memory_order_relaxed))) {
+                    if (ImGui::MenuItem("Pause", NULL, emulator->Paused.load())) {
                         emulator->Paused.store(!emulator->Paused.load());
                     }
                     if (ImGui::MenuItem("Reset")) {
-                        // TODO: check if this works by breakpointing exit of thread!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        // Sets the stopped flag on the thread to true and then waits for it to become false
+                        // The thread sets the flag to false upon exiting
                         emulator->Stopped.store(true);
-                        // Waits for the current thread to exit, there may exist a less hacky way to do this
-                        // (Each debug thread sets stopped to false after exiting
-                        while (emulator->Stopped.load()) {}
+                        emulator->Stopped.wait(false);
                         emulator->StartDebug();
                     }
                     if (ImGui::MenuItem("Goto PC")) {
@@ -157,9 +157,9 @@ namespace TKPEmu::Graphics {
                 ImGui::TableHeadersRow();
             }
             // TODO: implement breakpoint adder
-            if (emulator->Break.load(std::memory_order_relaxed)) {
-                emulator->Break.store(false, std::memory_order_relaxed);
-                Focus(emulator->InstructionBreak.load(std::memory_order_relaxed));
+            if (emulator->Break.load()) {
+                emulator->Break.store(false);
+                Focus(emulator->InstructionBreak.load());
             }
             if (goto_pc != -1) {
                 Focus(goto_pc);
