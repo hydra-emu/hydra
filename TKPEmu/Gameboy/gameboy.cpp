@@ -27,21 +27,14 @@ namespace TKPEmu::Gameboy {
 		auto func = [this]() {
 			while (!Stopped.load()) {
 				if (!Paused.load()) {
-					for (const auto& bp : Breakpoints) {
-						bool brk = true;
-						for (const auto& br : bp.BreakReqs) {
-							// Gets a reference of whatever we need to compare and
-							// compares it with the second member of the umap
-							if (load_break_req(br.first) != br.second) {
-								brk = false;
-							}
-						}
+					//for (const auto& bp : Breakpoints) {
+					bool brk = true;// = bp(0);
 						if (brk) {
 							Paused.store(true);
 							Break.store(true);
 							InstructionBreak.store(cpu_.PC);
 						}
-					}
+					//}
 				}
 				else {
 					if (Step.load()) {
@@ -124,31 +117,33 @@ namespace TKPEmu::Gameboy {
 		std::thread t1(func, std::ref(vec));
 		t1.detach();
 	}
-	uint16_t& Gameboy::load_break_req(const BreakReq req) {
-		switch (req) {
-		case BreakReq::RegA:
-			return cpu_.A;
-		case BreakReq::RegB:
-			return cpu_.B;
-		case BreakReq::RegC:
-			return cpu_.C;
-		case BreakReq::RegD:
-			return cpu_.D;
-		case BreakReq::RegE:
-			return cpu_.E;
-		case BreakReq::RegF:
-			return cpu_.F;
-		case BreakReq::RegH:
-			return cpu_.H;
-		case BreakReq::RegL:
-			return cpu_.L;
-		case BreakReq::PC:
-			return cpu_.PC;
-		case BreakReq::SP:
-			return cpu_.SP;
-		case BreakReq::LY:
-			throw("LY not impl");
-			// TODO: return bus_.Read(0xFF40); (make LY object in cpu that reads)
-		}
+	void Gameboy::AddBreakpoint(GameboyBreakpoint bp) {
+		using RegCheckVector = std::vector<std::function<bool()>>;
+		RegCheckVector register_checks;
+		// We calculate which of these checks we need, and add them all to a vector to save execution time
+		if (bp.A_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.A_Value]() { return cpu_->A == gbbp; }); }
+		if (bp.B_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.B_Value]() { return cpu_->B == gbbp; }); }
+		if (bp.C_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.C_Value]() { return cpu_->C == gbbp; }); }
+		if (bp.D_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.D_Value]() { return cpu_->D == gbbp; }); }
+		if (bp.E_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.E_Value]() { return cpu_->E == gbbp; }); }
+		if (bp.F_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.F_Value]() { return cpu_->F == gbbp; }); }
+		if (bp.H_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.H_Value]() { return cpu_->H == gbbp; }); }
+		if (bp.L_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.L_Value]() { return cpu_->L == gbbp; }); }
+		if (bp.PC_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.PC_Value]() { return cpu_->PC == gbbp; }); }
+		if (bp.SP_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.SP_Value]() { return cpu_->SP == gbbp; }); }
+		auto lamb = [rc = std::move(register_checks)]() {
+			for (auto& check : rc) {
+				if (!check()) {
+					// If any of the checks fails, that means the breakpoint shouldn't trigger
+					return false;
+				}
+			}
+			// Every check is passed, trigger breakpoint
+			return true;
+		};
+		Breakpoints.push_back(lamb);
+	}
+	void Gameboy::RemoveBreakpoint(int index) {
+		Breakpoints.erase(Breakpoints.begin() + index);
 	}
 }

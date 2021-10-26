@@ -5,6 +5,19 @@
 #include "CPU/cpu.h"
 #include <unordered_map>
 namespace TKPEmu::Gameboy {
+	// If a value in this struct is -1, that specific register won't matter for the breakpoint 
+	struct GameboyBreakpoint {
+		uint8_t A_Value = -1;
+		uint8_t B_Value = -1;
+		uint8_t C_Value = -1;
+		uint8_t D_Value = -1;
+		uint8_t E_Value = -1;
+		uint8_t F_Value = -1;
+		uint8_t H_Value = -1;
+		uint8_t L_Value = -1;
+		uint16_t PC_Value = -1;
+		uint16_t SP_Value = -1;
+	};
 	class Gameboy : public Emulator {
 	private:
 		using CPU = TKPEmu::Gameboy::Devices::CPU;
@@ -12,25 +25,6 @@ namespace TKPEmu::Gameboy {
 		using Bus = TKPEmu::Gameboy::Devices::Bus;
 		using Cartridge = TKPEmu::Gameboy::Devices::Cartridge;
 		using DisInstr = TKPEmu::Tools::DisInstr;
-		enum class BreakReq {
-			RegA,
-			RegB,
-			RegC,
-			RegD,
-			RegE,
-			RegF,
-			RegH,
-			RegL,
-			PC,
-			SP,
-			LY
-		};
-		// This is to be implemented differently for each platform
-		// Every member of this class is one that the user can add a Breakpoint to
-		// Multiple members can be set to a value, which means a breakpoint is reached when all of the members match the state of the device
-		struct Breakpoint {
-			std::unordered_map<BreakReq, uint16_t> BreakReqs;
-		};
 	public:
 		Gameboy();
 		~Gameboy();
@@ -41,13 +35,13 @@ namespace TKPEmu::Gameboy {
 		void Update() override;
 		void LoadFromFile(const std::string& path) override;
 		void LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) override;
-		std::vector<Breakpoint> Breakpoints;
+		void AddBreakpoint(GameboyBreakpoint bp);
+		void RemoveBreakpoint(int index);
 	private:
 		Bus bus_;
 		CPU cpu_;
 		PPU ppu_;
 		Cartridge cartridge_;
-		uint16_t& load_break_req(const BreakReq req);
 	};
 }
 #endif

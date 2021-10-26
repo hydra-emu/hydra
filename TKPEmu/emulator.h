@@ -5,6 +5,7 @@
 #include <mutex>
 #include <vector>
 #include <atomic>
+#include <functional>
 namespace TKPEmu {
 	using TKPImage = TKPEmu::Tools::TKPImage;
 	using DisInstr = TKPEmu::Tools::DisInstr;
@@ -27,6 +28,7 @@ namespace TKPEmu {
 		virtual void Update() = 0;
 		virtual void LoadFromFile(const std::string& path) = 0;
 		virtual void LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) = 0;
+		std::vector<std::function<bool()>> Breakpoints;
 		std::mutex DataMutex;
 		std::thread UpdateThread;
 		TKPImage* EmulatorImage = nullptr;
