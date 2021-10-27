@@ -9,7 +9,6 @@
 namespace TKPEmu {
 	using TKPImage = TKPEmu::Tools::TKPImage;
 	using DisInstr = TKPEmu::Tools::DisInstr;
-
 	class Emulator {
 	public:
 		Emulator() = default;

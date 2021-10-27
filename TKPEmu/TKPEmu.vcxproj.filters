@@ -47,6 +47,8 @@
     <ClCompile Include="Gameboy\gameboy.cpp">
       <Filter>Gameboy</Filter>
     </ClCompile>
+    <ClCompile Include="Display\Applications\disassembler.h" />
+    <ClCompile Include="Tools\disassembly_instr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Display\display.h">

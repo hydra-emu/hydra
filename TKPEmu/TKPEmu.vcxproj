@@ -162,6 +162,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Display\Applications\disassembler.h" />
     <ClCompile Include="Display\display.cpp" />
     <ClCompile Include="Gameboy\Bus\bus.cpp" />
     <ClCompile Include="Gameboy\Cartridge\cartridge.cpp" />
@@ -182,6 +183,7 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
+    <ClCompile Include="Tools\disassembly_instr.cpp" />
     <ClCompile Include="Tools\prettyprinter.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -109,9 +109,12 @@ namespace TKPEmu::Graphics {
     };
     
     struct SettingsApp {
-        AppSettings* current_settings;
-        float* sleep_time;
-        SettingsApp(AppSettings* cur, float* sleep_time) : current_settings(cur), sleep_time(sleep_time) {  }
+    private:
+        AppSettings* current_settings_;
+        bool* rom_load_state_;
+        float* sleep_time_;
+    public:
+        SettingsApp(AppSettings* current_settings, float* sleep_time, bool* rom_load_state) : current_settings_(current_settings), sleep_time_(sleep_time), rom_load_state_(rom_load_state) {  }
         static auto GetFpsValue(int i) {
             static const int fps_values[] = { 30, 60, 120, 144, 240 };
             return fps_values[i];
@@ -125,51 +128,89 @@ namespace TKPEmu::Graphics {
             }
             if (ImGui::CollapsingHeader("Video")) {
                 ImGui::Text("General video settings:");
-                ImGui::Checkbox("FPS Limit", (bool*)(&(current_settings->limit_fps)));
+                ImGui::Checkbox("FPS Limit", (bool*)(&(current_settings_->limit_fps)));
                 if (ImGui::IsItemHovered()) {
                     ImGui::BeginTooltip();
                     ImGui::Text("Enable to save CPU cycles.");
                     ImGui::EndTooltip();
                 }
-                if (current_settings->limit_fps) {
+                if (current_settings_->limit_fps) {
                     ImGui::SameLine();
                     static const char* fps_types[] = { "30", "60", "120", "144", "240" };
-                    if (ImGui::Combo(NULL, (int*)(&current_settings->max_fps_index), fps_types, IM_ARRAYSIZE(fps_types))) {
-                        *sleep_time = 1000.0f / GetFpsValue(current_settings->max_fps_index);
+                    if (ImGui::Combo("", (int*)(&current_settings_->max_fps_index), fps_types, IM_ARRAYSIZE(fps_types))) {
+                        *sleep_time_ = 1000.0f / GetFpsValue(current_settings_->max_fps_index);
                     }
                 }
                 ImGui::Separator();
-                ImGui::Text("Set the 4 colors used by the Gameboy:");
-                static float c1[3] = { (float)current_settings->dmg_color0_r / 255, (float)current_settings->dmg_color0_g / 255, (float)current_settings->dmg_color0_b / 255 };
-                static float c2[3] = { (float)current_settings->dmg_color1_r / 255, (float)current_settings->dmg_color1_g / 255, (float)current_settings->dmg_color1_b / 255 };
-                static float c3[3] = { (float)current_settings->dmg_color2_r / 255, (float)current_settings->dmg_color2_g / 255, (float)current_settings->dmg_color2_b / 255 };
-                static float c4[3] = { (float)current_settings->dmg_color3_r / 255, (float)current_settings->dmg_color3_g / 255, (float)current_settings->dmg_color3_b / 255 };
-                if (ImGui::ColorEdit3("Color 1", c1)) {
-                    current_settings->dmg_color0_r = (int)(c1[0] * 255.0f);
-                    current_settings->dmg_color0_g = (int)(c1[1] * 255.0f);
-                    current_settings->dmg_color0_b = (int)(c1[2] * 255.0f);
-                }
-                if (ImGui::ColorEdit3("Color 2", c2)) {
-                    current_settings->dmg_color1_r = (int)(c2[0] * 255.0f);
-                    current_settings->dmg_color1_g = (int)(c2[1] * 255.0f);
-                    current_settings->dmg_color1_b = (int)(c2[2] * 255.0f);
-                }
-                if (ImGui::ColorEdit3("Color 3", c3)) {
-                    current_settings->dmg_color2_r = (int)(c3[0] * 255.0f);
-                    current_settings->dmg_color2_g = (int)(c3[1] * 255.0f);
-                    current_settings->dmg_color2_b = (int)(c3[2] * 255.0f);
-                }
-                if (ImGui::ColorEdit3("Color 4", c4)) {
-                    current_settings->dmg_color3_r = (int)(c4[0] * 255.0f);
-                    current_settings->dmg_color3_g = (int)(c4[1] * 255.0f);
-                    current_settings->dmg_color3_b = (int)(c4[2] * 255.0f);
-                }
             }
-
             if (ImGui::CollapsingHeader("Emulation")) {
-                ImGui::Checkbox("Debug mode", (bool*)(&(current_settings->debug_mode)));
+                
+                ImGui::Checkbox("Debug mode", (bool*)(&(current_settings_->debug_mode)));
             }
-
+            if (ImGui::CollapsingHeader("Gameboy")) {
+                ImGui::Text("Palette:");
+                static float c1[3] = { (float)current_settings_->dmg_color0_r / 255, (float)current_settings_->dmg_color0_g / 255, (float)current_settings_->dmg_color0_b / 255 };
+                static float c2[3] = { (float)current_settings_->dmg_color1_r / 255, (float)current_settings_->dmg_color1_g / 255, (float)current_settings_->dmg_color1_b / 255 };
+                static float c3[3] = { (float)current_settings_->dmg_color2_r / 255, (float)current_settings_->dmg_color2_g / 255, (float)current_settings_->dmg_color2_b / 255 };
+                static float c4[3] = { (float)current_settings_->dmg_color3_r / 255, (float)current_settings_->dmg_color3_g / 255, (float)current_settings_->dmg_color3_b / 255 };
+                if (ImGui::ColorEdit3("Color 1", c1, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                    current_settings_->dmg_color0_r = (int)(c1[0] * 255.0f);
+                    current_settings_->dmg_color0_g = (int)(c1[1] * 255.0f);
+                    current_settings_->dmg_color0_b = (int)(c1[2] * 255.0f);
+                }
+                ImGui::SameLine();
+                if (ImGui::ColorEdit3("Color 2", c2, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                    current_settings_->dmg_color1_r = (int)(c2[0] * 255.0f);
+                    current_settings_->dmg_color1_g = (int)(c2[1] * 255.0f);
+                    current_settings_->dmg_color1_b = (int)(c2[2] * 255.0f);
+                }
+                ImGui::SameLine();
+                if (ImGui::ColorEdit3("Color 3", c3, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                    current_settings_->dmg_color2_r = (int)(c3[0] * 255.0f);
+                    current_settings_->dmg_color2_g = (int)(c3[1] * 255.0f);
+                    current_settings_->dmg_color2_b = (int)(c3[2] * 255.0f);
+                }
+                ImGui::SameLine();
+                if (ImGui::ColorEdit3("Color 4", c4, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                    current_settings_->dmg_color3_r = (int)(c4[0] * 255.0f);
+                    current_settings_->dmg_color3_g = (int)(c4[1] * 255.0f);
+                    current_settings_->dmg_color3_b = (int)(c4[2] * 255.0f);
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Click on a color to open the color picker.");
+                }
+                if (ImGui::Button("Reset")) {
+                    static AppSettings orig;
+                    current_settings_->dmg_color0_r = orig.dmg_color0_r;
+                    current_settings_->dmg_color0_g = orig.dmg_color0_g;
+                    current_settings_->dmg_color0_b = orig.dmg_color0_b;
+                    current_settings_->dmg_color1_r = orig.dmg_color1_r;
+                    current_settings_->dmg_color1_g = orig.dmg_color1_g;
+                    current_settings_->dmg_color1_b = orig.dmg_color1_b;
+                    current_settings_->dmg_color2_r = orig.dmg_color2_r;
+                    current_settings_->dmg_color2_g = orig.dmg_color2_g;
+                    current_settings_->dmg_color2_b = orig.dmg_color2_b;
+                    current_settings_->dmg_color3_r = orig.dmg_color3_r;
+                    current_settings_->dmg_color3_g = orig.dmg_color3_g;
+                    current_settings_->dmg_color3_b = orig.dmg_color3_b;
+                    c1[0] = (float)current_settings_->dmg_color0_r / 255;
+                    c1[1] = (float)current_settings_->dmg_color0_g / 255;
+                    c1[2] = (float)current_settings_->dmg_color0_b / 255;
+                    c2[0] = (float)current_settings_->dmg_color1_r / 255;
+                    c2[1] = (float)current_settings_->dmg_color1_g / 255;
+                    c2[2] = (float)current_settings_->dmg_color1_b / 255;
+                    c3[0] = (float)current_settings_->dmg_color2_r / 255;
+                    c3[1] = (float)current_settings_->dmg_color2_g / 255;
+                    c3[2] = (float)current_settings_->dmg_color2_b / 255;
+                    c4[0] = (float)current_settings_->dmg_color3_r / 255;
+                    c4[1] = (float)current_settings_->dmg_color3_g / 255;
+                    c4[2] = (float)current_settings_->dmg_color3_b / 255;
+                }
+                ImGui::Separator();
+            }
             ImGui::End();
         }
     };
@@ -194,7 +235,8 @@ namespace TKPEmu::Graphics {
     Display::Display() :
         window_ptr_(nullptr, SDL_DestroyWindow),
         gl_context_ptr_(nullptr, SDL_GL_DeleteContext),
-        display_initializer_(pretty_printer_)
+        display_initializer_(pretty_printer_),
+        disassembler_(&rom_load_state_)
     {
         #ifdef _WIN32
         GetModuleFileNameW(NULL, exe_dir, MAX_PATH);
@@ -245,14 +287,14 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_settings(bool* draw) {
         if (*draw) {
-            static SettingsApp settings(&app_settings_, &sleep_time_);
+            static SettingsApp settings(&app_settings_, &sleep_time_, &rom_load_state_);
             ImGui::SetNextWindowSize(ImVec2(400,400), ImGuiCond_FirstUseEver);
             settings.Draw("Settings", draw);
         }
     }
 
     void Display::draw_trace_logger(bool* draw) {
-        if (*draw && rom_loaded_) {
+        if (*draw && is_rom_loaded_and_debugmode()) {
             static LogApp trace_logger;
             ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
             trace_logger.Draw("Trace Logger", draw);
@@ -261,9 +303,9 @@ namespace TKPEmu::Graphics {
 
     // TODO: add filtering, breakpoints, searching
     void Display::draw_disassembler(bool* draw) {
-        if (*draw && rom_loaded_debug_) {
+        if (*draw && is_rom_loaded_and_debugmode()) {
             ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
-            disassembler_.Draw("Disassembler", emulator_.get(), draw);
+            disassembler_.Draw("Disassembler", draw);
         }
     }
 
@@ -317,27 +359,20 @@ namespace TKPEmu::Graphics {
                 auto t = file_browser_.GetSelected();
                 if (ext == ".gb") {
                     emulator_ = std::make_unique<Gameboy::Gameboy>();
+                    disassembler_.Reset();
+                    disassembler_.emulator = emulator_.get();
+                    rom_load_state_ = true;
+                    rom_paused_ = app_settings_.debug_mode;
+                    emulator_->Paused.store(rom_paused_);
+                    emulator_->LoadFromFile(file_browser_.GetSelected().string());
+                    if (app_settings_.debug_mode) {
+                        emulator_->StartDebug();
+                        emulator_->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
+                    }
+                    else {
+                        emulator_->Start();
+                    }
                 }
-                if (app_settings_.debug_mode) {
-                    rom_loaded_debug_ = true;
-                    rom_paused_ = true;
-                }
-                else {
-                    rom_loaded_ = true;
-                    rom_paused_ = false;
-                }
-                emulator_->Paused.store(rom_paused_);
-                emulator_->LoadFromFile(file_browser_.GetSelected().string());
-                if (app_settings_.debug_mode) {
-                    emulator_->StartDebug();
-                    disassembler_.Loaded = false;
-                    disassembler_.Loading = true;
-                    emulator_->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
-                }
-                else {
-                    emulator_->Start();
-                }
-                disassembler_.Instrs.clear();
                 file_browser_.ClearSelected();
             }
             if (file_browser_.ShouldClose()) {
@@ -391,8 +426,8 @@ namespace TKPEmu::Graphics {
         }
         ImGui::Separator();
         // TODO: implement save and load state, disable these buttons if no rom loaded
-        if (ImGui::MenuItem("Save State", "Ctrl+S", false, rom_loaded_)) {}
-        if (ImGui::MenuItem("Load State", "Ctrl+L", false, rom_loaded_)) {}
+        if (ImGui::MenuItem("Save State", "Ctrl+S", false, is_rom_loaded())) {}
+        if (ImGui::MenuItem("Load State", "Ctrl+L", false, is_rom_loaded())) {}
         ImGui::Separator();
         if (ImGui::MenuItem("Settings", NULL, window_settings_open_, true)) { 
             window_settings_open_ ^= true; 
@@ -401,14 +436,14 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::draw_menu_bar_emulation() {
-        if (ImGui::MenuItem("Stop", nullptr, false, rom_loaded_ || rom_loaded_debug_)) {
-            rom_loaded_ = false;
-            rom_loaded_debug_ = false;
-            emulator_->Stopped.store(true, std::memory_order_relaxed);
+        if (ImGui::MenuItem("Stop", nullptr, false, is_rom_loaded())) {
+            rom_load_state_ = false;
+            emulator_->Stopped.store(true, std::memory_order_seq_cst);
+            emulator_->Stopped.wait(false, std::memory_order_seq_cst);
         }
-        if (ImGui::MenuItem("Pause", nullptr, rom_paused_, rom_loaded_ || rom_loaded_debug_)) {
+        if (ImGui::MenuItem("Pause", nullptr, rom_paused_, is_rom_loaded())) {
             rom_paused_ ^= true;
-            emulator_->Paused.store(rom_paused_, std::memory_order_relaxed);
+            emulator_->Paused.store(rom_paused_);
         }
         ImGui::EndMenu();
     }
@@ -423,8 +458,8 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_menu_bar_tools() {
         // TODO: add seperator and text that tells you what to do to activate these
-        if (ImGui::MenuItem("Trace Logger", NULL, window_tracelogger_open_, rom_loaded_debug_)) { window_tracelogger_open_ ^= true; }
-        if (ImGui::MenuItem("Disassembler", NULL, window_disassembler_open_, rom_loaded_debug_)) { window_disassembler_open_ ^= true; }
+        if (ImGui::MenuItem("Trace Logger", NULL, window_tracelogger_open_, is_rom_loaded_and_debugmode())) { window_tracelogger_open_ ^= true; }
+        if (ImGui::MenuItem("Disassembler", NULL, window_disassembler_open_, is_rom_loaded_and_debugmode())) { window_disassembler_open_ ^= true; }
         ImGui::EndMenu();
     }
 
@@ -518,6 +553,16 @@ namespace TKPEmu::Graphics {
         
     }
 
+    inline bool Display::is_rom_loaded()
+    {
+        return rom_load_state_;
+    }
+
+    inline bool Display::is_rom_loaded_and_debugmode()
+    {
+        return rom_load_state_ && app_settings_.debug_mode;
+    }
+
     void Display::main_loop() {
         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
         IMGUI_CHECKVERSION();
@@ -533,6 +578,7 @@ namespace TKPEmu::Graphics {
         SDL_GL_SetSwapInterval(0);
         sleep_time_ = 1000.0f / SettingsApp::GetFpsValue(app_settings_.max_fps_index);
         ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
+        ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB | ImGuiColorEditFlags_PickerHueWheel);
         load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_);
         file_browser_.SetWindowSize(300, 300);
         bool loop = true;
@@ -584,7 +630,7 @@ namespace TKPEmu::Graphics {
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window_ptr_.get());
             ImGui::NewFrame();
-            draw_game_background(&rom_loaded_);
+            draw_game_background(&rom_load_state_);
             draw_menu_bar(&menu_bar_open_);
             draw_trace_logger(&window_tracelogger_open_);
             draw_fps_counter(&window_fpscounter_open_);

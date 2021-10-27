@@ -27,14 +27,14 @@ namespace TKPEmu::Gameboy {
 		auto func = [this]() {
 			while (!Stopped.load()) {
 				if (!Paused.load()) {
-					//for (const auto& bp : Breakpoints) {
-					bool brk = true;// = bp(0);
+					for (const auto& bp : Breakpoints) {
+					bool brk = bp();
 						if (brk) {
 							Paused.store(true);
 							Break.store(true);
 							InstructionBreak.store(cpu_.PC);
 						}
-					//}
+					}
 				}
 				else {
 					if (Step.load()) {
@@ -74,6 +74,7 @@ namespace TKPEmu::Gameboy {
 	// TODO: LoadInstrToVec only works for rom_only for now
 	// TODO: if you win + D while in disassembler, game crashes
 	void Gameboy::LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) {
+		// TODO: make this std::async
 		auto func = [this, &finished](std::vector<DisInstr>& vec) {
 			for (uint16_t i = 0; i < 0x8000;) {
 				uint8_t ins = cpu_.bus_->Read(i);

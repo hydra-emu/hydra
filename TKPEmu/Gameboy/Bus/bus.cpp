@@ -9,7 +9,7 @@ namespace TKPEmu::Gameboy::Devices {
 
 	uint8_t Bus::Read(uint16_t address) {
 		switch (address & 0xF000) {
-		case 0x0000: {
+		[[unlikely]] case 0x0000: {
 			if (inBios) {
 				//if (address <= BIOS_SIZE) {
 				//	return bios[address];
@@ -46,7 +46,7 @@ namespace TKPEmu::Gameboy::Devices {
 		case 0xE000: {
 			return mem[address] & 0xFFFF;
 		}
-		case 0xF000: {
+		[[likely]] case 0xF000: {
 			switch (address & 0x0F00) {
 			case 0x0:
 			case 0x100:
@@ -92,17 +92,6 @@ namespace TKPEmu::Gameboy::Devices {
 		case 0x0000: {
 			if (inBios && address < 0x0100) return;
 		}
-		case 0x1000:
-		case 0x2000:
-		case 0x3000: {
-			break;
-		}
-		case 0x4000:
-		case 0x5000:
-		case 0x6000:
-		case 0x7000: {
-			break;
-		}
 		case 0x8000:
 		case 0x9000: {
 			// VRAM
@@ -111,17 +100,14 @@ namespace TKPEmu::Gameboy::Devices {
 			break;
 		}
 		case 0xA000:
-		case 0xB000: {
-			mem[address] = data;
-			break;
-		}
+		case 0xB000:
 		case 0xC000:
 		case 0xD000:
 		case 0xE000: {
 			mem[address] = data;
 			break;
 		}
-		case 0xF000: {
+		[[likely]] case 0xF000: {
 			switch (address & 0x0F00) {
 			case 0x0:
 			case 0x100:
@@ -227,7 +213,7 @@ namespace TKPEmu::Gameboy::Devices {
 					obj1Palette[2] = palette[(data >> 6)];
 					mem[address] = data;
 					break;
-				default:
+				[[likely]] default :
 					mem[address] = data;
 					break;
 				}
