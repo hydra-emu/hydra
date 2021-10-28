@@ -249,24 +249,7 @@ namespace TKPEmu::Graphics {
             if (file_browser_.HasSelected()) {
                 std::cout << "Selected filename" << file_browser_.GetSelected().string() << std::endl;
                 window_file_browser_open_ = false;
-                auto ext = file_browser_.GetSelected().extension();
-                auto t = file_browser_.GetSelected();
-                if (ext == ".gb") {
-                    emulator_ = std::make_unique<Gameboy::Gameboy>();
-                    disassembler_.Reset();
-                    disassembler_.SetEmulator(emulator_.get());
-                    rom_loaded_ = true;
-                    rom_paused_ = app_settings_.debug_mode;
-                    emulator_->Paused.store(rom_paused_);
-                    emulator_->LoadFromFile(file_browser_.GetSelected().string());
-                    if (app_settings_.debug_mode) {
-                        emulator_->StartDebug();
-                        emulator_->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
-                    }
-                    else {
-                        emulator_->Start();
-                    }
-                }
+                load_rom(std::move(file_browser_.GetSelected()));
                 file_browser_.ClearSelected();
             }
             if (file_browser_.ShouldClose()) {
@@ -292,7 +275,7 @@ namespace TKPEmu::Graphics {
                     draw_menu_bar_file();
                 }
                 if (ImGui::BeginMenu("Emulation")) {
-                    draw_menu_bar_emulation();
+                    Disassembler::DrawMenuEmulation(emulator_.get(), &rom_loaded_);
                 }
                 if (ImGui::BeginMenu("View")) {
                     draw_menu_bar_view();
@@ -325,19 +308,6 @@ namespace TKPEmu::Graphics {
         ImGui::Separator();
         if (ImGui::MenuItem("Settings", NULL, window_settings_open_, true)) { 
             window_settings_open_ ^= true; 
-        }
-        ImGui::EndMenu();
-    }
-
-    void Display::draw_menu_bar_emulation() {
-        if (ImGui::MenuItem("Stop", nullptr, false, is_rom_loaded())) {
-            rom_loaded_ = false;
-            emulator_->Stopped.store(true, std::memory_order_seq_cst);
-            emulator_->Stopped.wait(false, std::memory_order_seq_cst);
-        }
-        if (ImGui::MenuItem("Pause", nullptr, rom_paused_, is_rom_loaded())) {
-            rom_paused_ ^= true;
-            emulator_->Paused.store(rom_paused_);
         }
         ImGui::EndMenu();
     }
@@ -429,6 +399,26 @@ namespace TKPEmu::Graphics {
             fseek(file, 0, SEEK_SET);
             access_user_settings<FileAccess::Write>(&app_settings_, sizeof(AppSettingsType), AppSettingsSize, file);
             fclose(file);
+        }
+    }
+
+    void Display::load_rom(std::filesystem::path&& path) {
+        auto ext = path.extension();
+        if (ext == ".gb") {
+            emulator_ = std::make_unique<Gameboy::Gameboy>();
+            disassembler_.Reset();
+            disassembler_.SetEmulator(emulator_.get());
+            rom_loaded_ = true;
+            rom_paused_ = app_settings_.debug_mode;
+            emulator_->Paused.store(rom_paused_);
+            emulator_->LoadFromFile(path.string());
+            if (app_settings_.debug_mode) {
+                emulator_->StartDebug();
+                emulator_->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
+            }
+            else {
+                emulator_->Start();
+            }
         }
     }
 
@@ -536,7 +526,14 @@ namespace TKPEmu::Graphics {
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window_ptr_.get());
         }
+        emulator_->Stopped = true;
+        emulator_->Paused = false;
+        emulator_->Paused.notify_all();
         save_user_settings();
         ImGui::SaveIniSettingsToDisk(ImGuiSettingsFile.c_str());
+        // Locking this mutex ensures that the other thread gets
+        // enough time to exit before we close the main application.
+        // TODO: code smell. find a different way to do this.
+        std::lock_guard<std::mutex> lguard(emulator_->ThreadStartedMutex);
     }
 }

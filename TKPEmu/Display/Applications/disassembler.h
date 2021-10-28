@@ -13,7 +13,7 @@ namespace TKPEmu::Applications {
             ImGuiWindow* window = g.CurrentWindow;
             // TODO: find a way to make item_height not hard coded
             static const int item_height = 17;
-            static const int offset_y = 16;
+            static const int offset_y = 24;
             window->Scroll.y = IM_FLOOR(item_height * item + offset_y);
         }
         void Reset() noexcept final override {
@@ -32,17 +32,13 @@ namespace TKPEmu::Applications {
             bool goto_popup = false;
             int goto_pc = -1;
             if (ImGui::BeginMenuBar()) {
+                if (ImGui::BeginMenu("Emulation")) {
+                    DrawMenuEmulation(emulator_, rom_loaded_);
+                }
                 if (ImGui::BeginMenu("Navigation")) {
                     if (ImGui::MenuItem("Step")) {
                         if (emulator_->Paused.load())
-                          emulator_->Step.store(true);
-                    }
-                    if (ImGui::MenuItem("Pause", NULL, emulator_->Paused.load())) {
-                        emulator_->Paused.store(!emulator_->Paused.load());
-                    }
-                    if (ImGui::MenuItem("Stop")) {
-                        *rom_loaded_ = false;
-                        emulator_->Stopped.store(true, std::memory_order_seq_cst);
+                            emulator_->Step.store(true);
                     }
                     if (ImGui::MenuItem("Reset")) {
                         // Sets the stopped flag on the thread to true and then waits for it to become false
@@ -53,10 +49,6 @@ namespace TKPEmu::Applications {
                     if (ImGui::MenuItem("Goto PC")) {
                         goto_popup = true;
                     }
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu("Breakpoints")) {
-
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();
@@ -93,8 +85,8 @@ namespace TKPEmu::Applications {
             
             static ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit;
             {
-                ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 260), false);
-                if (ImGui::BeginTable("table_advanced", 3, flags)) {
+                ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.6f, ImGui::GetContentRegionAvail().y), true);
+                if (ImGui::BeginTable("cmds", 3, flags)) {
                     ImGui::TableSetupColumn("PC");
                     ImGui::TableSetupColumn("Instruction");
                     ImGui::TableSetupColumn("Description");
@@ -118,7 +110,7 @@ namespace TKPEmu::Applications {
                         ImGui::TableNextRow();
                         ImGui::TableSetColumnIndex(0);
                         if (ImGui::Selectable(ins->InstructionPCHex.c_str(), ins->Selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-
+                            // TODO: Create breakpoint upon selecting
                         }
                         ImGui::TableSetColumnIndex(1);
                         ImGui::TextUnformatted(ins->InstructionHex.c_str());
@@ -130,14 +122,47 @@ namespace TKPEmu::Applications {
                 ImGui::EndTable();
                 ImGui::EndChild();
             }
+            ImGui::SameLine();
             {
-                //if (ImGui::BeginTable("table_advanced", 1, flags)) {
-                //    ImGui::TableSetupColumn("Breakpoints");
-                //    ImGui::TableHeadersRow();
-                //}
+                ImGui::BeginChild("ChildR", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), true);
+                if (ImGui::BeginTable("bps", 1, flags)) {
+                    ImGui::TableSetupColumn("Breakpoints");
+                    ImGui::TableHeadersRow();
+                }
+                ImGuiListClipper clipper;
+                clipper.Begin(emulator_->Breakpoints.size());
+                while (clipper.Step()) {
+                    for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
+                        ImGui::PushID(row_n);
+                        ImGui::TableNextRow();
+                        ImGui::TableSetColumnIndex(0);
+
+                        ImGui::PopID();
+                    }
+                }
+                ImGui::EndTable();
+                ImGui::EndChild();
             }
             ImGui::End();
         }
+
+        static void DrawMenuEmulation(Emulator* emulator, bool* rom_loaded) {
+            if (!*rom_loaded) {
+                ImGui::MenuItem("Pause", NULL, false, *rom_loaded);
+            }
+            else {
+                if (ImGui::MenuItem("Pause", NULL, emulator->Paused.load(), *rom_loaded)) {
+                    emulator->Paused.store(!emulator->Paused.load());
+                    emulator->Paused.notify_all();
+                }
+            }
+            if (ImGui::MenuItem("Stop", 0, false, *rom_loaded)) {
+                *rom_loaded = false;
+                emulator->Stopped.store(true, std::memory_order_seq_cst);
+            }
+            ImGui::EndMenu();
+        }
+
     };
 }
 #endif

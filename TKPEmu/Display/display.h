@@ -133,7 +133,6 @@ namespace TKPEmu::Graphics {
         void draw_game_background(bool* draw);
         void draw_menu_bar(bool* draw);
         void draw_menu_bar_file();
-        void draw_menu_bar_emulation();
         void draw_menu_bar_file_recent();
         void draw_menu_bar_tools();
         void draw_menu_bar_view();
@@ -149,6 +148,8 @@ namespace TKPEmu::Graphics {
         // These two functions save and load user settings stored in the app_settings_ object
         void load_user_settings();
         void save_user_settings();
+        
+        void load_rom(std::filesystem::path&& path);
         // This function chooses fread or fwrite on compile time to minimize code duplication
         template<FileAccess acc>
         void access_user_settings(void* item, size_t size, size_t count, FILE* stream);

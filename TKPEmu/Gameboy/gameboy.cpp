@@ -25,8 +25,11 @@ namespace TKPEmu::Gameboy {
 		Paused.store(true);
 		Reset();
 		auto func = [this]() {
+			Stopped = true;
 			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
+			Stopped = false;
 			while (!Stopped.load(std::memory_order_seq_cst)) {
+				Paused.wait(true);
 				if (!Paused.load()) {
 					for (const auto& bp : Breakpoints) {
 					bool brk = bp();
