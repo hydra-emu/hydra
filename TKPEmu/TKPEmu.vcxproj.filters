@@ -110,6 +110,9 @@
       <Filter>Tools</Filter>
     </ClInclude>
     <ClInclude Include="Tools\disassembly_instr.h" />
+    <ClInclude Include="Display\Applications\base_application.h" />
+    <ClInclude Include="Display\Applications\settings.h" />
+    <ClInclude Include="Display\Applications\application_settings.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGui">

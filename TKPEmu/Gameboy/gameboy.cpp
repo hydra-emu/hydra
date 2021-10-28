@@ -25,7 +25,8 @@ namespace TKPEmu::Gameboy {
 		Paused.store(true);
 		Reset();
 		auto func = [this]() {
-			while (!Stopped.load()) {
+			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
+			while (!Stopped.load(std::memory_order_seq_cst)) {
 				if (!Paused.load()) {
 					for (const auto& bp : Breakpoints) {
 					bool brk = bp();
@@ -46,9 +47,8 @@ namespace TKPEmu::Gameboy {
 					Update();
 				}
 			}
-			// Make sure store is executed before notify_all
+			// As the thread closes, set store to false so the next thread enters the loop
 			Stopped.store(false, std::memory_order_seq_cst);
-			Stopped.notify_all();
 			return;
 		};
 		UpdateThread = std::thread(func);

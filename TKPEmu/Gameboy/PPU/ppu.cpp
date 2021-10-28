@@ -6,13 +6,16 @@ namespace TKPEmu::Gameboy::Devices {
 	bool PPU::NeedsDraw(){
 		return needs_draw;
 	}
-	void PPU::Update()
-	{
+	void PPU::Update() {
+
 	}
-	void PPU::Reset()
-	{
+	void PPU::Reset() {
+
 	}
-	void PPU::Draw(TKPImage* screen)
-	{
+	void PPU::Draw(TKPImage* screen) {
+		test_draw();
+	}
+	void PPU::test_draw() {
+
 	}
 }

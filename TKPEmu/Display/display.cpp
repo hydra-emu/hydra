@@ -108,112 +108,6 @@ namespace TKPEmu::Graphics {
         }
     };
     
-    struct SettingsApp {
-    private:
-        AppSettings* current_settings_;
-        bool* rom_load_state_;
-        float* sleep_time_;
-    public:
-        SettingsApp(AppSettings* current_settings, float* sleep_time, bool* rom_load_state) : current_settings_(current_settings), sleep_time_(sleep_time), rom_load_state_(rom_load_state) {  }
-        static auto GetFpsValue(int i) {
-            static const int fps_values[] = { 30, 60, 120, 144, 240 };
-            return fps_values[i];
-        }
-        void Draw(const char* title, bool* p_open = NULL)
-        {
-            if (!ImGui::Begin(title, p_open))
-            {
-                ImGui::End();
-                return;
-            }
-            if (ImGui::CollapsingHeader("Video")) {
-                ImGui::Text("General video settings:");
-                ImGui::Checkbox("FPS Limit", (bool*)(&(current_settings_->limit_fps)));
-                if (ImGui::IsItemHovered()) {
-                    ImGui::BeginTooltip();
-                    ImGui::Text("Enable to save CPU cycles.");
-                    ImGui::EndTooltip();
-                }
-                if (current_settings_->limit_fps) {
-                    ImGui::SameLine();
-                    static const char* fps_types[] = { "30", "60", "120", "144", "240" };
-                    if (ImGui::Combo("", (int*)(&current_settings_->max_fps_index), fps_types, IM_ARRAYSIZE(fps_types))) {
-                        *sleep_time_ = 1000.0f / GetFpsValue(current_settings_->max_fps_index);
-                    }
-                }
-                ImGui::Separator();
-            }
-            if (ImGui::CollapsingHeader("Emulation")) {
-                
-                ImGui::Checkbox("Debug mode", (bool*)(&(current_settings_->debug_mode)));
-            }
-            if (ImGui::CollapsingHeader("Gameboy")) {
-                ImGui::Text("Palette:");
-                static float c1[3] = { (float)current_settings_->dmg_color0_r / 255, (float)current_settings_->dmg_color0_g / 255, (float)current_settings_->dmg_color0_b / 255 };
-                static float c2[3] = { (float)current_settings_->dmg_color1_r / 255, (float)current_settings_->dmg_color1_g / 255, (float)current_settings_->dmg_color1_b / 255 };
-                static float c3[3] = { (float)current_settings_->dmg_color2_r / 255, (float)current_settings_->dmg_color2_g / 255, (float)current_settings_->dmg_color2_b / 255 };
-                static float c4[3] = { (float)current_settings_->dmg_color3_r / 255, (float)current_settings_->dmg_color3_g / 255, (float)current_settings_->dmg_color3_b / 255 };
-                if (ImGui::ColorEdit3("Color 1", c1, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
-                    current_settings_->dmg_color0_r = (int)(c1[0] * 255.0f);
-                    current_settings_->dmg_color0_g = (int)(c1[1] * 255.0f);
-                    current_settings_->dmg_color0_b = (int)(c1[2] * 255.0f);
-                }
-                ImGui::SameLine();
-                if (ImGui::ColorEdit3("Color 2", c2, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
-                    current_settings_->dmg_color1_r = (int)(c2[0] * 255.0f);
-                    current_settings_->dmg_color1_g = (int)(c2[1] * 255.0f);
-                    current_settings_->dmg_color1_b = (int)(c2[2] * 255.0f);
-                }
-                ImGui::SameLine();
-                if (ImGui::ColorEdit3("Color 3", c3, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
-                    current_settings_->dmg_color2_r = (int)(c3[0] * 255.0f);
-                    current_settings_->dmg_color2_g = (int)(c3[1] * 255.0f);
-                    current_settings_->dmg_color2_b = (int)(c3[2] * 255.0f);
-                }
-                ImGui::SameLine();
-                if (ImGui::ColorEdit3("Color 4", c4, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
-                    current_settings_->dmg_color3_r = (int)(c4[0] * 255.0f);
-                    current_settings_->dmg_color3_g = (int)(c4[1] * 255.0f);
-                    current_settings_->dmg_color3_b = (int)(c4[2] * 255.0f);
-                }
-                ImGui::SameLine();
-                ImGui::TextDisabled("(?)");
-                if (ImGui::IsItemHovered())
-                {
-                    ImGui::SetTooltip("Click on a color to open the color picker.");
-                }
-                if (ImGui::Button("Reset")) {
-                    static AppSettings orig;
-                    current_settings_->dmg_color0_r = orig.dmg_color0_r;
-                    current_settings_->dmg_color0_g = orig.dmg_color0_g;
-                    current_settings_->dmg_color0_b = orig.dmg_color0_b;
-                    current_settings_->dmg_color1_r = orig.dmg_color1_r;
-                    current_settings_->dmg_color1_g = orig.dmg_color1_g;
-                    current_settings_->dmg_color1_b = orig.dmg_color1_b;
-                    current_settings_->dmg_color2_r = orig.dmg_color2_r;
-                    current_settings_->dmg_color2_g = orig.dmg_color2_g;
-                    current_settings_->dmg_color2_b = orig.dmg_color2_b;
-                    current_settings_->dmg_color3_r = orig.dmg_color3_r;
-                    current_settings_->dmg_color3_g = orig.dmg_color3_g;
-                    current_settings_->dmg_color3_b = orig.dmg_color3_b;
-                    c1[0] = (float)current_settings_->dmg_color0_r / 255;
-                    c1[1] = (float)current_settings_->dmg_color0_g / 255;
-                    c1[2] = (float)current_settings_->dmg_color0_b / 255;
-                    c2[0] = (float)current_settings_->dmg_color1_r / 255;
-                    c2[1] = (float)current_settings_->dmg_color1_g / 255;
-                    c2[2] = (float)current_settings_->dmg_color1_b / 255;
-                    c3[0] = (float)current_settings_->dmg_color2_r / 255;
-                    c3[1] = (float)current_settings_->dmg_color2_g / 255;
-                    c3[2] = (float)current_settings_->dmg_color2_b / 255;
-                    c4[0] = (float)current_settings_->dmg_color3_r / 255;
-                    c4[1] = (float)current_settings_->dmg_color3_g / 255;
-                    c4[2] = (float)current_settings_->dmg_color3_b / 255;
-                }
-                ImGui::Separator();
-            }
-            ImGui::End();
-        }
-    };
 	Display::DisplayInitializer::DisplayInitializer(PrettyPrinter& pprinter) {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             pprinter.PrettyAdd<PPMessageType::Error>(SDL_GetError());
@@ -236,7 +130,8 @@ namespace TKPEmu::Graphics {
         window_ptr_(nullptr, SDL_DestroyWindow),
         gl_context_ptr_(nullptr, SDL_GL_DeleteContext),
         display_initializer_(pretty_printer_),
-        disassembler_(&rom_load_state_)
+        disassembler_(&rom_loaded_),
+        settings_(&app_settings_, &sleep_time_, &rom_loaded_)
     {
         #ifdef _WIN32
         GetModuleFileNameW(NULL, exe_dir, MAX_PATH);
@@ -287,16 +182,15 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_settings(bool* draw) {
         if (*draw) {
-            static SettingsApp settings(&app_settings_, &sleep_time_, &rom_load_state_);
-            ImGui::SetNextWindowSize(ImVec2(400,400), ImGuiCond_FirstUseEver);
-            settings.Draw("Settings", draw);
+            ImGui::SetNextWindowSize(ImVec2(300,300), ImGuiCond_FirstUseEver);
+            settings_.Draw("Settings", draw);
         }
     }
 
     void Display::draw_trace_logger(bool* draw) {
         if (*draw && is_rom_loaded_and_debugmode()) {
             static LogApp trace_logger;
-            ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
             trace_logger.Draw("Trace Logger", draw);
         }
     }
@@ -304,7 +198,7 @@ namespace TKPEmu::Graphics {
     // TODO: add filtering, breakpoints, searching
     void Display::draw_disassembler(bool* draw) {
         if (*draw && is_rom_loaded_and_debugmode()) {
-            ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
             disassembler_.Draw("Disassembler", draw);
         }
     }
@@ -360,8 +254,8 @@ namespace TKPEmu::Graphics {
                 if (ext == ".gb") {
                     emulator_ = std::make_unique<Gameboy::Gameboy>();
                     disassembler_.Reset();
-                    disassembler_.emulator = emulator_.get();
-                    rom_load_state_ = true;
+                    disassembler_.SetEmulator(emulator_.get());
+                    rom_loaded_ = true;
                     rom_paused_ = app_settings_.debug_mode;
                     emulator_->Paused.store(rom_paused_);
                     emulator_->LoadFromFile(file_browser_.GetSelected().string());
@@ -437,7 +331,7 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_menu_bar_emulation() {
         if (ImGui::MenuItem("Stop", nullptr, false, is_rom_loaded())) {
-            rom_load_state_ = false;
+            rom_loaded_ = false;
             emulator_->Stopped.store(true, std::memory_order_seq_cst);
             emulator_->Stopped.wait(false, std::memory_order_seq_cst);
         }
@@ -555,12 +449,12 @@ namespace TKPEmu::Graphics {
 
     inline bool Display::is_rom_loaded()
     {
-        return rom_load_state_;
+        return rom_loaded_;
     }
 
     inline bool Display::is_rom_loaded_and_debugmode()
     {
-        return rom_load_state_ && app_settings_.debug_mode;
+        return rom_loaded_ && app_settings_.debug_mode;
     }
 
     void Display::main_loop() {
@@ -576,7 +470,7 @@ namespace TKPEmu::Graphics {
         glClearColor(background.x, background.y, background.z, background.w);
         load_user_settings();
         SDL_GL_SetSwapInterval(0);
-        sleep_time_ = 1000.0f / SettingsApp::GetFpsValue(app_settings_.max_fps_index);
+        sleep_time_ = 1000.0f / Settings::GetFpsValue(app_settings_.max_fps_index);
         ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
         ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB | ImGuiColorEditFlags_PickerHueWheel);
         load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_);
@@ -630,7 +524,7 @@ namespace TKPEmu::Graphics {
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window_ptr_.get());
             ImGui::NewFrame();
-            draw_game_background(&rom_load_state_);
+            draw_game_background(&rom_loaded_);
             draw_menu_bar(&menu_bar_open_);
             draw_trace_logger(&window_tracelogger_open_);
             draw_fps_counter(&window_fpscounter_open_);

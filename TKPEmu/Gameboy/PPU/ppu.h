@@ -4,7 +4,6 @@
 #include "../../Tools/TKPImage.h"
 namespace TKPEmu::Gameboy::Devices {
 	class PPU {
-		// TODO: Implement fully
 	private:
 		using TKPImage = TKPEmu::Tools::TKPImage;
 	public:
@@ -17,6 +16,8 @@ namespace TKPEmu::Gameboy::Devices {
 	private:
 		Bus* bus_;
 		bool needs_draw = false;
+		// TODO: remove test_draw function
+		void test_draw();
 	};
 }
 #endif

@@ -2,6 +2,7 @@
 #define TKP_TOOLS_PRETTYPRINTER_H
 #include <sstream>
 #include <string>
+// TODO: Remove this class, create a console instead
 namespace TKPEmu::Tools {
 	enum class PrettyPrinterMessageType {
 		Default,

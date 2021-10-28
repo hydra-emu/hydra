@@ -19,8 +19,10 @@ static_assert(false);
 #include "../ImGui/imgui_impl_sdl.h"
 #include "../ImGui/imgui_impl_opengl3.h"
 #include "../ImGui/imgui_internal.h"
+#include "Applications/application_settings.h"
 #include "Applications/disassembler.h"
 #include "Applications/imfilebrowser.h"
+#include "Applications/settings.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__MINGW32__) && !defined(__clang__)
 #define IM_FMTARGS(FMT)             __attribute__((format(gnu_printf, FMT, FMT+1)))
@@ -36,49 +38,28 @@ namespace TKPEmu::Graphics {
     constexpr auto GameboyWidth = 160;
     constexpr auto GameboyHeight = 144;
     constexpr auto MenuBarHeight = 19;
-    using AppSettingsType = uint8_t;
     using TKPImage = TKPEmu::Tools::TKPImage;
+    enum class FileAccess { Read, Write };
     struct WindowSettings {
-        int window_width = GameboyWidth * 4;
-        int window_height = GameboyHeight * 4;
+        int window_width = 640;
+        int window_height = 480;
         int minimum_width = GameboyWidth;
         int minimum_height = GameboyHeight + MenuBarHeight;
         // TODO: replace these magic numbers with screen height / width / -1
         int maximum_width = 1920;
         int maximum_height = 1080;
     };
-    // Do not change the order of these
-    struct AppSettings {
-        AppSettingsType limit_fps = 1;
-        AppSettingsType max_fps_index = 1;
-        AppSettingsType dmg_color0_r = 255;
-        AppSettingsType dmg_color0_g = 208;
-        AppSettingsType dmg_color0_b = 164;
-        AppSettingsType dmg_color1_r = 244;
-        AppSettingsType dmg_color1_g = 148;
-        AppSettingsType dmg_color1_b = 156;
-        AppSettingsType dmg_color2_r = 124;
-        AppSettingsType dmg_color2_g = 154;
-        AppSettingsType dmg_color2_b = 172;
-        AppSettingsType dmg_color3_r = 104;
-        AppSettingsType dmg_color3_g = 81;
-        AppSettingsType dmg_color3_b = 138;
-        // TODO: implement window size and fullscreen and widgets
-        AppSettingsType window_size_index = 0;
-        AppSettingsType window_fullscreen = 0;
-        AppSettingsType debug_mode = 1;
-    };
     enum class EmulatorType {
         None,
         Gameboy,
     };
-    constexpr auto AppSettingsSize = sizeof(AppSettings) / sizeof(AppSettingsType);
-    enum class FileAccess { Read, Write };
 	class Display {
     private:
         using PrettyPrinter = TKPEmu::Tools::PrettyPrinter;
         using SDL_GLContextType = std::remove_pointer_t<SDL_GLContext>;
         using PPMessageType = TKPEmu::Tools::PrettyPrinterMessageType;
+        using Disassembler = TKPEmu::Applications::Disassembler;
+        using Settings = TKPEmu::Applications::Settings;
         const std::string glsl_version = "#version 430";
         std::string BackgroundImageFile = "tkp_bg.jpg";
         std::string ImGuiSettingsFile = "imgui.ini";
@@ -119,6 +100,7 @@ namespace TKPEmu::Graphics {
         WindowSettings window_settings_;
         AppSettings app_settings_;
         Disassembler disassembler_;
+        Settings settings_;
         TKPImage background_image_;
         ImGui::FileBrowser file_browser_;
 
@@ -132,7 +114,7 @@ namespace TKPEmu::Graphics {
         // These bools determine whether certain windows are open
         // We aren't allowed to use static member variables so we use static functions that
         // return static members
-        bool rom_load_state_ = false;
+        bool rom_loaded_ = false;
         bool rom_paused_ = false;
         EmulatorType emulator_type_ = EmulatorType::None;
         bool menu_bar_open_ = true;
