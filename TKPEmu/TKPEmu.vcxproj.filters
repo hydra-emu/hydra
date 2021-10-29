@@ -113,6 +113,7 @@
     <ClInclude Include="Display\Applications\base_application.h" />
     <ClInclude Include="Display\Applications\settings.h" />
     <ClInclude Include="Display\Applications\application_settings.h" />
+    <ClInclude Include="Gameboy\Utils\breakpoint.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGui">

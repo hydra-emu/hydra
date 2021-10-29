@@ -2,8 +2,14 @@
 #define TKP_DISASSEMBLER_H
 #include <vector>
 #include "base_application.h"
-namespace TKPEmu::Applications {
+// TODO: make this disassembler the gameboy disassembler, and make a generic disassembler class
+#include "../../Gameboy/Utils/breakpoint.h"
+#include "../../Gameboy/gameboy.h"
+namespace TKPEmu::Applications { 
     class Disassembler : public IMApplication {
+    private:
+        using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
+        using Gameboy = TKPEmu::Gameboy::Gameboy;
     public:
         bool Loaded = false;
         std::vector<DisInstr> Instrs;
@@ -30,6 +36,7 @@ namespace TKPEmu::Applications {
                 return;
             }
             bool goto_popup = false;
+            bool bp_add_popup = false;
             int goto_pc = -1;
             if (ImGui::BeginMenuBar()) {
                 if (ImGui::BeginMenu("Emulation")) {
@@ -52,37 +59,7 @@ namespace TKPEmu::Applications {
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();
-            }
-            if (goto_popup) {
-                ImGui::OpenPopup("goto");
-                goto_popup = false;
-            }
-            ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-            ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-            if (ImGui::BeginPopupModal("goto", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-            {
-                ImGui::Text("Program Code (in hex) to go to:");
-                ImGui::Separator();
-                static char buf3[64] = ""; ImGui::InputText("hexadecimal", buf3, static_cast<size_t>(emulator_->GetPCHexCharSize()) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
-                if (ImGui::Button("OK", ImVec2(120, 0))) {
-                    unsigned x;
-                    std::stringstream ss;
-                    ss << std::hex << buf3;
-                    ss >> x;
-                    int ind = 0;
-                    for (auto& k : Instrs) {
-                        if (k.InstructionProgramCode == x) {
-                            goto_pc = ind;
-                            break;
-                        }
-                        ind++;
-                    }
-                    ImGui::CloseCurrentPopup();
-                }
-
-                ImGui::EndPopup();
-            }
-            
+            }      
             static ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_SizingFixedFit;
             {
                 ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.6f, ImGui::GetContentRegionAvail().y), true);
@@ -124,8 +101,8 @@ namespace TKPEmu::Applications {
             }
             ImGui::SameLine();
             {
-                ImGui::BeginChild("ChildR", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), true);
-                if (ImGui::BeginTable("bps", 1, flags)) {
+                ImGui::BeginChild("ChildR", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.75f), true);
+                if (ImGui::BeginTable("bps", 1, flags, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.9f))) {
                     ImGui::TableSetupColumn("Breakpoints");
                     ImGui::TableHeadersRow();
                 }
@@ -141,11 +118,80 @@ namespace TKPEmu::Applications {
                     }
                 }
                 ImGui::EndTable();
+                if (ImGui::Button("Add", ImVec2(ImGui::GetContentRegionAvail().x * (1.0f / 3.0f), ImGui::GetContentRegionAvail().y))) {
+                    bp_add_popup = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Remove", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y))) {
+
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Clear", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y))) {
+                    emulator_->Breakpoints.clear();
+                }
                 ImGui::EndChild();
+            }   
+            if (goto_popup) {
+                ImGui::OpenPopup("Goto Program Code");
+                goto_popup = false;
+            }
+            ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+            ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+            if (ImGui::BeginPopupModal("Goto Program Code", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("Program Code (in hex) to go to:");
+                ImGui::Separator();
+                static char buf3[64] = ""; ImGui::InputText("hexadecimal", buf3, static_cast<size_t>(emulator_->GetPCHexCharSize()) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+                if (ImGui::Button("OK", ImVec2(120, 0))) {
+                    unsigned x;
+                    std::stringstream ss;
+                    ss << std::hex << buf3;
+                    ss >> x;
+                    int ind = 0;
+                    for (auto& k : Instrs) {
+                        if (k.InstructionProgramCode == x) {
+                            goto_pc = ind;
+                            break;
+                        }
+                        ind++;
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+            if (bp_add_popup) {
+                ImGui::OpenPopup("Add breakpoint");
+                bp_add_popup = false;
+            }
+            // TODO: add switch from hex to binary on every textbox here
+            ImGui::SetNextWindowSize(ImVec2(200, 200));
+            ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+            if (ImGui::BeginPopupModal("Add breakpoint", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+                static GameboyBreakpoint gbbp{
+                    .PC_using = true,
+                    .PC_value = 0x100
+                };
+                ImGui::Text("Configure the breakpoint:");
+                ImGui::Separator();
+                {
+                    ImGui::BeginChild("bpChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.75f));
+                    breakpoint_register_checkbox(gbbp.A_value, gbbp.A_using);
+                    ImGui::EndChild();
+                }
+                ImGui::SameLine();
+                {
+                    ImGui::BeginChild("bpChildR", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.75f));
+                    ImGui::EndChild();
+                }
+                if (ImGui::Button("Add", ImVec2(120, 0))) {
+                    dynamic_cast<Gameboy&>(*emulator_).AddBreakpoint(gbbp);
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
             }
             ImGui::End();
         }
-
         static void DrawMenuEmulation(Emulator* emulator, bool* rom_loaded) {
             if (!*rom_loaded) {
                 ImGui::MenuItem("Pause", NULL, false, *rom_loaded);
@@ -162,7 +208,15 @@ namespace TKPEmu::Applications {
             }
             ImGui::EndMenu();
         }
-
+    private:
+        template<typename T>
+        void breakpoint_register_checkbox(T& value, bool& is_used) {
+            ImGui::Checkbox("A", &is_used);
+            ImGui::SameLine();
+            if (is_used) {
+                ImGui::DragInt("drag int", (int*)(&value), 1, 0, 255, NULL);
+            }
+        }
     };
 }
 #endif

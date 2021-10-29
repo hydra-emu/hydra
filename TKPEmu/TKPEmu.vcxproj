@@ -197,6 +197,7 @@
     <ClInclude Include="Gameboy\CPU\cpu.h" />
     <ClInclude Include="Gameboy\gameboy.h" />
     <ClInclude Include="Gameboy\PPU\ppu.h" />
+    <ClInclude Include="Gameboy\Utils\breakpoint.h" />
     <ClInclude Include="Gameboy\Utils\cpu_const.h" />
     <ClInclude Include="Display\Applications\imfilebrowser.h" />
     <ClInclude Include="ImGui\imconfig.h" />

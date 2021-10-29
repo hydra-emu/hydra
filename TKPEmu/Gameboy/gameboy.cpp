@@ -125,16 +125,18 @@ namespace TKPEmu::Gameboy {
 		using RegCheckVector = std::vector<std::function<bool()>>;
 		RegCheckVector register_checks;
 		// We calculate which of these checks we need, and add them all to a vector to save execution time
-		if (bp.A_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.A_Value]() { return cpu_->A == gbbp; }); }
-		if (bp.B_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.B_Value]() { return cpu_->B == gbbp; }); }
-		if (bp.C_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.C_Value]() { return cpu_->C == gbbp; }); }
-		if (bp.D_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.D_Value]() { return cpu_->D == gbbp; }); }
-		if (bp.E_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.E_Value]() { return cpu_->E == gbbp; }); }
-		if (bp.F_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.F_Value]() { return cpu_->F == gbbp; }); }
-		if (bp.H_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.H_Value]() { return cpu_->H == gbbp; }); }
-		if (bp.L_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.L_Value]() { return cpu_->L == gbbp; }); }
-		if (bp.PC_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.PC_Value]() { return cpu_->PC == gbbp; }); }
-		if (bp.SP_Value != -1) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.SP_Value]() { return cpu_->SP == gbbp; }); }
+		// Before being copied to the lambda, the values are decremented, as to keep them (1-256) -> (0-255)
+		// because we used the value of 0 to check whether this is used or not.
+		if (!bp.A_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.A_value - 1]() { return cpu_->A == gbbp; }); }
+		if (!bp.B_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.B_value - 1]() { return cpu_->B == gbbp; }); }
+		if (!bp.C_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.C_value - 1]() { return cpu_->C == gbbp; }); }
+		if (!bp.D_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.D_value - 1]() { return cpu_->D == gbbp; }); }
+		if (!bp.E_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.E_value - 1]() { return cpu_->E == gbbp; }); }
+		if (!bp.F_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.F_value - 1]() { return cpu_->F == gbbp; }); }
+		if (!bp.H_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.H_value - 1]() { return cpu_->H == gbbp; }); }
+		if (!bp.L_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.L_value - 1]() { return cpu_->L == gbbp; }); }
+		if (!bp.PC_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.PC_value - 1]() { return cpu_->PC == gbbp; }); }
+		if (!bp.SP_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.SP_value - 1]() { return cpu_->SP == gbbp; }); }
 		auto lamb = [rc = std::move(register_checks)]() {
 			for (auto& check : rc) {
 				if (!check()) {
