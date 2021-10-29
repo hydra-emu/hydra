@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_GB_DISPLAY_H
 #define TKP_GB_DISPLAY_H
 #include <glad/glad.h>

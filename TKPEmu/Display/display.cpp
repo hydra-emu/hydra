@@ -413,6 +413,7 @@ namespace TKPEmu::Graphics {
             emulator_->Paused.store(rom_paused_);
             emulator_->LoadFromFile(path.string());
             if (app_settings_.debug_mode) {
+
                 emulator_->StartDebug();
                 emulator_->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
             }
@@ -526,9 +527,7 @@ namespace TKPEmu::Graphics {
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window_ptr_.get());
         }
-        emulator_->Stopped = true;
-        emulator_->Paused = false;
-        emulator_->Paused.notify_all();
+        Disassembler::ResetEmulatorState(emulator_.get());
         save_user_settings();
         ImGui::SaveIniSettingsToDisk(ImGuiSettingsFile.c_str());
         // Locking this mutex ensures that the other thread gets

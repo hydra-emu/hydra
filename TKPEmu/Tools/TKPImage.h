@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_TOOLS_IMAGE_H
 #define TKP_TOOLS_IMAGE_H
 #include "../ImGui/imgui.h"

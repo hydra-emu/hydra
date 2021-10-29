@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_GB_CPU_H
 #define TKP_GB_CPU_H
 #include <cstdint>

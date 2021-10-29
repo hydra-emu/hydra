@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_SETTINGS_H
 #define TKP_SETTINGS_H
 #include "base_application.h"

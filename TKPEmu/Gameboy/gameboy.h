@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_GB_GAMEBOY_H
 #define TKP_GB_GAMEBOY_H
 #include "../emulator.h"
@@ -17,7 +18,7 @@ namespace TKPEmu::Gameboy {
 	public:
 		Gameboy();
 		~Gameboy();
-		int GetPCHexCharSize() override { return 4; };
+		constexpr int GetPCHexCharSize() override { return 4; };
 		void Start() override;
 		void StartDebug() override;
 		void Reset() override;

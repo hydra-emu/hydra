@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_APPLICATION_SETTINGS_H
 #define TKP_APPLICATION_SETTINGS_H
 #include <cstdint>

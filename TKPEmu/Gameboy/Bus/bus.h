@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_GB_BUS_H
 #define TKP_GB_BUS_H
 #include <string>

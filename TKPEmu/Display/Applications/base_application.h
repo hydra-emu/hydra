@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_BASE_APPLICATION_H
 #define TKP_BASE_APPLICATION_H
 #include <memory>

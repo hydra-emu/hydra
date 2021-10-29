@@ -29,25 +29,22 @@ namespace TKPEmu::Gameboy {
 			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
 			Stopped = false;
 			while (!Stopped.load(std::memory_order_seq_cst)) {
-				Paused.wait(true);
 				if (!Paused.load()) {
+					Update();
 					for (const auto& bp : Breakpoints) {
 					bool brk = bp();
 						if (brk) {
 							Paused.store(true);
-							Break.store(true);
 							InstructionBreak.store(cpu_.PC);
+							Break.store(true);
 						}
 					}
-				}
-				else {
-					if (Step.load()) {
-						Update();
-						Step.store(false);
-					}
-				}
-				if (!Paused.load()) {
+				} else {
 					Update();
+					InstructionBreak.store(cpu_.PC);
+					Break.store(true);
+					Step.wait(false);
+					Step.store(false);
 				}
 			}
 			// As the thread closes, set store to false so the next thread enters the loop

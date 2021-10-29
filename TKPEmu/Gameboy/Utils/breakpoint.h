@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_TOOLS_GBBP_H
 #define TKP_TOOLS_GBBP_H
 namespace TKPEmu::Gameboy::Utils {

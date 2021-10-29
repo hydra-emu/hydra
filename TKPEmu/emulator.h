@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_EMULATOR_H
 #define TKP_EMULATOR_H
 #include "Tools/TKPImage.h"
@@ -19,8 +20,8 @@ namespace TKPEmu {
 		std::atomic_bool Paused = false;
 		std::atomic_bool Step = false;
 		std::atomic_bool Break = false;
-		std::atomic_int InstructionBreak = 0;
-		virtual int GetPCHexCharSize() { return 1; }
+		std::atomic_int InstructionBreak = -1;
+		constexpr virtual int GetPCHexCharSize() { return 1; }
 		virtual void Start() = 0;
 		virtual void StartDebug() = 0;
 		virtual void Reset() = 0;

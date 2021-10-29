@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_GB_PPU_H
 #define TKP_GB_PPU_H
 #include "../Bus/bus.h"

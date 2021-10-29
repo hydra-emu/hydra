@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_GB_DISASSEMBLY_INSTR_H
 #define TKP_GB_DISASSEMBLY_INSTR_H
 #include <string>

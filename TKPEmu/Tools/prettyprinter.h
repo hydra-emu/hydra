@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TKP_TOOLS_PRETTYPRINTER_H
 #define TKP_TOOLS_PRETTYPRINTER_H
 #include <sstream>
