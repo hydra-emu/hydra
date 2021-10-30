@@ -24,10 +24,13 @@ namespace TKPEmu::Gameboy {
 		void Reset() override;
 		void Update() override;
 		void LoadFromFile(const std::string& path) override;
-		void LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) override;
+		void LoadInstrToVec(std::vector<DisInstr>& vec, std::atomic_bool& finished);
 		void AddBreakpoint(GameboyBreakpoint bp);
 		void RemoveBreakpoint(int index);
 		void CopyRegToBreakpoint(GameboyBreakpoint& bp);
+		const auto& GetOpcodeDescription(uint8_t opc);
+		CPU& GetCPU() { return cpu_; }
+		std::vector<GameboyBreakpoint> Breakpoints;
 	private:
 		Bus bus_;
 		CPU cpu_;

@@ -7,21 +7,16 @@
 namespace TKPEmu::Tools {
 	// TODO: instead of using uint16_t and 8_t, make this a template class and generalize it,
 	// params should take more than 2 etc..
+	// TODO: remove "ID"
 	struct DisInstr {
-		DisInstr(uint16_t IPC, uint8_t Ins) {
+		DisInstr(uint16_t iPC, uint8_t ins, uint8_t skip) : InstructionProgramCode(iPC), Instruction(ins), ParamSize(skip) {
 			ID = get_id_and_inc();
-			InstructionProgramCode = IPC;
-			Instruction = Ins;
-			InstructionPCHex = int_to_hex(IPC, 4);
-			InstructionHex = int_to_hex(Ins, 2);
 		}
 		int ID = 0;
 		uint16_t InstructionProgramCode = 0;
 		uint8_t Instruction = 0;
 		uint8_t Params[2]{ 0, 0 };
-		std::string InstructionPCHex;
-		std::string InstructionHex;
-		std::string InstructionFull;
+		uint8_t ParamSize = 0;
 		bool Selected = false;
 		static int s_id;
 		static void ResetId() {
@@ -30,13 +25,6 @@ namespace TKPEmu::Tools {
 	private:
 		int get_id_and_inc() {
 			return s_id++;
-		}
-		template<typename T>
-		inline std::string int_to_hex(T val, size_t width = sizeof(T) * 2)
-		{
-			std::stringstream ss;
-			ss << std::setfill('0') << std::setw(width) << std::uppercase << std::hex << (val | 0);
-			return ss.str();
 		}
 	};
 }

@@ -17,7 +17,6 @@ namespace TKPEmu::Gameboy::Devices {
 	private:
 		using RegisterType = uint16_t;
 	private:
-
 		int bios[256] = {
 			0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
 			0x11, 0x3E, 0x80, 0x32, 0xE2, 0x0C, 0x3E, 0xF3, 0xE2, 0x32, 0x3E, 0x77, 0x77, 0x3E, 0xFC, 0xE0,
@@ -111,33 +110,21 @@ namespace TKPEmu::Gameboy::Devices {
 		RegisterType A, B, C, D, E, H, L, F, PC, SP;
 		RegisterType rsvA, rsvB, rsvC, rsvD, rsvE, rsvH, rsvL, rsvF;
 		bool IME;
-		// TODO: remove once testing is over
-		bool cpuDebugPause = !false;
-		std::ofstream debugLog;
 		unsigned totalClock = 0;
 		int mClock;
 		int tClock;
 		CPU(Bus* bus);
-		~CPU();
-
 		struct Instruction {
 			std::string name;
 			void(CPU::* op)() = nullptr;
 			int skip = 0;
-			uint16_t PC = 0;
-			int byte1 = 0;
-			int byte2 = 0;
 		};
 		Bus* bus_;
 		std::vector<Instruction> instructions;
 		std::vector<Instruction> cbMap;
-		std::vector<std::string> inst;
-
 
 		void Reset();
 		void Update();
-		Instruction GetInstruction(int index);
-		std::vector<Instruction> ConstructInstructionList(std::vector<int>& ints);
 	};
 }
 #endif

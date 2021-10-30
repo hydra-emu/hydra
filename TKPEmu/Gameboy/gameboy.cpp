@@ -32,7 +32,7 @@ namespace TKPEmu::Gameboy {
 				if (!Paused.load()) {
 					bool broken = false;
 					for (const auto& bp : Breakpoints) {
-						bool brk = bp();
+						bool brk = bp.Check();
 						if (brk) {
 							Paused.store(true);
 							broken = true;
@@ -76,47 +76,36 @@ namespace TKPEmu::Gameboy {
 	}
 	// TODO: LoadInstrToVec only works for rom_only for now
 	// TODO: if you win + D while in disassembler, game crashes
-	void Gameboy::LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) {
+	void Gameboy::LoadInstrToVec(std::vector<DisInstr>& vec, std::atomic_bool& finished) {
 		// TODO: make this std::async
 		auto func = [this, &finished](std::vector<DisInstr>& vec) {
-			for (uint16_t i = 0; i < 0x8000;) {
+			std::vector<DisInstr> ret;
+			ret.reserve(0xFFFF);
+			for (uint16_t i = 0; i < 0xFFFF;) {
 				uint8_t ins = cpu_.bus_->Read(i);
 				auto x = cpu_.instructions[ins];
-				auto d = DisInstr(i, ins);
+				auto d = DisInstr(i, ins, x.skip);
 				uint8_t p1, p2;
 				if (x.skip == 1) {
 					p1 = cpu_.bus_->Read(i + 1);
 					d.Params[0] = p1;
-					std::stringstream ss;
-					ss << x.name << " " << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << (int)p1;
-					d.InstructionFull = ss.str();
-					std::stringstream ss2;
-					ss2 << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << (int)ins << " " << std::setfill('0') << std::setw(2) << (int)p1;
-					d.InstructionHex = ss2.str();
-					vec.push_back(std::move(d));
+					ret.push_back(std::move(d));
 				}
 				else if (x.skip == 2) {
 					p1 = cpu_.bus_->Read(i + 1);
 					p2 = cpu_.bus_->Read(i + 2);
 					d.Params[0] = p1;
 					d.Params[1] = p2;
-					std::stringstream ss;
-					ss << x.name << " " << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << (int)p2 << std::setfill('0') << std::setw(2) << (int)p1;
-					d.InstructionFull = ss.str();
-					std::stringstream ss2;
-					ss2 << std::setfill('0') << std::setw(2) << std::uppercase << std::hex << (int)ins << " " << std::setfill('0') << std::setw(2) << (int)p1 << " " << std::setfill('0') << std::setw(2) << (int)p2;
-					d.InstructionHex = ss2.str();
-					vec.push_back(std::move(d));
+					ret.push_back(std::move(d));
 				}
 				else {
-					std::stringstream ss;
-					ss << x.name;
-					d.InstructionFull = ss.str();
-					vec.push_back(std::move(d));
+					ret.push_back(std::move(d));
 				}
 				i += 1 + x.skip;
 			}
-			finished = true;
+			finished.store(true);
+			finished.notify_all();
+			vec = std::move(ret);
 		};
 		std::thread t1(func, std::ref(vec));
 		t1.detach();
@@ -127,16 +116,18 @@ namespace TKPEmu::Gameboy {
 		// We calculate which of these checks we need, and add them all to a vector to save execution time
 		// Before being copied to the lambda, the values are decremented, as to keep them (1-256) -> (0-255)
 		// because we used the value of 0 to check whether this is used or not.
-		if (!bp.A_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.A_value - 1]() { return cpu_->A == gbbp; }); }
-		if (!bp.B_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.B_value - 1]() { return cpu_->B == gbbp; }); }
-		if (!bp.C_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.C_value - 1]() { return cpu_->C == gbbp; }); }
-		if (!bp.D_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.D_value - 1]() { return cpu_->D == gbbp; }); }
-		if (!bp.E_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.E_value - 1]() { return cpu_->E == gbbp; }); }
-		if (!bp.F_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.F_value - 1]() { return cpu_->F == gbbp; }); }
-		if (!bp.H_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.H_value - 1]() { return cpu_->H == gbbp; }); }
-		if (!bp.L_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.L_value - 1]() { return cpu_->L == gbbp; }); }
-		if (!bp.PC_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.PC_value - 1]() { return cpu_->PC == gbbp; }); }
-		if (!bp.SP_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.SP_value - 1]() { return cpu_->SP == gbbp; }); }
+		if (bp.A_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.A_value]() { return cpu_->A == gbbp; }); }
+		if (bp.B_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.B_value]() { return cpu_->B == gbbp; }); }
+		if (bp.C_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.C_value]() { return cpu_->C == gbbp; }); }
+		if (bp.D_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.D_value]() { return cpu_->D == gbbp; }); }
+		if (bp.E_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.E_value]() { return cpu_->E == gbbp; }); }
+		if (bp.F_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.F_value]() { return cpu_->F == gbbp; }); }
+		if (bp.H_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.H_value]() { return cpu_->H == gbbp; }); }
+		if (bp.L_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.L_value]() { return cpu_->L == gbbp; }); }
+		if (bp.PC_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.PC_value]() { return cpu_->PC == gbbp; }); }
+		if (bp.SP_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.SP_value]() { return cpu_->SP == gbbp; }); }
+		if (bp.SP_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.SP_value]() { return cpu_->SP == gbbp; }); }
+		if (bp.Ins_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.Ins_value]() { return (cpu_->bus_->Read(cpu_->PC)) == gbbp; }); }
 		auto lamb = [rc = std::move(register_checks)]() {
 			for (auto& check : rc) {
 				if (!check()) {
@@ -147,24 +138,26 @@ namespace TKPEmu::Gameboy {
 			// Every check is passed, trigger breakpoint
 			return true;
 		};
-		Breakpoints.push_back(lamb);
+		bp.SetChecks(std::move(lamb));
+		Breakpoints.push_back(bp);
 	}
 	void Gameboy::RemoveBreakpoint(int index) {
 		Breakpoints.erase(Breakpoints.begin() + index);
 	}
 	void Gameboy::CopyRegToBreakpoint(GameboyBreakpoint& bp) {
 		std::lock_guard<std::mutex> lg(UpdateMutex);
-		bp = {
-			.A_value = cpu_.A,
-			.B_value = cpu_.B,
-			.C_value = cpu_.C,
-			.D_value = cpu_.D,
-			.E_value = cpu_.E,
-			.F_value = cpu_.F,
-			.H_value = cpu_.H,
-			.L_value = cpu_.L,
-			.PC_value = cpu_.PC,
-			.SP_value = cpu_.SP,
-		};
+		bp.A_value = cpu_.A;
+		bp.B_value = cpu_.B;
+		bp.C_value = cpu_.C;
+		bp.D_value = cpu_.D;
+		bp.E_value = cpu_.E;
+		bp.F_value = cpu_.F;
+		bp.H_value = cpu_.H;
+		bp.L_value = cpu_.L;
+		bp.SP_value = cpu_.SP;
+		bp.PC_value = cpu_.PC;
+	}
+	const auto& Gameboy::GetOpcodeDescription(uint8_t opc) {
+		return cpu_.instructions[opc].name;
 	}
 }

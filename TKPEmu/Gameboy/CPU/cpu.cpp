@@ -2,9 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 namespace TKPEmu::Gameboy::Devices {
-	//TODO: remove DEBUG_LOG_FILE
-//#define DEBUG_LOG_FILE
-	CPU::CPU(Bus* bus) : debugLog("D:/gblogs/tkp_3_1.txt"), bus_(bus) {
+	CPU::CPU(Bus* bus) : bus_(bus) {
 		A = 0; B = 0; C = 0; D = 0; E = 0; H = 0; L = 0;
 		F = 0; SP = 0; PC = 0x0; IME = 1; R = 0;
 		mClock = 0; tClock = 0;
@@ -49,34 +47,6 @@ namespace TKPEmu::Gameboy::Devices {
 		};
 		bus_->Write(0xFF44, 0x91);
 	}
-
-	CPU::~CPU() {
-		debugLog.close();
-	}
-
-	CPU::Instruction CPU::GetInstruction(int index) {
-		return instructions[index];
-	}
-
-	std::vector<CPU::Instruction> CPU::ConstructInstructionList(std::vector<int>& ints) {
-		std::vector<CPU::Instruction> ret;
-		int x1 = PC;
-		int x2 = PC + 20;
-		for (int i = x1; i < x2; i++) {
-			Instruction temp = GetInstruction(bus_->mem[i]);
-			temp.PC = i;
-			if (temp.skip != 0) {
-				i += temp.skip;
-				temp.byte1 = i + 1;
-				if (temp.skip == 2) {
-					temp.byte2 = i + 2;
-				}
-			}
-			ret.push_back(temp);
-		}
-		return ret;
-	}
-
 	inline void CPU::reg_dec(RegisterType& reg) {
 		auto temp = reg - 1;
 		auto flag = FLAG_NEG_MASK;
@@ -668,10 +638,13 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::POPAF() {
-		F = bus_->Read(SP);
-		F &= 0xF0;
-		A = bus_->Read(SP + 1);
+		//A = bus_->Read((SP + 1) & 0xFFFF);
+		//F = bus_->Read(SP) & 0xF0 & 0xF0;
+		auto t = bus_->ReadL(SP);
+		A = (t >> 8) & 0xFF;
+		F = t & 0xF0;
 		SP += 2;
+		SP &= 0xFFFF;
 		mTemp = 3; tTemp = 12;
 	}
 

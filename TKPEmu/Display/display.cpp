@@ -405,17 +405,18 @@ namespace TKPEmu::Graphics {
     void Display::load_rom(std::filesystem::path&& path) {
         auto ext = path.extension();
         if (ext == ".gb") {
-            emulator_ = std::make_unique<Gameboy::Gameboy>();
+            using Gameboy = TKPEmu::Gameboy::Gameboy;
+            emulator_ = std::make_unique<Gameboy>();
+            Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             disassembler_.Reset();
-            disassembler_.SetEmulator(dynamic_cast<Gameboy::Gameboy*>(emulator_.get()));
+            disassembler_.SetEmulator(temp);
             rom_loaded_ = true;
             rom_paused_ = app_settings_.debug_mode;
             emulator_->Paused.store(rom_paused_);
             emulator_->LoadFromFile(path.string());
             if (app_settings_.debug_mode) {
-
                 emulator_->StartDebug();
-                emulator_->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
+                temp->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
             }
             else {
                 emulator_->Start();

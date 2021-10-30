@@ -27,8 +27,6 @@ namespace TKPEmu {
 		virtual void Reset() = 0;
 		virtual void Update() = 0;
 		virtual void LoadFromFile(const std::string& path) = 0;
-		virtual void LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) = 0;
-		std::vector<std::function<bool()>> Breakpoints;
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
 		std::mutex UpdateMutex;
