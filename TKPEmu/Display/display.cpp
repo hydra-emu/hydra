@@ -3,11 +3,13 @@
 #include "display.h"
 #include <memory>
 #include <thread>
-#include "../ImGui/stb_image.h"
-#include "../Gameboy/gameboy.h"
-#include "../Tools/disassembly_instr.h"
 #include <iostream>
 #include <algorithm>
+#include "../ImGui/stb_image.h"
+#include "../Tools/disassembly_instr.h"
+#include "../Gameboy/gameboy.h"
+#include "../Gameboy/Utils/disassembler.h"
+
 namespace TKPEmu::Graphics {
     using TKPEmu::Tools::DisInstr;
     struct LogApp
@@ -130,7 +132,6 @@ namespace TKPEmu::Graphics {
         window_ptr_(nullptr, SDL_DestroyWindow),
         gl_context_ptr_(nullptr, SDL_GL_DeleteContext),
         display_initializer_(pretty_printer_),
-        disassembler_(&rom_loaded_),
         settings_(&app_settings_, &sleep_time_, &rom_loaded_)
     {
         #ifdef _WIN32
@@ -199,7 +200,7 @@ namespace TKPEmu::Graphics {
     void Display::draw_disassembler(bool* draw) {
         if (*draw && is_rom_loaded_and_debugmode()) {
             ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
-            disassembler_.Draw("Disassembler", draw);
+            disassembler_->Draw("Disassembler", draw);
         }
     }
 
@@ -275,7 +276,7 @@ namespace TKPEmu::Graphics {
                     draw_menu_bar_file();
                 }
                 if (ImGui::BeginMenu("Emulation")) {
-                    Disassembler::DrawMenuEmulation(emulator_.get(), &rom_loaded_);
+                    BaseDisassembler::DrawMenuEmulation(emulator_.get(), &rom_loaded_);
                 }
                 if (ImGui::BeginMenu("View")) {
                     draw_menu_bar_view();
@@ -406,20 +407,23 @@ namespace TKPEmu::Graphics {
         auto ext = path.extension();
         if (ext == ".gb") {
             using Gameboy = TKPEmu::Gameboy::Gameboy;
+            using GameboyDisassembler = TKPEmu::Applications::GameboyDisassembler;
             if (emulator_) {
                 close_emulator_and_wait();
             }
             emulator_ = std::make_unique<Gameboy>();
+            disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
-            disassembler_.Reset();
-            disassembler_.SetEmulator(temp);
+            GameboyDisassembler* dis = dynamic_cast<GameboyDisassembler*>(disassembler_.get());
+            disassembler_->Reset();
+            disassembler_->SetEmulator(temp);
             rom_loaded_ = true;
             rom_paused_ = app_settings_.debug_mode;
             emulator_->Paused.store(rom_paused_);
             emulator_->LoadFromFile(path.string());
             if (app_settings_.debug_mode) {
                 emulator_->StartDebug();
-                temp->LoadInstrToVec(disassembler_.Instrs, disassembler_.Loaded);
+                temp->LoadInstrToVec(dis->Instrs, dis->Loaded);
             }
             else {
                 emulator_->Start();
@@ -539,7 +543,7 @@ namespace TKPEmu::Graphics {
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window_ptr_.get());
         }
-        Disassembler::ResetEmulatorState(emulator_.get());
+        BaseDisassembler::ResetEmulatorState(emulator_.get());
         save_user_settings();
         ImGui::SaveIniSettingsToDisk(ImGuiSettingsFile.c_str());
         // Locking this mutex ensures that the other thread gets

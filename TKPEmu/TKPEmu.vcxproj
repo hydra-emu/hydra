@@ -163,7 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Display\Applications\disassembler.h" />
+    <ClCompile Include="Display\Applications\base_disassembler.h" />
     <ClCompile Include="Display\display.cpp" />
     <ClCompile Include="Gameboy\Bus\bus.cpp" />
     <ClCompile Include="Gameboy\Cartridge\cartridge.cpp" />
@@ -236,6 +236,7 @@
     <ClInclude Include="Gameboy\Utils\breakpoint.h" />
     <ClInclude Include="Gameboy\Utils\cpu_const.h" />
     <ClInclude Include="Display\Applications\imfilebrowser.h" />
+    <ClInclude Include="Gameboy\Utils\disassembler.h" />
     <ClInclude Include="ImGui\imconfig.h" />
     <ClInclude Include="ImGui\imgui.h" />
     <ClInclude Include="ImGui\imgui_impl_opengl3.h" />

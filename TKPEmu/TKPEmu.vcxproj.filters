@@ -47,7 +47,7 @@
     <ClCompile Include="Gameboy\gameboy.cpp">
       <Filter>Gameboy</Filter>
     </ClCompile>
-    <ClCompile Include="Display\Applications\disassembler.h" />
+    <ClCompile Include="Display\Applications\base_disassembler.h" />
     <ClCompile Include="Tools\disassembly_instr.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -114,6 +114,7 @@
     <ClInclude Include="Display\Applications\settings.h" />
     <ClInclude Include="Display\Applications\application_settings.h" />
     <ClInclude Include="Gameboy\Utils\breakpoint.h" />
+    <ClInclude Include="Gameboy\Utils\disassembler.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGui">

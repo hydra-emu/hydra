@@ -1,27 +1,25 @@
 #pragma once
-#ifndef TKP_DISASSEMBLER_H
-#define TKP_DISASSEMBLER_H
+#ifndef TKP_GB_DISASSEMBLER_H
+#define TKP_GB_DISASSEMBLER_H
 #include <vector>
 #include <algorithm>
 #include <execution>
-#include "base_application.h"
-// TODO: make this disassembler the gameboy disassembler, and make a generic disassembler class
-#include "../../Gameboy/Utils/breakpoint.h"
-#include "../../Gameboy/gameboy.h"
+#include "../../Display/Applications/base_disassembler.h"
+#include "breakpoint.h"
+#include "../gameboy.h"
 #define WRAM_START 0xC000
-namespace TKPEmu::Applications { 
-    class Disassembler : public IMApplication {
+namespace TKPEmu::Applications {
+    class GameboyDisassembler : public BaseDisassembler {
     private:
         using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
         using Gameboy = TKPEmu::Gameboy::Gameboy;
-        Gameboy* emulator_ = nullptr;
         GameboyBreakpoint debug_rvalues_;
+        Gameboy* emulator_ = nullptr;
         bool clear_all_flag = false;
         int selected_bp = -1;
     public:
-        std::atomic_bool Loaded = false;
         std::vector<DisInstr> Instrs;
-        Disassembler(bool* rom_loaded) : IMApplication(rom_loaded) {}
+        GameboyDisassembler(bool* rom_loaded) : BaseDisassembler(rom_loaded) {}
         void Focus(int item) noexcept {
             ImGuiContext& g = *ImGui::GetCurrentContext();
             ImGuiWindow* window = g.CurrentWindow;
@@ -38,6 +36,9 @@ namespace TKPEmu::Applications {
                     return ins.InstructionProgramCode == target;
                 }
             );
+        }
+        void SetEmulator(Emulator* emu) override {
+            emulator_ = dynamic_cast<Gameboy*>(emu);
         }
         void Reset() noexcept final override {
             DisInstr::ResetId();
@@ -72,7 +73,7 @@ namespace TKPEmu::Applications {
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();
-            }      
+            }
             if (goto_popup) {
                 ImGui::OpenPopup("Goto Program Code");
                 goto_popup = false;
@@ -100,7 +101,7 @@ namespace TKPEmu::Applications {
                 }
                 ImGui::EndPopup();
             }
-            static ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV 
+            static ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV
                 | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV;
             {
                 ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.6f, ImGui::GetContentRegionAvail().y), true);
@@ -265,7 +266,7 @@ namespace TKPEmu::Applications {
                     emulator_->CopyRegToBreakpoint(db_reg);
                 }
                 std::stringstream ss;
-                ss << std::hex << std::setfill('0') 
+                ss << std::hex << std::setfill('0')
                     << "AF: " << std::setw(2) << db_reg.A_value << std::setw(2) << db_reg.F_value << "   BC: " << std::setw(2) << db_reg.B_value << std::setw(2) << db_reg.C_value << "\n"
                     << "DE: " << std::setw(2) << db_reg.D_value << std::setw(2) << db_reg.E_value << "   HL: " << std::setw(2) << db_reg.H_value << std::setw(2) << db_reg.L_value << "\n"
                     << "PC: " << std::setw(4) << db_reg.PC_value << "\n"
@@ -313,35 +314,9 @@ namespace TKPEmu::Applications {
             }
             ImGui::End();
         }
-        void SetEmulator(Gameboy* emulator) {
-            emulator_ = emulator;
-        }
         void SetGotoPC(int& goto_pc, int target) {
             auto it = FindByPC(target);
             goto_pc = it - Instrs.begin();
-        }
-        static void DrawMenuEmulation(Emulator* emulator, bool* rom_loaded) {
-            if (!*rom_loaded) {
-                ImGui::MenuItem("Pause", NULL, false, *rom_loaded);
-            }
-            else {
-                if (ImGui::MenuItem("Pause", NULL, emulator->Paused.load(), *rom_loaded)) {
-                    emulator->Paused.store(!emulator->Paused.load());
-                    emulator->Step.store(true);
-                    emulator->Step.notify_all();
-                }
-            }
-            if (ImGui::MenuItem("Stop", 0, false, *rom_loaded)) {
-                *rom_loaded = false;
-                ResetEmulatorState(emulator);
-            }
-            ImGui::EndMenu();
-        }
-        static void ResetEmulatorState(Emulator* emulator) {
-            emulator->Step.store(true);
-            emulator->Paused.store(false);
-            emulator->Stopped.store(true);
-            emulator->Step.notify_all();
         }
     private:
         template<typename T>
@@ -356,7 +331,7 @@ namespace TKPEmu::Applications {
                 char id[6] = "##IDt";
                 id[4] = checkbox_l[0];
                 ImGui::InputScalar(id, type, &value, 0, 0, w == 20 ? "%02X" : "%04X",
-                    ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CharsHexadecimal );
+                    ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CharsHexadecimal);
                 ImGui::PopItemWidth();
             }
         }

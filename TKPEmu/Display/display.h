@@ -21,7 +21,7 @@ static_assert(false);
 #include "../ImGui/imgui_impl_opengl3.h"
 #include "../ImGui/imgui_internal.h"
 #include "Applications/application_settings.h"
-#include "Applications/disassembler.h"
+#include "Applications/base_disassembler.h"
 #include "Applications/imfilebrowser.h"
 #include "Applications/settings.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
@@ -59,7 +59,7 @@ namespace TKPEmu::Graphics {
         using PrettyPrinter = TKPEmu::Tools::PrettyPrinter;
         using SDL_GLContextType = std::remove_pointer_t<SDL_GLContext>;
         using PPMessageType = TKPEmu::Tools::PrettyPrinterMessageType;
-        using Disassembler = TKPEmu::Applications::Disassembler;
+        using BaseDisassembler = TKPEmu::Applications::BaseDisassembler;
         using Settings = TKPEmu::Applications::Settings;
         const std::string glsl_version = "#version 430";
         std::string BackgroundImageFile = "tkp_bg.jpg";
@@ -100,12 +100,12 @@ namespace TKPEmu::Graphics {
         PrettyPrinter pretty_printer_;
         WindowSettings window_settings_;
         AppSettings app_settings_;
-        Disassembler disassembler_;
         Settings settings_;
         TKPImage background_image_;
         ImGui::FileBrowser file_browser_;
 
-        std::unique_ptr<Emulator> emulator_;
+        std::unique_ptr<Emulator> emulator_ = nullptr;
+        std::unique_ptr<BaseDisassembler> disassembler_ = nullptr;
         std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window_ptr_;
         std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
