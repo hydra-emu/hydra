@@ -151,6 +151,8 @@ namespace TKPEmu::Graphics {
         void save_user_settings();
         
         void load_rom(std::filesystem::path&& path);
+        // Sends the appropriate flags to close the running emulator thread and waits until its closed
+        void close_emulator_and_wait();
         // This function chooses fread or fwrite on compile time to minimize code duplication
         template<FileAccess acc>
         void access_user_settings(void* item, size_t size, size_t count, FILE* stream);

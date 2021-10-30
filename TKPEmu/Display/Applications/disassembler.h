@@ -94,98 +94,98 @@ namespace TKPEmu::Applications {
                     ImGui::TableSetupColumn("Description");
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableHeadersRow();
-                }
-                if (clear_all_flag) {
-                    clear_all_flag = false;
-                    for (auto& i : Instrs) {
-                        i.Selected = false;
+                    if (clear_all_flag) {
+                        clear_all_flag = false;
+                        for (auto& i : Instrs) {
+                            i.Selected = false;
+                        }
                     }
-                }
-                ImGuiListClipper clipper;
-                clipper.Begin(Instrs.size());
-                while (clipper.Step()) {
-                    for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
-                        DisInstr* ins = &Instrs[row_n];
-                        ImGui::PushID(ins->ID);
-                        ImGui::TableNextRow();
-                        ImGui::TableSetColumnIndex(0);
-                        if (ImGui::Selectable("$", ins->Selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                            if (emulator_->Paused.load()) {
-                                ins->Selected ^= true;
-                                if (ins->Selected) {
-                                    GameboyBreakpoint bp;
-                                    bp.PC_using = true;
-                                    bp.PC_value = ins->InstructionProgramCode;
-                                    bp.breakpoint_from_table = true;
-                                    emulator_->AddBreakpoint(bp);
-                                }
-                                else {
-                                    auto it = std::find_if(
-                                        std::execution::par_unseq,
-                                        emulator_->Breakpoints.begin(),
-                                        emulator_->Breakpoints.end(),
-                                        [target = ins->InstructionProgramCode](GameboyBreakpoint bp) {
+                    ImGuiListClipper clipper;
+                    clipper.Begin(Instrs.size());
+                    while (clipper.Step()) {
+                        for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
+                            DisInstr* ins = &Instrs[row_n];
+                            ImGui::PushID(ins->ID);
+                            ImGui::TableNextRow();
+                            ImGui::TableSetColumnIndex(0);
+                            if (ImGui::Selectable("$", ins->Selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                                if (emulator_->Paused.load()) {
+                                    ins->Selected ^= true;
+                                    if (ins->Selected) {
+                                        GameboyBreakpoint bp;
+                                        bp.PC_using = true;
+                                        bp.PC_value = ins->InstructionProgramCode;
+                                        bp.breakpoint_from_table = true;
+                                        emulator_->AddBreakpoint(bp);
+                                    }
+                                    else {
+                                        auto it = std::find_if(
+                                            std::execution::par_unseq,
+                                            emulator_->Breakpoints.begin(),
+                                            emulator_->Breakpoints.end(),
+                                            [target = ins->InstructionProgramCode](GameboyBreakpoint bp) {
                                             return bp.breakpoint_from_table && bp.PC_value == target;
                                         }
-                                    );
-                                    emulator_->Breakpoints.erase(it);
+                                        );
+                                        emulator_->Breakpoints.erase(it);
+                                    }
                                 }
                             }
-                        }
-                        ImGui::SameLine();
-                        ImGui::Text("%04X", ins->InstructionProgramCode);
-                        ImGui::TableSetColumnIndex(1);
-                        ImGui::Text("%02X", ins->Instruction);
-                        switch (ins->ParamSize) {
-                        case 0:
                             ImGui::SameLine();
-                            ImGui::TextUnformatted("     ");
-                            break;
-                        case 1:
-                            ImGui::SameLine();
-                            ImGui::Text("%02X   ", ins->Params[0]);
-                            break;
-                        case 2:
-                            ImGui::SameLine();
-                            ImGui::Text("%02X,%02X", ins->Params[0], ins->Params[1]);
-                            break;
-                        }
-                        ImGui::TableSetColumnIndex(2);
-                        ImGui::TextUnformatted(emulator_->GetCPU().instructions[ins->Instruction].name.c_str());
-                        switch (ins->ParamSize) {
-                        case 1:
-                            ImGui::SameLine();
-                            ImGui::Text("0x%02X", ins->Params[0]);
-                            break;
-                        case 2:
-                            ImGui::SameLine();
-                            ImGui::Text("0x%02X%02X", ins->Params[1], ins->Params[0]);
-                            break;
-                        }
-                        if (ins->InstructionProgramCode > WRAM_START) {
-                            ImGui::SameLine();
-                            ImGui::TextColored(ImVec4(128, 128, 0, 255), "(!)");
-                            if (ImGui::IsItemHovered()) {
-                                ImGui::BeginTooltip();
-                                // TODO: find a way to reload instructions in real time
-                                ImGui::TextUnformatted("WRAM instruction loading not implemented yet!");
-                                ImGui::EndTooltip();
+                            ImGui::Text("%04X", ins->InstructionProgramCode);
+                            ImGui::TableSetColumnIndex(1);
+                            ImGui::Text("%02X", ins->Instruction);
+                            switch (ins->ParamSize) {
+                            case 0:
+                                ImGui::SameLine();
+                                ImGui::TextUnformatted("     ");
+                                break;
+                            case 1:
+                                ImGui::SameLine();
+                                ImGui::Text("%02X   ", ins->Params[0]);
+                                break;
+                            case 2:
+                                ImGui::SameLine();
+                                ImGui::Text("%02X,%02X", ins->Params[0], ins->Params[1]);
+                                break;
                             }
+                            ImGui::TableSetColumnIndex(2);
+                            ImGui::TextUnformatted(emulator_->GetCPU().instructions[ins->Instruction].name.c_str());
+                            switch (ins->ParamSize) {
+                            case 1:
+                                ImGui::SameLine();
+                                ImGui::Text("0x%02X", ins->Params[0]);
+                                break;
+                            case 2:
+                                ImGui::SameLine();
+                                ImGui::Text("0x%02X%02X", ins->Params[1], ins->Params[0]);
+                                break;
+                            }
+                            if (ins->InstructionProgramCode > WRAM_START) {
+                                ImGui::SameLine();
+                                ImGui::TextColored(ImVec4(128, 128, 0, 255), "(!)");
+                                if (ImGui::IsItemHovered()) {
+                                    ImGui::BeginTooltip();
+                                    // TODO: find a way to reload instructions in real time
+                                    ImGui::TextUnformatted("WRAM instruction loading not implemented yet!");
+                                    ImGui::EndTooltip();
+                                }
+                            }
+                            ImGui::PopID();
                         }
-                        ImGui::PopID();
                     }
-                }
-                if (emulator_->Break.load()) {
-                    emulator_->Break.store(false);
-                    if (auto inst = emulator_->InstructionBreak.load(); inst != -1) {
-                        SetGotoPC(goto_pc, inst);
-                        emulator_->InstructionBreak.store(-1);
+                    if (emulator_->Break.load()) {
+                        emulator_->Break.store(false);
+                        if (auto inst = emulator_->InstructionBreak.load(); inst != -1) {
+                            SetGotoPC(goto_pc, inst);
+                            emulator_->InstructionBreak.store(-1);
+                        }
                     }
+                    if (goto_pc != -1) {
+                        Focus(goto_pc);
+                    }
+                    ImGui::EndTable();
                 }
-                if (goto_pc != -1) {
-                    Focus(goto_pc);
-                }
-                ImGui::EndTable();
                 ImGui::EndChild();
             }
             ImGui::SameLine();
@@ -194,22 +194,23 @@ namespace TKPEmu::Applications {
                 if (ImGui::BeginTable("bps", 1, flags, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.6f))) {
                     ImGui::TableSetupColumn("Breakpoints");
                     ImGui::TableHeadersRow();
-                }
-                ImGuiListClipper clipper;
-                clipper.Begin(emulator_->Breakpoints.size());
-                while (clipper.Step()) {
-                    for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
-                        auto& bp = emulator_->Breakpoints[row_n];
-                        ImGui::PushID(row_n);
-                        ImGui::TableNextRow();
-                        ImGui::TableSetColumnIndex(0);
-                        if (ImGui::Selectable(bp.GetName().c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                            // TODO: Create breakpoint upon selecting
+
+                    ImGuiListClipper clipper;
+                    clipper.Begin(emulator_->Breakpoints.size());
+                    while (clipper.Step()) {
+                        for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
+                            auto& bp = emulator_->Breakpoints[row_n];
+                            ImGui::PushID(row_n);
+                            ImGui::TableNextRow();
+                            ImGui::TableSetColumnIndex(0);
+                            if (ImGui::Selectable(bp.GetName().c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                                // TODO: Create breakpoint upon selecting
+                            }
+                            ImGui::PopID();
                         }
-                        ImGui::PopID();
                     }
+                    ImGui::EndTable();
                 }
-                ImGui::EndTable();
                 if (ImGui::Button("Add", ImVec2(ImGui::GetContentRegionAvail().x * (1.0f / 3.0f), ImGui::GetContentRegionAvail().y * 0.15f))) {
                     bp_add_popup = true;
                 }

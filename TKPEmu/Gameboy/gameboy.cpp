@@ -21,12 +21,10 @@ namespace TKPEmu::Gameboy {
 	}
 
 	void Gameboy::StartDebug() {
-		// TODO: StartDebug starts paused
-		Paused.store(true);
 		Reset();
 		auto func = [this]() {
-			Stopped = true;
 			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
+			Paused = true;
 			Stopped = false;
 			while (!Stopped.load(std::memory_order_seq_cst)) {
 				if (!Paused.load()) {

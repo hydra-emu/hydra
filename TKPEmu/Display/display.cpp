@@ -406,6 +406,9 @@ namespace TKPEmu::Graphics {
         auto ext = path.extension();
         if (ext == ".gb") {
             using Gameboy = TKPEmu::Gameboy::Gameboy;
+            if (emulator_) {
+                close_emulator_and_wait();
+            }
             emulator_ = std::make_unique<Gameboy>();
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             disassembler_.Reset();
@@ -422,6 +425,14 @@ namespace TKPEmu::Graphics {
                 emulator_->Start();
             }
         }
+    }
+
+    void Display::close_emulator_and_wait() {
+        emulator_->Stopped = true;
+        emulator_->Paused = false;
+        emulator_->Step = true;
+        emulator_->Step.notify_all();
+        std::lock_guard<std::mutex> lguard(emulator_->ThreadStartedMutex);
     }
 
     void Display::limit_fps() {
