@@ -13,6 +13,8 @@ namespace TKPEmu::Applications {
     private:
         using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
         using Gameboy = TKPEmu::Gameboy::Gameboy;
+        Gameboy* emulator_ = nullptr;
+        GameboyBreakpoint debug_rvalues_;
     public:
         bool Loaded = false;
         std::vector<DisInstr> Instrs;
@@ -79,15 +81,7 @@ namespace TKPEmu::Applications {
                     std::stringstream ss;
                     ss << std::hex << buf;
                     ss >> x;
-                    const auto it = std::find_if(
-                        std::execution::par_unseq,
-                        Instrs.begin(),
-                        Instrs.end(),
-                        [&x](DisInstr ins) {
-                            return ins.InstructionProgramCode == x;
-                        }
-                    );
-                    goto_pc = it - Instrs.begin();
+                    SetGotoPC(goto_pc, x);
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::EndPopup();
@@ -132,17 +126,9 @@ namespace TKPEmu::Applications {
                     ImGui::TableSetupColumn("Description");
                     ImGui::TableHeadersRow();
                 }
-                if (emulator_->Break.load()) {
-                    emulator_->Break.store(false);
-                    if (auto inst = emulator_->InstructionBreak.load(); inst != -1) {
-                        Focus(inst);
-                        emulator_->InstructionBreak.store(-1);
-                    }
-                }
                 ImGuiListClipper clipper;
                 clipper.Begin(Instrs.size());
-                while (clipper.Step())
-                {
+                while (clipper.Step()) {
                     for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
                         DisInstr* ins = &Instrs[row_n];
                         ImGui::PushID(ins->ID);
@@ -156,6 +142,13 @@ namespace TKPEmu::Applications {
                         ImGui::TableSetColumnIndex(2);
                         ImGui::TextUnformatted(ins->InstructionFull.c_str());
                         ImGui::PopID();
+                    }
+                }
+                if (emulator_->Break.load()) {
+                    emulator_->Break.store(false);
+                    if (auto inst = emulator_->InstructionBreak.load(); inst != -1) {
+                        SetGotoPC(goto_pc, inst);
+                        emulator_->InstructionBreak.store(-1);
                     }
                 }
                 if (goto_pc != -1) {
@@ -194,9 +187,34 @@ namespace TKPEmu::Applications {
                 if (ImGui::Button("Clear", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.15f))) {
                     emulator_->Breakpoints.clear();
                 }
+                static GameboyBreakpoint db_reg;
+                if (emulator_->Paused.load()) {
+                    emulator_->CopyRegToBreakpoint(db_reg);
+                }
+                std::stringstream ss;
+                ss << std::hex << std::setfill('0') 
+                    << "AF: " << std::setw(2) << db_reg.A_value << std::setw(2) << db_reg.F_value << "   BC: " << std::setw(2) << db_reg.B_value << std::setw(2) << db_reg.C_value << "\n"
+                    << "DE: " << std::setw(2) << db_reg.D_value << std::setw(2) << db_reg.E_value << "   HL: " << std::setw(2) << db_reg.H_value << std::setw(2) << db_reg.L_value << "\n"
+                    << "PC: " << std::setw(4) << db_reg.PC_value << "\n"
+                    << "SP: " << std::setw(4) << db_reg.SP_value << "\n";
+                ImGui::Text(ss.str().c_str());
                 ImGui::EndChild();
             }
             ImGui::End();
+        }
+        void SetEmulator(Gameboy* emulator) {
+            emulator_ = emulator;
+        }
+        void SetGotoPC(int& goto_pc, int target) {
+            const auto it = std::find_if(
+                std::execution::par_unseq,
+                Instrs.begin(),
+                Instrs.end(),
+                [&target](DisInstr ins) {
+                    return ins.InstructionProgramCode == target;
+                }
+            );
+            goto_pc = it - Instrs.begin();
         }
         static void DrawMenuEmulation(Emulator* emulator, bool* rom_loaded) {
             if (!*rom_loaded) {

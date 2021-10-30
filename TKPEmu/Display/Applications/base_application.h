@@ -10,7 +10,6 @@ namespace TKPEmu::Applications {
 	protected:
 		using Emulator = TKPEmu::Emulator;
 		using DisInstr = TKPEmu::Tools::DisInstr;
-		Emulator* emulator_ = nullptr;
 		bool* rom_loaded_;
 	public:
 		IMApplication(bool* rom_loaded) : rom_loaded_(rom_loaded) {};
@@ -19,9 +18,6 @@ namespace TKPEmu::Applications {
 		IMApplication& operator=(const IMApplication&) = delete;
 		virtual void Draw(const char* title, bool* p_open = nullptr) = 0;
 		virtual void Reset() {};
-		virtual void SetEmulator(Emulator* emulator) {
-			emulator_ = emulator;
-		}
 	};
 }
 #endif

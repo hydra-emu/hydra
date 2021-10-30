@@ -407,7 +407,7 @@ namespace TKPEmu::Graphics {
         if (ext == ".gb") {
             emulator_ = std::make_unique<Gameboy::Gameboy>();
             disassembler_.Reset();
-            disassembler_.SetEmulator(emulator_.get());
+            disassembler_.SetEmulator(dynamic_cast<Gameboy::Gameboy*>(emulator_.get()));
             rom_loaded_ = true;
             rom_paused_ = app_settings_.debug_mode;
             emulator_->Paused.store(rom_paused_);

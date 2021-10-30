@@ -29,8 +29,9 @@ namespace TKPEmu {
 		virtual void LoadFromFile(const std::string& path) = 0;
 		virtual void LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) = 0;
 		std::vector<std::function<bool()>> Breakpoints;
-		std::mutex DataMutex;
 		std::mutex ThreadStartedMutex;
+		std::mutex DrawMutex;
+		std::mutex UpdateMutex;
 		std::thread UpdateThread;
 		TKPImage* EmulatorImage = nullptr;
 	};

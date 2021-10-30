@@ -30,21 +30,23 @@ namespace TKPEmu::Gameboy {
 			Stopped = false;
 			while (!Stopped.load(std::memory_order_seq_cst)) {
 				if (!Paused.load()) {
-					Update();
+					bool broken = false;
 					for (const auto& bp : Breakpoints) {
-					bool brk = bp();
+						bool brk = bp();
 						if (brk) {
 							Paused.store(true);
-							InstructionBreak.store(cpu_.PC);
-							Break.store(true);
+							broken = true;
 						}
 					}
-				} else {
-					Update();
+					if (!broken)
+						Update();
+				}
+				else {
 					InstructionBreak.store(cpu_.PC);
 					Break.store(true);
 					Step.wait(false);
 					Step.store(false);
+					Update();
 				}
 			}
 			// As the thread closes, set store to false so the next thread enters the loop
@@ -60,6 +62,7 @@ namespace TKPEmu::Gameboy {
 		ppu_.Reset();
 	}
 	void Gameboy::Update() {
+		std::lock_guard<std::mutex> lg(UpdateMutex);
 		cpu_.Update();
 		//ppu_.Update();
 		//if (ppu_.NeedsDraw()) {
@@ -148,5 +151,20 @@ namespace TKPEmu::Gameboy {
 	}
 	void Gameboy::RemoveBreakpoint(int index) {
 		Breakpoints.erase(Breakpoints.begin() + index);
+	}
+	void Gameboy::CopyRegToBreakpoint(GameboyBreakpoint& bp) {
+		std::lock_guard<std::mutex> lg(UpdateMutex);
+		bp = {
+			.A_value = cpu_.A,
+			.B_value = cpu_.B,
+			.C_value = cpu_.C,
+			.D_value = cpu_.D,
+			.E_value = cpu_.E,
+			.F_value = cpu_.F,
+			.H_value = cpu_.H,
+			.L_value = cpu_.L,
+			.PC_value = cpu_.PC,
+			.SP_value = cpu_.SP,
+		};
 	}
 }

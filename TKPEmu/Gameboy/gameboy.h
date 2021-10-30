@@ -27,6 +27,7 @@ namespace TKPEmu::Gameboy {
 		void LoadInstrToVec(std::vector<DisInstr>& vec, bool& finished) override;
 		void AddBreakpoint(GameboyBreakpoint bp);
 		void RemoveBreakpoint(int index);
+		void CopyRegToBreakpoint(GameboyBreakpoint& bp);
 	private:
 		Bus bus_;
 		CPU cpu_;

@@ -111,11 +111,11 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <EnableModules>false</EnableModules>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <DebugInformationFormat>None</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\CppData\SDL2-2.0.14\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -148,7 +148,7 @@
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>C:\CppData\glad\include;C:\CppData\SDL2-2.0.14\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <DebugInformationFormat>None</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <EnableModules>false</EnableModules>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -156,7 +156,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\CppData\SDL2-2.0.14\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
