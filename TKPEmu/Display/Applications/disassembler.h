@@ -17,6 +17,7 @@ namespace TKPEmu::Applications {
         Gameboy* emulator_ = nullptr;
         GameboyBreakpoint debug_rvalues_;
         bool clear_all_flag = false;
+        int selected_bp = -1;
     public:
         std::atomic_bool Loaded = false;
         std::vector<DisInstr> Instrs;
@@ -27,6 +28,16 @@ namespace TKPEmu::Applications {
             // TODO: find a way to make item_height not hard coded
             static const int item_height = 17;
             window->Scroll.y = IM_FLOOR(item_height * item);
+        }
+        auto FindByPC(int target) {
+            return std::find_if(
+                std::execution::par_unseq,
+                Instrs.begin(),
+                Instrs.end(),
+                [&target](DisInstr ins) {
+                    return ins.InstructionProgramCode == target;
+                }
+            );
         }
         void Reset() noexcept final override {
             DisInstr::ResetId();
@@ -40,7 +51,6 @@ namespace TKPEmu::Applications {
             bool goto_popup = false;
             bool bp_add_popup = false;
             int goto_pc = -1;
-            int selected_bp = -1;
             if (ImGui::BeginMenuBar()) {
                 if (ImGui::BeginMenu("Emulation")) {
                     DrawMenuEmulation(emulator_, rom_loaded_);
@@ -73,8 +83,14 @@ namespace TKPEmu::Applications {
                 ImGui::Text("Program Code (in hex) to go to:");
                 ImGui::Separator();
                 static char buf[16] = "";
-                ImGui::InputText("hexadecimal", buf, static_cast<size_t>(emulator_->GetPCHexCharSize()) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+                bool close = false;
+                if (ImGui::InputText("hexadecimal", buf, static_cast<size_t>(emulator_->GetPCHexCharSize()) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    close = true;
+                }
                 if (ImGui::Button("OK", ImVec2(120, 0))) {
+                    close = true;
+                }
+                if (close) {
                     unsigned x = 0;
                     std::stringstream ss;
                     ss << std::hex << buf;
@@ -203,8 +219,14 @@ namespace TKPEmu::Applications {
                             ImGui::PushID(row_n);
                             ImGui::TableNextRow();
                             ImGui::TableSetColumnIndex(0);
-                            if (ImGui::Selectable(bp.GetName().c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                                // TODO: Create breakpoint upon selecting
+                            bool sel = false;
+                            if (row_n == selected_bp)
+                                sel = true;
+                            if (ImGui::Selectable(bp.GetName().c_str(), sel, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                                if (!sel)
+                                    selected_bp = row_n;
+                                else
+                                    selected_bp = -1;
                             }
                             ImGui::PopID();
                         }
@@ -215,8 +237,23 @@ namespace TKPEmu::Applications {
                     bp_add_popup = true;
                 }
                 ImGui::SameLine();
+                bool disable = false;
+                // If a breakpoint isn't selected, disable the "Remove" button
+                if (selected_bp == -1) {
+                    disable = true;
+                    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                }
                 if (ImGui::Button("Remove", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.15f))) {
-
+                    if (emulator_->Breakpoints[selected_bp].breakpoint_from_table) {
+                        // We have to remove the breakpoint selection from the table too
+                        auto it = FindByPC(emulator_->Breakpoints[selected_bp].PC_value);
+                        it->Selected = false;
+                    }
+                    emulator_->Breakpoints.erase(emulator_->Breakpoints.begin() + selected_bp);
+                    selected_bp = -1;
+                }
+                if (disable) {
+                    ImGui::PopItemFlag();
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Clear", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.15f))) {
@@ -240,21 +277,30 @@ namespace TKPEmu::Applications {
                     ImGui::OpenPopup("Add breakpoint");
                     bp_add_popup = false;
                 }
-                ImGui::SetNextWindowSize(ImVec2(400, 400));
+                ImGui::SetNextWindowSize(ImVec2(250, 250));
                 ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
                 if (ImGui::BeginPopupModal("Add breakpoint", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
                     static GameboyBreakpoint gbbp;
                     ImGui::Text("Configure the breakpoint:");
                     ImGui::Separator();
                     {
-                        ImGui::BeginChild("bpChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.75f));
-                        breakpoint_register_checkbox(gbbp.A_value, gbbp.A_using, "A");
-                        breakpoint_register_checkbox(gbbp.Ins_value, gbbp.Ins_using, "Ins");
+                        ImGui::BeginChild("bpChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.9f));
+                        breakpoint_register_checkbox("A:", gbbp.A_value, gbbp.A_using);
+                        breakpoint_register_checkbox("B:", gbbp.B_value, gbbp.B_using);
+                        breakpoint_register_checkbox("D:", gbbp.D_value, gbbp.D_using);
+                        breakpoint_register_checkbox("H:", gbbp.H_value, gbbp.H_using);
+                        breakpoint_register_checkbox("PC:", gbbp.PC_value, gbbp.PC_using, ImGuiDataType_U16);
+                        breakpoint_register_checkbox("Instr:", gbbp.Ins_value, gbbp.Ins_using);
                         ImGui::EndChild();
                     }
                     ImGui::SameLine();
                     {
-                        ImGui::BeginChild("bpChildR", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.75f));
+                        ImGui::BeginChild("bpChildR", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.9f));
+                        breakpoint_register_checkbox("F:", gbbp.F_value, gbbp.F_using);
+                        breakpoint_register_checkbox("C:", gbbp.C_value, gbbp.C_using);
+                        breakpoint_register_checkbox("E:", gbbp.E_value, gbbp.E_using);
+                        breakpoint_register_checkbox("L:", gbbp.L_value, gbbp.L_using);
+                        breakpoint_register_checkbox("SP:", gbbp.SP_value, gbbp.SP_using, ImGuiDataType_U16);
                         ImGui::EndChild();
                     }
                     if (ImGui::Button("Add", ImVec2(120, 0))) {
@@ -269,16 +315,6 @@ namespace TKPEmu::Applications {
         }
         void SetEmulator(Gameboy* emulator) {
             emulator_ = emulator;
-        }
-        auto FindByPC(int target) {
-            return std::find_if(
-                std::execution::par_unseq,
-                Instrs.begin(),
-                Instrs.end(),
-                [&target](DisInstr ins) {
-                    return ins.InstructionProgramCode == target;
-                }
-            );
         }
         void SetGotoPC(int& goto_pc, int target) {
             auto it = FindByPC(target);
@@ -309,12 +345,19 @@ namespace TKPEmu::Applications {
         }
     private:
         template<typename T>
-        void breakpoint_register_checkbox(T& value, bool& is_used, std::string str) {
-            ImGui::Checkbox(str.c_str(), &is_used);
-            ImGui::SameLine();
+        void breakpoint_register_checkbox(const char* checkbox_l, T& value, bool& is_used, ImGuiDataType type = ImGuiDataType_U8) {
+            ImGui::Checkbox(checkbox_l, &is_used);
             if (is_used) {
-                // TODO: set to type max
-                ImGui::DragInt("drag int", (int*)(&value), 1, 0, 255, NULL);
+                ImGui::SameLine();
+                int w = 20;
+                if (type == ImGuiDataType_U16)
+                    w = 40;
+                ImGui::PushItemWidth(w);
+                char id[6] = "##IDt";
+                id[4] = checkbox_l[0];
+                ImGui::InputScalar(id, type, &value, 0, 0, w == 20 ? "%02X" : "%04X",
+                    ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CharsHexadecimal );
+                ImGui::PopItemWidth();
             }
         }
     };
