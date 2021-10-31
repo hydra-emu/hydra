@@ -15,11 +15,13 @@ namespace TKPEmu::Applications {
         using Gameboy = TKPEmu::Gameboy::Gameboy;
         GameboyBreakpoint debug_rvalues_;
         Gameboy* emulator_ = nullptr;
+        uint8_t* LY_ = nullptr;
         bool clear_all_flag = false;
         int selected_bp = -1;
     public:
         std::vector<DisInstr> Instrs;
-        GameboyDisassembler(bool* rom_loaded) : BaseDisassembler(rom_loaded) {}
+        GameboyDisassembler(bool* rom_loaded) : BaseDisassembler(rom_loaded) {
+        }
         void Focus(int item) noexcept {
             ImGuiContext& g = *ImGui::GetCurrentContext();
             ImGuiWindow* window = g.CurrentWindow;
@@ -39,6 +41,7 @@ namespace TKPEmu::Applications {
         }
         void SetEmulator(Emulator* emu) override {
             emulator_ = dynamic_cast<Gameboy*>(emu);
+            LY_ = emulator_->GetCPU().bus_->GetPointer(0xFF44);
         }
         void Reset() noexcept final override {
             DisInstr::ResetId();
@@ -265,12 +268,15 @@ namespace TKPEmu::Applications {
                 if (emulator_->Paused.load()) {
                     emulator_->CopyRegToBreakpoint(db_reg);
                 }
+                // TODO: dont use stringstream, use imgui text with %02x
                 std::stringstream ss;
+                if (emulator_->Paused.load())
                 ss << std::hex << std::setfill('0')
-                    << "AF: " << std::setw(2) << db_reg.A_value << std::setw(2) << db_reg.F_value << "   BC: " << std::setw(2) << db_reg.B_value << std::setw(2) << db_reg.C_value << "\n"
-                    << "DE: " << std::setw(2) << db_reg.D_value << std::setw(2) << db_reg.E_value << "   HL: " << std::setw(2) << db_reg.H_value << std::setw(2) << db_reg.L_value << "\n"
+                    << "AF: " << std::setw(2) << db_reg.A_value << std::setw(2) << db_reg.F_value << "\nBC: " << std::setw(2) << db_reg.B_value << std::setw(2) << db_reg.C_value << "\n"
+                    << "DE: " << std::setw(2) << db_reg.D_value << std::setw(2) << db_reg.E_value << "\nHL: " << std::setw(2) << db_reg.H_value << std::setw(2) << db_reg.L_value << "\n"
+                    << "SP: " << std::setw(4) << db_reg.SP_value << "\n"
                     << "PC: " << std::setw(4) << db_reg.PC_value << "\n"
-                    << "SP: " << std::setw(4) << db_reg.SP_value << "\n";
+                    << "LY: " << std::setw(2) << (int)(*LY_) << "\n";
                 ImGui::Text(ss.str().c_str());
                 ImGui::EndChild();
                 // TODO: add switch from hex to binary on every textbox here

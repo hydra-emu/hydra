@@ -124,7 +124,8 @@ namespace TKPEmu::Gameboy::Devices {
 		std::vector<Instruction> cbMap;
 
 		void Reset();
-		void Update();
+		int Update();
+		void CheckInterr();
 	};
 }
 #endif

@@ -15,6 +15,8 @@ namespace TKPEmu::Gameboy {
 		using Cartridge = TKPEmu::Gameboy::Devices::Cartridge;
 		using DisInstr = TKPEmu::Tools::DisInstr;
 		using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
+		// TODO: for debugging the cpu
+		std::string str = "D:/gblogs/tkpemu/logtest1.txt";
 	public:
 		Gameboy();
 		~Gameboy();
@@ -36,6 +38,7 @@ namespace TKPEmu::Gameboy {
 		CPU cpu_;
 		PPU ppu_;
 		Cartridge cartridge_;
+		std::ofstream file;
 	};
 }
 #endif

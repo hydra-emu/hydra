@@ -45,7 +45,6 @@ namespace TKPEmu::Gameboy::Devices {
 			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
 			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
 		};
-		bus_->Write(0xFF44, 0x91);
 	}
 	inline void CPU::reg_dec(RegisterType& reg) {
 		auto temp = reg - 1;
@@ -63,6 +62,7 @@ namespace TKPEmu::Gameboy::Devices {
 		auto temp = reg + 1;
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (((reg & 0xF) + (1 & 0xF)) > 0xF) << FLAG_HCARRY_SHIFT;
 		// Carry doesn't reset after INC 
 		F &= FLAG_CARRY_MASK;
 		F |= flag;
@@ -630,10 +630,10 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::POPBC() {
+		// TODO: remove & 0xFFFF and make ReadL
+		B = bus_->Read((SP + 1) & 0xFFFF);
 		C = bus_->Read(SP);
-		SP++;
-		B = bus_->Read(SP);
-		SP++;
+		SP += 2;
 		mTemp = 3; tTemp = 12;
 	}
 
@@ -1366,7 +1366,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::AND8() {
-		uint16_t t = bus_->Read((H << 8) | L);
+		uint16_t t = bus_->Read(PC);
 		reg_and(t);
 		PC++;
 		mTemp = 2; tTemp = 8;
@@ -1756,16 +1756,16 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::CALLNZ16() {
-		if ((F & 0x80) == 0x00) {
+		if (!(F & FLAG_ZERO_MASK)) {
 			SP -= 2;
 			bus_->WriteL(SP, PC + 2);
 			PC = bus_->ReadL(PC);
-			mTemp += 2; tTemp += 8;
+			mTemp += 3; tTemp += 12;
 		}
 		else {
 			PC += 2;
 		}
-		mTemp = 3; tTemp = 12;
+		mTemp += 3; tTemp += 12;
 	}
 
 	void CPU::CALLZ16() {
@@ -2828,7 +2828,7 @@ namespace TKPEmu::Gameboy::Devices {
 		halt = false; stop = false;
 	}
 
-	void CPU::Update() {
+	int CPU::Update() {
 		if (halt) {
 			mTemp = 1; tTemp = 4;
 		}
@@ -2841,10 +2841,15 @@ namespace TKPEmu::Gameboy::Devices {
 			F &= 0xF0;
 			PC &= 0xFFFF;
 		}
+		mClock += mTemp;
+		tClock += tTemp;
+		return tTemp;
+	}
+	void CPU::CheckInterr() {
 		int ieT, ifT;
 		ieT = bus_->GetIE();
 		ifT = bus_->GetIF();
-		if (IME && ieT && ifT) { 
+		if (IME && ieT && ifT) {
 			halt = 0; IME = 0;
 			bool ifired = ieT & ifT;
 			if (ifired & 1) {
@@ -2876,7 +2881,5 @@ namespace TKPEmu::Gameboy::Devices {
 				IME = 1;
 			}
 		}
-		mClock += mTemp;
-		tClock += tTemp;
 	}
 }

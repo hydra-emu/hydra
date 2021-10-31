@@ -1,11 +1,12 @@
 #include "gameboy.h"
 #include <iostream>
 namespace TKPEmu::Gameboy {
-	Gameboy::Gameboy() : cpu_(&bus_), ppu_(&bus_), cartridge_() {
+	Gameboy::Gameboy() : cpu_(&bus_), ppu_(&bus_), cartridge_(), file(str) {
 
 	}
 	Gameboy::~Gameboy() {
 		Stopped.store(true);
+		file.close();
 	}
 	void Gameboy::Start() {
 		Reset();
@@ -61,13 +62,17 @@ namespace TKPEmu::Gameboy {
 	}
 	void Gameboy::Update() {
 		std::lock_guard<std::mutex> lg(UpdateMutex);
-		cpu_.Update();
+		int clk = cpu_.Update();
+		ppu_.Update(clk);
+		cpu_.CheckInterr();
 		//ppu_.Update();
 		//if (ppu_.NeedsDraw()) {
 		//	ScreenDataMutex.lock();
 		//	ppu_.Draw(EmulatorImage);
 		//	ScreenDataMutex.unlock();
 		//}
+		//file << std::hex << std::setfill('0') << std::setw(4) << cpu_.PC << ": A:" << std::setw(2) << cpu_.A << " B:" << std::setw(2) << cpu_.B << " C:" << std::setw(2) << cpu_.C << " D:" << std::setw(2) << cpu_.D
+		//	<< " E:" << std::setw(2) << cpu_.E << " F:" << std::setw(2) << cpu_.F << " H:" << std::setw(2) << cpu_.H << " L:" << std::setw(2) << cpu_.L << " LY:" << std::setw(2) << (int)cpu_.bus_->Read(0xFF44) << " SP:" << std::setw(4) << cpu_.SP << "\n";
 	}
 	void Gameboy::LoadFromFile(const std::string& path) {
 		cartridge_.Load(path, bus_.mem);

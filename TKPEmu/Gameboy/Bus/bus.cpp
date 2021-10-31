@@ -71,9 +71,9 @@ namespace TKPEmu::Gameboy::Devices {
 
 			case 0xF00:
 			{
-				if (address == 0xFF41) {
-					return ((mem[0xFF44] == mem[0xFF45]) ? 4 : 0) | mem[0xFF41];
-				}
+				//if (address == 0xFF41) {
+				//	return ((mem[0xFF44] == mem[0xFF45]) ? 4 : 0) | mem[0xFF41];
+				//}
 				return mem[address] & 0xFFFF;
 			}
 			}
@@ -85,6 +85,10 @@ namespace TKPEmu::Gameboy::Devices {
 
 	uint16_t Bus::ReadL(uint16_t address) {
 		return Read(address) + (Read(address + 1) << 8);
+	}
+
+	uint8_t* Bus::GetPointer(uint16_t address) {
+		return &mem[address];
 	}
 
 	void Bus::Write(uint16_t address, uint8_t data) {
@@ -250,19 +254,19 @@ namespace TKPEmu::Gameboy::Devices {
 		cartridge->Load(fileName, mem);
 	}
 
-	int Bus::GetIE() {
+	uint8_t Bus::GetIE() {
 		return mem[0xFFFF];
 	}
 
-	int Bus::GetIF() {
+	uint8_t Bus::GetIF() {
 		return mem[0xFF0F];
 	}
 
-	void Bus::SetIE(int value) {
+	void Bus::SetIE(uint8_t value) {
 		mem[0xFFFF] = value;
 	}
 
-	void Bus::SetIF(int value) {
+	void Bus::SetIF(uint8_t value) {
 		mem[0xFF0F] = value;
 	}
 }
