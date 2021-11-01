@@ -66,8 +66,8 @@ namespace TKPEmu::Gameboy::Devices {
 		// Two byte instructions
 		void RLCB(); void RLCC(); void RLCD(); void RLCE(); void RLCH(); void RLCL(); void RLCHL(); void RLCAr(); void RRCB(); void RRCC(); void RRCD(); void RRCE(); void RRCH(); void RRCL(); void RRCHL(); void RRCAr();
 		void RLB(); void RLC(); void RLD(); void RLE(); void RLH(); void RLL(); void RLHL(); void RLAr(); void RRB(); void RRC(); void RRD(); void RRE(); void RRH(); void RRL(); void RRHL(); void RRAr();
-		void SLAB(); void SLAC(); void SLAD(); void SLAE(); void SLAH(); void SLAL(); void SLAA(); void SRAB(); void SRAC(); void SRAD(); void SRAE(); void SRAH(); void SRAL(); void SRAA();
-		void SWAPB(); void SWAPC(); void SWAPD(); void SWAPE(); void SWAPH(); void SWAPL(); void SWAPA(); void SRLB(); void SRLC(); void SRLD(); void SRLE(); void SRLH(); void SRLL(); void SRLA();
+		void SLAB(); void SLAC(); void SLAD(); void SLAE(); void SLAH(); void SLAL(); void SLAHL(); void SLAA(); void SRAB(); void SRAC(); void SRAD(); void SRAE(); void SRAH(); void SRAL(); void SRAHL(); void SRAA();
+		void SWAPB(); void SWAPC(); void SWAPD(); void SWAPE(); void SWAPH(); void SWAPL(); void SWAPHL();  void SWAPA(); void SRLB(); void SRLC(); void SRLD(); void SRLE(); void SRLH(); void SRLL(); void SRLHL(); void SRLA();
 		void BIT0B(); void BIT0C(); void BIT0D(); void BIT0E(); void BIT0H(); void BIT0L(); void BIT0M(); void BIT0A(); void BIT1B(); void BIT1C(); void BIT1D(); void BIT1E(); void BIT1H(); void BIT1L(); void BIT1M(); void BIT1A();
 		void BIT2B(); void BIT2C(); void BIT2D(); void BIT2E(); void BIT2H(); void BIT2L(); void BIT2M(); void BIT2A(); void BIT3B(); void BIT3C(); void BIT3D(); void BIT3E(); void BIT3H(); void BIT3L(); void BIT3M(); void BIT3A();
 		void BIT4B(); void BIT4C(); void BIT4D(); void BIT4E(); void BIT4H(); void BIT4L(); void BIT4M(); void BIT4A(); void BIT5B(); void BIT5C(); void BIT5D(); void BIT5E(); void BIT5H(); void BIT5L(); void BIT5M(); void BIT5A();
@@ -94,14 +94,20 @@ namespace TKPEmu::Gameboy::Devices {
 		inline void reg_add(RegisterType& reg);
 		inline void reg_adc(RegisterType& reg);
 		inline void reg_cmp(RegisterType& reg);
+		inline void reg_or (RegisterType& reg);
+		inline void reg_xor(RegisterType& reg);
 		inline void hl_add(BigRegisterType& big_reg);
 		inline void bit_ch(RegisterType reg, unsigned shift);
 		inline void bit_res(RegisterType& reg, unsigned shift);
 		inline void bit_set(RegisterType& reg, unsigned shift);
 		inline void bit_swap(RegisterType& reg);
+		inline void bit_rrc(RegisterType& reg);
+		inline void bit_rl(RegisterType& reg);
+		inline void bit_rr(RegisterType& reg);
+		inline void bit_sl(RegisterType& reg);
+		inline void bit_sr(RegisterType& reg);
+		inline void bit_srl(RegisterType& reg);
 
-		// TODO: remove FZ
-		void FZ(int i, bool as = false);
 		void RSV();
 		void RRS();
 		/// <summary>Flag 7 0x80</summary>
@@ -157,8 +163,8 @@ namespace TKPEmu::Gameboy::Devices {
 		std::array<Instruction, 0x100> cbMap = { {
 			{ "RLCB" , &CPU::RLCB }, { "RLCC" , &CPU::RLCC }, { "RLCD" , &CPU::RLCD }, { "RLCE" , &CPU::RLCE }, { "RLCH" , &CPU::RLCH }, { "RLCL" , &CPU::RLCL }, { "RLCHL" , &CPU::RLCHL }, { "RLCAr" , &CPU::RLCAr },  { "RRCB" , &CPU::RRCB }, { "RRCC" , &CPU::RRCC }, { "RRCD" , &CPU::RRCD }, { "RRCE" , &CPU::RRCE }, { "RRCH" , &CPU::RRCH }, { "RRCL" , &CPU::RRCL }, { "RRCHL" , &CPU::RRCHL }, { "RRCAr" , &CPU::RRCAr },
 			{ "RLB" , &CPU::RLB }, { "RLC" , &CPU::RLC }, { "RLD" , &CPU::RLD }, { "RLE" , &CPU::RLE }, { "RLH" , &CPU::RLH }, { "RLL" , &CPU::RLL }, { "RLHL" , &CPU::RLHL }, { "RLAr" , &CPU::RLAr }, { "RRB" , &CPU::RRB }, { "RRC" , &CPU::RRC },  { "RRD" , &CPU::RRD },  { "RRE" , &CPU::RRE },  { "RRH" , &CPU::RRH },  { "RRL" , &CPU::RRL },  { "RRHL" , &CPU::RRHL },  { "RRAr" , &CPU::RRAr },
-			{ "SLAB" , &CPU::SLAB }, { "SLAC" , &CPU::SLAC }, { "SLAD" , &CPU::SLAD }, { "SLAE" , &CPU::SLAE }, { "SLAH" , &CPU::SLAH }, { "SLAL" , &CPU::SLAL }, { "???" , &CPU::XXX }, { "SLAA" , &CPU::SLAA }, { "SRAB" , &CPU::SRAB }, { "SRAC" , &CPU::SRAC }, { "SRAD" , &CPU::SRAD }, { "SRAE" , &CPU::SRAE }, { "SRAH" , &CPU::SRAH }, { "SRAL" , &CPU::SRAL }, { "???" , &CPU::XXX }, { "SRAA" , &CPU::SRAA },
-			{ "SWAPB" , &CPU::SWAPB }, { "SWAPC" , &CPU::SWAPC }, { "SWAPD" , &CPU::SWAPD }, { "SWAPE" , &CPU::SWAPE }, { "SWAPH" , &CPU::SWAPH }, { "SWAPL" , &CPU::SWAPL }, { "???" , &CPU::XXX }, { "SWAPA" , &CPU::SWAPA }, { "SRLB" , &CPU::SRLB }, { "SRLC" , &CPU::SRLC }, { "SRLD" , &CPU::SRLD }, { "SRLE" , &CPU::SRLE }, { "SRLH" , &CPU::SRLH }, { "SRLL" , &CPU::SRLL }, { "???" , &CPU::XXX }, { "SRLA" , &CPU::SRLA },
+			{ "SLAB" , &CPU::SLAB }, { "SLAC" , &CPU::SLAC }, { "SLAD" , &CPU::SLAD }, { "SLAE" , &CPU::SLAE }, { "SLAH" , &CPU::SLAH }, { "SLAL" , &CPU::SLAL }, { "SLAHL" , &CPU::SLAHL }, { "SLAA" , &CPU::SLAA }, { "SRAB" , &CPU::SRAB }, { "SRAC" , &CPU::SRAC }, { "SRAD" , &CPU::SRAD }, { "SRAE" , &CPU::SRAE }, { "SRAH" , &CPU::SRAH }, { "SRAL" , &CPU::SRAL }, { "SRAHL" , &CPU::SRAHL }, { "SRAA" , &CPU::SRAA },
+			{ "SWAPB" , &CPU::SWAPB }, { "SWAPC" , &CPU::SWAPC }, { "SWAPD" , &CPU::SWAPD }, { "SWAPE" , &CPU::SWAPE }, { "SWAPH" , &CPU::SWAPH }, { "SWAPL" , &CPU::SWAPL }, { "SWAPHL" , &CPU::SWAPHL }, { "SWAPA" , &CPU::SWAPA }, { "SRLB" , &CPU::SRLB }, { "SRLC" , &CPU::SRLC }, { "SRLD" , &CPU::SRLD }, { "SRLE" , &CPU::SRLE }, { "SRLH" , &CPU::SRLH }, { "SRLL" , &CPU::SRLL }, { "SRLHL" , &CPU::SRLHL }, { "SRLA" , &CPU::SRLA },
 			{ "BIT0B" , &CPU::BIT0B }, { "BIT0C" , &CPU::BIT0C }, { "BIT0D" , &CPU::BIT0D }, { "BIT0E" , &CPU::BIT0E }, { "BIT0H" , &CPU::BIT0H }, { "BIT0L" , &CPU::BIT0L }, { "BIT0M" , &CPU::BIT0M }, { "BIT0A" , &CPU::BIT0A }, { "BIT1B" , &CPU::BIT1B }, { "BIT1C" , &CPU::BIT1C }, { "BIT1D" , &CPU::BIT1D }, { "BIT1E" , &CPU::BIT1E }, { "BIT1H" , &CPU::BIT1H }, { "BIT1L" , &CPU::BIT1L }, { "BIT1M" , &CPU::BIT1M }, { "BIT1A" , &CPU::BIT1A },
 			{ "BIT2B" , &CPU::BIT2B }, { "BIT2C" , &CPU::BIT2C }, { "BIT2D" , &CPU::BIT2D }, { "BIT2E" , &CPU::BIT2E }, { "BIT2H" , &CPU::BIT2H }, { "BIT2L" , &CPU::BIT2L }, { "BIT2M" , &CPU::BIT2M }, { "BIT2A" , &CPU::BIT2A }, { "BIT3B" , &CPU::BIT3B }, { "BIT3C" , &CPU::BIT3C }, { "BIT3D" , &CPU::BIT3D }, { "BIT3E" , &CPU::BIT3E }, { "BIT3H" , &CPU::BIT3H }, { "BIT3L" , &CPU::BIT3L }, { "BIT3M" , &CPU::BIT3M }, { "BIT3A" , &CPU::BIT3A },
 			{ "BIT4B" , &CPU::BIT4B }, { "BIT4C" , &CPU::BIT4C }, { "BIT4D" , &CPU::BIT4D }, { "BIT4E" , &CPU::BIT4E }, { "BIT4H" , &CPU::BIT4H }, { "BIT4L" , &CPU::BIT4L }, { "BIT4M" , &CPU::BIT4M }, { "BIT4A" , &CPU::BIT4A }, { "BIT5B" , &CPU::BIT5B }, { "BIT5C" , &CPU::BIT5C }, { "BIT5D" , &CPU::BIT5D }, { "BIT5E" , &CPU::BIT5E }, { "BIT5H" , &CPU::BIT5H }, { "BIT5L" , &CPU::BIT5L }, { "BIT5M" , &CPU::BIT5M }, { "BIT5A" , &CPU::BIT5A },

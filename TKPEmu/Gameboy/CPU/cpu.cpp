@@ -98,6 +98,24 @@ namespace TKPEmu::Gameboy::Devices {
 		mTemp = 1; tTemp = 4;
 	}
 
+	inline void CPU::reg_or(RegisterType& reg) {
+		auto temp = A | reg;
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		F = flag;
+		A = temp & 0xFF;
+		mTemp = 1; tTemp = 4;
+	}
+
+	inline void CPU::reg_xor(RegisterType& reg) {
+		auto temp = A ^ reg;
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		F = flag;
+		A = temp & 0xFF;
+		mTemp = 1; tTemp = 4;
+	}
+
 	inline void CPU::hl_add(BigRegisterType& big_reg) {
 		uint16_t t = (H << 8) | L;
 		auto temp = t + big_reg;
@@ -135,18 +153,71 @@ namespace TKPEmu::Gameboy::Devices {
 		mTemp = 2; tTemp = 8;
 	}
 
-	inline void CPU::bit_set(RegisterType& reg, unsigned shift) {
-		reg |= 1 << shift;
+	inline void CPU::bit_rrc(RegisterType& reg) {
+		auto temp = (reg >> 1) + ((reg & 0x1) << 7) + ((reg & 0x1) << 8);
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
+		reg = temp & 0xFF;
 		mTemp = 2; tTemp = 8;
 	}
 
-	void CPU::FZ(int i, bool as) {
-		F = 0;
-		if (!(i & 0xFF)) {
-			F |= 0x80;
-		}
+	inline void CPU::bit_rl(RegisterType& reg) {
+		bool carry = F & FLAG_CARRY_MASK;
+		auto temp = (reg << 1) + carry;
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
+		reg = temp & 0xFF;
+		mTemp = 2; tTemp = 8;
+	}
 
-		F |= as ? 0x40 : 0;
+	inline void CPU::bit_rr(RegisterType& reg) {
+		bool carry = F & FLAG_CARRY_MASK;
+		auto temp = (reg >> 1) + (carry << 7) + ((reg & 0x1) << 8);
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
+		reg = temp & 0xFF;
+		mTemp = 2; tTemp = 8;
+	}
+
+	inline void CPU::bit_sl(RegisterType& reg) {
+		auto temp = (reg << 1);
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
+		reg = temp & 0xFF;
+		mTemp = 2; tTemp = 8;
+	}
+
+	inline void CPU::bit_sr(RegisterType& reg) {
+		auto temp = ((reg >> 1) | (reg & 0x80)) + ((reg & 0x1) << 8);
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
+		reg = temp & 0xFF;
+		mTemp = 2; tTemp = 8;
+	}
+
+	inline void CPU::bit_srl(RegisterType& reg) {
+		auto temp = (reg >> 1) + ((reg & 0x1) << 8);
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
+		reg = temp & 0xFF;
+		mTemp = 2; tTemp = 8;
+	}
+
+	inline void CPU::bit_set(RegisterType& reg, unsigned shift) {
+		reg |= 1 << shift;
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::RSV() {
@@ -1152,138 +1223,82 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::ORA() {
-		A |= A;
-		A &= 0xFF;
-		FZ(A);
-		SetFlagCarry(false);
-		mTemp = 1; tTemp = 4;
+		reg_or(A);
 	}
 
 	void CPU::ORB() {
-		A |= B;
-		A &= 0xFF;
-		FZ(A);
-		SetFlagCarry(false);
-		mTemp = 1; tTemp = 4;
+		reg_or(B);
 	}
 
 	void CPU::ORC() {
-		A |= C;
-		A &= 0xFF;
-		FZ(A);
-		SetFlagCarry(false);
-		mTemp = 1; tTemp = 4;
+		reg_or(C);
 	}
 
 	void CPU::ORD() {
-		A |= D;
-		A &= 0xFF;
-		FZ(A);
-		SetFlagCarry(false);
-		mTemp = 1; tTemp = 4;
+		reg_or(D);
 	}
 
 	void CPU::ORE() {
-		A |= E;
-		A &= 0xFF;
-		FZ(A);
-		SetFlagCarry(false);
-		mTemp = 1; tTemp = 4;
+		reg_or(E);
 	}
 
 	void CPU::ORH() {
-		A |= H;
-		A &= 0xFF;
-		FZ(A);
-		SetFlagCarry(false);
-		mTemp = 1; tTemp = 4;
+		reg_or(H);
 	}
 
 	void CPU::ORL() {
-		A |= L;
-		A &= 0xFF;
-		FZ(A);
-		SetFlagCarry(false);
-		mTemp = 1; tTemp = 4;
+		reg_or(L);
 	}
 
 	void CPU::ORHL() {
-		A |= bus_->Read((H << 8) | L);
-		A &= 0xFF;
-		F = A ? 0 : 0x80;
+		uint8_t t = bus_->Read((H << 8) | L);
+		reg_or(t);
 		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::OR8() {
-		A |= bus_->Read(PC);
-		A &= 0xFF;
-		PC++;
-		FZ(A);
-		SetFlagCarry(false);
+		uint8_t t = bus_->Read(PC++);
+		reg_or(t);
 		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::XORA() {
-		A ^= A;
-		A &= 0xFF;
-		FZ(A);
-		mTemp = 1; tTemp = 4;
+		reg_xor(A);
 	}
 
 	void CPU::XORB() {
-		A ^= B;
-		A &= 0xFF;
-		FZ(A);
-		mTemp = 1; tTemp = 4;
+		reg_xor(B);
 	}
 
 	void CPU::XORC() {
-		A ^= C;
-		A &= 0xFF;
-		FZ(A);
-		mTemp = 1; tTemp = 4;
+		reg_xor(C);
 	}
 
 	void CPU::XORD() {
-		A ^= D;
-		A &= 0xFF;
-		FZ(A);
-		mTemp = 1; tTemp = 4;
+		reg_xor(D);
 	}
 
 	void CPU::XORE() {
-		A ^= E;
-		A &= 0xFF;
-		FZ(A);
-		mTemp = 1; tTemp = 4;
+		reg_xor(E);
 	}
 
 	void CPU::XORH() {
-		A ^= H;
-		A &= 0xFF;
-		FZ(A);
-		mTemp = 1; tTemp = 4;
+		reg_xor(H);
 	}
 
 	void CPU::XORL() {
-		A ^= L;
-		A &= 0xFF;
-		FZ(A);
-		mTemp = 1; tTemp = 4;
+		reg_xor(L);
 	}
 
 	void CPU::XORHL() {
-		A ^= bus_->Read((H << 8) | L);
-		A &= 0xFF;
-		FZ(A);
+		uint8_t t = bus_->Read((H << 8) | L);
+		reg_xor(t);
 		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::XOR8() {
-		A ^= bus_->Read(PC);
-		A &= 0xFF;
-		PC++;
-		FZ(A);
+		uint8_t t = bus_->Read(PC++);
+		reg_xor(t);
 		mTemp = 2; tTemp = 8;
 	}
 
@@ -1818,368 +1833,178 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::RRCB() {
-		int ci = B & 1 ? 0x80 : 0;
-		int co = B & 1 ? 0x10 : 0;
-		B = (B >> 1) + ci;
-		B &= 0xFF;
-		FZ(B);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rrc(B);
 	}
 
 	void CPU::RRCC() {
-		int ci = C & 1 ? 0x80 : 0;
-		int co = C & 1 ? 0x10 : 0;
-		C = (C >> 1) + ci;
-		C &= 0xFF;
-		FZ(C);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rrc(C);
 	}
 
 	void CPU::RRCD() {
-		int ci = D & 1 ? 0x80 : 0;
-		int co = D & 1 ? 0x10 : 0;
-		D = (D >> 1) + ci;
-		D &= 0xFF;
-		FZ(D);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rrc(D);
 	}
 
 	void CPU::RRCE() {
-		int ci = E & 1 ? 0x80 : 0;
-		int co = E & 1 ? 0x10 : 0;
-		E = (E >> 1) + ci;
-		E &= 0xFF;
-		FZ(E);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rrc(E);
 	}
 
 	void CPU::RRCH() {
-		int ci = H & 1 ? 0x80 : 0;
-		int co = H & 1 ? 0x10 : 0;
-		H = (H >> 1) + ci;
-		H &= 0xFF;
-		FZ(H);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rrc(H);
 	}
 
 	void CPU::RRCL() {
-		int ci = L & 1 ? 0x80 : 0;
-		int co = L & 1 ? 0x10 : 0;
-		L = (L >> 1) + ci;
-		L &= 0xFF;
-		FZ(L);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rrc(L);
 	}
 
 	void CPU::RRCAr() {
-		int ci = A & 1 ? 0x80 : 0;
-		int co = A & 1 ? 0x10 : 0;
-		A = (A >> 1) + ci;
-		A &= 0xFF;
-		FZ(A);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rrc(A);
 	}
 
 	void CPU::RRCHL() {
-		int i = bus_->Read((H << 8) | L);
-		int ci = i & 1 ? 0x80 : 0;
-		int co = i & 1 ? 0x10 : 0;
-		i = (i >> 1) + ci;
-		i &= 0xFF;
-		bus_->Write((H << 8) | L, i);
-		F = (i) ? 0 : 0x80;
-		F = (F & 0xEF) + co;
+		uint8_t t = bus_->Read((H << 8) | L);
+		bit_rrc(t);
+		bus_->Write((H << 8) | L, t);
 		mTemp = 4; tTemp = 16;
 	}
 
 	void CPU::RLB() {
-		int ci = F & 0x10 ? 1 : 0;
-		int co = B & 0x80 ? 0x10 : 0;
-		B = (B << 1) + ci;
-		B &= 0xFF;
-		FZ(B);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rl(B);
 	}
 
 	void CPU::RLC() {
-		int ci = F & 0x10 ? 1 : 0;
-		int co = C & 0x80 ? 0x10 : 0;
-		C = (C << 1) + ci;
-		C &= 0xFF;
-		FZ(C);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rl(C);
 	}
 
 	void CPU::RLD() {
-		int ci = F & 0x10 ? 1 : 0;
-		int co = D & 0x80 ? 0x10 : 0;
-		D = (D << 1) + ci;
-		D &= 0xFF;
-		FZ(D);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rl(D);
 	}
 
 	void CPU::RLE() {
-		int ci = F & 0x10 ? 1 : 0;
-		int co = E & 0x80 ? 0x10 : 0;
-		E = (E << 1) + ci;
-		E &= 0xFF;
-		FZ(E);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rl(E);
 	}
 
 	void CPU::RLH() {
-		int ci = F & 0x10 ? 1 : 0;
-		int co = H & 0x80 ? 0x10 : 0;
-		H = (H << 1) + ci;
-		H &= 0xFF;
-		FZ(H);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rl(H);
 	}
 
 	void CPU::RLL() {
-		int ci = F & 0x10 ? 1 : 0;
-		int co = L & 0x80 ? 0x10 : 0;
-		L = (L << 1) + ci;
-		L &= 0xFF;
-		FZ(L);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rl(L);
 	}
 
 	void CPU::RLAr() {
-		int ci = F & 0x10 ? 1 : 0;
-		int co = A & 0x80 ? 0x10 : 0;
-		A = (A << 1) + ci;
-		A &= 0xFF;
-		FZ(A);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rl(A);
 	}
 
 	void CPU::RLHL() {
-		int i = bus_->Read((H << 8) | L);
-		int ci = F & 0x10 ? 1 : 0;
-		int co = i & 0x80 ? 0x10 : 0;
-		i = (i << 1) + ci;
-		i &= 0xFF;
-		FZ(i);
-		bus_->Write((H << 8) | L, i);
-		F = (F & 0xEF) + co;
+		uint8_t t = bus_->Read((H << 8) | L);
+		bit_rl(t);
+		bus_->Write((H << 8) | L, t);
 		mTemp = 4; tTemp = 16;
 	}
 
 	void CPU::RRB() {
-		int ci = F & 0x10 ? 0x80 : 0;
-		int co = B & 1 ? 0x10 : 0;
-		B = (B >> 1) + ci;
-		B &= 0xFF;
-		FZ(B);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rr(B);
 	}
 
 	void CPU::RRC() {
-		int ci = F & 0x10 ? 0x80 : 0;
-		int co = C & 1 ? 0x10 : 0;
-		C = (C >> 1) + ci;
-		C &= 0xFF;
-		FZ(C);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rr(C);
 	}
 
 	void CPU::RRD() {
-		int ci = F & 0x10 ? 0x80 : 0;
-		int co = D & 1 ? 0x10 : 0;
-		D = (D >> 1) + ci;
-		D &= 0xFF;
-		FZ(D);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rr(D);
 	}
 
 	void CPU::RRE() {
-		int ci = F & 0x10 ? 0x80 : 0;
-		int co = E & 1 ? 0x10 : 0;
-		E = (E >> 1) + ci;
-		E &= 0xFF;
-		FZ(E);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rr(E);
 	}
 
 	void CPU::RRH() {
-		int ci = F & 0x10 ? 0x80 : 0;
-		int co = H & 1 ? 0x10 : 0;
-		H = (H >> 1) + ci;
-		H &= 0xFF;
-		FZ(H);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rr(H);
 	}
 
 	void CPU::RRL() {
-		int ci = F & 0x10 ? 0x80 : 0;
-		int co = L & 1 ? 0x10 : 0;
-		L = (L >> 1) + ci;
-		L &= 0xFF;
-		FZ(L);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rr(L);
 	}
 
 	void CPU::RRAr() {
-		int ci = F & 0x10 ? 0x80 : 0;
-		int co = A & 1 ? 0x10 : 0;
-		A = (A >> 1) + ci;
-		A &= 0xFF;
-		FZ(A);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_rr(A);
 	}
 
 	void CPU::RRHL() {
-		int i = bus_->Read((H << 8) | L);
-		int ci = F & 0x10 ? 1 : 0;
-		int co = i & 0x80 ? 0x10 : 0;
-		i = (i << 1) + ci;
-		i &= 0xFF;
-		FZ(i);
-		bus_->Write((H << 8) | L, i);
-		F = (F & 0xEF) + co;
+		uint8_t t = bus_->Read((H << 8) | L);
+		bit_rr(t);
+		bus_->Write((H << 8) | L, t);
 		mTemp = 4; tTemp = 16;
 	}
 
 	void CPU::SLAB() {
-		int co = B & 0x80 ? 0x10 : 0;
-		B = (B << 1) & 0xFF;
-		FZ(B);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sl(B);
 	}
 
 	void CPU::SLAC() {
-		int co = C & 0x80 ? 0x10 : 0;
-		C = (C << 1) & 0xFF;
-		FZ(C);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sl(C);
 	}
 
 	void CPU::SLAD() {
-		int co = D & 0x80 ? 0x10 : 0;
-		D = (D << 1) & 0xFF;
-		FZ(D);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sl(D);
 	}
 
 	void CPU::SLAE() {
-		int co = E & 0x80 ? 0x10 : 0;
-		E = (E << 1) & 0xFF;
-		FZ(E);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sl(E);
 	}
 
 	void CPU::SLAH() {
-		int co = H & 0x80 ? 0x10 : 0;
-		H = (H << 1) & 0xFF;
-		FZ(H);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sl(H);
 	}
 
 	void CPU::SLAL() {
-		int co = L & 0x80 ? 0x10 : 0;
-		L = (L << 1) & 0xFF;
-		FZ(L);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sl(L);
+	}
+
+	void CPU::SLAHL() {
+		uint8_t t = bus_->Read((H << 8) | L);
+		bit_sl(t);
+		bus_->Write((H << 8) | L, t);
+		mTemp = 4; tTemp = 16;
 	}
 
 	void CPU::SLAA() {
-		int co = A & 0x80 ? 0x10 : 0;
-		A = (A << 1) & 0xFF;
-		FZ(A);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sl(A);
 	}
 
 	void CPU::SRAB() {
-		int ci = B & 0x80;
-		int co = B & 1 ? 0x10 : 0;
-		B = ((B >> 1) + ci) & 0xFF;
-		FZ(B);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sr(B);
 	}
 
 	void CPU::SRAC() {
-		int ci = C & 0x80;
-		int co = C & 1 ? 0x10 : 0;
-		C = ((C >> 1) + ci) & 0xFF;
-		FZ(C);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sr(C);
 	}
 
 	void CPU::SRAD() {
-		int ci = D & 0x80;
-		int co = D & 1 ? 0x10 : 0;
-		D = ((D >> 1) + ci) & 0xFF;
-		FZ(D);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sr(D);
 	}
 
 	void CPU::SRAE() {
-		int ci = E & 0x80;
-		int co = E & 1 ? 0x10 : 0;
-		E = ((E >> 1) + ci) & 0xFF;
-		FZ(E);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sr(E);
 	}
 
 	void CPU::SRAH() {
-		int ci = H & 0x80;
-		int co = H & 1 ? 0x10 : 0;
-		H = ((H >> 1) + ci) & 0xFF;
-		FZ(H);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sr(H);
 	}
 
 	void CPU::SRAL() {
-		int ci = L & 0x80;
-		int co = L & 1 ? 0x10 : 0;
-		L = ((L >> 1) + ci) & 0xFF;
-		FZ(L);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sr(L);
+	}
+
+	void CPU::SRAHL() {
+		uint8_t t = bus_->Read((H << 8) | L);
+		bit_sr(t);
+		bus_->Write((H << 8) | L, t);
+		mTemp = 4; tTemp = 16;
 	}
 
 	void CPU::SRAA() {
-		int ci = A & 0x80;
-		int co = A & 1 ? 0x10 : 0;
-		A = ((A >> 1) + ci) & 0xFF;
-		FZ(A);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_sr(A);
 	}
 
 	void CPU::SWAPB() {
@@ -2206,64 +2031,50 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_swap(L);
 	}
 
+	void CPU::SWAPHL() {
+		uint8_t t = bus_->Read((H << 8) | L);
+		bit_swap(t);
+		bus_->Write((H << 8) | L, t);
+		mTemp = 4; tTemp = 16;
+	}
+
 	void CPU::SWAPA() {
 		bit_swap(A);
 	}
 
 	void CPU::SRLB() {
-		int co = B & 1 ? 0x10 : 0;
-		B = (B >> 1) & 0xFF;
-		FZ(B);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_srl(B);
 	}
 
 	void CPU::SRLC() {
-		int co = C & 1 ? 0x10 : 0;
-		C = (C >> 1) & 0xFF;
-		FZ(C);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_srl(C);
 	}
 
 	void CPU::SRLD() {
-		int co = D & 1 ? 0x10 : 0;
-		D = (D >> 1) & 0xFF;
-		FZ(D);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_srl(D);
 	}
 
 	void CPU::SRLE() {
-		int co = E & 1 ? 0x10 : 0;
-		E = (E >> 1) & 0xFF;
-		FZ(E);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_srl(E);
 	}
 
 	void CPU::SRLH() {
-		int co = H & 1 ? 0x10 : 0;
-		H = (H >> 1) & 0xFF;
-		FZ(H);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_srl(H);
 	}
 
 	void CPU::SRLL() {
-		int co = L & 1 ? 0x10 : 0;
-		L = (L >> 1) & 0xFF;
-		FZ(L);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_srl(L);
+	}
+
+	void CPU::SRLHL() {
+		uint8_t t = bus_->Read((H << 8) | L);
+		bit_srl(t);
+		bus_->Write((H << 8) | L, t);
+		mTemp = 4; tTemp = 16;
 	}
 
 	void CPU::SRLA() {
-		int co = A & 1 ? 0x10 : 0;
-		A = (A >> 1) & 0xFF;
-		FZ(A);
-		F = (F & 0xEF) + co;
-		mTemp = 2; tTemp = 8;
+		bit_srl(A);
 	}
 
 	void CPU::BIT0B() {
