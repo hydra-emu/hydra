@@ -148,7 +148,7 @@
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>C:\CppData\glad\include;C:\CppData\SDL2-2.0.14\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>None</DebugInformationFormat>
       <EnableModules>false</EnableModules>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>

@@ -16,7 +16,7 @@ namespace TKPEmu::Gameboy {
 		using DisInstr = TKPEmu::Tools::DisInstr;
 		using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
 		// TODO: for debugging the cpu
-		std::string str = "D:/gblogs/tkpemu/logtest1.txt";
+		std::string str = "D:/gblogs/tkpemu/logtest2.txt";
 	public:
 		Gameboy();
 		~Gameboy();

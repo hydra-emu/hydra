@@ -7,44 +7,6 @@ namespace TKPEmu::Gameboy::Devices {
 		F = 0; SP = 0; PC = 0x0; IME = 1; R = 0;
 		mClock = 0; tClock = 0;
 		halt = false; stop = false;
-		instructions =
-		{
-			{ "NOP" , &CPU::NOP }, { "LDBC16" , &CPU::LDBC16 , 2}, { "LDBCA" , &CPU::LDBCA }, { "INCBC" , &CPU::INCBC }, { "INCB" , &CPU::INCB }, { "DECB" , &CPU::DECB }, { "LDB8" , &CPU::LDB8 , 1}, { "RLCA" , &CPU::RLCA }, { "LD16SP" , &CPU::LD16SP }, { "ADDHLBC" , &CPU::ADDHLBC }, { "LDABC" , &CPU::LDABC }, { "DECBC" , &CPU::DECBC }, { "INCC" , &CPU::INCC }, { "DECC" , &CPU::DECC }, { "LDC8" , &CPU::LDC8 , 1}, { "RRCA" , &CPU::RRCA },
-			{ "STOP" , &CPU::STOP }, { "LDDE16" , &CPU::LDDE16 , 2}, { "LDDEA" , &CPU::LDDEA }, { "INCDE" , &CPU::INCDE }, { "INCD" , &CPU::INCD }, { "DECD" , &CPU::DECD }, { "LDD8" , &CPU::LDD8 , 1}, { "RLA" , &CPU::RLA }, { "JR8" , &CPU::JR8 , 1}, { "ADDHLDE" , &CPU::ADDHLDE }, { "LDADE" , &CPU::LDADE }, { "DECDE" , &CPU::DECDE }, { "INCE" , &CPU::INCE }, { "DECE" , &CPU::DECE }, { "LDE8" , &CPU::LDE8 , 1}, { "RRA" , &CPU::RRA },
-			{ "JRNZ8" , &CPU::JRNZ8 , 1}, { "LDHL16" , &CPU::LDHL16 , 2}, { "LDIHLA" , &CPU::LDIHLA }, { "INCHL" , &CPU::INCHL }, { "INCH" , &CPU::INCH }, { "DECH" , &CPU::DECH }, { "LDH8" , &CPU::LDH8 , 1}, { "DAA" , &CPU::DAA }, { "JRZ8" , &CPU::JRZ8 , 1}, { "ADDHLHL" , &CPU::ADDHLHL }, { "LDIAHL" , &CPU::LDIAHL }, { "DECHL" , &CPU::DECHL }, { "INCL" , &CPU::INCL }, { "DECL" , &CPU::DECL }, { "LDL8" , &CPU::LDL8 , 1}, { "CPL" , &CPU::CPL },
-			{ "JRNC8" , &CPU::JRNC8 , 1}, { "LDSP16" , &CPU::LDSP16 , 2}, { "LDDHLA" , &CPU::LDDHLA }, { "INCSP" , &CPU::INCSP }, { "INCHLR" , &CPU::INCHLR }, { "DECHLR" , &CPU::DECHLR }, { "LDHL8" , &CPU::LDHL8 , 1}, { "SCF" , &CPU::SCF }, { "JRC8" , &CPU::JRC8 , 1}, { "ADDHLSP" , &CPU::ADDHLSP }, { "LDDAHL" , &CPU::LDDAHL }, { "DECSP" , &CPU::DECSP }, { "INCA" , &CPU::INCA }, { "DECA" , &CPU::DECA }, { "LDA8" , &CPU::LDA8 , 1}, { "CCF" , &CPU::CCF },
-			{ "LDBB" , &CPU::LDBB }, { "LDBC" , &CPU::LDBC }, { "LDBD" , &CPU::LDBD }, { "LDBE" , &CPU::LDBE }, { "LDBH" , &CPU::LDBH }, { "LDBL" , &CPU::LDBL }, { "LDBHL" , &CPU::LDBHL }, { "LDBA" , &CPU::LDBA }, { "LDCB" , &CPU::LDCB }, { "LDCC" , &CPU::LDCC }, { "LDCD" , &CPU::LDCD }, { "LDCE" , &CPU::LDCE }, { "LDCH" , &CPU::LDCH }, { "LDCL" , &CPU::LDCL }, { "LDCHL" , &CPU::LDCHL }, { "LDCA" , &CPU::LDCA },
-			{ "LDDB" , &CPU::LDDB }, { "LDDC" , &CPU::LDDC }, { "LDDD" , &CPU::LDDD }, { "LDDE" , &CPU::LDDE }, { "LDDH" , &CPU::LDDH }, { "LDDL" , &CPU::LDDL }, { "LDDHL" , &CPU::LDDHL }, { "LDDA" , &CPU::LDDA }, { "LDEB" , &CPU::LDEB }, { "LDEC" , &CPU::LDEC }, { "LDED" , &CPU::LDED }, { "LDEE" , &CPU::LDEE }, { "LDEH" , &CPU::LDEH }, { "LDEL" , &CPU::LDEL }, { "LDEHL" , &CPU::LDEHL }, { "LDEA" , &CPU::LDEA },
-			{ "LDHB" , &CPU::LDHB }, { "LDHC" , &CPU::LDHC }, { "LDHD" , &CPU::LDHD }, { "LDHE" , &CPU::LDHE }, { "LDHH" , &CPU::LDHH }, { "LDHL" , &CPU::LDHL }, { "LDHHL" , &CPU::LDHHL }, { "LDHA" , &CPU::LDHA }, { "LDLB" , &CPU::LDLB }, { "LDLC" , &CPU::LDLC }, { "LDLD" , &CPU::LDLD }, { "LDLE" , &CPU::LDLE }, { "LDLH" , &CPU::LDLH }, { "LDLL" , &CPU::LDLL }, { "LDLHL" , &CPU::LDLHL }, { "LDLA" , &CPU::LDLA },
-			{ "LDHLB" , &CPU::LDHLB }, { "LDHLC" , &CPU::LDHLC }, { "LDHLD" , &CPU::LDHLD }, { "LDHLE" , &CPU::LDHLE }, { "LDHLH" , &CPU::LDHLH }, { "LDHLL" , &CPU::LDHLL }, { "HALT" , &CPU::HALT }, { "LDHLA" , &CPU::LDHLA }, { "LDAB" , &CPU::LDAB }, { "LDAC" , &CPU::LDAC }, { "LDAD" , &CPU::LDAD }, { "LDAE" , &CPU::LDAE }, { "LDAH" , &CPU::LDAH }, { "LDAL" , &CPU::LDAL }, { "LDAHL" , &CPU::LDAHL }, { "LDAA" , &CPU::LDAA },
-			{ "ADDAB" , &CPU::ADDAB }, { "ADDAC" , &CPU::ADDAC }, { "ADDAD" , &CPU::ADDAD }, { "ADDAE" , &CPU::ADDAE }, { "ADDAH" , &CPU::ADDAH }, { "ADDAL" , &CPU::ADDAL }, { "ADDAHL" , &CPU::ADDAHL }, { "ADDAA" , &CPU::ADDAA }, { "ADCAB" , &CPU::ADCAB }, { "ADCAC" , &CPU::ADCAC }, { "ADCAD" , &CPU::ADCAD }, { "ADCAE" , &CPU::ADCAE }, { "ADCAH" , &CPU::ADCAH }, { "ADCAL" , &CPU::ADCAL }, { "ADCAHL" , &CPU::ADCAHL }, { "ADCAA" , &CPU::ADCAA },
-			{ "SUBAB" , &CPU::SUBAB }, { "SUBAC" , &CPU::SUBAC }, { "SUBAD" , &CPU::SUBAD }, { "SUBAE" , &CPU::SUBAE }, { "SUBAH" , &CPU::SUBAH }, { "SUBAL" , &CPU::SUBAL }, { "SUBAHL" , &CPU::SUBAHL }, { "SUBAA" , &CPU::SUBAA }, { "SBCAB" , &CPU::SBCAB }, { "SBCAC" , &CPU::SBCAC }, { "SBCAD" , &CPU::SBCAD }, { "SBCAE" , &CPU::SBCAE }, { "SBCAH" , &CPU::SBCAH }, { "SBCAL" , &CPU::SBCAL }, { "SBCAHL" , &CPU::SBCAHL }, { "SBCAA" , &CPU::SBCAA },
-			{ "ANDB" , &CPU::ANDB }, { "ANDC" , &CPU::ANDC }, { "ANDD" , &CPU::ANDD }, { "ANDE" , &CPU::ANDE }, { "ANDH" , &CPU::ANDH }, { "ANDL" , &CPU::ANDL }, { "ANDHL" , &CPU::ANDHL }, { "ANDA" , &CPU::ANDA }, { "XORB" , &CPU::XORB }, { "XORC" , &CPU::XORC }, { "XORD" , &CPU::XORD }, { "XORE" , &CPU::XORE }, { "XORH" , &CPU::XORH }, { "XORL" , &CPU::XORL }, { "XORHL" , &CPU::XORHL }, { "XORA" , &CPU::XORA },
-			{ "ORB" , &CPU::ORB }, { "ORC" , &CPU::ORC }, { "ORD" , &CPU::ORD }, { "ORE" , &CPU::ORE }, { "ORH" , &CPU::ORH }, { "ORL" , &CPU::ORL }, { "ORHL" , &CPU::ORHL }, { "ORA" , &CPU::ORA }, { "CPAB" , &CPU::CPAB }, { "CPAC" , &CPU::CPAC }, { "CPAD" , &CPU::CPAD }, { "CPAE" , &CPU::CPAE }, { "CPAH" , &CPU::CPAH }, { "CPAL" , &CPU::CPAL }, { "CPAHL" , &CPU::CPAHL }, { "CPAA" , &CPU::CPAA },
-			{ "RETNZ" , &CPU::RETNZ }, { "POPBC" , &CPU::POPBC }, { "JPNZ16" , &CPU::JPNZ16 , 2}, { "JP16" , &CPU::JP16 , 2}, { "CALLNZ16" , &CPU::CALLNZ16 , 2}, { "PUSHBC" , &CPU::PUSHBC }, { "ADDA8" , &CPU::ADDA8 , 1}, { "RST0" , &CPU::RST0 }, { "RETZ" , &CPU::RETZ }, { "RET" , &CPU::RET }, { "JPZ16" , &CPU::JPZ16 , 2}, { "EXT" , &CPU::EXT , 1 }, { "CALLZ16" , &CPU::CALLZ16 , 2}, { "CALL16" , &CPU::CALL16 , 2}, { "ADCA8" , &CPU::ADCA8 , 2}, { "RST8" , &CPU::RST8 },
-			{ "RETNC" , &CPU::RETNC }, { "POPDE" , &CPU::POPDE }, { "JPNC16" , &CPU::JPNC16 , 2}, { "???" , &CPU::XXX }, { "CALLNC16" , &CPU::CALLNC16 , 2}, { "PUSHDE" , &CPU::PUSHDE }, { "SUBA8" , &CPU::SUBA8 , 1}, { "RST10" , &CPU::RST10 }, { "RETC" , &CPU::RETC }, { "RETI" , &CPU::RETI }, { "JPC16" , &CPU::JPC16 , 2}, { "???" , &CPU::XXX }, { "CALLC16" , &CPU::CALLC16 , 2}, { "???" , &CPU::XXX }, { "SBCA8" , &CPU::SBCA8 , 1}, { "RST18" , &CPU::RST18 },
-			{ "LDH8A" , &CPU::LDH8A }, { "POPHL" , &CPU::POPHL }, { "LDHCA" , &CPU::LDHCA }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "PUSHHL" , &CPU::PUSHHL }, { "AND8" , &CPU::AND8 , 1}, { "RST20" , &CPU::RST20 }, { "ADDSPD" , &CPU::ADDSPD , 1}, { "JPHL" , &CPU::JPHL }, { "LD16A" , &CPU::LD16A }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "XOR8" , &CPU::XOR8 , 1}, { "RST28" , &CPU::RST28 },
-			{ "LDHA8" , &CPU::LDHA8 , 1}, { "POPAF" , &CPU::POPAF }, { "LDAMC" , &CPU::LDAMC }, { "DI" , &CPU::DI }, { "???" , &CPU::XXX }, { "PUSHAF" , &CPU::PUSHAF }, { "OR8" , &CPU::OR8, 1 }, { "RST30" , &CPU::RST30 }, { "LDHLSPD" , &CPU::LDHLSPD , 1 }, { "LDSPHL", &CPU::LDSPHL }, { "LDA16" , &CPU::LDA16 }, { "EI" , &CPU::EI }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "CP8" , &CPU::CP8 , 1}, { "RST38" , &CPU::RST38 }
-		};
-
-		cbMap = {
-			{ "RLCB" , &CPU::RLCB }, { "RLCC" , &CPU::RLCC }, { "RLCD" , &CPU::RLCD }, { "RLCE" , &CPU::RLCE }, { "RLCH" , &CPU::RLCH }, { "RLCL" , &CPU::RLCL }, { "RLCHL" , &CPU::RLCHL }, { "RLCAr" , &CPU::RLCAr },  { "RRCB" , &CPU::RRCB }, { "RRCC" , &CPU::RRCC }, { "RRCD" , &CPU::RRCD }, { "RRCE" , &CPU::RRCE }, { "RRCH" , &CPU::RRCH }, { "RRCL" , &CPU::RRCL }, { "RRCHL" , &CPU::RRCHL }, { "RRCAr" , &CPU::RRCAr },
-			{ "RLB" , &CPU::RLB }, { "RLC" , &CPU::RLC }, { "RLD" , &CPU::RLD }, { "RLE" , &CPU::RLE }, { "RLH" , &CPU::RLH }, { "RLL" , &CPU::RLL }, { "RLHL" , &CPU::RLHL }, { "RLAr" , &CPU::RLAr }, { "RRB" , &CPU::RRB }, { "RRC" , &CPU::RRC },  { "RRD" , &CPU::RRD },  { "RRE" , &CPU::RRE },  { "RRH" , &CPU::RRH },  { "RRL" , &CPU::RRL },  { "RRHL" , &CPU::RRHL },  { "RRAr" , &CPU::RRAr },
-			{ "SLAB" , &CPU::SLAB }, { "SLAC" , &CPU::SLAC }, { "SLAD" , &CPU::SLAD }, { "SLAE" , &CPU::SLAE }, { "SLAH" , &CPU::SLAH }, { "SLAL" , &CPU::SLAL }, { "???" , &CPU::XXX }, { "SLAA" , &CPU::SLAA }, { "SRAB" , &CPU::SRAB }, { "SRAC" , &CPU::SRAC }, { "SRAD" , &CPU::SRAD }, { "SRAE" , &CPU::SRAE }, { "SRAH" , &CPU::SRAH }, { "SRAL" , &CPU::SRAL }, { "???" , &CPU::XXX }, { "SRAA" , &CPU::SRAA },
-			{ "SWAPB" , &CPU::SWAPB }, { "SWAPC" , &CPU::SWAPC }, { "SWAPD" , &CPU::SWAPD }, { "SWAPE" , &CPU::SWAPE }, { "SWAPH" , &CPU::SWAPH }, { "SWAPL" , &CPU::SWAPL }, { "???" , &CPU::XXX }, { "SWAPA" , &CPU::SWAPA }, { "SRLB" , &CPU::SRLB }, { "SRLC" , &CPU::SRLC }, { "SRLD" , &CPU::SRLD }, { "SRLE" , &CPU::SRLE }, { "SRLH" , &CPU::SRLH }, { "SRLL" , &CPU::SRLL }, { "???" , &CPU::XXX }, { "SRLA" , &CPU::SRLA },
-			{ "BIT0B" , &CPU::BIT0B }, { "BIT0C" , &CPU::BIT0C }, { "BIT0D" , &CPU::BIT0D }, { "BIT0E" , &CPU::BIT0E }, { "BIT0H" , &CPU::BIT0H }, { "BIT0L" , &CPU::BIT0L }, { "BIT0M" , &CPU::BIT0M }, { "BIT0A" , &CPU::BIT0A }, { "BIT1B" , &CPU::BIT1B }, { "BIT1C" , &CPU::BIT1C }, { "BIT1D" , &CPU::BIT1D }, { "BIT1E" , &CPU::BIT1E }, { "BIT1H" , &CPU::BIT1H }, { "BIT1L" , &CPU::BIT1L }, { "BIT1M" , &CPU::BIT1M }, { "BIT1A" , &CPU::BIT1A },
-			{ "BIT2B" , &CPU::BIT2B }, { "BIT2C" , &CPU::BIT2C }, { "BIT2D" , &CPU::BIT2D }, { "BIT2E" , &CPU::BIT2E }, { "BIT2H" , &CPU::BIT2H }, { "BIT2L" , &CPU::BIT2L }, { "BIT2M" , &CPU::BIT2M }, { "BIT2A" , &CPU::BIT2A }, { "BIT3B" , &CPU::BIT3B }, { "BIT3C" , &CPU::BIT3C }, { "BIT3D" , &CPU::BIT3D }, { "BIT3E" , &CPU::BIT3E }, { "BIT3H" , &CPU::BIT3H }, { "BIT3L" , &CPU::BIT3L }, { "BIT3M" , &CPU::BIT3M }, { "BIT3A" , &CPU::BIT3A },
-			{ "BIT4B" , &CPU::BIT4B }, { "BIT4C" , &CPU::BIT4C }, { "BIT4D" , &CPU::BIT4D }, { "BIT4E" , &CPU::BIT4E }, { "BIT4H" , &CPU::BIT4H }, { "BIT4L" , &CPU::BIT4L }, { "BIT4M" , &CPU::BIT4M }, { "BIT4A" , &CPU::BIT4A }, { "BIT5B" , &CPU::BIT5B }, { "BIT5C" , &CPU::BIT5C }, { "BIT5D" , &CPU::BIT5D }, { "BIT5E" , &CPU::BIT5E }, { "BIT5H" , &CPU::BIT5H }, { "BIT5L" , &CPU::BIT5L }, { "BIT5M" , &CPU::BIT5M }, { "BIT5A" , &CPU::BIT5A },
-			{ "BIT6B" , &CPU::BIT6B }, { "BIT6C" , &CPU::BIT6C }, { "BIT6D" , &CPU::BIT6D }, { "BIT6E" , &CPU::BIT6E }, { "BIT6H" , &CPU::BIT6H }, { "BIT6L" , &CPU::BIT6L }, { "BIT6M" , &CPU::BIT6M }, { "BIT6A" , &CPU::BIT6A }, { "BIT7B" , &CPU::BIT7B }, { "BIT7C" , &CPU::BIT7C }, { "BIT7D" , &CPU::BIT7D }, { "BIT7E" , &CPU::BIT7E }, { "BIT7H" , &CPU::BIT7H }, { "BIT7L" , &CPU::BIT7L }, { "BIT7M" , &CPU::BIT7M }, { "BIT7A" , &CPU::BIT7A },
-			{ "RES0B" , &CPU::RES0B }, { "RES0C" , &CPU::RES0C }, { "RES0D" , &CPU::RES0D }, { "RES0E" , &CPU::RES0E }, { "RES0H" , &CPU::RES0H }, { "RES0L" , &CPU::RES0L }, { "RES0HL" , &CPU::RES0HL }, { "RES0A" , &CPU::RES0A }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
-			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
-			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
-			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
-			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
-			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
-			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
-			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
-		};
 	}
 	inline void CPU::reg_dec(RegisterType& reg) {
 		auto temp = reg - 1;
@@ -137,10 +99,10 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	inline void CPU::hl_add(BigRegisterType& big_reg) {
-		auto HL = (H << 8) | L;
-		auto temp = HL + big_reg;
+		uint16_t t = (H << 8) | L;
+		auto temp = t + big_reg;
 		auto flag = FLAG_EMPTY_MASK;
-		flag |= (((HL & 0xFFF) + (big_reg & 0xFFF)) > 0xFFF) << FLAG_HCARRY_SHIFT;
+		flag |= (((t & 0xFFF) + (big_reg & 0xFFF)) > 0xFFF) << FLAG_HCARRY_SHIFT;
 		flag |= (temp > 0xFFFF) << FLAG_CARRY_SHIFT;
 		F &= FLAG_ZERO_MASK;
 		F |= flag;
@@ -170,6 +132,11 @@ namespace TKPEmu::Gameboy::Devices {
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
 		F = flag;
 		reg = temp & 0xFF;
+		mTemp = 2; tTemp = 8;
+	}
+
+	inline void CPU::bit_set(RegisterType& reg, unsigned shift) {
+		reg |= 1 << shift;
 		mTemp = 2; tTemp = 8;
 	}
 
@@ -339,13 +306,8 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::SUBAHL() {
-		A -= bus_->Read((H << 8) | L);
-		FZ(A, true);
-		if (A < 0) {
-			F |= 0x10;
-		}
-		SetFlagSubtract(true);
-		A &= 0xFF;
+		uint8_t t = bus_->Read((H << 8) | L);
+		reg_sub(t);
 		mTemp = 2; tTemp = 8;
 	}
 
@@ -464,8 +426,6 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::POPAF() {
-		//A = bus_->Read((SP + 1) & 0xFFFF);
-		//F = bus_->Read(SP) & 0xF0 & 0xF0;
 		auto t = bus_->ReadL(SP);
 		A = (t >> 8) & 0xFF;
 		F = t & 0xF0;
@@ -1743,13 +1703,8 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::CPAHL() {
-		int i = A;
-		i -= bus_->Read(((H << 8) | L));
-		FZ(i, true);
-		if (i < 0) {
-			F |= 0x10;
-		}
-		i &= 0xFF;
+		uint8_t t = bus_->Read((H << 8) | L);
+		reg_cmp(t);
 		mTemp = 2; tTemp = 8;
 	}
 
@@ -1763,14 +1718,6 @@ namespace TKPEmu::Gameboy::Devices {
 		F = flag;
 		PC++;
 		mTemp = 2; tTemp = 8;
-		//PC++;
-		//F = (i < 0) ? 0x50 : 0x40;
-		//i &= 0xFF;
-		//if (i == 0) {
-		//	SetFlagZero(true);
-		//}
-		//if ((A ^ i ^ m) & 0x10) F |= 0x20;
-		//SetFlagSubtract(true);
 	}
 
 	void CPU::HALT() {
@@ -1780,8 +1727,6 @@ namespace TKPEmu::Gameboy::Devices {
 
 	void CPU::XXX() {
 		stop = true;
-		//std::cout << "Invalid instruction at 0x" + std::to_string(PC - 1) << std::endl;
-		//std::cout << instructions[bus_->Read(PC - 1)].name << bus_->Read(PC - 1) << std::endl;
 	}
 
 
@@ -2620,6 +2565,530 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_res(A, 0);
 	}
 
+	void CPU::RES1B() {
+		bit_res(B, 1);
+	}
+
+	void CPU::RES1C() {
+		bit_res(C, 1);
+	}
+
+	void CPU::RES1D() {
+		bit_res(D, 1);
+	}
+
+	void CPU::RES1E() {
+		bit_res(E, 1);
+	}
+
+	void CPU::RES1H() {
+		bit_res(H, 1);
+	}
+
+	void CPU::RES1L() {
+		bit_res(L, 1);
+	}
+
+	void CPU::RES1HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_res(t, 1);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::RES1A() {
+		bit_res(A, 1);
+	}
+
+	void CPU::RES2B() {
+		bit_res(B, 2);
+	}
+
+	void CPU::RES2C() {
+		bit_res(C, 2);
+	}
+
+	void CPU::RES2D() {
+		bit_res(D, 2);
+	}
+
+	void CPU::RES2E() {
+		bit_res(E, 2);
+	}
+
+	void CPU::RES2H() {
+		bit_res(H, 2);
+	}
+
+	void CPU::RES2L() {
+		bit_res(L, 2);
+	}
+
+	void CPU::RES2HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_res(t, 2);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::RES2A() {
+		bit_res(A, 2);
+	}
+
+	void CPU::RES3B() {
+		bit_res(B, 3);
+	}
+
+	void CPU::RES3C() {
+		bit_res(C, 3);
+	}
+
+	void CPU::RES3D() {
+		bit_res(D, 3);
+	}
+
+	void CPU::RES3E() {
+		bit_res(E, 3);
+	}
+
+	void CPU::RES3H() {
+		bit_res(H, 3);
+	}
+
+	void CPU::RES3L() {
+		bit_res(L, 3);
+	}
+
+	void CPU::RES3HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_res(t, 3);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::RES3A() {
+		bit_res(A, 3);
+	}
+
+	void CPU::RES4B() {
+		bit_res(B, 4);
+	}
+
+	void CPU::RES4C() {
+		bit_res(C, 4);
+	}
+
+	void CPU::RES4D() {
+		bit_res(D, 4);
+	}
+
+	void CPU::RES4E() {
+		bit_res(E, 4);
+	}
+
+	void CPU::RES4H() {
+		bit_res(H, 4);
+	}
+
+	void CPU::RES4L() {
+		bit_res(L, 4);
+	}
+
+	void CPU::RES4HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_res(t, 4);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::RES4A() {
+		bit_res(A, 4);
+	}
+
+	void CPU::RES5B() {
+		bit_res(B, 5);
+	}
+
+	void CPU::RES5C() {
+		bit_res(C, 5);
+	}
+
+	void CPU::RES5D() {
+		bit_res(D, 5);
+	}
+
+	void CPU::RES5E() {
+		bit_res(E, 5);
+	}
+
+	void CPU::RES5H() {
+		bit_res(H, 5);
+	}
+
+	void CPU::RES5L() {
+		bit_res(L, 5);
+	}
+
+	void CPU::RES5HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_res(t, 5);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::RES5A() {
+		bit_res(A, 5);
+	}
+
+	void CPU::RES6B() {
+		bit_res(B, 6);
+	}
+
+	void CPU::RES6C() {
+		bit_res(C, 6);
+	}
+
+	void CPU::RES6D() {
+		bit_res(D, 6);
+	}
+
+	void CPU::RES6E() {
+		bit_res(E, 6);
+	}
+
+	void CPU::RES6H() {
+		bit_res(H, 6);
+	}
+
+	void CPU::RES6L() {
+		bit_res(L, 6);
+	}
+
+	void CPU::RES6HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_res(t, 6);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::RES6A() {
+		bit_res(A, 6);
+	}
+
+	void CPU::RES7B() {
+		bit_res(B, 7);
+	}
+
+	void CPU::RES7C() {
+		bit_res(C, 7);
+	}
+
+	void CPU::RES7D() {
+		bit_res(D, 7);
+	}
+
+	void CPU::RES7E() {
+		bit_res(E, 7);
+	}
+
+	void CPU::RES7H() {
+		bit_res(H, 7);
+	}
+
+	void CPU::RES7L() {
+		bit_res(L, 7);
+	}
+
+	void CPU::RES7HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_res(t, 7);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::RES7A() {
+		bit_res(A, 7);
+	}
+
+	void CPU::SET0B() {
+		bit_set(B, 0);
+	}
+
+	void CPU::SET0C() {
+		bit_set(C, 0);
+	}
+
+	void CPU::SET0D() {
+		bit_set(D, 0);
+	}
+
+	void CPU::SET0E() {
+		bit_set(E, 0);
+	}
+
+	void CPU::SET0H() {
+		bit_set(H, 0);
+	}
+
+	void CPU::SET0L() {
+		bit_set(L, 0);
+	}
+
+	void CPU::SET0HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_set(t, 0);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::SET0A() {
+		bit_set(A, 0);
+	}
+
+	void CPU::SET1B() {
+		bit_set(B, 1);
+	}
+
+	void CPU::SET1C() {
+		bit_set(C, 1);
+	}
+
+	void CPU::SET1D() {
+		bit_set(D, 1);
+	}
+
+	void CPU::SET1E() {
+		bit_set(E, 1);
+	}
+
+	void CPU::SET1H() {
+		bit_set(H, 1);
+	}
+
+	void CPU::SET1L() {
+		bit_set(L, 1);
+	}
+
+	void CPU::SET1HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_set(t, 1);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::SET1A() {
+		bit_set(A, 1);
+	}
+
+	void CPU::SET2B() {
+		bit_set(B, 2);
+	}
+
+	void CPU::SET2C() {
+		bit_set(C, 2);
+	}
+
+	void CPU::SET2D() {
+		bit_set(D, 2);
+	}
+
+	void CPU::SET2E() {
+		bit_set(E, 2);
+	}
+
+	void CPU::SET2H() {
+		bit_set(H, 2);
+	}
+
+	void CPU::SET2L() {
+		bit_set(L, 2);
+	}
+
+	void CPU::SET2HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_set(t, 2);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::SET2A() {
+		bit_set(A, 2);
+	}
+
+	void CPU::SET3B() {
+		bit_set(B, 3);
+	}
+
+	void CPU::SET3C() {
+		bit_set(C, 3);
+	}
+
+	void CPU::SET3D() {
+		bit_set(D, 3);
+	}
+
+	void CPU::SET3E() {
+		bit_set(E, 3);
+	}
+
+	void CPU::SET3H() {
+		bit_set(H, 3);
+	}
+
+	void CPU::SET3L() {
+		bit_set(L, 3);
+	}
+
+	void CPU::SET3HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_set(t, 3);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::SET3A() {
+		bit_set(A, 3);
+	}
+
+	void CPU::SET4B() {
+		bit_set(B, 4);
+	}
+
+	void CPU::SET4C() {
+		bit_set(C, 4);
+	}
+
+	void CPU::SET4D() {
+		bit_set(D, 4);
+	}
+
+	void CPU::SET4E() {
+		bit_set(E, 4);
+	}
+
+	void CPU::SET4H() {
+		bit_set(H, 4);
+	}
+
+	void CPU::SET4L() {
+		bit_set(L, 4);
+	}
+
+	void CPU::SET4HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_set(t, 4);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::SET4A() {
+		bit_set(A, 4);
+	}
+
+	void CPU::SET5B() {
+		bit_set(B, 5);
+	}
+
+	void CPU::SET5C() {
+		bit_set(C, 5);
+	}
+
+	void CPU::SET5D() {
+		bit_set(D, 5);
+	}
+
+	void CPU::SET5E() {
+		bit_set(E, 5);
+	}
+
+	void CPU::SET5H() {
+		bit_set(H, 5);
+	}
+
+	void CPU::SET5L() {
+		bit_set(L, 5);
+	}
+
+	void CPU::SET5HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_set(t, 5);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::SET5A() {
+		bit_set(A, 5);
+	}
+
+	void CPU::SET6B() {
+		bit_set(B, 6);
+	}
+
+	void CPU::SET6C() {
+		bit_set(C, 6);
+	}
+
+	void CPU::SET6D() {
+		bit_set(D, 6);
+	}
+
+	void CPU::SET6E() {
+		bit_set(E, 6);
+	}
+
+	void CPU::SET6H() {
+		bit_set(H, 6);
+	}
+
+	void CPU::SET6L() {
+		bit_set(L, 6);
+	}
+
+	void CPU::SET6HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_set(t, 6);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::SET6A() {
+		bit_set(A, 6);
+	}
+
+	void CPU::SET7B() {
+		bit_set(B, 7);
+	}
+
+	void CPU::SET7C() {
+		bit_set(C, 7);
+	}
+
+	void CPU::SET7D() {
+		bit_set(D, 7);
+	}
+
+	void CPU::SET7E() {
+		bit_set(E, 7);
+	}
+
+	void CPU::SET7H() {
+		bit_set(H, 7);
+	}
+
+	void CPU::SET7L() {
+		bit_set(L, 7);
+	}
+
+	void CPU::SET7HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_set(t, 7);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
+	void CPU::SET7A() {
+		bit_set(A, 7);
+	}
 	#pragma endregion
 
 	void CPU::Reset() {
@@ -2637,8 +3106,6 @@ namespace TKPEmu::Gameboy::Devices {
 		IME = 1;
 		bus_->SetIF(0xE1);
 		bus_->SetIE(0);
-		// TODO: Implement ppu reset
-		//gpu->Reset();
 		mClock = 0; tClock = 0; totalClock = 0;
 		halt = false; stop = false;
 	}
@@ -2660,41 +3127,46 @@ namespace TKPEmu::Gameboy::Devices {
 		tClock += tTemp;
 		return tTemp;
 	}
-	void CPU::CheckInterr() {
+	bool CPU::CheckInterr() {
 		int ieT, ifT;
 		ieT = bus_->GetIE();
 		ifT = bus_->GetIF();
-		if (IME && ieT && ifT) {
-			halt = 0; IME = 0;
-			bool ifired = ieT & ifT;
-			if (ifired & 1) {
-				ifT &= 0xFE;
-				bus_->SetIF(ifT);
-				RST40();
-			}
-			else if (ifired & 2) {
-				ifT &= 0xFD;
-				bus_->SetIF(ifT);
-				RST48();
-			}
-			else if (ifired & 4) {
-				ifT &= 0xFB;
-				bus_->SetIF(ifT);
-				RST50();
-			}
-			else if (ifired & 8) {
-				ifT &= 0xF7;
-				bus_->SetIF(ifT);
-				RST58();
-			}
-			else if (ifired & 16) {
-				ifT &= 0xEF;
-				bus_->SetIF(ifT);
-				RST60();
-			}
-			else {
-				IME = 1;
+		bool b = IME && ieT && ifT;
+		if (ieT & ifT) {
+			halt = 0;
+			if (IME) {
+				IME = 0;
+				int ifired = ieT & ifT;
+				if (ifired & 1) {
+					ifT &= 0xFE;
+					bus_->SetIF(ifT);
+					RST40();
+				}
+				else if (ifired & 2) {
+					ifT &= 0xFD;
+					bus_->SetIF(ifT);
+					RST48();
+				}
+				else if (ifired & 4) {
+					ifT &= 0xFB;
+					bus_->SetIF(ifT);
+					RST50();
+				}
+				else if (ifired & 8) {
+					ifT &= 0xF7;
+					bus_->SetIF(ifT);
+					RST58();
+				}
+				else if (ifired & 16) {
+					ifT &= 0xEF;
+					bus_->SetIF(ifT);
+					RST60();
+				}
+				else {
+					IME = 1;
+				}
 			}
 		}
+		return b;
 	}
 }
