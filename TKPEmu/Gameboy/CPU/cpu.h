@@ -87,8 +87,10 @@ namespace TKPEmu::Gameboy::Devices {
 		inline void reg_and(RegisterType& reg);
 		inline void reg_add(RegisterType& reg);
 		inline void reg_adc(RegisterType& reg);
+		inline void reg_cmp(RegisterType& reg);
 		inline void hl_add(BigRegisterType& big_reg);
 		inline void bit_ch(RegisterType reg, unsigned shift);
+		inline void bit_swap(RegisterType& reg);
 
 		// TODO: remove FZ
 		void FZ(int i, bool as = false);

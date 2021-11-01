@@ -50,6 +50,7 @@ namespace TKPEmu::Gameboy::Devices {
 		auto temp = reg - 1;
 		auto flag = FLAG_NEG_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (((reg & 0xF) - (1 & 0xF)) < 0) << FLAG_HCARRY_SHIFT;
 		// Carry doesn't reset after DEC
 		F &= FLAG_CARRY_MASK;
 		F |= flag;
@@ -125,6 +126,16 @@ namespace TKPEmu::Gameboy::Devices {
 		mTemp = 1; tTemp = 4;
 	}
 
+	inline void CPU::reg_cmp(RegisterType& reg) {
+		auto temp = A - reg;
+		auto flag = FLAG_NEG_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (((A & 0xF) - (reg & 0xF)) < 0) << FLAG_HCARRY_SHIFT;
+		flag |= (temp < 0) << FLAG_CARRY_SHIFT;
+		F = flag;
+		mTemp = 1; tTemp = 4;
+	}
+
 	inline void CPU::hl_add(BigRegisterType& big_reg) {
 		auto HL = (H << 8) | L;
 		auto temp = HL + big_reg;
@@ -145,6 +156,16 @@ namespace TKPEmu::Gameboy::Devices {
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
 		F &= FLAG_CARRY_MASK;
 		F |= flag;
+		mTemp = 2; tTemp = 8;
+	}
+
+	inline void CPU::bit_swap(RegisterType& reg) {
+		auto temp = ((reg & 0xF0) >> 4) | ((reg & 0x0F) << 4);
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		F = flag;
+		reg = temp & 0xFF;
+		PC++;
 		mTemp = 2; tTemp = 8;
 	}
 
@@ -371,66 +392,31 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::CPAA() {
-		uint8_t i = A;
-		i -= A;
-		F |= 0x40;
-		if (!(i & 0xFF)) { F |= 0x80; }
-		if (i < 0) { F |= 0x10; }
-		mTemp = 1; tTemp = 4;
+		reg_cmp(A);
 	}
 
 	void CPU::CPAB() {
-		uint8_t i = A;
-		i -= B;
-		F |= 0x40;
-		if (!(i & 0xFF)) { F |= 0x80; }
-		if (i < 0) { F |= 0x10; }
-		mTemp = 1; tTemp = 4;
+		reg_cmp(B);
 	}
 
 	void CPU::CPAC() {
-		int i = A;
-		i -= C;
-		F |= 0x40;
-		if (!(i & 0xFF)) { F |= 0x80; }
-		if (i < 0) { F |= 0x10; }
-		mTemp = 1; tTemp = 4;
+		reg_cmp(C);
 	}
 
 	void CPU::CPAD() {
-		int i = A;
-		i -= D;
-		F |= 0x40;
-		if (!(i & 0xFF)) { F |= 0x80; }
-		if (i < 0) { F |= 0x10; }
-		mTemp = 1; tTemp = 4;
+		reg_cmp(D);
 	}
 
 	void CPU::CPAE() {
-		int i = A;
-		i -= E;
-		F |= 0x40;
-		if (!(i & 0xFF)) { F |= 0x80; }
-		if (i < 0) { F |= 0x10; }
-		mTemp = 1; tTemp = 4;
+		reg_cmp(E);
 	}
 
 	void CPU::CPAH() {
-		int i = A;
-		i -= H;
-		F |= 0x40;
-		if (!(i & 0xFF)) { F |= 0x80; }
-		if (i < 0) { F |= 0x10; }
-		mTemp = 1; tTemp = 4;
+		reg_cmp(H);
 	}
 
 	void CPU::CPAL() {
-		int i = A;
-		i -= L;
-		F |= 0x40;
-		if (!(i & 0xFF)) { F |= 0x80; }
-		if (i < 0) { F |= 0x10; }
-		mTemp = 1; tTemp = 4;
+		reg_cmp(L);
 	}
 
 	void CPU::PUSHBC() {
@@ -1529,31 +1515,27 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::RLA() {
-		int i = (F & 0x10) ? 1 : 0;
-		int o = (A & 0x80) ? 0x10 : 0;
-		A = (A << 1) + i;
-		A &= 0xFF;
-		F = (F & 0xEF) + o;
+		bool carry = F & FLAG_CARRY_MASK;
+		auto temp = (A << 1) + carry;
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
+		A = temp & 0xFF;
 		mTemp = 1; tTemp = 4;
 	}
 
 	void CPU::RLCA() {
-		int i = (A & 0x80) ? 1 : 0;
-		int o = (A & 0x80) ? 0x10 : 0;
-		A = (A << 1) + i;
-		A &= 0xFF;
-		F = (F & 0xEF) + o;
+		auto temp = (A << 1) + (A >> 7);
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
+		A = temp & 0xFF;
 		mTemp = 1; tTemp = 4;
 	}
 
 	void CPU::RRA() {
-		/*int i = (F & 0x10) ? 0x80 : 0;
-		int o = (A & 0x1) ? 0x10 : 0;
-		A = (A >> 1) + i;
-		A &= 0xFF;
-		F = (F & 0xEF) + o;
-		mTemp = 1; tTemp = 4;*/
-		auto temp = (A >> 1) + ((F & FLAG_CARRY_MASK) << 7) + ((A & 1) << 8);
+		bool carry = F & FLAG_CARRY_MASK;
+		auto temp = (A >> 1) + ((carry) << 7) + ((A & 1) << 8);
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
 		F = flag;
@@ -1563,16 +1545,6 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::RRCA() {
-		//int i = (A & 0x1) ? 0x80 : 0;
-		//int o = (A & 0x1) ? 0x10 : 0;
-		//A = (A >> 1) + i;
-		//A &= 0xFF;
-		//F = (F & 0xEF) + o;
-
-		//uint8_t carry = A & 0x1;
-		//uint8_t trunc = A & 0x1;
-		//uint8_t res = static_cast<uint8_t>((A >> 1) | (trunc << 7));
-
 		auto temp = (A >> 1) + ((A & 1) << 7) + ((A & 1) << 8);
 		auto flag = FLAG_EMPTY_MASK;
 		flag += (temp > 0xFF) << FLAG_CARRY_SHIFT;
@@ -1708,18 +1680,21 @@ namespace TKPEmu::Gameboy::Devices {
 
 	void CPU::CPL() {
 		A = (~A) & 0xFF;
-		FZ(A, true);
+		F &= 0b1001'0000;
+		F |= 0b0110'0000;
 		mTemp = 1; tTemp = 4;
 	}
 
 	void CPU::SCF() {
-		F |= 0x10;
+		F &= 0b1000'0000;
+		F |= 0b0001'0000;
 		mTemp = 1; tTemp = 4;
 	}
 
 	void CPU::CCF() {
-		int i = F & 0x10 ? 0 : 0x10;
-		F = (F & 0xEF) + i;
+		auto flag = (F & 0b0001'0000) ^ 0b0001'0000;
+		F &= 0b1000'0000;
+		F |= flag;
 		mTemp = 1; tTemp = 4;
 	}
 
@@ -2259,58 +2234,31 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::SWAPB() {
-		int tr = B;
-		B = (bus_->Read((H << 8) | L));
-		bus_->Write((H << 8) | L, tr);
-		mTemp = 4; tTemp = 16;
+		bit_swap(B);
 	}
 
 	void CPU::SWAPC() {
-		int tr = C;
-		C = (bus_->Read((H << 8) | L));
-		bus_->Write((H << 8) | L, tr);
-		mTemp = 4; tTemp = 16;
+		bit_swap(C);
 	}
 
 	void CPU::SWAPD() {
-		int tr = D;
-		D = (bus_->Read((H << 8) | L));
-		bus_->Write((H << 8) | L, tr);
-		mTemp = 4; tTemp = 16;
+		bit_swap(D);
 	}
 
 	void CPU::SWAPE() {
-		int tr = E;
-		E = (bus_->Read((H << 8) | L));
-		bus_->Write((H << 8) | L, tr);
-		mTemp = 4; tTemp = 16;
+		bit_swap(E);
 	}
 
 	void CPU::SWAPH() {
-		int tr = H;
-		H = (bus_->Read((H << 8) | L));
-		bus_->Write((H << 8) | L, tr);
-		mTemp = 4; tTemp = 16;
+		bit_swap(H);
 	}
 
 	void CPU::SWAPL() {
-		int tr = L;
-		L = (bus_->Read((H << 8) | L));
-		bus_->Write((H << 8) | L, tr);
-		mTemp = 4; tTemp = 16;
+		bit_swap(L);
 	}
 
 	void CPU::SWAPA() {
-		//int tr = A;
-		//A = (bus_->Read((H << 8) | L));
-		//bus_->Write((H << 8) | L, tr);
-		uint16_t temp = ((A & 0xF0) >> 4) | ((A & 0x0F) << 4);
-		uint16_t flag = FLAG_EMPTY_MASK;
-		flag += ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
-		F = flag;
-		temp &= 0xFF;
-		A = temp;
-		mTemp = 4; tTemp = 16;
+		bit_swap(A);
 	}
 
 	void CPU::SRLB() {
