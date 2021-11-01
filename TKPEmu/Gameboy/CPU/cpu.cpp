@@ -251,29 +251,30 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::ADDHLSP() {
-		int HL = (H << 8) | L;
-		HL += SP;
-		if (HL > 0xFF) {
-			F |= 0x10;
-		}
-		else {
-			F &= 0xEF;
-		}
-		H = (HL >> 8) & 255;
-		L = HL & 255;
-		mTemp = 3; tTemp = 12;
-
+		auto HL = (H << 8) | L;
+		auto temp = HL + SP;
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= (((HL & 0xFFF) + (SP & 0xFFF)) > 0xFFF) << FLAG_HCARRY_SHIFT;
+		flag |= (temp > 0xFFFF) << FLAG_CARRY_SHIFT;
+		F &= FLAG_ZERO_MASK;
+		F |= flag;
+		temp &= 0xFFFF;
+		H = temp >> 8;
+		L = temp & 0xFF;
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::ADDSPD() {
-		uint8_t i = bus_->Read(PC);
-		if (i >= 0x80) {
-			i = -((~i + 1) & 0xFF);
-		}
+		int val = bus_->Read(PC);
+		auto temp = SP + ((val ^ 0x80) - 0x80);
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= (((SP & 0xF) + (val & 0xF)) > 0xF) << FLAG_HCARRY_SHIFT;
+		flag |= (((SP & 0xFF) + (val & 0xFF)) > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
+		temp &= 0xFFFF;
+		SP = temp;
 		PC++;
-		SP += i;
-		mTemp = 4;
-		tTemp = 16;
+		mTemp = 4; tTemp = 16;
 	}
 
 	void CPU::ADCAA() {
@@ -365,23 +366,13 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::ADCA8() {
-		/*A += bus_->Read(PC);
-		PC++;
-		A += (F & 0x10) ? 1 : 0;
-		FZ(A);
-		if (A > 0xFF) {
-			F |= 0x10;
-		}
-		A &= 0xFF;
-		mTemp = 2; tTemp = 8;*/
 		auto ret = bus_->Read(PC++);
 		bool carry = F & FLAG_CARRY_MASK;
 		auto temp = A + ret + carry;
 		auto flag = FLAG_EMPTY_MASK;
-		// TODO: test with |= instead of +=
-		flag += ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
-		flag += (((A & 0x0F) + (ret & 0x0F) + carry) > 0xF) << FLAG_HCARRY_SHIFT;
-		flag += (temp > 0xFF) << FLAG_CARRY_SHIFT;
+		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
+		flag |= (((A & 0x0F) + (ret & 0x0F) + carry) > 0xF) << FLAG_HCARRY_SHIFT;
+		flag |= (temp > 0xFF) << FLAG_CARRY_SHIFT;
 		F = flag;
 		temp &= 0xFF;
 		A = temp;
@@ -1890,15 +1881,15 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::LDHLSPD() {
-		int i = bus_->Read(PC);
-		if (i >= 0x80) {
-			i = -((~i + 1) & 0xFF);
-		}
+		auto val = bus_->Read(PC);
+		auto HL = SP + ((val ^ 0x80) - 0x80);
+		H = (HL >> 8) & 0xFF;
+		L = HL & 0xFF;
+		auto flag = FLAG_EMPTY_MASK;
+		flag |=	(((SP & 0xF) + (val & 0xF)) > 0xF) << FLAG_HCARRY_SHIFT;
+		flag |= (((SP & 0xFF) + (val & 0xFF)) > 0xFF) << FLAG_CARRY_SHIFT;
+		F = flag;
 		PC++;
-		i += SP;
-		H = (i >> 8) & 0xFF;
-		L = i & 0xFF;
-		mTemp = 3; tTemp = 12;
 	}
 
 	void CPU::LDHA8() {
