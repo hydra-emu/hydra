@@ -60,7 +60,7 @@ namespace TKPEmu::Gameboy::Devices {
 		void RETNZ(); void POPBC(); void JPNZ16(); void JP16(); void CALLNZ16(); void PUSHBC(); void ADDA8(); void RST0(); void RETZ(); void RET(); void JPZ16(); void EXT(); void CALLZ16(); void CALL16(); void ADCA8(); void RST8();
 		void RETNC(); void POPDE(); void JPNC16(); void CALLNC16(); void PUSHDE(); void SUBA8(); void RST10(); void RETC(); void RETI(); void JPC16();  void CALLC16();  void SBCA8(); void RST18();
 		void LDH8A(); void POPHL(); void LDHCA(); void PUSHHL(); void AND8(); void RST20(); void ADDSPD(); void JPHL(); void LD16A(); void XOR8(); void RST28();
-		void LDHA8(); void POPAF();  void DI();  void PUSHAF(); void OR8(); void RST30(); void LDHLSPD(); void LDSPHL(); void LDA16(); void EI(); void CP8(); void RST38();
+		void LDHA8(); void POPAF();  void LDAMC(); void DI();  void PUSHAF(); void OR8(); void RST30(); void LDHLSPD(); void LDSPHL(); void LDA16(); void EI(); void CP8(); void RST38();
 
 		void RST40(); void RST48(); void RST50(); void RST58(); void RST60();
 

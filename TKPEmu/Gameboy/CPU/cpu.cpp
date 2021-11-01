@@ -24,7 +24,7 @@ namespace TKPEmu::Gameboy::Devices {
 			{ "RETNZ" , &CPU::RETNZ }, { "POPBC" , &CPU::POPBC }, { "JPNZ16" , &CPU::JPNZ16 , 2}, { "JP16" , &CPU::JP16 , 2}, { "CALLNZ16" , &CPU::CALLNZ16 , 2}, { "PUSHBC" , &CPU::PUSHBC }, { "ADDA8" , &CPU::ADDA8 , 1}, { "RST0" , &CPU::RST0 }, { "RETZ" , &CPU::RETZ }, { "RET" , &CPU::RET }, { "JPZ16" , &CPU::JPZ16 , 2}, { "EXT" , &CPU::EXT , 1 }, { "CALLZ16" , &CPU::CALLZ16 , 2}, { "CALL16" , &CPU::CALL16 , 2}, { "ADCA8" , &CPU::ADCA8 , 2}, { "RST8" , &CPU::RST8 },
 			{ "RETNC" , &CPU::RETNC }, { "POPDE" , &CPU::POPDE }, { "JPNC16" , &CPU::JPNC16 , 2}, { "???" , &CPU::XXX }, { "CALLNC16" , &CPU::CALLNC16 , 2}, { "PUSHDE" , &CPU::PUSHDE }, { "SUBA8" , &CPU::SUBA8 , 1}, { "RST10" , &CPU::RST10 }, { "RETC" , &CPU::RETC }, { "RETI" , &CPU::RETI }, { "JPC16" , &CPU::JPC16 , 2}, { "???" , &CPU::XXX }, { "CALLC16" , &CPU::CALLC16 , 2}, { "???" , &CPU::XXX }, { "SBCA8" , &CPU::SBCA8 , 1}, { "RST18" , &CPU::RST18 },
 			{ "LDH8A" , &CPU::LDH8A }, { "POPHL" , &CPU::POPHL }, { "LDHCA" , &CPU::LDHCA }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "PUSHHL" , &CPU::PUSHHL }, { "AND8" , &CPU::AND8 , 1}, { "RST20" , &CPU::RST20 }, { "ADDSPD" , &CPU::ADDSPD , 1}, { "JPHL" , &CPU::JPHL }, { "LD16A" , &CPU::LD16A }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "XOR8" , &CPU::XOR8 , 1}, { "RST28" , &CPU::RST28 },
-			{ "LDHA8" , &CPU::LDHA8 , 1}, { "POPAF" , &CPU::POPAF }, { "???" , &CPU::XXX }, { "DI" , &CPU::DI }, { "???" , &CPU::XXX }, { "PUSHAF" , &CPU::PUSHAF }, { "OR8" , &CPU::OR8, 1 }, { "RST30" , &CPU::RST30 }, { "LDHLSPD" , &CPU::LDHLSPD , 1 }, { "LDSPHL", &CPU::LDSPHL }, { "LDA16" , &CPU::LDA16 }, { "EI" , &CPU::EI }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "CP8" , &CPU::CP8 , 1}, { "RST38" , &CPU::RST38 }
+			{ "LDHA8" , &CPU::LDHA8 , 1}, { "POPAF" , &CPU::POPAF }, { "LDAMC" , &CPU::LDAMC }, { "DI" , &CPU::DI }, { "???" , &CPU::XXX }, { "PUSHAF" , &CPU::PUSHAF }, { "OR8" , &CPU::OR8, 1 }, { "RST30" , &CPU::RST30 }, { "LDHLSPD" , &CPU::LDHLSPD , 1 }, { "LDSPHL", &CPU::LDSPHL }, { "LDA16" , &CPU::LDA16 }, { "EI" , &CPU::EI }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "CP8" , &CPU::CP8 , 1}, { "RST38" , &CPU::RST38 }
 		};
 
 		cbMap = {
@@ -1464,7 +1464,12 @@ namespace TKPEmu::Gameboy::Devices {
 
 	void CPU::LDSPHL() {
 		SP = (H << 8) | L;
-		mTemp = 2; tTemp = 4;
+		mTemp = 2; tTemp = 8;
+	}
+
+	void CPU::LDAMC() {
+		A = bus_->Read(0xFF00 + C);
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::RST38() {
