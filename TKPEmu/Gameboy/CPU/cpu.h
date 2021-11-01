@@ -73,7 +73,7 @@ namespace TKPEmu::Gameboy::Devices {
 		void BIT2B(); void BIT2C(); void BIT2D(); void BIT2E(); void BIT2H(); void BIT2L(); void BIT2M(); void BIT2A(); void BIT3B(); void BIT3C(); void BIT3D(); void BIT3E(); void BIT3H(); void BIT3L(); void BIT3M(); void BIT3A();
 		void BIT4B(); void BIT4C(); void BIT4D(); void BIT4E(); void BIT4H(); void BIT4L(); void BIT4M(); void BIT4A(); void BIT5B(); void BIT5C(); void BIT5D(); void BIT5E(); void BIT5H(); void BIT5L(); void BIT5M(); void BIT5A();
 		void BIT6B(); void BIT6C(); void BIT6D(); void BIT6E(); void BIT6H(); void BIT6L(); void BIT6M(); void BIT6A(); void BIT7B(); void BIT7C(); void BIT7D(); void BIT7E(); void BIT7H(); void BIT7L(); void BIT7M(); void BIT7A();
-		void RES0A();
+		void RES0B(); void RES0C(); void RES0D(); void RES0E(); void RES0H(); void RES0L(); void RES0HL();   void RES0A();
 
 
 		// Undefined instructions
@@ -90,6 +90,7 @@ namespace TKPEmu::Gameboy::Devices {
 		inline void reg_cmp(RegisterType& reg);
 		inline void hl_add(BigRegisterType& big_reg);
 		inline void bit_ch(RegisterType reg, unsigned shift);
+		inline void bit_res(RegisterType& reg, unsigned shift);
 		inline void bit_swap(RegisterType& reg);
 
 		// TODO: remove FZ

@@ -36,7 +36,7 @@ namespace TKPEmu::Gameboy::Devices {
 			{ "BIT2B" , &CPU::BIT2B }, { "BIT2C" , &CPU::BIT2C }, { "BIT2D" , &CPU::BIT2D }, { "BIT2E" , &CPU::BIT2E }, { "BIT2H" , &CPU::BIT2H }, { "BIT2L" , &CPU::BIT2L }, { "BIT2M" , &CPU::BIT2M }, { "BIT2A" , &CPU::BIT2A }, { "BIT3B" , &CPU::BIT3B }, { "BIT3C" , &CPU::BIT3C }, { "BIT3D" , &CPU::BIT3D }, { "BIT3E" , &CPU::BIT3E }, { "BIT3H" , &CPU::BIT3H }, { "BIT3L" , &CPU::BIT3L }, { "BIT3M" , &CPU::BIT3M }, { "BIT3A" , &CPU::BIT3A },
 			{ "BIT4B" , &CPU::BIT4B }, { "BIT4C" , &CPU::BIT4C }, { "BIT4D" , &CPU::BIT4D }, { "BIT4E" , &CPU::BIT4E }, { "BIT4H" , &CPU::BIT4H }, { "BIT4L" , &CPU::BIT4L }, { "BIT4M" , &CPU::BIT4M }, { "BIT4A" , &CPU::BIT4A }, { "BIT5B" , &CPU::BIT5B }, { "BIT5C" , &CPU::BIT5C }, { "BIT5D" , &CPU::BIT5D }, { "BIT5E" , &CPU::BIT5E }, { "BIT5H" , &CPU::BIT5H }, { "BIT5L" , &CPU::BIT5L }, { "BIT5M" , &CPU::BIT5M }, { "BIT5A" , &CPU::BIT5A },
 			{ "BIT6B" , &CPU::BIT6B }, { "BIT6C" , &CPU::BIT6C }, { "BIT6D" , &CPU::BIT6D }, { "BIT6E" , &CPU::BIT6E }, { "BIT6H" , &CPU::BIT6H }, { "BIT6L" , &CPU::BIT6L }, { "BIT6M" , &CPU::BIT6M }, { "BIT6A" , &CPU::BIT6A }, { "BIT7B" , &CPU::BIT7B }, { "BIT7C" , &CPU::BIT7C }, { "BIT7D" , &CPU::BIT7D }, { "BIT7E" , &CPU::BIT7E }, { "BIT7H" , &CPU::BIT7H }, { "BIT7L" , &CPU::BIT7L }, { "BIT7M" , &CPU::BIT7M }, { "BIT7A" , &CPU::BIT7A },
-			{ "RES0B" , &CPU::XXX }, { "RES0C" , &CPU::XXX }, { "RES0D" , &CPU::XXX }, { "RES0E" , &CPU::XXX }, { "RES0H" , &CPU::XXX }, { "RES01" , &CPU::XXX }, { "RES08" , &CPU::XXX }, { "RES0A" , &CPU::RES0A }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
+			{ "RES0B" , &CPU::RES0B }, { "RES0C" , &CPU::RES0C }, { "RES0D" , &CPU::RES0D }, { "RES0E" , &CPU::RES0E }, { "RES0H" , &CPU::RES0H }, { "RES0L" , &CPU::RES0L }, { "RES0HL" , &CPU::RES0HL }, { "RES0A" , &CPU::RES0A }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
 			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
 			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
 			{ "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX },
@@ -156,6 +156,11 @@ namespace TKPEmu::Gameboy::Devices {
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
 		F &= FLAG_CARRY_MASK;
 		F |= flag;
+		mTemp = 2; tTemp = 8;
+	}
+
+	inline void CPU::bit_res(RegisterType& reg, unsigned shift) {
+		reg &= ~(1 << shift);
 		mTemp = 2; tTemp = 8;
 	}
 
@@ -2580,10 +2585,39 @@ namespace TKPEmu::Gameboy::Devices {
 		mTemp = 3; tTemp = 12;
 	}
 
+	void CPU::RES0B(){
+		bit_res(B, 0);
+	}
+
+	void CPU::RES0C() {
+		bit_res(C, 0);
+	}
+
+	void CPU::RES0D() {
+		bit_res(D, 0);
+	}
+
+	void CPU::RES0E() {
+		bit_res(E, 0);
+	}
+
+	void CPU::RES0H() {
+		bit_res(H, 0);
+	}
+
+	void CPU::RES0L() {
+		bit_res(L, 0);
+	}
+
+	void CPU::RES0HL() {
+		auto t = bus_->Read((H << 8) | L);
+		bit_res(t, 0);
+		bus_->Write((H << 8) | L, t);
+		mTemp += 2; tTemp += 8;
+	}
+
 	void CPU::RES0A() {
-		A &= 0xFE;
-		mTemp = 2;
-		tTemp = 8;
+		bit_res(A, 0);
 	}
 
 	#pragma endregion
