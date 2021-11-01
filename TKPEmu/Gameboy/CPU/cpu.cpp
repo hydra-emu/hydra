@@ -165,7 +165,6 @@ namespace TKPEmu::Gameboy::Devices {
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
 		F = flag;
 		reg = temp & 0xFF;
-		PC++;
 		mTemp = 2; tTemp = 8;
 	}
 
