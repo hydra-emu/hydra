@@ -125,6 +125,20 @@ namespace TKPEmu::Gameboy::Devices {
 		mTemp = 1; tTemp = 4;
 	}
 
+	inline void CPU::hl_add(BigRegisterType& big_reg) {
+		auto HL = (H << 8) | L;
+		auto temp = HL + big_reg;
+		auto flag = FLAG_EMPTY_MASK;
+		flag |= (((HL & 0xFFF) + (big_reg & 0xFFF)) > 0xFFF) << FLAG_HCARRY_SHIFT;
+		flag |= (temp > 0xFFFF) << FLAG_CARRY_SHIFT;
+		F &= FLAG_ZERO_MASK;
+		F |= flag;
+		temp &= 0xFFFF;
+		H = temp >> 8;
+		L = temp & 0xFF;
+		mTemp = 2; tTemp = 8;
+	}
+
 	inline void CPU::bit_ch(RegisterType reg, unsigned shift) {
 		auto temp = reg & (1 << shift);
 		auto flag = FLAG_HCARRY_MASK;
@@ -188,71 +202,34 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::ADDAHL() {
-		uint16_t t = bus_->Read((H << 8) | L);
+		uint8_t t = bus_->Read((H << 8) | L);
 		reg_add(t);
 		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::ADDA8() {
-		uint16_t t = bus_->Read(PC++);
+		uint8_t t = bus_->Read(PC++);
 		reg_add(t);
 		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::ADDHLBC() {
-		int HL = (H << 8) | L;
-		HL += (B << 8) | C;
-		if (HL > 0xFF) {
-			F |= 0x10;
-		}
-		else {
-			F &= 0xEF;
-		}
-		H = (HL >> 8) & 255;
-		L = HL & 255;
-		mTemp = 3; tTemp = 12;
+		uint16_t t = (B << 8) | C;
+		hl_add(t);
 	}
 
 	void CPU::ADDHLDE() {
-		int HL = (H << 8) | L;
-		HL += (D << 8) | E;
-		if (HL > 0xFF) {
-			F |= 0x10;
-		}
-		else {
-			F &= 0xEF;
-		}
-		H = (HL >> 8) & 255;
-		L = HL & 255;
-		mTemp = 3; tTemp = 12;
+		uint16_t t = (D << 8) | E;
+		hl_add(t);
 	}
 
 	void CPU::ADDHLHL() {
-		int HL = (H << 8) | L;
-		HL += HL;
-		if (HL > 0xFF) {
-			F |= 0x10;
-		}
-		else {
-			F &= 0xEF;
-		}
-		H = (HL >> 8) & 255;
-		L = HL & 255;
-		mTemp = 3; tTemp = 12;
+		uint16_t t = (H << 8) | L;
+		hl_add(t);
 	}
 
 	void CPU::ADDHLSP() {
-		auto HL = (H << 8) | L;
-		auto temp = HL + SP;
-		auto flag = FLAG_EMPTY_MASK;
-		flag |= (((HL & 0xFFF) + (SP & 0xFFF)) > 0xFFF) << FLAG_HCARRY_SHIFT;
-		flag |= (temp > 0xFFFF) << FLAG_CARRY_SHIFT;
-		F &= FLAG_ZERO_MASK;
-		F |= flag;
-		temp &= 0xFFFF;
-		H = temp >> 8;
-		L = temp & 0xFF;
-		mTemp = 2; tTemp = 8;
+		hl_add(SP);
 	}
 
 	void CPU::ADDSPD() {
@@ -297,13 +274,13 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::ADCAHL() {
-		uint16_t t = bus_->Read((H << 8) | L);
+		uint8_t t = bus_->Read((H << 8) | L);
 		reg_adc(t);
 		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::ADCA8() {
-		uint16_t t = bus_->Read(PC++);
+		uint8_t t = bus_->Read(PC++);
 		reg_adc(t);
 		mTemp = 2; tTemp = 8;
 	}
@@ -348,7 +325,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::SUBA8() {
-		uint16_t t = bus_->Read(PC++);
+		uint8_t t = bus_->Read(PC++);
 		reg_sub(t);
 		mTemp = 2; tTemp = 8;
 	}
@@ -382,13 +359,13 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::SBCAHL() {
-		uint16_t t = bus_->Read(H << 8 | L);
+		uint8_t t = bus_->Read(H << 8 | L);
 		reg_sbc(t);
 		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::SBCA8() {
-		uint16_t t = bus_->Read(PC++);
+		uint8_t t = bus_->Read(PC++);
 		reg_sbc(t);
 		mTemp = 2; tTemp = 8;
 	}
@@ -977,7 +954,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::INCHLR() {
-		uint16_t t = bus_->Read((H << 8) | L);
+		uint8_t t = bus_->Read((H << 8) | L);
 		reg_inc(t);
 		bus_->Write((H << 8) | L, t);
 		mTemp = 3; tTemp = 12;
@@ -1012,7 +989,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::DECHLR() {
-		uint16_t t = bus_->Read((H << 8) | L);
+		uint8_t t = bus_->Read((H << 8) | L);
 		reg_dec(t);
 		bus_->Write((H << 8) | L, t);
 		mTemp = 3; tTemp = 12;
@@ -1043,7 +1020,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::INCSP() {
-		SP = (SP + 1) & 0xFFFF;
+		SP++;
 		mTemp = 1; tTemp = 4;
 	}
 
@@ -1213,13 +1190,13 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::ANDHL() {
-		uint16_t t = bus_->Read((H << 8) | L);
+		uint8_t t = bus_->Read((H << 8) | L);
 		reg_and(t);
 		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::AND8() {
-		uint16_t t = bus_->Read(PC++);
+		uint8_t t = bus_->Read(PC++);
 		reg_and(t);
 		mTemp = 2; tTemp = 8;
 	}

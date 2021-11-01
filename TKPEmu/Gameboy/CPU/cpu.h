@@ -15,7 +15,8 @@ namespace TKPEmu::Gameboy::Devices {
 	using namespace TKPEmu::Gameboy::Utils;
 	class CPU {
 	private:
-		using RegisterType = uint16_t;
+		using RegisterType = uint8_t;
+		using BigRegisterType = uint16_t;
 	private:
 		int bios[256] = {
 			0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
@@ -86,6 +87,7 @@ namespace TKPEmu::Gameboy::Devices {
 		inline void reg_and(RegisterType& reg);
 		inline void reg_add(RegisterType& reg);
 		inline void reg_adc(RegisterType& reg);
+		inline void hl_add(BigRegisterType& big_reg);
 		inline void bit_ch(RegisterType reg, unsigned shift);
 
 		// TODO: remove FZ
@@ -110,7 +112,8 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 
 	public:
-		RegisterType A, B, C, D, E, H, L, F, PC, SP;
+		RegisterType A, B, C, D, E, H, L, F;
+		BigRegisterType PC, SP;
 		RegisterType rsvA, rsvB, rsvC, rsvD, rsvE, rsvH, rsvL, rsvF;
 		bool IME;
 		unsigned totalClock = 0;
