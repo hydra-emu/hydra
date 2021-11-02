@@ -26,7 +26,7 @@ namespace TKPEmu {
 		virtual void StartDebug() = 0;
 		virtual void Reset() = 0;
 		virtual void Update() = 0;
-		virtual void LoadFromFile(const std::string& path) = 0;
+		virtual void LoadFromFile(std::string&& path) = 0;
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
 		std::mutex UpdateMutex;

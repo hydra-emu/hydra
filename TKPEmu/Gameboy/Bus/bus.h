@@ -23,6 +23,24 @@ namespace TKPEmu::Gameboy::Devices {
     };
 
     class Bus {
+    private:
+        using RamBank = std::array<uint8_t, 0x2000>;
+        using RomBank = std::array<uint8_t, 0x4000>;
+        bool ram_enabled_ = false;
+        uint8_t selected_ram_bank_ = 0;
+        uint8_t selected_rom_bank_ = 1;
+        uint8_t rom_banks_size_ = 2;
+        uint8_t unused_mem_area_ = 0;
+        std::vector<RamBank> ram_banks_;
+        std::vector<RomBank> rom_banks_;
+        std::unique_ptr<Cartridge> cartridge_ = NULL;
+        std::array<Sprite, 40> sprites;
+        std::array<uint8_t, 0xA0> oam_{};
+        std::array<uint8_t, 0x100> hram_{};
+        // TODO: cgb uses larger wram, maybe change, maybe inherit
+        std::array<uint8_t, 0x2000> wram_{};
+        std::array<uint8_t, 0x2000> vram_{};
+        uint8_t& redirect_address(uint16_t address);
     public:
         enum LCDCFlag {
             BG_ENABLE = 1 << 0,
@@ -51,30 +69,6 @@ namespace TKPEmu::Gameboy::Devices {
             SERIAL = 1 << 3,
             JOYPAD = 1 << 4
         };
-    private:
-        SDL_Color vdColor = { 44, 33, 55 };
-        SDL_Color dColor = { 118, 68, 98 };
-        SDL_Color lColor = { 169, 104, 104 };
-        SDL_Color vlColor = { 237, 180, 161 };
-        SDL_Color palette[4] = { vlColor, lColor, dColor, vdColor };
-        std::unique_ptr<Cartridge> cartridge = NULL;
-    public:
-        bool backgroundMapChanged = false;
-        bool spriteDataChanged = false;
-        bool keyPressed = false;
-        bool canWriteToOam = true;
-
-        std::array<Sprite, 40> sprites;
-
-
-        SDL_Color backgroundPalette[4] = { vlColor, lColor, dColor, vdColor };
-
-        // Obj palettes' first color is transparent, thus 3 colors are used.
-        SDL_Color obj0Palette[3] = { lColor, dColor, vdColor };
-        SDL_Color obj1Palette[3] = { lColor, dColor, vdColor };
-
-        std::array<uint8_t, 0x10000> mem;
-
 
         // Currently unused
         // TODO: Implement bios, change reset default values
@@ -104,10 +98,9 @@ namespace TKPEmu::Gameboy::Devices {
         uint8_t& GetReference(uint16_t address);
         void Write(uint16_t address, uint8_t data);
         void WriteL(uint16_t address, uint16_t data);
-        void WriteInput(int key);
-        void RemoveInput(int key);
         void Reset();
-        void LoadCartridge(std::string fileName);
+        void SoftReset();
+        void LoadCartridge(std::string&& fileName);
     };
 }
 #endif

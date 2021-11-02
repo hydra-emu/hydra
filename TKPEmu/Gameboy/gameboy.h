@@ -25,7 +25,7 @@ namespace TKPEmu::Gameboy {
 		void StartDebug() override;
 		void Reset() override;
 		void Update() override;
-		void LoadFromFile(const std::string& path) override;
+		void LoadFromFile(std::string&& path) override;
 		void LoadInstrToVec(std::vector<DisInstr>& vec, std::atomic_bool& finished);
 		void AddBreakpoint(GameboyBreakpoint bp);
 		void RemoveBreakpoint(int index);

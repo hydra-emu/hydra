@@ -3,11 +3,12 @@
 #define TKP_GB_CARTRIDGE_H
 #include <string>
 #include <vector>
-
-#define ENTRY_POINT 0x101
+#include <array>
+#define ENTRY_POINT 0x100
 namespace TKPEmu::Gameboy::Devices {
 	class Cartridge
 	{
+	public:
 		enum class CartridgeType {
 			ROM_ONLY = 0x0,
 			MBC1 = 0x1,
@@ -38,27 +39,9 @@ namespace TKPEmu::Gameboy::Devices {
 			HuC3 = 0xFE,
 			HuC1_RAM_BATTERY = 0xFF
 		};
-		enum class RomSize {
-			ROM_32KB = 0x0,
-			ROM_64KB = 0x1,
-			ROM_128KB = 0x2,
-			ROM_256KB = 0x3,
-			ROM_512KB = 0x4,
-			ROM_1MB = 0x5,
-			ROM_2MB = 0x6,
-			ROM_4MB = 0x7,
-			ROM_1_1MB = 0x52,
-			ROM_1_2MB = 0x53,
-			ROM_1_5MB = 0x54
-		};
-		enum class RamSize {
-			None = 0x0,
-			RAM_2KB = 0x1,
-			RAM_8KB = 0x2,
-			RAM_32KB = 0x3
-		};
+	private:
 		struct Header {
-			char unusedData1[0x33];
+			char unusedData1[0x34];
 			char name[14];
 			char gameboyColor;
 			char unusedData2[4];
@@ -66,15 +49,15 @@ namespace TKPEmu::Gameboy::Devices {
 			char romSize;
 			char ramSize;
 			char unusedData3[6];
-		};
-	private:
-		Header header;
+		} header_;
 		bool loaded;
 	public:
-		void Load(const std::string& fileName, std::array<uint8_t, 0x10000>& rom);
+		void Load(const std::string& fileName, std::vector<std::array<uint8_t, 0x4000>>& romBanks, std::vector<std::array<uint8_t, 0x2000>>& ramBanks);
 		CartridgeType GetCartridgeType();
-		RamSize GetRamSize();
-		RomSize GetRomSize();
+		int GetRamSize();
+		int GetRomSize();
+		// TODO: return string&&, make window that shows the string
+		void PrintHeader();
 	};
 }
 #endif

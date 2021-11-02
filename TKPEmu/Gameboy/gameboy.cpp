@@ -57,7 +57,7 @@ namespace TKPEmu::Gameboy {
 	}
 
 	void Gameboy::Reset() {
-		bus_.Reset();
+		bus_.SoftReset();
 		cpu_.Reset();
 		ppu_.Reset();
 	}
@@ -70,8 +70,8 @@ namespace TKPEmu::Gameboy {
 		}
 		cpu_.tClock = 0;
 	}
-	void Gameboy::LoadFromFile(const std::string& path) {
-		cartridge_.Load(path, bus_.mem);
+	void Gameboy::LoadFromFile(std::string&& path) {
+		bus_.LoadCartridge(std::forward<std::string>(path));
 	}
 	// TODO: LoadInstrToVec only works for rom_only for now
 	// TODO: if you win + D while in disassembler, game crashes

@@ -1627,7 +1627,7 @@ namespace TKPEmu::Gameboy::Devices {
 		int i = bus_->Read(PC);
 		PC++;
 		PC &= 0xFFFF;
-		if (i < 0xFF) {
+		if (i <= 0xFF) {
 			(this->*CBInstructions[i].op)();
 		}
 	}
