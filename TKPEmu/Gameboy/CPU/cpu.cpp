@@ -2,10 +2,16 @@
 #include <stdexcept>
 #include <iostream>
 namespace TKPEmu::Gameboy::Devices {
-	CPU::CPU(Bus* bus) : bus_(bus), IF(bus->GetReference(0xFF0F)), IE(bus->GetReference(0xFFFF)) {
+	CPU::CPU(Bus* bus) : bus_(bus),
+		IF(bus->GetReference(0xFF0F)),
+		IE(bus->GetReference(0xFFFF)),
+		DIVIDER(bus->GetReference(0xFF04)),
+		TIMA(bus->GetReference(0xFF05)),
+		TMA(bus->GetReference(0xFF06)),
+		TAC(bus->GetReference(0xFF07)) {
 		A = 0; B = 0; C = 0; D = 0; E = 0; H = 0; L = 0;
 		F = 0; SP = 0; PC = 0x0; IME = true;
-		mClock = 0; tClock = 0;
+		tClock = 0;
 		halt = false; stop = false;
 	}
 	inline void CPU::reg_dec(RegisterType& reg) {
@@ -2813,39 +2819,35 @@ namespace TKPEmu::Gameboy::Devices {
 
 	void CPU::Reset() {
 		bus_->inBios = false;
-		A = 0x1;
-		B = 0x0;
-		C = 0x13;
-		D = 0x0;
-		E = 0xD8;
-		F = 0x90;
-		H = 0x1;
-		L = 0x4D;
+		A = 0x1; F = 0x90;
+		B = 0x0; C = 0x13;
+		D = 0x0; E = 0xD8;
+		H = 0x1; L = 0x4D;
 		SP = 0xFFFE;
 		PC = 0x100;
 		IME = true;
 		IF = 0xE1;
-		IE = 0x0;
-		mClock = 0; tClock = 0;
+		tClock = 0;
 		halt = false; stop = false;
 	}
 
 	int CPU::Update() {
+		if (halt) {
+			PC--;
+		}
 		(this->*Instructions[bus_->Read(PC++)].op)();
+		update_timers(tTemp);
 		handle_interrupts();
-		mClock += mTemp;
 		tClock += tTemp;
 		return tTemp;
 	}
 
-	void CPU::handle_interrupts()
-	{
+	void CPU::handle_interrupts() {
 		if (auto temp = IE & IF; IME && IF) {
 			// Starting from the lowest bit (highest priority) and going up,
 			// we are effectively queueing interrupts in case there's multiple.
 			for (int i = 0; i < 5; i++) {
-				auto bit = (temp >> i) & 0x1;
-				if (bit) {
+				if (auto bit = (temp >> i) & 0x1; bit) {
 					execute_interrupt(i);
 					return;
 				}
@@ -2853,18 +2855,47 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 	}
 
-	void CPU::execute_interrupt(int bit)
-	{
+	void CPU::execute_interrupt(int bit) {
 		IME = false;
 		IF &= ~(1U << bit);
 		bus_->WriteL(SP, PC);
 		SP -= 2;
-		switch (bit) {
-			case 0: PC = 0x40; break;
-			case 1: PC = 0x48; break;
-			case 2: PC = 0x50; break;
-			case 3: PC = 0x58; break;
-			case 4: PC = 0x60; break;
+		PC = 0x40 + bit * 0x8;
+	}
+
+	void CPU::update_timers(int cycles) {
+		bool enabled = (TAC >> 2) & 0x1;
+		div_index_ += cycles;
+		if (div_index_ >= 0xFF) {
+			div_index_ = 0;
+			DIVIDER++;
+		}
+		uint8_t freq = get_clk_freq();
+		if (tac_index_ != freq) {
+			TimerCounter = freq;
+			tac_index_ = freq;
+		}
+		if (enabled) {
+			TimerCounter -= cycles;
+			if (TimerCounter <= 0) {
+				TimerCounter = get_clk_freq();
+				if (TIMA == 0xFF) {
+					TIMA = TMA;
+					IF |= 1 << 2;
+					halt = false;
+				}
+				else {
+					TIMA++;
+				}
+			}
+		}
+	}
+	int CPU::get_clk_freq() {
+		switch (TAC & 0b11) {
+			case 0: return 1024;
+			case 1: return 16;
+			case 2: return 64;
+			case 3: return 256;
 		}
 	}
 }

@@ -38,12 +38,10 @@ namespace TKPEmu::Gameboy::Devices {
 
 		Bus* bus_;
 		bool IME = false;
-		uint8_t& IF;
-		uint8_t& IE;
 		int mTemp = 0;
 		int tTemp = 0;
-		int mClock = 0;
-		int tClock = 0;
+		int div_index_ = 0;
+		int tac_index_ = 0x1000;
 		bool halt = false;
 		bool stop = false;
 
@@ -111,6 +109,8 @@ namespace TKPEmu::Gameboy::Devices {
 		inline void rst(RegisterType addr);
 		void handle_interrupts();
 		void execute_interrupt(int bit);
+		void update_timers(int cycles);
+		int get_clk_freq();
 
 	public:
 		CPU(Bus* bus);
@@ -156,8 +156,17 @@ namespace TKPEmu::Gameboy::Devices {
 			{ "SET6B" , &CPU::SET6B }, { "SET6C" , &CPU::SET6C }, { "SET6D" , &CPU::SET6D }, { "SET6E" , &CPU::SET6E }, { "SET6H" , &CPU::SET6H }, { "SET6L" , &CPU::SET6L }, { "SET6HL" , &CPU::SET6HL }, { "SET6A" , &CPU::SET6A }, { "SET7B" , &CPU::SET7B }, { "SET7C" , &CPU::SET7C }, { "SET7D" , &CPU::SET7D }, { "SET7E" , &CPU::SET7E }, { "SET7H" , &CPU::SET7H }, { "SET7L" , &CPU::SET7L }, { "SET7HL" , &CPU::SET7HL }, { "SET7A" , &CPU::SET7A }
 		} };
 
+		// CPU registers
 		RegisterType A, B, C, D, E, H, L, F;
 		BigRegisterType PC, SP;
+
+		// Memory mapped registers, they are a reference to a position in memory
+		RegisterType &IF, &IE, &DIVIDER, &TIMA, &TMA, &TAC;
+
+		const int ClockSpeed = 4194304;
+		const int MaxCycles = ClockSpeed / 60;
+		int TimerCounter = ClockSpeed / tac_index_;
+		int tClock = 0;
 
 		void Reset();
 		int Update();

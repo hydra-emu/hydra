@@ -101,7 +101,6 @@ namespace TKPEmu::Gameboy::Devices {
         Bus();
         uint8_t Read(uint16_t address);
         uint16_t ReadL(uint16_t address);
-        uint8_t* GetPointer(uint16_t address);
         uint8_t& GetReference(uint16_t address);
         void Write(uint16_t address, uint8_t data);
         void WriteL(uint16_t address, uint16_t data);

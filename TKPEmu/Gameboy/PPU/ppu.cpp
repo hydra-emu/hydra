@@ -6,7 +6,6 @@ namespace TKPEmu::Gameboy::Devices {
 		STAT(bus->GetReference(0xFF41)), 
 		LY(bus->GetReference(0xFF44)), 
 		LYC(bus->GetReference(0xFF45)) {}
-
 	bool PPU::NeedsDraw(){
 		return needs_draw;
 	}

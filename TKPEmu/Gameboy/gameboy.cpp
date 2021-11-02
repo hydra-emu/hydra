@@ -63,15 +63,12 @@ namespace TKPEmu::Gameboy {
 	}
 	void Gameboy::Update() {
 		std::lock_guard<std::mutex> lg(UpdateMutex);
-		int clk = cpu_.Update();
-		//int clk = 4;
-		//cpu_.IF = 0;
-		//
-		////if (!cpu_.CheckInterr())
-		//	clk = cpu_.Update();
-		ppu_.Update(clk);
-		//file << std::hex << std::setfill('0') << std::setw(4) << (int)cpu_.PC << ": A:" << std::setw(2) << (int)cpu_.A << " B:" << std::setw(2) << (int)cpu_.B << " C:" << std::setw(2) << (int)cpu_.C << " D:" << std::setw(2) << (int)cpu_.D
-		//	<< " E:" << std::setw(2) << (int)cpu_.E << " F:" << std::setw(2) << (int)cpu_.F << " H:" << std::setw(2) << (int)cpu_.H << " L:" << std::setw(2) << (int)cpu_.L << " LY:" << std::setw(2) << (int)cpu_.bus_->Read(0xFF44) << " SP:" << std::setw(4) << (int)cpu_.SP << "\n";
+		cpu_.TimerCounter = cpu_.ClockSpeed / 0x400;
+		while (cpu_.tClock < cpu_.MaxCycles) {
+			int clk = cpu_.Update();
+			ppu_.Update(clk);
+		}
+		cpu_.tClock = 0;
 	}
 	void Gameboy::LoadFromFile(const std::string& path) {
 		cartridge_.Load(path, bus_.mem);
