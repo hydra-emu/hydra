@@ -36,12 +36,16 @@ namespace TKPEmu::Gameboy::Devices {
 			0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50,
 		};
 
-		int R;
-		int mTemp;
-		int tTemp;
-
-		bool halt;
-		bool stop;
+		Bus* bus_;
+		bool IME = false;
+		uint8_t& IF;
+		uint8_t& IE;
+		int mTemp = 0;
+		int tTemp = 0;
+		int mClock = 0;
+		int tClock = 0;
+		bool halt = false;
+		bool stop = false;
 
 		// Instruction functions
 		void NOP(); void LDBC16(); void LDBCA(); void INCBC(); void INCB(); void DECB(); void LDB8(); void RLCA(); void LD16SP(); void ADDHLBC(); void LDABC(); void DECBC(); void INCC(); void DECC(); void LDC8(); void RRCA();
@@ -61,8 +65,6 @@ namespace TKPEmu::Gameboy::Devices {
 		void LDH8A(); void POPHL(); void LDHCA(); void PUSHHL(); void AND8(); void RST20(); void ADDSPD(); void JPHL(); void LD16A(); void XOR8(); void RST28();
 		void LDHA8(); void POPAF();  void LDAMC(); void DI();  void PUSHAF(); void OR8(); void RST30(); void LDHLSPD(); void LDSPHL(); void LDA16(); void EI(); void CP8(); void RST38();
 
-		void RST40(); void RST48(); void RST50(); void RST58(); void RST60();
-
 		// Two byte instructions
 		void RLCB(); void RLCC(); void RLCD(); void RLCE(); void RLCH(); void RLCL(); void RLCHL(); void RLCAr(); void RRCB(); void RRCC(); void RRCD(); void RRCE(); void RRCH(); void RRCL(); void RRCHL(); void RRCAr();
 		void RLB(); void RLC(); void RLD(); void RLE(); void RLH(); void RLL(); void RLHL(); void RLAr(); void RRB(); void RRC(); void RRD(); void RRE(); void RRH(); void RRL(); void RRHL(); void RRAr();
@@ -80,7 +82,6 @@ namespace TKPEmu::Gameboy::Devices {
 		void SET2B(); void SET2C(); void SET2D(); void SET2E(); void SET2H(); void SET2L(); void SET2HL(); void SET2A(); void SET3B(); void SET3C(); void SET3D(); void SET3E(); void SET3H(); void SET3L(); void SET3HL(); void SET3A();
 		void SET4B(); void SET4C(); void SET4D(); void SET4E(); void SET4H(); void SET4L(); void SET4HL(); void SET4A(); void SET5B(); void SET5C(); void SET5D(); void SET5E(); void SET5H(); void SET5L(); void SET5HL(); void SET5A();
 		void SET6B(); void SET6C(); void SET6D(); void SET6E(); void SET6H(); void SET6L(); void SET6HL(); void SET6A(); void SET7B(); void SET7C(); void SET7D(); void SET7E(); void SET7H(); void SET7L(); void SET7HL(); void SET7A();
-
 
 		// Undefined instructions
 		void XXX();
@@ -107,42 +108,18 @@ namespace TKPEmu::Gameboy::Devices {
 		inline void bit_sl(RegisterType& reg);
 		inline void bit_sr(RegisterType& reg);
 		inline void bit_srl(RegisterType& reg);
-
-		void RSV();
-		void RRS();
-		/// <summary>Flag 7 0x80</summary>
-		void SetFlagZero(unsigned long value) {
-			F = (F & ~(1UL << 7)) | (value << 7);
-		}
-		/// <summary>Flag 6 0x40</summary>
-		void SetFlagSubtract(unsigned long value) {
-			F = (F & ~(1UL << 6)) | (value << 6);
-		}
-		/// <summary>Flag 5 0x20</summary>
-		void SetFlagHalfCarry(unsigned long value) {
-			F = (F & ~(1UL << 5)) | (value << 5);
-		}
-		/// <summary>Flag 4 0x10</summary>
-		void SetFlagCarry(unsigned long value) {
-			F = (F & ~(1UL << 4)) | (value << 4);
-		}
+		inline void rst(RegisterType addr);
+		void handle_interrupts();
+		void execute_interrupt(int bit);
 
 	public:
-		RegisterType A, B, C, D, E, H, L, F;
-		BigRegisterType PC, SP;
-		RegisterType rsvA, rsvB, rsvC, rsvD, rsvE, rsvH, rsvL, rsvF;
-		bool IME;
-		unsigned totalClock = 0;
-		int mClock;
-		int tClock;
 		CPU(Bus* bus);
 		struct Instruction {
 			std::string name;
 			void(CPU::* op)() = nullptr;
 			int skip = 0;
 		};
-		Bus* bus_;
-		std::array<Instruction, 0x100> instructions = { {
+		std::array<Instruction, 0x100> Instructions = { {
 			{ "NOP" , &CPU::NOP }, { "LDBC16" , &CPU::LDBC16 , 2}, { "LDBCA" , &CPU::LDBCA }, { "INCBC" , &CPU::INCBC }, { "INCB" , &CPU::INCB }, { "DECB" , &CPU::DECB }, { "LDB8" , &CPU::LDB8 , 1}, { "RLCA" , &CPU::RLCA }, { "LD16SP" , &CPU::LD16SP }, { "ADDHLBC" , &CPU::ADDHLBC }, { "LDABC" , &CPU::LDABC }, { "DECBC" , &CPU::DECBC }, { "INCC" , &CPU::INCC }, { "DECC" , &CPU::DECC }, { "LDC8" , &CPU::LDC8 , 1}, { "RRCA" , &CPU::RRCA },
 			{ "STOP" , &CPU::STOP }, { "LDDE16" , &CPU::LDDE16 , 2}, { "LDDEA" , &CPU::LDDEA }, { "INCDE" , &CPU::INCDE }, { "INCD" , &CPU::INCD }, { "DECD" , &CPU::DECD }, { "LDD8" , &CPU::LDD8 , 1}, { "RLA" , &CPU::RLA }, { "JR8" , &CPU::JR8 , 1}, { "ADDHLDE" , &CPU::ADDHLDE }, { "LDADE" , &CPU::LDADE }, { "DECDE" , &CPU::DECDE }, { "INCE" , &CPU::INCE }, { "DECE" , &CPU::DECE }, { "LDE8" , &CPU::LDE8 , 1}, { "RRA" , &CPU::RRA },
 			{ "JRNZ8" , &CPU::JRNZ8 , 1}, { "LDHL16" , &CPU::LDHL16 , 2}, { "LDIHLA" , &CPU::LDIHLA }, { "INCHL" , &CPU::INCHL }, { "INCH" , &CPU::INCH }, { "DECH" , &CPU::DECH }, { "LDH8" , &CPU::LDH8 , 1}, { "DAA" , &CPU::DAA }, { "JRZ8" , &CPU::JRZ8 , 1}, { "ADDHLHL" , &CPU::ADDHLHL }, { "LDIAHL" , &CPU::LDIAHL }, { "DECHL" , &CPU::DECHL }, { "INCL" , &CPU::INCL }, { "DECL" , &CPU::DECL }, { "LDL8" , &CPU::LDL8 , 1}, { "CPL" , &CPU::CPL },
@@ -160,7 +137,7 @@ namespace TKPEmu::Gameboy::Devices {
 			{ "LDH8A" , &CPU::LDH8A }, { "POPHL" , &CPU::POPHL }, { "LDHCA" , &CPU::LDHCA }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "PUSHHL" , &CPU::PUSHHL }, { "AND8" , &CPU::AND8 , 1}, { "RST20" , &CPU::RST20 }, { "ADDSPD" , &CPU::ADDSPD , 1}, { "JPHL" , &CPU::JPHL }, { "LD16A" , &CPU::LD16A }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "XOR8" , &CPU::XOR8 , 1}, { "RST28" , &CPU::RST28 },
 			{ "LDHA8" , &CPU::LDHA8 , 1}, { "POPAF" , &CPU::POPAF }, { "LDAMC" , &CPU::LDAMC }, { "DI" , &CPU::DI }, { "???" , &CPU::XXX }, { "PUSHAF" , &CPU::PUSHAF }, { "OR8" , &CPU::OR8, 1 }, { "RST30" , &CPU::RST30 }, { "LDHLSPD" , &CPU::LDHLSPD , 1 }, { "LDSPHL", &CPU::LDSPHL }, { "LDA16" , &CPU::LDA16 }, { "EI" , &CPU::EI }, { "???" , &CPU::XXX }, { "???" , &CPU::XXX }, { "CP8" , &CPU::CP8 , 1}, { "RST38" , &CPU::RST38 }
 		} };
-		std::array<Instruction, 0x100> cbMap = { {
+		std::array<Instruction, 0x100> CBInstructions = { {
 			{ "RLCB" , &CPU::RLCB }, { "RLCC" , &CPU::RLCC }, { "RLCD" , &CPU::RLCD }, { "RLCE" , &CPU::RLCE }, { "RLCH" , &CPU::RLCH }, { "RLCL" , &CPU::RLCL }, { "RLCHL" , &CPU::RLCHL }, { "RLCAr" , &CPU::RLCAr },  { "RRCB" , &CPU::RRCB }, { "RRCC" , &CPU::RRCC }, { "RRCD" , &CPU::RRCD }, { "RRCE" , &CPU::RRCE }, { "RRCH" , &CPU::RRCH }, { "RRCL" , &CPU::RRCL }, { "RRCHL" , &CPU::RRCHL }, { "RRCAr" , &CPU::RRCAr },
 			{ "RLB" , &CPU::RLB }, { "RLC" , &CPU::RLC }, { "RLD" , &CPU::RLD }, { "RLE" , &CPU::RLE }, { "RLH" , &CPU::RLH }, { "RLL" , &CPU::RLL }, { "RLHL" , &CPU::RLHL }, { "RLAr" , &CPU::RLAr }, { "RRB" , &CPU::RRB }, { "RRC" , &CPU::RRC },  { "RRD" , &CPU::RRD },  { "RRE" , &CPU::RRE },  { "RRH" , &CPU::RRH },  { "RRL" , &CPU::RRL },  { "RRHL" , &CPU::RRHL },  { "RRAr" , &CPU::RRAr },
 			{ "SLAB" , &CPU::SLAB }, { "SLAC" , &CPU::SLAC }, { "SLAD" , &CPU::SLAD }, { "SLAE" , &CPU::SLAE }, { "SLAH" , &CPU::SLAH }, { "SLAL" , &CPU::SLAL }, { "SLAHL" , &CPU::SLAHL }, { "SLAA" , &CPU::SLAA }, { "SRAB" , &CPU::SRAB }, { "SRAC" , &CPU::SRAC }, { "SRAD" , &CPU::SRAD }, { "SRAE" , &CPU::SRAE }, { "SRAH" , &CPU::SRAH }, { "SRAL" , &CPU::SRAL }, { "SRAHL" , &CPU::SRAHL }, { "SRAA" , &CPU::SRAA },
@@ -179,9 +156,11 @@ namespace TKPEmu::Gameboy::Devices {
 			{ "SET6B" , &CPU::SET6B }, { "SET6C" , &CPU::SET6C }, { "SET6D" , &CPU::SET6D }, { "SET6E" , &CPU::SET6E }, { "SET6H" , &CPU::SET6H }, { "SET6L" , &CPU::SET6L }, { "SET6HL" , &CPU::SET6HL }, { "SET6A" , &CPU::SET6A }, { "SET7B" , &CPU::SET7B }, { "SET7C" , &CPU::SET7C }, { "SET7D" , &CPU::SET7D }, { "SET7E" , &CPU::SET7E }, { "SET7H" , &CPU::SET7H }, { "SET7L" , &CPU::SET7L }, { "SET7HL" , &CPU::SET7HL }, { "SET7A" , &CPU::SET7A }
 		} };
 
+		RegisterType A, B, C, D, E, H, L, F;
+		BigRegisterType PC, SP;
+
 		void Reset();
 		int Update();
-		bool CheckInterr();
 	};
 }
 #endif

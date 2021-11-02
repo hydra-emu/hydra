@@ -41,7 +41,6 @@ namespace TKPEmu::Applications {
         }
         void SetEmulator(Emulator* emu) override {
             emulator_ = dynamic_cast<Gameboy*>(emu);
-            LY_ = emulator_->GetCPU().bus_->GetPointer(0xFF44);
         }
         void Reset() noexcept final override {
             DisInstr::ResetId();
@@ -170,7 +169,7 @@ namespace TKPEmu::Applications {
                                 break;
                             }
                             ImGui::TableSetColumnIndex(2);
-                            ImGui::TextUnformatted(emulator_->GetCPU().instructions[ins->Instruction].name.c_str());
+                            ImGui::TextUnformatted(emulator_->GetCPU().Instructions[ins->Instruction].name.c_str());
                             switch (ins->ParamSize) {
                             case 1:
                                 ImGui::SameLine();
@@ -264,20 +263,22 @@ namespace TKPEmu::Applications {
                     emulator_->Breakpoints.clear();
                     clear_all_flag = true;
                 }
-                static GameboyBreakpoint db_reg;
-                if (emulator_->Paused.load()) {
-                    emulator_->CopyRegToBreakpoint(db_reg);
-                }
-                // TODO: dont use stringstream, use imgui text with %02x
-                std::stringstream ss;
-                if (emulator_->Paused.load())
-                ss << std::hex << std::setfill('0')
-                    << "AF: " << std::setw(2) << db_reg.A_value << std::setw(2) << db_reg.F_value << "\nBC: " << std::setw(2) << db_reg.B_value << std::setw(2) << db_reg.C_value << "\n"
-                    << "DE: " << std::setw(2) << db_reg.D_value << std::setw(2) << db_reg.E_value << "\nHL: " << std::setw(2) << db_reg.H_value << std::setw(2) << db_reg.L_value << "\n"
-                    << "SP: " << std::setw(4) << db_reg.SP_value << "\n"
-                    << "PC: " << std::setw(4) << db_reg.PC_value << "\n"
-                    << "LY: " << std::setw(2) << (int)(*LY_) << "\n";
-                ImGui::Text(ss.str().c_str());
+                //static GameboyBreakpoint db_reg;
+                //if (emulator_->Paused.load()) {
+                //    emulator_->CopyRegToBreakpoint(db_reg);
+                //}
+                //// TODO: dont use stringstream, use imgui text with %02x
+                //std::stringstream ss;
+                //if (emulator_->Paused.load())
+                //    ss << std::hex << std::setfill('0')
+                //    << "AF: " << std::setw(2) << db_reg.A_value << std::setw(2) << db_reg.F_value << "\nBC: " << std::setw(2) << db_reg.B_value << std::setw(2) << db_reg.C_value << "\n"
+                //    << "DE: " << std::setw(2) << db_reg.D_value << std::setw(2) << db_reg.E_value << "\nHL: " << std::setw(2) << db_reg.H_value << std::setw(2) << db_reg.L_value << "\n"
+                //    << "SP: " << std::setw(4) << db_reg.SP_value << "\n"
+                //    << "PC: " << std::setw(4) << db_reg.PC_value << "\n"
+                //    << "IME: " << std::setw(2) << (int)(emulator_->GetCPU().IME) << "\n"
+                //    << "IE: " << std::setw(2) << (int)(emulator_->GetCPU().IE) << "\n"
+                //    << "IF: " << std::setw(2) << (int)(emulator_->GetCPU().IF) << "\n";
+                //ImGui::Text(ss.str().c_str());
                 ImGui::EndChild();
                 // TODO: add switch from hex to binary on every textbox here
                 if (bp_add_popup) {

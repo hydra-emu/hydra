@@ -7,6 +7,9 @@ namespace TKPEmu::Gameboy::Devices {
 	constexpr int FRAME_CYCLES = 70224;
 	class PPU {
 	private:
+		using IFInterrupt = Bus::IFInterrupt;
+		using LCDCFlag = Bus::LCDCFlag;
+		using STATFlag = Bus::STATFlag;
 		using TKPImage = TKPEmu::Tools::TKPImage;
 	public:
 		PPU(Bus* bus);
@@ -20,39 +23,10 @@ namespace TKPEmu::Gameboy::Devices {
 		std::array<uint8_t, 0x9F> mem_OAM_;
 
 		// PPU register pointers
-		uint8_t* LCDC_ = nullptr;
-		uint8_t* STAT_ = nullptr;
-		uint8_t* IF_   = nullptr;
-		uint8_t* LYC_  = nullptr;
-		uint8_t* LY_   = nullptr;
-
-		enum LCDCFlag {
-			BG_ENABLE   = 1 << 0,
-			OBJ_ENABLE  = 1 << 1,
-			OBJ_SIZE    = 1 << 2,
-			BG_TILEMAP  = 1 << 3,
-			BG_TILES    = 1 << 4,
-			WND_ENABLE  = 1 << 5,
-			WND_TILEMAP = 1 << 6,
-			LCD_ENABLE  = 1 << 7
-		};
-
-		enum STATFlag {
-			MODE = 0b11,
-			COINCIDENCE = 1 << 2,
-			MODE0_INTER = 1 << 3,
-			MODE1_INTER = 1 << 4,
-			MODE2_INTER = 1 << 5,
-			COINC_INTER = 1 << 6
-		};
-
-		enum IFInterrupt {
-			VBLANK  = 1 << 0,
-			LCDSTAT = 1 << 1,
-			TIMER   = 1 << 2,
-			SERIAL  = 1 << 3,
-			JOYPAD  = 1 << 4
-		};
+		uint8_t& LCDC;
+		uint8_t& STAT;
+		uint8_t& LYC;
+		uint8_t& LY;
 
 		int clock_ = 0;
 		int clock_target_ = 0;

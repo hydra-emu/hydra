@@ -22,8 +22,35 @@ namespace TKPEmu::Gameboy::Devices {
         char spriteFlags = 0;
     };
 
-    class Bus
-    {
+    class Bus {
+    public:
+        enum LCDCFlag {
+            BG_ENABLE = 1 << 0,
+            OBJ_ENABLE = 1 << 1,
+            OBJ_SIZE = 1 << 2,
+            BG_TILEMAP = 1 << 3,
+            BG_TILES = 1 << 4,
+            WND_ENABLE = 1 << 5,
+            WND_TILEMAP = 1 << 6,
+            LCD_ENABLE = 1 << 7
+        };
+
+        enum STATFlag {
+            MODE = 0b11,
+            COINCIDENCE = 1 << 2,
+            MODE0_INTER = 1 << 3,
+            MODE1_INTER = 1 << 4,
+            MODE2_INTER = 1 << 5,
+            COINC_INTER = 1 << 6
+        };
+
+        enum IFInterrupt {
+            VBLANK = 1 << 0,
+            LCDSTAT = 1 << 1,
+            TIMER = 1 << 2,
+            SERIAL = 1 << 3,
+            JOYPAD = 1 << 4
+        };
     private:
         SDL_Color vdColor = { 44, 33, 55 };
         SDL_Color dColor = { 118, 68, 98 };
@@ -75,16 +102,13 @@ namespace TKPEmu::Gameboy::Devices {
         uint8_t Read(uint16_t address);
         uint16_t ReadL(uint16_t address);
         uint8_t* GetPointer(uint16_t address);
+        uint8_t& GetReference(uint16_t address);
         void Write(uint16_t address, uint8_t data);
         void WriteL(uint16_t address, uint16_t data);
         void WriteInput(int key);
         void RemoveInput(int key);
+        void Reset();
         void LoadCartridge(std::string fileName);
-
-        uint8_t GetIF();
-        uint8_t GetIE();
-        void SetIF(uint8_t value);
-        void SetIE(uint8_t value);
     };
 }
 #endif

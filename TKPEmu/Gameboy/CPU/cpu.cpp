@@ -2,9 +2,9 @@
 #include <stdexcept>
 #include <iostream>
 namespace TKPEmu::Gameboy::Devices {
-	CPU::CPU(Bus* bus) : bus_(bus) {
+	CPU::CPU(Bus* bus) : bus_(bus), IF(bus->GetReference(0xFF0F)), IE(bus->GetReference(0xFFFF)) {
 		A = 0; B = 0; C = 0; D = 0; E = 0; H = 0; L = 0;
-		F = 0; SP = 0; PC = 0x0; IME = 1; R = 0;
+		F = 0; SP = 0; PC = 0x0; IME = true;
 		mClock = 0; tClock = 0;
 		halt = false; stop = false;
 	}
@@ -215,23 +215,16 @@ namespace TKPEmu::Gameboy::Devices {
 		mTemp = 2; tTemp = 8;
 	}
 
+	inline void CPU::rst(RegisterType addr) {
+		SP -= 2;
+		bus_->WriteL(SP, PC);
+		PC = addr;
+		mTemp = 3; tTemp = 12;
+	}
+
 	inline void CPU::bit_set(RegisterType& reg, unsigned shift) {
 		reg |= 1 << shift;
 		mTemp = 2; tTemp = 8;
-	}
-
-	void CPU::RSV() {
-		rsvA = A; rsvB = B;
-		rsvC = C; rsvD = D;
-		rsvE = E; rsvH = H;
-		rsvL = L; rsvF = F;
-	}
-
-	void CPU::RRS() {
-		A = rsvA; B = rsvB;
-		C = rsvC; D = rsvD;
-		E = rsvE; H = rsvH;
-		L = rsvL; F = rsvF;
 	}
 
 	#pragma region Instructions
@@ -456,70 +449,60 @@ namespace TKPEmu::Gameboy::Devices {
 		reg_cmp(L);
 	}
 
+
 	void CPU::PUSHBC() {
-		SP--;
-		bus_->Write(SP, B);
-		SP--;
-		bus_->Write(SP, C);
+		SP -= 2;
+		bus_->WriteL(SP, (B << 8) | C);
 		mTemp = 3; tTemp = 12;
 	}
 
 	void CPU::PUSHAF() {
-		SP--;
-		bus_->Write(SP, A);
-		SP--;
-		bus_->Write(SP, F);
+		SP -= 2;
+		bus_->WriteL(SP, (A << 8) | F);
 		mTemp = 3; tTemp = 12;
 	}
 
 	void CPU::PUSHDE() {
-		SP--;
-		bus_->Write(SP, D);
-		SP--;
-		bus_->Write(SP, E);
+		SP -= 2;
+		bus_->WriteL(SP, (D << 8) | E);
 		mTemp = 3; tTemp = 12;
 	}
 
 	void CPU::PUSHHL() {
-		SP--;
-		bus_->Write(SP, H);
-		SP--;
-		bus_->Write(SP, L);
+		SP -= 2;
+		bus_->WriteL(SP, (H << 8) | L);
 		mTemp = 3; tTemp = 12;
 	}
 
 	void CPU::POPBC() {
-		// TODO: remove & 0xFFFF and make ReadL
-		B = bus_->Read((SP + 1) & 0xFFFF);
+		B = bus_->Read(SP + 1);
 		C = bus_->Read(SP);
 		SP += 2;
 		mTemp = 3; tTemp = 12;
 	}
 
 	void CPU::POPAF() {
-		auto t = bus_->ReadL(SP);
-		A = (t >> 8) & 0xFF;
-		F = t & 0xF0;
+		auto temp = bus_->ReadL(SP);
+		A = (temp >> 8) & 0xFF;
+		F = temp & 0xF0;
 		SP += 2;
-		SP &= 0xFFFF;
 		mTemp = 3; tTemp = 12;
 	}
 
 	void CPU::POPDE() {
 		E = bus_->Read(SP);
-		SP++;
-		D = bus_->Read(SP);
-		SP++;
+		D = bus_->Read(SP + 1);
+		SP += 2;
 		mTemp = 3; tTemp = 12;
 	}
 
 	void CPU::POPHL() {
 		L = bus_->Read(SP);
-		SP++;
-		H = bus_->Read(SP);
-		SP++;
+		H = bus_->Read(SP + 1);
+		SP += 2;
 		mTemp = 3; tTemp = 12;
 	}
+
 
 	void CPU::LDABC() {
 		int addr = C | (B << 8);
@@ -1328,11 +1311,10 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::RETI() {
-		IME = 1;
-		RRS();
+		IME = true;
 		PC = bus_->ReadL(SP);
 		SP += 2;
-		mTemp = 3; tTemp = 12;
+		mTemp = 4; tTemp = 16;
 	}
 
 	void CPU::RETNZ() {
@@ -1372,59 +1354,35 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::RST0() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x00;
-		mTemp = 3; tTemp = 12;
+		rst(0x00);
 	}
 
 	void CPU::RST8() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x08;
-		mTemp = 3; tTemp = 12;
+		rst(0x08);
 	}
 
 	void CPU::RST10() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x10;
-		mTemp = 3; tTemp = 12;
+		rst(0x10);
 	}
 
 	void CPU::RST18() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x18;
-		mTemp = 3; tTemp = 12;
+		rst(0x18);
 	}
 
 	void CPU::RST20() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x20;
-		mTemp = 3; tTemp = 12;
+		rst(0x20);
 	}
 
 	void CPU::RST28() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x28;
-		mTemp = 3; tTemp = 12;
+		rst(0x28);
 	}
 
 	void CPU::RST30() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x30;
-		mTemp = 3; tTemp = 12;
+		rst(0x30);
+	}
+
+	void CPU::RST38() {
+		rst(0x38);
 	}
 
 	void CPU::LDSPHL() {
@@ -1437,60 +1395,12 @@ namespace TKPEmu::Gameboy::Devices {
 		mTemp = 2; tTemp = 8;
 	}
 
-	void CPU::RST38() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x38;
-		mTemp = 3; tTemp = 12;
-	}
-
-	void CPU::RST40() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x40;
-		mTemp = 3; tTemp = 12;
-	}
-
-	void CPU::RST48() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x48;
-		mTemp = 3; tTemp = 12;
-	}
-
-	void CPU::RST50() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x50;
-		mTemp = 3; tTemp = 12;
-	}
-
-	void CPU::RST58() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x58;
-		mTemp = 3; tTemp = 12;
-	}
-
-	void CPU::RST60() {
-		RSV();
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x60;
-		mTemp = 3; tTemp = 12;
-	}
-
 	void CPU::DI() {
-		IME = 0; mTemp = 1; tTemp = 4;
+		IME = false; mTemp = 1; tTemp = 4;
 	}
 
 	void CPU::EI() {
-		IME = 1; mTemp = 1; tTemp = 4;
+		IME = true; mTemp = 1; tTemp = 4;
 	}
 
 	void CPU::RLA() {
@@ -1709,11 +1619,10 @@ namespace TKPEmu::Gameboy::Devices {
 
 	void CPU::EXT() {
 		int i = bus_->Read(PC);
-		auto s = cbMap[i].name;
 		PC++;
 		PC &= 0xFFFF;
 		if (i < 0xFF) {
-			(this->*cbMap[i].op)();
+			(this->*CBInstructions[i].op)();
 		}
 	}
 
@@ -2914,70 +2823,48 @@ namespace TKPEmu::Gameboy::Devices {
 		L = 0x4D;
 		SP = 0xFFFE;
 		PC = 0x100;
-		IME = 1;
-		bus_->SetIF(0xE1);
-		bus_->SetIE(0);
-		mClock = 0; tClock = 0; totalClock = 0;
+		IME = true;
+		IF = 0xE1;
+		IE = 0x0;
+		mClock = 0; tClock = 0;
 		halt = false; stop = false;
 	}
 
 	int CPU::Update() {
-		if (halt) {
-			mTemp = 1; tTemp = 4;
-		}
-		else {
-	#ifdef DEBUG_LOG_FILE
-			debugLog << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << PC << ":" << std::nouppercase << " A:" << std::setfill('0') << std::setw(2) << A << " B:" << std::setfill('0') << std::setw(2) << B << " C:" << std::setfill('0') << std::setw(2) << C << " D:" << std::setfill('0') << std::setw(2) << D << " E:" << std::setfill('0') << std::setw(2) << E << " F:" << std::setfill('0') << std::setw(2) << F << " H:" << std::setfill('0') << std::setw(2) << H << " L:" << std::setfill('0') << std::setw(2) << L << " SP:" << std::setfill('0') << std::setw(4) << SP << "\r\n";
-	#endif
-			(this->*instructions[bus_->Read(PC++)].op)();
-			totalClock++;
-			F &= 0xF0;
-			PC &= 0xFFFF;
-		}
+		(this->*Instructions[bus_->Read(PC++)].op)();
+		handle_interrupts();
 		mClock += mTemp;
 		tClock += tTemp;
 		return tTemp;
 	}
-	bool CPU::CheckInterr() {
-		int ieT, ifT;
-		ieT = bus_->GetIE();
-		ifT = bus_->GetIF();
-		bool b = IME && ieT && ifT;
-		if (ieT & ifT) {
-			halt = 0;
-			if (IME) {
-				IME = 0;
-				int ifired = ieT & ifT;
-				if (ifired & 1) {
-					ifT &= 0xFE;
-					bus_->SetIF(ifT);
-					RST40();
-				}
-				else if (ifired & 2) {
-					ifT &= 0xFD;
-					bus_->SetIF(ifT);
-					RST48();
-				}
-				else if (ifired & 4) {
-					ifT &= 0xFB;
-					bus_->SetIF(ifT);
-					RST50();
-				}
-				else if (ifired & 8) {
-					ifT &= 0xF7;
-					bus_->SetIF(ifT);
-					RST58();
-				}
-				else if (ifired & 16) {
-					ifT &= 0xEF;
-					bus_->SetIF(ifT);
-					RST60();
-				}
-				else {
-					IME = 1;
+
+	void CPU::handle_interrupts()
+	{
+		if (auto temp = IE & IF; IME && IF) {
+			// Starting from the lowest bit (highest priority) and going up,
+			// we are effectively queueing interrupts in case there's multiple.
+			for (int i = 0; i < 5; i++) {
+				auto bit = (temp >> i) & 0x1;
+				if (bit) {
+					execute_interrupt(i);
+					return;
 				}
 			}
 		}
-		return b;
+	}
+
+	void CPU::execute_interrupt(int bit)
+	{
+		IME = false;
+		IF &= ~(1U << bit);
+		bus_->WriteL(SP, PC);
+		SP -= 2;
+		switch (bit) {
+			case 0: PC = 0x40; break;
+			case 1: PC = 0x48; break;
+			case 2: PC = 0x50; break;
+			case 3: PC = 0x58; break;
+			case 4: PC = 0x60; break;
+		}
 	}
 }

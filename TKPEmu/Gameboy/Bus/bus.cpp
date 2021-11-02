@@ -4,7 +4,6 @@
 namespace TKPEmu::Gameboy::Devices {
 	Bus::Bus() {
 		inBios = true;
-		std::fill(mem.begin(), mem.end(), 0);
 	}
 
 	uint8_t Bus::Read(uint16_t address) {
@@ -87,8 +86,8 @@ namespace TKPEmu::Gameboy::Devices {
 		return Read(address) + (Read(address + 1) << 8);
 	}
 
-	uint8_t* Bus::GetPointer(uint16_t address) {
-		return &mem[address];
+	uint8_t& Bus::GetReference(uint16_t address) {
+		return mem[address];
 	}
 
 	void Bus::Write(uint16_t address, uint8_t data) {
@@ -249,24 +248,14 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 	}
 
+	void Bus::Reset() {
+		for (auto i = mem.begin() + 0xC000; i < mem.end(); i++) {
+			*i = 0;
+		}
+	}
+
 	void Bus::LoadCartridge(std::string fileName) {
 		cartridge = std::unique_ptr<Cartridge>(new Cartridge());
 		cartridge->Load(fileName, mem);
-	}
-
-	uint8_t Bus::GetIE() {
-		return mem[0xFFFF];
-	}
-
-	uint8_t Bus::GetIF() {
-		return mem[0xFF0F];
-	}
-
-	void Bus::SetIE(uint8_t value) {
-		mem[0xFFFF] = value;
-	}
-
-	void Bus::SetIF(uint8_t value) {
-		mem[0xFF0F] = value;
 	}
 }

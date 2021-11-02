@@ -57,14 +57,18 @@ namespace TKPEmu::Gameboy {
 	}
 
 	void Gameboy::Reset() {
+		bus_.Reset();
 		cpu_.Reset();
 		ppu_.Reset();
 	}
 	void Gameboy::Update() {
 		std::lock_guard<std::mutex> lg(UpdateMutex);
-		int clk = 4;
-		if (!cpu_.CheckInterr())
-			clk = cpu_.Update();
+		int clk = cpu_.Update();
+		//int clk = 4;
+		//cpu_.IF = 0;
+		//
+		////if (!cpu_.CheckInterr())
+		//	clk = cpu_.Update();
 		ppu_.Update(clk);
 		//file << std::hex << std::setfill('0') << std::setw(4) << (int)cpu_.PC << ": A:" << std::setw(2) << (int)cpu_.A << " B:" << std::setw(2) << (int)cpu_.B << " C:" << std::setw(2) << (int)cpu_.C << " D:" << std::setw(2) << (int)cpu_.D
 		//	<< " E:" << std::setw(2) << (int)cpu_.E << " F:" << std::setw(2) << (int)cpu_.F << " H:" << std::setw(2) << (int)cpu_.H << " L:" << std::setw(2) << (int)cpu_.L << " LY:" << std::setw(2) << (int)cpu_.bus_->Read(0xFF44) << " SP:" << std::setw(4) << (int)cpu_.SP << "\n";
@@ -80,18 +84,18 @@ namespace TKPEmu::Gameboy {
 			std::vector<DisInstr> ret;
 			ret.reserve(0xFFFF);
 			for (uint16_t i = 0; i < 0xFFFF;) {
-				uint8_t ins = cpu_.bus_->Read(i);
-				auto x = cpu_.instructions[ins];
+				uint8_t ins = bus_.Read(i);
+				auto x = cpu_.Instructions[ins];
 				auto d = DisInstr(i, ins, x.skip);
 				uint8_t p1, p2;
 				if (x.skip == 1) {
-					p1 = cpu_.bus_->Read(i + 1);
+					p1 = bus_.Read(i + 1);
 					d.Params[0] = p1;
 					ret.push_back(std::move(d));
 				}
 				else if (x.skip == 2) {
-					p1 = cpu_.bus_->Read(i + 1);
-					p2 = cpu_.bus_->Read(i + 2);
+					p1 = bus_.Read(i + 1);
+					p2 = bus_.Read(i + 2);
 					d.Params[0] = p1;
 					d.Params[1] = p2;
 					ret.push_back(std::move(d));
@@ -114,18 +118,18 @@ namespace TKPEmu::Gameboy {
 		// We calculate which of these checks we need, and add them all to a vector to save execution time
 		// Before being copied to the lambda, the values are decremented, as to keep them (1-256) -> (0-255)
 		// because we used the value of 0 to check whether this is used or not.
-		if (bp.A_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.A_value]() { return cpu_->A == gbbp; }); }
-		if (bp.B_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.B_value]() { return cpu_->B == gbbp; }); }
-		if (bp.C_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.C_value]() { return cpu_->C == gbbp; }); }
-		if (bp.D_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.D_value]() { return cpu_->D == gbbp; }); }
-		if (bp.E_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.E_value]() { return cpu_->E == gbbp; }); }
-		if (bp.F_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.F_value]() { return cpu_->F == gbbp; }); }
-		if (bp.H_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.H_value]() { return cpu_->H == gbbp; }); }
-		if (bp.L_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.L_value]() { return cpu_->L == gbbp; }); }
-		if (bp.PC_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.PC_value]() { return cpu_->PC == gbbp; }); }
-		if (bp.SP_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.SP_value]() { return cpu_->SP == gbbp; }); }
-		if (bp.SP_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.SP_value]() { return cpu_->SP == gbbp; }); }
-		if (bp.Ins_using) { register_checks.push_back([cpu_ = &cpu_, gbbp = bp.Ins_value]() { return (cpu_->bus_->Read(cpu_->PC)) == gbbp; }); }
+		if (bp.A_using) { register_checks.push_back([this, gbbp = bp.A_value]() { return cpu_.A == gbbp; }); }
+		if (bp.B_using) { register_checks.push_back([this, gbbp = bp.B_value]() { return cpu_.B == gbbp; }); }
+		if (bp.C_using) { register_checks.push_back([this, gbbp = bp.C_value]() { return cpu_.C == gbbp; }); }
+		if (bp.D_using) { register_checks.push_back([this, gbbp = bp.D_value]() { return cpu_.D == gbbp; }); }
+		if (bp.E_using) { register_checks.push_back([this, gbbp = bp.E_value]() { return cpu_.E == gbbp; }); }
+		if (bp.F_using) { register_checks.push_back([this, gbbp = bp.F_value]() { return cpu_.F == gbbp; }); }
+		if (bp.H_using) { register_checks.push_back([this, gbbp = bp.H_value]() { return cpu_.H == gbbp; }); }
+		if (bp.L_using) { register_checks.push_back([this, gbbp = bp.L_value]() { return cpu_.L == gbbp; }); }
+		if (bp.PC_using) { register_checks.push_back([this, gbbp = bp.PC_value]() { return cpu_.PC == gbbp; }); }
+		if (bp.SP_using) { register_checks.push_back([this, gbbp = bp.SP_value]() { return cpu_.SP == gbbp; }); }
+		if (bp.SP_using) { register_checks.push_back([this, gbbp = bp.SP_value]() { return cpu_.SP == gbbp; }); }
+		if (bp.Ins_using) { register_checks.push_back([this, gbbp = bp.Ins_value]() { return (bus_.Read(cpu_.PC)) == gbbp; }); }
 		auto lamb = [rc = std::move(register_checks)]() {
 			for (auto& check : rc) {
 				if (!check()) {
@@ -156,6 +160,6 @@ namespace TKPEmu::Gameboy {
 		bp.PC_value = cpu_.PC;
 	}
 	const auto& Gameboy::GetOpcodeDescription(uint8_t opc) {
-		return cpu_.instructions[opc].name;
+		return cpu_.Instructions[opc].name;
 	}
 }
