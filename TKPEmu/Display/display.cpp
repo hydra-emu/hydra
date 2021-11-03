@@ -175,7 +175,12 @@ namespace TKPEmu::Graphics {
         else {
             pretty_printer_.PrettyAdd<PPMessageType::Success>("Glad initialized successfully.");
         }
-
+    }
+    Display::~Display() {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDeleteFramebuffers(1, &frame_buffer_);
+        glDeleteTextures(1, &background_image_.texture);
+        glDeleteTextures(1, &emulator_->EmulatorImage.texture);
     }
     void Display::EnterMainLoop() {
         main_loop();
@@ -261,7 +266,24 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_game_background(bool* draw) {
         if (*draw) {
-            //ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(emulator_->EmulatorImage->texture), emulator_->EmulatorImage->topleft, emulator_->EmulatorImage->botright);
+            emulator_->DrawMutex.lock();
+            //glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
+            glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
+            glTexSubImage2D(
+                GL_TEXTURE_2D,
+                0,
+                0,
+                0,
+                emulator_->EmulatorImage.width,
+                emulator_->EmulatorImage.height,
+                GL_RGBA,
+                GL_UNSIGNED_BYTE,
+                emulator_->GetScreenData()
+            );
+            glBindTexture(GL_TEXTURE_2D, 0);
+            //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
+            emulator_->DrawMutex.unlock();
         }
         else {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(background_image_.texture), background_image_.topleft, background_image_.botright);
@@ -429,6 +451,12 @@ namespace TKPEmu::Graphics {
                 emulator_->Start();
             }
         }
+
+        glGenFramebuffers(1, &frame_buffer_);
+        glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
     }
 
     void Display::close_emulator_and_wait() {
@@ -509,6 +537,8 @@ namespace TKPEmu::Graphics {
                         window_settings_.window_width = event.window.data1;
                         window_settings_.window_height = event.window.data2;
                         image_scale(background_image_.topleft, background_image_.botright);
+                        if (emulator_ != nullptr)
+                            image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
                         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
                         break;
                     }

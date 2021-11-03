@@ -27,11 +27,12 @@ namespace TKPEmu {
 		virtual void Reset() = 0;
 		virtual void Update() = 0;
 		virtual void LoadFromFile(std::string&& path) = 0;
+		virtual uint8_t* GetScreenData() { return nullptr; };
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
 		std::mutex UpdateMutex;
 		std::thread UpdateThread;
-		TKPImage* EmulatorImage = nullptr;
+		TKPImage EmulatorImage{};
 	};
 }
 #endif

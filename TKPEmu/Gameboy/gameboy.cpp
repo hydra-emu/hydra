@@ -1,8 +1,31 @@
 #include "gameboy.h"
 #include <iostream>
+#include <glad/glad.h>
 namespace TKPEmu::Gameboy {
-	Gameboy::Gameboy() : cpu_(&bus_), ppu_(&bus_), cartridge_(), file(str) {
-
+	Gameboy::Gameboy() : cpu_(&bus_), ppu_(&bus_, &DrawMutex), cartridge_(), file(str) {
+		GLuint image_texture;
+		glGenTextures(1, &image_texture);
+		glBindTexture(GL_TEXTURE_2D, image_texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, image_texture);
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGBA,
+			160,
+			144,
+			0,
+			GL_RGBA,
+			GL_UNSIGNED_BYTE,
+			NULL
+		);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		EmulatorImage.texture = image_texture;
+		EmulatorImage.width = 160;
+		EmulatorImage.height = 144;
 	}
 	Gameboy::~Gameboy() {
 		Stopped.store(true);
@@ -74,7 +97,6 @@ namespace TKPEmu::Gameboy {
 		bus_.LoadCartridge(std::forward<std::string>(path));
 	}
 	// TODO: LoadInstrToVec only works for rom_only for now
-	// TODO: if you win + D while in disassembler, game crashes
 	void Gameboy::LoadInstrToVec(std::vector<DisInstr>& vec, std::atomic_bool& finished) {
 		// TODO: make this std::async
 		auto func = [this, &finished](std::vector<DisInstr>& vec) {
@@ -155,6 +177,10 @@ namespace TKPEmu::Gameboy {
 		bp.L_value = cpu_.L;
 		bp.SP_value = cpu_.SP;
 		bp.PC_value = cpu_.PC;
+	}
+	uint8_t* Gameboy::GetScreenData()
+	{
+		return ppu_.GetScreenData();
 	}
 	const auto& Gameboy::GetOpcodeDescription(uint8_t opc) {
 		return cpu_.Instructions[opc].name;

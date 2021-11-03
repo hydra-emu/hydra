@@ -87,6 +87,7 @@ namespace TKPEmu::Graphics {
         };
     public:
         Display();
+        ~Display();
         Display(const Display&) = delete;
         Display& operator=(const Display&) = delete;
         void EnterMainLoop();
@@ -102,6 +103,7 @@ namespace TKPEmu::Graphics {
         AppSettings app_settings_;
         Settings settings_;
         TKPImage background_image_;
+        GLuint frame_buffer_;
         ImGui::FileBrowser file_browser_;
 
         std::unique_ptr<Emulator> emulator_ = nullptr;

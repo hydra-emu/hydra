@@ -1,44 +1,5 @@
 #define SDL_MAIN_HANDLED
-
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <thread>
-#include <bitset>
-#include <chrono>
-
-//#include "CPU/cpu.h"
-//#include "Cartridge/cartridge.h"
 #include "Display/display.h"
-
-#define BG_MAP0_START 0x9800
-#define BG_MAP0_END 0x9C00
-#define MAX_FPS 60
-
-struct Timer
-{
-	int div, tma, tima, tac, cmain, csub, cdiv;
-};
-//using TKP::Devices::CPU;
-//using TKP::Devices::Sprite;
-//CPU c;
-Timer tData;
-
-bool pause = !true;
-bool quit = false;
-bool find = false;
-bool next = false;
-int fps = 0;
-int fps_a = 0;
-int ftime = 0;
-int ptime = 0;
-int memstart = 0x9800;
-int memend = 0x98FF;
-int mouse_x, mouse_y;
-
-
-std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
-std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
 
 int main() {
 	using TKPEmu::Graphics::Display;

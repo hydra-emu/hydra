@@ -48,7 +48,7 @@ namespace TKPEmu::Gameboy::Devices {
 			case 0xA000:
 			case 0xB000: {
 				if (cartridge_->GetRamSize() == 0)
-					return unused_mem_area_;
+					return eram_default_[address % 0x2000];
 
 				return (ram_banks_[selected_ram_bank_])[address % 0x2000];
 			}
@@ -97,6 +97,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void Bus::Write(uint16_t address, uint8_t data) {
+		// TODO: implement serial correctly, remove this
 		if (address == 0xFF01) {
 			std::cout << data;
 		}
@@ -115,12 +116,14 @@ namespace TKPEmu::Gameboy::Devices {
 				// Keep 3 highest bits
 				selected_rom_bank_ &= 0b11100000;
 				selected_rom_bank_ |= data & 0b11111;
-				selected_rom_bank_ %= rom_banks_size_;;
+				selected_rom_bank_ %= rom_banks_size_;
+				if (selected_rom_bank_ == 0)
+					selected_rom_bank_ = 1;
 			}
 			else if (address <= 0x5FFF) {
 				selected_rom_bank_ &= 0b11111;
 				selected_rom_bank_ |= (data << 5);
-				selected_rom_bank_ %= rom_banks_size_;;
+				selected_rom_bank_ %= rom_banks_size_;
 			}
 			else if (address <= 0x7FFF) {
 				// TODO: MBC1 1MB multi-carts might have different behavior, investigate
@@ -151,8 +154,8 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 		hram_.fill(0);
 		oam_.fill(0);
-		selected_rom_bank_ = 0;
-		selected_ram_bank_ = 1;
+		selected_rom_bank_ = 1;
+		selected_ram_bank_ = 0;
 	}
 
 	void Bus::LoadCartridge(std::string&& fileName) {

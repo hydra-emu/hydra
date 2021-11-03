@@ -38,6 +38,7 @@ namespace TKPEmu::Gameboy::Devices {
         std::array<uint8_t, 0xA0> oam_{};
         std::array<uint8_t, 0x100> hram_{};
         // TODO: cgb uses larger wram, maybe change, maybe inherit
+        std::array<uint8_t, 0x2000> eram_default_{};
         std::array<uint8_t, 0x2000> wram_{};
         std::array<uint8_t, 0x2000> vram_{};
         uint8_t& redirect_address(uint16_t address);
