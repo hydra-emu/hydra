@@ -29,6 +29,7 @@ namespace TKPEmu::Gameboy {
 	}
 	Gameboy::~Gameboy() {
 		Stopped.store(true);
+		glDeleteTextures(1, &EmulatorImage.texture);
 		file.close();
 	}
 	void Gameboy::Start() {

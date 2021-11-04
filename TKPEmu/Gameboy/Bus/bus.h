@@ -11,17 +11,13 @@
 #include "../Cartridge/cartridge.h"
 
 namespace TKPEmu::Gameboy::Devices {
-    constexpr auto BIOS_SIZE = 0x100;
-    constexpr auto OAM_START = 0xFE00;
-    constexpr auto OAM_END = 0xFE9F;
-    struct Sprite {
-        // TODO: change all to uint8_t
-        char yPosition = 0;
-        char xPosition = 0;
-        char tileNumber = 0;
-        char spriteFlags = 0;
-    };
-
+    const auto cl_white = 0;
+    const auto cl_lgray = 1;
+    const auto cl_dgray = 2;
+    const auto cl_black = 3;
+    const auto addr_bgp = 0xFF47;
+    const auto addr_obp0 = 0xFF48;
+    const auto addr_obp1 = 0xFF49;
     class Bus {
     private:
         using RamBank = std::array<uint8_t, 0x2000>;
@@ -34,13 +30,12 @@ namespace TKPEmu::Gameboy::Devices {
         std::vector<RamBank> ram_banks_;
         std::vector<RomBank> rom_banks_;
         std::unique_ptr<Cartridge> cartridge_ = NULL;
-        std::array<Sprite, 40> sprites;
         std::array<uint8_t, 0xA0> oam_{};
         std::array<uint8_t, 0x100> hram_{};
-        // TODO: cgb uses larger wram, maybe change, maybe inherit
         std::array<uint8_t, 0x2000> eram_default_{};
-        std::array<uint8_t, 0x2000> wram_{};
+        std::array<uint8_t, 0x2000> wram_{}; // TODO: cgb uses larger wram, maybe change, maybe inherit
         std::array<uint8_t, 0x2000> vram_{};
+        
         uint8_t& redirect_address(uint16_t address);
     public:
         enum LCDCFlag {
@@ -74,7 +69,7 @@ namespace TKPEmu::Gameboy::Devices {
         // Currently unused
         // TODO: Implement bios, change reset default values
         bool inBios;
-        int bios[BIOS_SIZE] = {
+        int bios[0x100] = {
         0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
         0x11, 0x3E, 0x80, 0x32, 0xE2, 0x0C, 0x3E, 0xF3, 0xE2, 0x32, 0x3E, 0x77, 0x77, 0x3E, 0xFC, 0xE0,
         0x47, 0x11, 0x04, 0x01, 0x21, 0x10, 0x80, 0x1A, 0xCD, 0x95, 0x00, 0xCD, 0x96, 0x00, 0x13, 0x7B,
@@ -102,6 +97,9 @@ namespace TKPEmu::Gameboy::Devices {
         void Reset();
         void SoftReset();
         void LoadCartridge(std::string&& fileName);
+        std::array<uint8_t, 4> BGPalette{};
+        std::array<uint8_t, 4> OBJ0Palette{};
+        std::array<uint8_t, 4> OBJ1Palette{};
     };
 }
 #endif

@@ -180,7 +180,6 @@ namespace TKPEmu::Graphics {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteFramebuffers(1, &frame_buffer_);
         glDeleteTextures(1, &background_image_.texture);
-        glDeleteTextures(1, &emulator_->EmulatorImage.texture);
     }
     void Display::EnterMainLoop() {
         main_loop();
@@ -386,7 +385,7 @@ namespace TKPEmu::Graphics {
     inline void Display::image_scale(ImVec2& topleft, ImVec2& bottomright)
     {
         float wi = background_image_.width; float hi = background_image_.height;
-        float ws = window_settings_.window_width; float hs = window_settings_.window_height;
+        float ws = window_settings_.window_width; float hs = window_settings_.window_height - MenuBarHeight;
         float ri = wi / hi;
         float rs = ws / hs;
         float new_w;
@@ -399,10 +398,10 @@ namespace TKPEmu::Graphics {
             new_w = ws;
             new_h = hi * (ws / wi);
         }
-        topleft.y = (hs - new_h) / 2 + MenuBarHeight / 2;
+        topleft.y = (hs - new_h) / 2 + MenuBarHeight;
         topleft.x = (ws - new_w) / 2;
         bottomright.x = new_w + topleft.x;
-        bottomright.y = new_h + topleft.y;
+        bottomright.y = new_h + topleft.y + MenuBarHeight;
     }
 
     void Display::load_user_settings() {

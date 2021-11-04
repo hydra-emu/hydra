@@ -6,8 +6,12 @@ namespace TKPEmu::Gameboy::Devices {
 	PPU::PPU(Bus* bus, std::mutex* draw_mutex) : bus_(bus), mem_OAM_(), draw_mutex_(draw_mutex),
 		LCDC(bus->GetReference(0xFF40)),
 		STAT(bus->GetReference(0xFF41)),
+		SCY(bus->GetReference(0xFF42)),
+		SCX(bus->GetReference(0xFF43)),
 		LY(bus->GetReference(0xFF44)),
 		LYC(bus->GetReference(0xFF45)),
+		WY(bus->GetReference(0xFF4A)),
+		WX(bus->GetReference(0xFF4B)),
 		IF(bus->GetReference(0xFF0F))
 	{
 		screen_.fill(0xFF);
@@ -40,6 +44,8 @@ namespace TKPEmu::Gameboy::Devices {
 					clock_target_ += 206;
 					if (LY <= 143) {
 						next_stat_mode = 2;
+						std::lock_guard<std::mutex> lg(*draw_mutex_);
+						draw_scanline();
 					}
 					else {
 						next_stat_mode = 1;
@@ -50,9 +56,6 @@ namespace TKPEmu::Gameboy::Devices {
 					next_stat_mode = 1;
 					if (LY == 144) {
 						IF |= IFInterrupt::VBLANK;
-						// TODO: frame is done here, needs draw = true
-						std::lock_guard<std::mutex> lg(*draw_mutex_);
-						update_cache();
 					}
 					LY += 1;
 					IF |= update_lyc();
@@ -114,18 +117,15 @@ namespace TKPEmu::Gameboy::Devices {
 		return 0;
 	}
 
-	void PPU::update_cache() {
-		int x = 0;
-		int y = 0;
-		for (int i = 0x8000; i < 0x8FFF; i += 0x10) {
-			draw_tile(i, x, y);
-			x += 8;
-			if (x == 128) {
-				x = 0;
-				y += 8;
-			}
+	inline void PPU::draw_scanline() {
+		if (LCDC & 0b1) {
+
+		}
+		if (LCDC & 0b10) {
+
 		}
 	}
+
 	inline void PPU::draw_tile(int addr, int xx, int yy) {
 		// TODO: cache the changes from getting the writes in bus
 		// TODO: get colors from display
@@ -140,6 +140,7 @@ namespace TKPEmu::Gameboy::Devices {
 			auto byte2 = bus_->Read(addr + i + 1);
 			for (int b = 0; b < 8; b++) {
 				int code = ((byte1 >> (7 - b)) & 0x1) | (((byte2 >> (7 - b)) & 0x1) << 1);
+				if (yy + y < 144)
 				switch (code) {
 				case 0: set_pixel(xx + x, yy + y, color1[0], color1[1], color1[2]); break;
 				case 1: set_pixel(xx + x, yy + y, color2[0], color2[1], color2[2]); break;
@@ -152,4 +153,64 @@ namespace TKPEmu::Gameboy::Devices {
 			x = 0;
 		}
 	}
+
+	//inline void PPU::draw_tiles() {
+	//	static const int color1[3] = { 160, 202, 72 };
+	//	static const int color2[3] = { 70, 255, 0 };
+	//	static const int color3[3] = { 50, 100, 200 };
+	//	static const int color4[3] = { 255, 30, 110 };
+	//	uint8_t wx_c = WX - 7;
+	//	int base = (LCDC & 0b0001'0000) ? 0x8000 : 0x8800;
+	//	bool unsig = base == 0x8800;
+	//	bool win_enable = ((LCDC & 0b0010'0000) && (WY <= LY));
+	//	uint16_t id_loc = 0;
+	//	uint8_t pos_y = 0;
+	//	id_loc = (LCDC & 0b0100'0000) ? 0x9C00 : 0x9800;
+	//	if (win_enable) {
+	//		pos_y = LY - WY;
+	//	}
+	//	else {
+	//		pos_y = LY + SCY;
+	//	}
+	//	uint16_t tile_row = (((uint8_t)(pos_y / 8)) * 32);
+	//	for (int i = 0; i < 160; i += 8) {
+	//		uint8_t posx = i + SCX;
+	//		if (win_enable && i >= WX) {
+	//			posx = i - WX;
+	//		}
+	//		uint16_t tile_col = (posx / 8);
+	//		uint16_t tileno = 0;
+	//		uint16_t tile_addy = id_loc + tile_row + tile_col;
+	//		if (unsig) {
+	//			tileno = bus_->Read(tile_addy);
+	//		}
+	//		else {
+	//			tileno = static_cast<int8_t>(bus_->Read(tile_addy));
+	//		}
+	//		uint16_t tile_loc = base;
+	//		if (unsig) {
+	//			base += tileno * 16;
+	//		}
+	//		else {
+	//			base += (tileno + 128) * 16;
+	//		}
+	//		uint8_t line = (pos_y % 8);
+	//		line *= 2;
+	//		//uint8_t byte1 = bus_->Read(tile_loc + line);
+	//		//uint8_t byte2 = bus_->Read(tile_loc + line + 1);
+	//		//int colorbit = posx % 8;
+	//		//colorbit -= 7;
+	//		//colorbit *= -1;
+	//		//int colornum = colorbit & byte2;
+	//		//colornum <<= 1;
+	//		//colornum |= colorbit & byte1;
+	//		//switch (colornum) {
+	//		//case 0: set_pixel(i, LY % 144, color1[0], color1[1], color1[2]); break;
+	//		//case 1: set_pixel(i, LY % 144, color2[0], color2[1], color2[2]); break;
+	//		//case 2: set_pixel(i, LY % 144, color3[0], color3[1], color3[2]); break;
+	//		//case 3: set_pixel(i, LY % 144, color4[0], color4[1], color4[2]); break;
+	//		//}
+	//		draw_tile(tile_loc + line, i, LY % 144);
+	//	}
+	//}
 }

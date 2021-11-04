@@ -131,6 +131,26 @@ namespace TKPEmu::Gameboy::Devices {
 			}
 		}
 		else {
+			switch (address) {
+				case addr_bgp: {
+					for (int i = 0; i < 4; i++) {
+						BGPalette[i] = (data >> (i * 2)) & 0b11;
+					}
+					break;
+				}
+				case addr_obp0: {
+					for (int i = 0; i < 4; i++) {
+						OBJ0Palette[i] = (data >> (i * 2)) & 0b11;
+					}
+					break;
+				}
+				case addr_obp1: {
+					for (int i = 0; i < 4; i++) {
+						OBJ1Palette[i] = (data >> (i * 2)) & 0b11;
+					}
+					break;
+				}
+			}
 			redirect_address(address) = data;
 		}
 	}
