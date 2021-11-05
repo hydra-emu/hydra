@@ -21,6 +21,7 @@ namespace TKPEmu::Gameboy::Devices {
     const auto addr_dma = 0xFF46;
     const auto addr_serial = 0xFF01;
     const auto addr_div = 0xFF04;
+    const auto addr_tac = 0xFF07;
     class Bus {
     private:
         using RamBank = std::array<uint8_t, 0x2000>;
@@ -117,6 +118,7 @@ namespace TKPEmu::Gameboy::Devices {
         std::array<uint8_t, 4> OBJ1Palette{};
         std::array<Sprite, 40> OAM;
         bool DIVReset = false;
+        bool TACChanged = false;
     };
 }
 #endif

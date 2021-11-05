@@ -168,6 +168,10 @@ namespace TKPEmu::Gameboy::Devices {
 						DIVReset = true;
 						break;
 					}
+					case addr_tac: {
+						TACChanged = true;
+						break;
+					}
 				}
 				
 			}
