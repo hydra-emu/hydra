@@ -32,6 +32,7 @@ namespace TKPEmu::Gameboy {
 		void CopyRegToBreakpoint(GameboyBreakpoint& bp);
 		uint8_t* GetScreenData() override;
 		const auto& GetOpcodeDescription(uint8_t opc);
+		std::array<std::array<uint8_t, 3>, 4>& GetPalette();
 		CPU& GetCPU() { return cpu_; }
 		std::vector<GameboyBreakpoint> Breakpoints;
 	private:

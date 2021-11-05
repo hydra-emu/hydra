@@ -14,23 +14,15 @@ namespace TKPEmu::Gameboy::Devices {
 		using LCDCFlag = Bus::LCDCFlag;
 		using STATFlag = Bus::STATFlag;
 		using TKPImage = TKPEmu::Tools::TKPImage;
+		using Pixel = TKPEmu::Gameboy::Devices::Bus::Pixel;
 	public:
 		PPU(Bus* bus, std::mutex* draw_mutex);
 		void Update(uint8_t tTemp);
 		void Reset();
 		uint8_t* GetScreenData();
-	private:
-		struct Pixel {
-			uint8_t color : 2;
-			uint8_t palette : 1;
-			// TODO: CGB Sprite priority
-			uint8_t bg_prio : 1;
-		};
 		Bus* bus_;
-		std::array<uint8_t, 0x9F> mem_OAM_;
-		std::array<uint8_t, 4 * 160 * 144> screen_{};
-		std::queue<Pixel> bg_fifo_{};
-		std::queue<Pixel> sprite_fifo_{};
+		std::array<uint8_t, 4 * 160 * 144> screen_color_data_{};
+		std::array<std::array<Pixel, 144>, 160> pixel_data_{};
 
 		// PPU register pointers
 		uint8_t& LCDC, &STAT, &LYC, &LY, &IF, &SCY, &SCX, &WY, &WX;
@@ -39,12 +31,12 @@ namespace TKPEmu::Gameboy::Devices {
 		int clock_target_ = 0;
 		int next_stat_mode = 0;
 		std::mutex* draw_mutex_ = nullptr;
-		inline void set_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b);
 		int set_mode(int mode);
 		int get_mode();
 		int update_lyc();
-		inline void draw_scanline();
-		inline void draw_tile(int addr, int xx, int yy);
+		void draw_scanline();
+		inline void renderTiles();
+		inline void renderSprites();
 	};
 }
 #endif

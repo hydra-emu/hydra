@@ -158,7 +158,7 @@ namespace TKPEmu::Graphics {
         // This function chooses fread or fwrite on compile time to minimize code duplication
         template<FileAccess acc>
         void access_user_settings(void* item, size_t size, size_t count, FILE* stream);
-
+        void setup_gameboy_palette();
         void main_loop();
 	};
     template<>

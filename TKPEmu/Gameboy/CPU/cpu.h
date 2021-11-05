@@ -41,6 +41,7 @@ namespace TKPEmu::Gameboy::Devices {
 		int mTemp = 0;
 		int tTemp = 0;
 		int div_index_ = 0;
+		int div_reset_index_ = 0;
 		int tac_index_ = 0x1000;
 		bool halt = false;
 		bool stop = false;

@@ -265,7 +265,7 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_game_background(bool* draw) {
         if (*draw) {
-            emulator_->DrawMutex.lock();
+            std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
             //glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
             glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
             glTexSubImage2D(
@@ -282,7 +282,6 @@ namespace TKPEmu::Graphics {
             glBindTexture(GL_TEXTURE_2D, 0);
             //glBindFramebuffer(GL_FRAMEBUFFER, 0);
             ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
-            emulator_->DrawMutex.unlock();
         }
         else {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(background_image_.texture), background_image_.topleft, background_image_.botright);
@@ -385,7 +384,7 @@ namespace TKPEmu::Graphics {
     inline void Display::image_scale(ImVec2& topleft, ImVec2& bottomright)
     {
         float wi = background_image_.width; float hi = background_image_.height;
-        float ws = window_settings_.window_width; float hs = window_settings_.window_height - MenuBarHeight;
+        float ws = window_settings_.window_width; float hs = window_settings_.window_height;
         float ri = wi / hi;
         float rs = ws / hs;
         float new_w;
@@ -398,10 +397,10 @@ namespace TKPEmu::Graphics {
             new_w = ws;
             new_h = hi * (ws / wi);
         }
-        topleft.y = (hs - new_h) / 2 + MenuBarHeight;
-        topleft.x = (ws - new_w) / 2;
-        bottomright.x = new_w + topleft.x;
-        bottomright.y = new_h + topleft.y + MenuBarHeight;
+        topleft.y = MenuBarHeight;
+        topleft.x = 0;
+        bottomright.x = new_w;
+        bottomright.y = new_h + topleft.y;
     }
 
     void Display::load_user_settings() {
@@ -442,6 +441,7 @@ namespace TKPEmu::Graphics {
             rom_paused_ = app_settings_.debug_mode;
             emulator_->Paused.store(rom_paused_);
             emulator_->LoadFromFile(path.string());
+            setup_gameboy_palette();
             if (app_settings_.debug_mode) {
                 emulator_->StartDebug();
                 temp->LoadInstrToVec(dis->Instrs, dis->Loaded);
@@ -489,6 +489,26 @@ namespace TKPEmu::Graphics {
     inline bool Display::is_rom_loaded_and_debugmode()
     {
         return rom_loaded_ && app_settings_.debug_mode;
+    }
+
+    void Display::setup_gameboy_palette() {
+        if (emulator_ != nullptr) {
+            using Gameboy = TKPEmu::Gameboy::Gameboy;
+            Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
+            auto& pal = temp->GetPalette();
+            pal[0][0] = app_settings_.dmg_color0_r;
+            pal[0][1] = app_settings_.dmg_color0_g;
+            pal[0][2] = app_settings_.dmg_color0_b;
+            pal[1][0] = app_settings_.dmg_color1_r;
+            pal[1][1] = app_settings_.dmg_color1_g;
+            pal[1][2] = app_settings_.dmg_color1_b;
+            pal[2][0] = app_settings_.dmg_color2_r;
+            pal[2][1] = app_settings_.dmg_color2_g;
+            pal[2][2] = app_settings_.dmg_color2_b;
+            pal[3][0] = app_settings_.dmg_color3_r;
+            pal[3][1] = app_settings_.dmg_color3_g;
+            pal[3][2] = app_settings_.dmg_color3_b;
+        }
     }
 
     void Display::main_loop() {
@@ -572,12 +592,14 @@ namespace TKPEmu::Graphics {
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window_ptr_.get());
         }
-        BaseDisassembler::ResetEmulatorState(emulator_.get());
         save_user_settings();
         ImGui::SaveIniSettingsToDisk(ImGuiSettingsFile.c_str());
         // Locking this mutex ensures that the other thread gets
         // enough time to exit before we close the main application.
         // TODO: code smell. find a different way to do this.
-        std::lock_guard<std::mutex> lguard(emulator_->ThreadStartedMutex);
+        if (emulator_ != nullptr) {
+            BaseDisassembler::ResetEmulatorState(emulator_.get());
+            std::lock_guard<std::mutex> lguard(emulator_->ThreadStartedMutex);
+        }
     }
 }

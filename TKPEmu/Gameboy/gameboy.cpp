@@ -186,4 +186,8 @@ namespace TKPEmu::Gameboy {
 	const auto& Gameboy::GetOpcodeDescription(uint8_t opc) {
 		return cpu_.Instructions[opc].name;
 	}
+
+	std::array<std::array<uint8_t, 3>, 4>& Gameboy::GetPalette() {
+		return bus_.Palette;
+	}
 }

@@ -18,6 +18,9 @@ namespace TKPEmu::Gameboy::Devices {
     const auto addr_bgp = 0xFF47;
     const auto addr_obp0 = 0xFF48;
     const auto addr_obp1 = 0xFF49;
+    const auto addr_dma = 0xFF46;
+    const auto addr_serial = 0xFF01;
+    const auto addr_div = 0xFF04;
     class Bus {
     private:
         using RamBank = std::array<uint8_t, 0x2000>;
@@ -48,7 +51,6 @@ namespace TKPEmu::Gameboy::Devices {
             WND_TILEMAP = 1 << 6,
             LCD_ENABLE = 1 << 7
         };
-
         enum STATFlag {
             MODE = 0b11,
             COINCIDENCE = 1 << 2,
@@ -57,7 +59,6 @@ namespace TKPEmu::Gameboy::Devices {
             MODE2_INTER = 1 << 5,
             COINC_INTER = 1 << 6
         };
-
         enum IFInterrupt {
             VBLANK = 1 << 0,
             LCDSTAT = 1 << 1,
@@ -65,7 +66,21 @@ namespace TKPEmu::Gameboy::Devices {
             SERIAL = 1 << 3,
             JOYPAD = 1 << 4
         };
-
+        struct Sprite {
+            uint8_t y_pos = 0;
+            uint8_t x_pos = 0;
+            uint8_t tile_index = 0;
+            uint8_t flags = 0;
+        };
+        struct Pixel {
+            uint8_t color : 2;
+            uint8_t palette : 2;
+            // TODO: CGB Sprite priority
+            uint8_t bg_prio : 1;
+        };
+        struct Tile {
+            Pixel pixels[64];
+        };
         // Currently unused
         // TODO: Implement bios, change reset default values
         bool inBios;
@@ -87,7 +102,6 @@ namespace TKPEmu::Gameboy::Devices {
         0x21, 0x04, 0x01, 0x11, 0xA8, 0x00, 0x1A, 0x13, 0xBE, 0x20, 0xFE, 0x23, 0x7D, 0xFE, 0x34, 0x20,
         0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50,
         };
-
         Bus();
         uint8_t Read(uint16_t address);
         uint16_t ReadL(uint16_t address);
@@ -97,9 +111,12 @@ namespace TKPEmu::Gameboy::Devices {
         void Reset();
         void SoftReset();
         void LoadCartridge(std::string&& fileName);
+        std::array<std::array<uint8_t, 3>, 4> Palette;
         std::array<uint8_t, 4> BGPalette{};
         std::array<uint8_t, 4> OBJ0Palette{};
         std::array<uint8_t, 4> OBJ1Palette{};
+        std::array<Sprite, 40> OAM;
+        bool DIVReset = false;
     };
 }
 #endif
