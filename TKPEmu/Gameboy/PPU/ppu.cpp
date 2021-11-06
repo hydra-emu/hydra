@@ -108,14 +108,15 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void PPU::draw_scanline() {
-		renderTiles();
+		if (LCDC & 0b1) {
+			renderTiles();
+		}
 		if (LCDC & 0b10) {
 			renderSprites();
 		}
 	}
 
-	inline void PPU::renderTiles()
-	{
+	inline void PPU::renderTiles() {
 		uint8_t lcdControl = bus_->Read(0xFF40);
 		uint16_t tileData = (LCDC & 0b10000) ? 0x8000 : 0x8800;
 		uint8_t currScanline = bus_->Read(0xFF44);
@@ -231,11 +232,10 @@ namespace TKPEmu::Gameboy::Devices {
 			use8x16 = true;
 
 		for (int sprite = 0; sprite < 40; sprite++) {
-			uint8_t index = sprite * 4;
-			uint8_t positionY = bus_->Read(0xFE00 + index) - 16;
-			uint8_t positionX = bus_->Read(0xFe00 + index + 1) - 8;
-			uint8_t tileLoc = bus_->Read(0xFE00 + index + 2);
-			uint8_t attributes = bus_->Read(0xFe00 + index + 3);
+			uint8_t positionY = bus_->OAM[sprite].y_pos - 16;
+			uint8_t positionX = bus_->OAM[sprite].x_pos - 8;
+			uint8_t tileLoc = bus_->OAM[sprite].tile_index;
+			uint8_t attributes = bus_->OAM[sprite].flags;
 
 			bool yFlip = attributes & 0b1000000;
 			bool xFlip = attributes & 0b100000;
@@ -251,7 +251,7 @@ namespace TKPEmu::Gameboy::Devices {
 
 				// if a sprite is flipped we read data from opposite side of table 
 				if (yFlip) {
-					line -= height;
+					line -= height - 1;
 					line *= -1;
 				}
 
