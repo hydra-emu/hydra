@@ -550,41 +550,62 @@ namespace TKPEmu::Graphics {
 
                 switch (event.type)
                 {
-                case SDL_QUIT:
-                    save_user_settings();
-                    loop = false;
-                    break;
-
-                case SDL_WINDOWEVENT:
-                    switch (event.window.event)
-                    {
-                    case SDL_WINDOWEVENT_RESIZED:
-                        window_settings_.window_width = event.window.data1;
-                        window_settings_.window_height = event.window.data2;
-                        image_scale(background_image_.topleft, background_image_.botright);
-                        if (emulator_ != nullptr)
-                            image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
-                        glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
+                    case SDL_QUIT:
+                        save_user_settings();
+                        loop = false;
                         break;
-                    }
-                    break;
 
-                case SDL_KEYDOWN:
-                    switch (event.key.keysym.sym)
-                    {
+                    case SDL_WINDOWEVENT:
+                        switch (event.window.event)
+                        {
+                        case SDL_WINDOWEVENT_RESIZED:
+                            window_settings_.window_width = event.window.data1;
+                            window_settings_.window_height = event.window.data2;
+                            image_scale(background_image_.topleft, background_image_.botright);
+                            if (emulator_ != nullptr)
+                                image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
+                            glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
+                            break;
+                        }
+                        break;
+
+                    case SDL_KEYDOWN: {
+                        switch (event.key.keysym.sym)
+                        {
                         case SDLK_ESCAPE:
                             loop = false;
                             break;
                         case SDLK_F7:
                             step_emulator();
                             break;
+                        }
+                        // Handle the shortcuts
+                        const auto k = SDL_GetKeyboardState(NULL);
+                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_P]) {
+                            pause_pressed_ = true;
+                        }
+                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_R]) {
+                            reset_pressed_ = true;
+                        }
+                        break;
                     }
-                        
-                    break;
                 }
             }
             if (app_settings_.limit_fps) {
                 limit_fps();
+            }
+            if (emulator_ != nullptr) {
+                if (reset_pressed_) {
+                    reset_pressed_ = false;
+                    BaseDisassembler::ResetEmulatorState(emulator_.get());
+                    emulator_->StartDebug();
+                }
+                if (pause_pressed_) {
+                    pause_pressed_ = false;
+                    emulator_->Paused.store(!emulator_->Paused.load());
+                    emulator_->Step.store(true);
+                    emulator_->Step.notify_all();
+                }
             }
 
             ImGui_ImplOpenGL3_NewFrame();

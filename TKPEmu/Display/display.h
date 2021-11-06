@@ -127,6 +127,10 @@ namespace TKPEmu::Graphics {
         bool window_file_browser_open_ = false;
         bool window_disassembler_open_ = false;
 
+        // Shortcut pressed booleans
+        bool reset_pressed_ = false;
+        bool pause_pressed_ = false;
+
         // Window drawing functions for ImGui
         void draw_settings(bool* draw);
         void draw_trace_logger(bool* draw);

@@ -59,15 +59,9 @@ namespace TKPEmu::Applications {
                     DrawMenuEmulation(emulator_, rom_loaded_);
                 }
                 if (ImGui::BeginMenu("Navigation")) {
-                    if (ImGui::MenuItem("Step", NULL, false, emulator_->Paused.load())) {
+                    if (ImGui::MenuItem("Step", "F7", false, emulator_->Paused.load())) {
                         emulator_->Step.store(true);
                         emulator_->Step.notify_all();
-                    }
-                    if (ImGui::MenuItem("Reset")) {
-                        // Sets the stopped flag on the thread to true and then waits for it to become false
-                        // The thread sets the flag to false upon exiting
-                        ResetEmulatorState(emulator_);
-                        emulator_->StartDebug();
                     }
                     if (ImGui::MenuItem("Goto PC")) {
                         goto_popup = true;
