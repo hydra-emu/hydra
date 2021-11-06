@@ -179,7 +179,7 @@ namespace TKPEmu::Applications {
                                 ImGui::TextColored(ImVec4(128, 128, 0, 255), "(!)");
                                 if (ImGui::IsItemHovered()) {
                                     ImGui::BeginTooltip();
-                                    // TODO: find a way to reload instructions in real time
+                                    // TODO: find a way to reload instructions in real time (Issue 01)
                                     ImGui::TextUnformatted("WRAM instruction loading not implemented yet!");
                                     ImGui::EndTooltip();
                                 }

@@ -15,7 +15,7 @@ namespace TKPEmu::Tools {
 		int ID = 0;
 		uint16_t InstructionProgramCode = 0;
 		uint8_t Instruction = 0;
-		uint8_t Params[2]{ 0, 0 };
+		uint8_t Params[2]{};
 		uint8_t ParamSize = 0;
 		bool Selected = false;
 		static int s_id;

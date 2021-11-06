@@ -179,18 +179,6 @@ namespace TKPEmu::Gameboy {
 	void Gameboy::RemoveBreakpoint(int index) {
 		Breakpoints.erase(Breakpoints.begin() + index);
 	}
-	void Gameboy::CopyRegToBreakpoint(GameboyBreakpoint& bp) {
-		bp.A_value = cpu_.A;
-		bp.B_value = cpu_.B;
-		bp.C_value = cpu_.C;
-		bp.D_value = cpu_.D;
-		bp.E_value = cpu_.E;
-		bp.F_value = cpu_.F;
-		bp.H_value = cpu_.H;
-		bp.L_value = cpu_.L;
-		bp.SP_value = cpu_.SP;
-		bp.PC_value = cpu_.PC;
-	}
 	uint8_t* Gameboy::GetScreenData()
 	{
 		return ppu_.GetScreenData();
