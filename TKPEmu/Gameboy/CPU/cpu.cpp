@@ -13,6 +13,7 @@ namespace TKPEmu::Gameboy::Devices {
 		F = 0; SP = 0; PC = 0x0; IME = true;
 		tClock = 0;
 		halt = false; stop = false;
+		bus_->Write(0xFF00, 0b11011111);
 	}
 	inline void CPU::reg_dec(RegisterType& reg) {
 		auto temp = reg - 1;

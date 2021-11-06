@@ -2,7 +2,18 @@
 #include <iostream>
 #include <glad/glad.h>
 namespace TKPEmu::Gameboy {
-	Gameboy::Gameboy() : cpu_(&bus_), ppu_(&bus_, &DrawMutex), cartridge_(), file(str) {
+	void Gameboy::limit_fps() {
+		a = std::chrono::system_clock::now();
+		std::chrono::duration<double, std::milli> work_time = a - b;
+		if (work_time.count() < sleep_time_) {
+			std::chrono::duration<double, std::milli> delta_ms(sleep_time_ - work_time.count());
+			auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
+			std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
+		}
+		b = std::chrono::system_clock::now();
+		std::chrono::duration<double, std::milli> sleep_time = b - a;
+	}
+	Gameboy::Gameboy() : cpu_(&bus_), ppu_(&bus_, &DrawMutex), cartridge_() {
 		GLuint image_texture;
 		glGenTextures(1, &image_texture);
 		glBindTexture(GL_TEXTURE_2D, image_texture);
@@ -30,7 +41,6 @@ namespace TKPEmu::Gameboy {
 	Gameboy::~Gameboy() {
 		Stopped.store(true);
 		glDeleteTextures(1, &EmulatorImage.texture);
-		file.close();
 	}
 	void Gameboy::Start() {
 		Reset();
@@ -46,9 +56,9 @@ namespace TKPEmu::Gameboy {
 	}
 
 	void Gameboy::StartDebug() {
-		Reset();
 		auto func = [this]() {
 			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
+			Reset();
 			Paused = true;
 			Stopped = false;
 			while (!Stopped.load(std::memory_order_seq_cst)) {
@@ -86,13 +96,15 @@ namespace TKPEmu::Gameboy {
 		ppu_.Reset();
 	}
 	void Gameboy::Update() {
-		std::lock_guard<std::mutex> lg(UpdateMutex);
-		cpu_.TimerCounter = cpu_.ClockSpeed / 0x400;
-		while (cpu_.tClock < cpu_.MaxCycles) {
-			int clk = cpu_.Update();
-			ppu_.Update(clk);
+		//while (cpu_.tClock < cpu_.MaxCycles) {
+		int clk = cpu_.Update();
+		ppu_.Update(clk);
+		//}
+		if (cpu_.tClock >= cpu_.MaxCycles) {
+			cpu_.tClock = 0;
+			cpu_.TimerCounter = cpu_.ClockSpeed / 0x400;
+			limit_fps();
 		}
-		cpu_.tClock = 0;
 	}
 	void Gameboy::LoadFromFile(std::string&& path) {
 		bus_.LoadCartridge(std::forward<std::string>(path));
@@ -167,7 +179,6 @@ namespace TKPEmu::Gameboy {
 		Breakpoints.erase(Breakpoints.begin() + index);
 	}
 	void Gameboy::CopyRegToBreakpoint(GameboyBreakpoint& bp) {
-		std::lock_guard<std::mutex> lg(UpdateMutex);
 		bp.A_value = cpu_.A;
 		bp.B_value = cpu_.B;
 		bp.C_value = cpu_.C;

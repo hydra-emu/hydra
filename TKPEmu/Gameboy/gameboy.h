@@ -15,8 +15,7 @@ namespace TKPEmu::Gameboy {
 		using Cartridge = TKPEmu::Gameboy::Devices::Cartridge;
 		using DisInstr = TKPEmu::Tools::DisInstr;
 		using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
-		// TODO: for debugging the cpu
-		std::string str = "D:/gblogs/tkpemu/logtest2.txt";
+		void limit_fps();
 	public:
 		Gameboy();
 		~Gameboy();
@@ -40,7 +39,9 @@ namespace TKPEmu::Gameboy {
 		CPU cpu_;
 		PPU ppu_;
 		Cartridge cartridge_;
-		std::ofstream file;
+		std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
+		std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
+		float sleep_time_ = 16.75f;
 	};
 }
 #endif

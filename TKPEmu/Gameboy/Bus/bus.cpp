@@ -70,11 +70,11 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				else if (address <= 0xFEFF) {
 					// TODO: check if this is actually unused area
+					unused_mem_area_ = 1;
 					return unused_mem_area_;
 				}
 				else if (address <= 0xFFFF) {
-					// I/O Registers, HRAM and IE
-					return hram_[address & 0xFF];
+					return hram_[address % 0xFF00];
 				}
 				else {
 					throw("Bad memory address");
@@ -86,6 +86,8 @@ namespace TKPEmu::Gameboy::Devices {
 	uint8_t Bus::Read(uint16_t address) {
 		// Make copy so you can't write to this
 		uint8_t read = redirect_address(address);
+		if (address == 0xFF00)
+			return 0b11101111;
 		return read;
 	}
 
@@ -129,62 +131,66 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 		else {
 			switch (address) {
-					case addr_serial: {
-						std::cout << data;
-						break;
-
-					case addr_bgp: {
-						for (int i = 0; i < 4; i++) {
-							BGPalette[i] = (data >> (i * 2)) & 0b11;
-						}
-						break;
-					}
-					case addr_obp0: {
-						for (int i = 0; i < 4; i++) {
-							OBJ0Palette[i] = (data >> (i * 2)) & 0b11;
-						}
-						break;
-					}
-					case addr_obp1: {
-						for (int i = 0; i < 4; i++) {
-							OBJ1Palette[i] = (data >> (i * 2)) & 0b11;
-						}
-						break;
-					}
-					case addr_dma: {
-						// DMA transfer, load oam up.
-						uint16_t dma_addr = data << 8;
-						for (int i = 0; i <= (0x9F - 4); i += 4) {
-							uint16_t source = dma_addr | i;
-							// Each sprite is 4 bytes, so the array has size of 160/4 = 40 
-							OAM[i / 4].y_pos      = Read(source);
-							OAM[i / 4].x_pos      = Read(source + 1);
-							OAM[i / 4].tile_index = Read(source + 2);
-							OAM[i / 4].flags      = Read(source + 3);
-						}
-						break;
-					}
-					case addr_div: {
-						DIVReset = true;
-						break;
-					}
-					case addr_tac: {
-						TACChanged = true;
-						break;
-					}
+				case addr_joyp: {
+					return;
 				}
-				
+				case addr_serial: {
+					#ifndef NDEBUG
+					std::cout << data;
+					#endif
+					break;
+				}
+				case addr_bgp: {
+					for (int i = 0; i < 4; i++) {
+						BGPalette[i] = (data >> (i * 2)) & 0b11;
+					}
+					break;
+				}
+				case addr_obp0: {
+					for (int i = 0; i < 4; i++) {
+						OBJ0Palette[i] = (data >> (i * 2)) & 0b11;
+					}
+					break;
+				}
+				case addr_obp1: {
+					for (int i = 0; i < 4; i++) {
+						OBJ1Palette[i] = (data >> (i * 2)) & 0b11;
+					}
+					break;
+				}
+				case addr_dma: {
+					// DMA transfer, load oam up.
+					uint16_t dma_addr = data << 8;
+					for (int i = 0; i <= (0x9F - 4); i += 4) {
+						uint16_t source = dma_addr | i;
+						// Each sprite is 4 bytes, so the array has size of 160/4 = 40 
+						OAM[i / 4].y_pos      = Read(source);
+						OAM[i / 4].x_pos      = Read(source + 1);
+						OAM[i / 4].tile_index = Read(source + 2);
+						OAM[i / 4].flags      = Read(source + 3);
+					}
+					break;
+				}
+				case addr_div: {
+					DIVReset = true;
+					break;
+				}
+				case addr_tac: {
+					TACChanged = true;
+					break;
+				}
 			}
 			switch (address & 0xF000) {
 				case 0xF000: {
 					if (address >= 0xFE00 && address <= 0xFE9F) {
 						switch (address % 4) { 
-							case 0: OAM[(address - 0xFE00) / 4].y_pos      = data; break;
-							case 1: OAM[(address - 0xFE00) / 4].x_pos      = data; break;
-							case 2: OAM[(address - 0xFE00) / 4].tile_index = data; break;
-							case 3: OAM[(address - 0xFE00) / 4].flags      = data; break;
+							case 0: OAM[(address & 0xFF) / 4].y_pos      = data; break;
+							case 1: OAM[(address & 0xFF) / 4].x_pos      = data; break;
+							case 2: OAM[(address & 0xFF) / 4].tile_index = data; break;
+							case 3: OAM[(address & 0xFF) / 4].flags      = data; break;
 						}
 					}
+
 					break;
 				}
 			}

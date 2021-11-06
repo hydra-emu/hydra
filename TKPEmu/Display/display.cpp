@@ -466,6 +466,13 @@ namespace TKPEmu::Graphics {
         std::lock_guard<std::mutex> lguard(emulator_->ThreadStartedMutex);
     }
 
+    void Display::step_emulator() {
+        if (emulator_ != nullptr) {
+            emulator_->Step = true;
+            emulator_->Step.notify_all();
+        }
+    }
+
     void Display::limit_fps() {
         a = std::chrono::system_clock::now();
         std::chrono::duration<double, std::milli> work_time = a - b;
@@ -478,7 +485,6 @@ namespace TKPEmu::Graphics {
 
         b = std::chrono::system_clock::now();
         std::chrono::duration<double, std::milli> sleep_time = b - a;
-        
     }
 
     inline bool Display::is_rom_loaded()
@@ -566,10 +572,14 @@ namespace TKPEmu::Graphics {
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym)
                     {
-                    case SDLK_ESCAPE:
-                        loop = false;
-                        break;
+                        case SDLK_ESCAPE:
+                            loop = false;
+                            break;
+                        case SDLK_F7:
+                            step_emulator();
+                            break;
                     }
+                        
                     break;
                 }
             }
