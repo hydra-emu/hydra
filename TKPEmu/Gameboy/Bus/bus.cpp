@@ -131,10 +131,10 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 		else {
 			switch (address) {
-				case addr_joyp: {
+				case addr_joy: {
 					return;
 				}
-				case addr_serial: {
+				case addr_std: {
 					#ifndef NDEBUG
 					std::cout << data;
 					#endif
@@ -146,13 +146,13 @@ namespace TKPEmu::Gameboy::Devices {
 					}
 					break;
 				}
-				case addr_obp0: {
+				case addr_ob0: {
 					for (int i = 0; i < 4; i++) {
 						OBJ0Palette[i] = (data >> (i * 2)) & 0b11;
 					}
 					break;
 				}
-				case addr_obp1: {
+				case addr_ob1: {
 					for (int i = 0; i < 4; i++) {
 						OBJ1Palette[i] = (data >> (i * 2)) & 0b11;
 					}
@@ -171,12 +171,69 @@ namespace TKPEmu::Gameboy::Devices {
 					}
 					break;
 				}
+
+				// Any unused bits in these registers are set, passes unused_hwio-GS.gb test (mooneye)
 				case addr_div: {
 					DIVReset = true;
 					break;
 				}
 				case addr_tac: {
 					TACChanged = true;
+					data |= 0b1111'1000;
+					break;
+				}
+				case addr_stc: {
+					data |= 0b01111110;
+					break;
+				}
+				case addr_ifl: {
+					data |= 0b1110'0000;
+					break;
+				}
+				case addr_sta: {
+					data |= 0b1000'0000;
+					break;
+				}
+				case addr_s1s: {
+					data |= 0b1000'0000;
+					break;
+				}
+				case addr_s3e: {
+					data |= 0b0111'1111;
+					break;
+				}
+				case addr_s3o: {
+					data |= 0b1001'1111;
+					break;
+				}
+				case addr_s4l: {
+					data |= 0b1110'0000;
+					break;
+				}
+				case addr_s4c: {
+					data |= 0b0011'1111;
+					break;
+				}
+				case addr_snd: {
+					data |= 0b0111'0000;
+					break;
+				}
+				// Unused HWIO registers
+				// Writing to these sets all the bits
+				case 0xFF03: case 0xFF08: case 0xFF09: case 0xFF0A: case 0xFF0B:
+				case 0xFF0C: case 0xFF0D: case 0xFF0E: case 0xFF15: case 0xFF1F:
+				case 0xFF27: case 0xFF28: case 0xFF29: case 0xFF4C: case 0xFF4D:
+				case 0xFF4E: case 0xFF4F: case 0xFF50: case 0xFF51: case 0xFF52:
+				case 0xFF53: case 0xFF54: case 0xFF55: case 0xFF56: case 0xFF57:
+				case 0xFF58: case 0xFF59: case 0xFF5A: case 0xFF5B: case 0xFF5C:
+				case 0xFF5D: case 0xFF5E: case 0xFF5F: case 0xFF60: case 0xFF61:
+				case 0xFF62: case 0xFF63: case 0xFF64: case 0xFF65: case 0xFF66:
+				case 0xFF67: case 0xFF68: case 0xFF69: case 0xFF6A: case 0xFF6B:
+				case 0xFF6C: case 0xFF6D: case 0xFF6E: case 0xFF6F: case 0xFF70:
+				case 0xFF71: case 0xFF72: case 0xFF73: case 0xFF74: case 0xFF75:
+				case 0xFF76: case 0xFF77: case 0xFF78: case 0xFF79: case 0xFF7A:
+				case 0xFF7B: case 0xFF7C: case 0xFF7D: case 0xFF7E: case 0xFF7F: {
+					data |= 0b1111'1111;
 					break;
 				}
 			}

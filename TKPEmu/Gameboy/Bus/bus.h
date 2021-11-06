@@ -15,14 +15,28 @@ namespace TKPEmu::Gameboy::Devices {
     const auto cl_lgray = 1;
     const auto cl_dgray = 2;
     const auto cl_black = 3;
-    const auto addr_bgp = 0xFF47;
-    const auto addr_obp0 = 0xFF48;
-    const auto addr_obp1 = 0xFF49;
-    const auto addr_dma = 0xFF46;
-    const auto addr_serial = 0xFF01;
+    const auto addr_joy = 0xFF00;
+    // Serial registers
+    const auto addr_std = 0xFF01;
+    const auto addr_stc = 0xFF02;
+    // Timer registers
     const auto addr_div = 0xFF04;
     const auto addr_tac = 0xFF07;
-    const auto addr_joyp = 0xFF00;
+    // Interrupt flag
+    const auto addr_ifl = 0xFF0F;
+    // Sound registers
+    const auto addr_s1s = 0xFF10;
+    const auto addr_s3e = 0xFF1A;
+    const auto addr_s3o = 0xFF1C;
+    const auto addr_s4l = 0xFF20;
+    const auto addr_s4c = 0xFF23;
+    const auto addr_snd = 0xFF26;
+    // PPU & OAM related registers
+    const auto addr_sta = 0xFF41;
+    const auto addr_dma = 0xFF46;
+    const auto addr_bgp = 0xFF47;
+    const auto addr_ob0 = 0xFF48;
+    const auto addr_ob1 = 0xFF49;
     class Bus {
     private:
         using RamBank = std::array<uint8_t, 0x2000>;
@@ -40,16 +54,7 @@ namespace TKPEmu::Gameboy::Devices {
         std::array<uint8_t, 0x2000> eram_default_{};
         std::array<uint8_t, 0x2000> wram_{}; // TODO: cgb uses larger wram, maybe change, maybe inherit
         std::array<uint8_t, 0x2000> vram_{};
-        //std::vector<uint16_t> unused_addresses_ = {
-        //    0xFF03, 0xFF08, 0xFF09, 0xFF0A, 0xFF0B, 0xFF0C,
-        //    0xFF0D, 0xFF0E, 0xFF27, 0xFF28, 0xFF29, 0xFF4C,
-        //    0xFF4D, 0xFF4E, 0xFF56, 0xFF57, 0xFF58, 0xFF59,
-        //    0xFF5A, 0xFF5B, 0xFF5C, 0xFF5D, 0xFF5E, 0xFF5F,
-        //    0xFF60, 0xFF61, 0xFF62, 0xFF63, 0xFF64, 0xFF65,
-        //    0xFF66, 0xFF67, 0xFF71, 0xFF72, 0xFF73, 0xFF74,
-        //    0xFF75, 0xFF76, 0xFF77, 0xFF78, 0xFF79, 0xFF7A,
-        //    0xFF7B, 0xFF7C, 0xFF7D, 0xFF7E
-        //};
+
         uint8_t& redirect_address(uint16_t address);
     public:
         enum LCDCFlag {
