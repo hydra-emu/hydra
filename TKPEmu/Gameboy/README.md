@@ -3,7 +3,7 @@ Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
 ## Features
 
  - Disassembler/Debugger with step/reset/pause functionality
- - Advanced breakpoints. You can create a breakpoint for a specific instruction with specific register values.
+ - Advanced breakpoints. You can create a breakpoint for a specific instruction with specific register values
  - Real time register values shown on disassembler
  - Trace logger (WIP)
  - Save states (WIP)
