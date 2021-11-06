@@ -149,6 +149,7 @@ namespace TKPEmu::Graphics {
         UserSettingsFile = ExecutableDirectory + ResourcesDataDir + UserSettingsFile;
         #endif
         // TODO: Implement linux path
+        // TODO: get rid of this enum warning
         SDL_WindowFlags window_flags = (SDL_WindowFlags)(
             SDL_WINDOW_OPENGL
             | SDL_WINDOW_RESIZABLE
@@ -203,7 +204,7 @@ namespace TKPEmu::Graphics {
     // TODO: add filtering, breakpoints, searching
     void Display::draw_disassembler(bool* draw) {
         if (*draw && is_rom_loaded_and_debugmode()) {
-            ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
             disassembler_->Draw("Disassembler", draw);
         }
     }
@@ -381,8 +382,7 @@ namespace TKPEmu::Graphics {
         return true;
     }
 
-    inline void Display::image_scale(ImVec2& topleft, ImVec2& bottomright)
-    {
+    inline void Display::image_scale(ImVec2& topleft, ImVec2& bottomright) {
         float wi = background_image_.width; float hi = background_image_.height;
         float ws = window_settings_.window_width; float hs = window_settings_.window_height;
         float ri = wi / hi;

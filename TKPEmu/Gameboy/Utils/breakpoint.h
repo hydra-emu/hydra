@@ -4,7 +4,6 @@
 namespace TKPEmu::Gameboy::Utils {
 	struct GameboyBreakpoint {
 	public:
-		// TODO: make into std::pair<bool, uint16_t> and an array that contains them
 		using BreakFunction = std::function<bool()>;
 		bool A_using = false; uint16_t A_value = 0;
 		bool B_using = false; uint16_t B_value = 0;

@@ -174,7 +174,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				case addr_lcd: {
 					if (data & 0b1000'0000) {
-						// TODO:
+						// TODO: LCDC write behavior
 						// clock = 0
 						// clock_target = FRAME_CYCLES
 						// 

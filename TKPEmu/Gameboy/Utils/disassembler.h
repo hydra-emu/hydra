@@ -257,22 +257,21 @@ namespace TKPEmu::Applications {
                     emulator_->Breakpoints.clear();
                     clear_all_flag = true;
                 }
-                //static GameboyBreakpoint db_reg;
-                //if (emulator_->Paused.load()) {
-                //    emulator_->CopyRegToBreakpoint(db_reg);
-                //}
-                //// TODO: dont use stringstream, use imgui text with %02x
-                //std::stringstream ss;
-                //if (emulator_->Paused.load())
-                //    ss << std::hex << std::setfill('0')
-                //    << "AF: " << std::setw(2) << db_reg.A_value << std::setw(2) << db_reg.F_value << "\nBC: " << std::setw(2) << db_reg.B_value << std::setw(2) << db_reg.C_value << "\n"
-                //    << "DE: " << std::setw(2) << db_reg.D_value << std::setw(2) << db_reg.E_value << "\nHL: " << std::setw(2) << db_reg.H_value << std::setw(2) << db_reg.L_value << "\n"
-                //    << "SP: " << std::setw(4) << db_reg.SP_value << "\n"
-                //    << "PC: " << std::setw(4) << db_reg.PC_value << "\n"
-                //    << "IME: " << std::setw(2) << (int)(emulator_->GetCPU().IME) << "\n"
-                //    << "IE: " << std::setw(2) << (int)(emulator_->GetCPU().IE) << "\n"
-                //    << "IF: " << std::setw(2) << (int)(emulator_->GetCPU().IF) << "\n";
-                //ImGui::Text(ss.str().c_str());
+                static bool use_hex = true;
+                auto& t = emulator_->GetCPU();
+                if (use_hex) {
+                    ImGui::Text("AF: 0x%02x%02x", t.A, t.F); ImGui::SameLine(); ImGui::Text("PC: 0x%04x", t.PC);
+                    ImGui::Text("BC: 0x%02x%02x", t.B, t.C); ImGui::SameLine(); ImGui::Text("SP: 0x%04x", t.SP);
+                    ImGui::Text("DE: 0x%02x%02x", t.D, t.E); ImGui::SameLine(); ImGui::Text("IE: 0x%02x", t.IE);
+                    ImGui::Text("HL: 0x%02x%02x", t.H, t.L); ImGui::SameLine(); ImGui::Text("IF: 0x%02x", t.IF);
+                }
+                else {
+                    ImGui::Text("AF: %d,%d", t.A, t.F); ImGui::SameLine(); ImGui::Text("PC: %d", t.PC);
+                    ImGui::Text("BC: %d,%d", t.B, t.C); ImGui::SameLine(); ImGui::Text("SP: %d", t.SP);
+                    ImGui::Text("DE: %d,%d", t.D, t.E); ImGui::SameLine(); ImGui::Text("IE: %d", t.IE);
+                    ImGui::Text("HL: %d,%d", t.H, t.L); ImGui::SameLine(); ImGui::Text("IF: %d", t.IF);
+                }
+                ImGui::Checkbox("Hex", &use_hex);
                 ImGui::EndChild();
                 // TODO: add switch from hex to binary on every textbox here
                 if (bp_add_popup) {
