@@ -30,7 +30,6 @@ Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
 | oam_dma/basic | ❌ |
 | oam_dma/reg_read | ✅ |
 | oam_dma/sources-GS | ❌ (needs MBC5)|
-| oam_dma/sources-GS | ❌ (needs MBC5)|
 | ppu/... | ❌ (untested)|
 | serial/... | ❌ (untested)|
 | timer/div_write | ✅ |
