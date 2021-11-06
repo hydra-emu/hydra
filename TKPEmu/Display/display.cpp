@@ -390,17 +390,18 @@ namespace TKPEmu::Graphics {
         float new_w;
         float new_h;
         if (rs > ri) {
-            new_w = wi * (hs / hi);
-            new_h = hs;
+            new_h = hs - MenuBarHeight;
+            new_w = wi * (new_h / hi);
         }
         else {
             new_w = ws;
             new_h = hi * (ws / wi);
         }
-        topleft.y = MenuBarHeight;
-        topleft.x = 0;
-        bottomright.x = new_w;
-        bottomright.y = new_h + topleft.y;
+        new_h += MenuBarHeight;
+        topleft.y = (hs - new_h) / 2 + MenuBarHeight;
+        topleft.x = (ws - new_w) / 2;
+        bottomright.x = new_w + topleft.x;
+        bottomright.y = new_h + topleft.y - MenuBarHeight;
     }
 
     void Display::load_user_settings() {
