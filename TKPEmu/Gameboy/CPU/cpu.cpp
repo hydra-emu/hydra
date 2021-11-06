@@ -1299,7 +1299,6 @@ namespace TKPEmu::Gameboy::Devices {
 
 	void CPU::STOP() {
 		PC++;
-		mTemp = 1; tTemp = 4;
 		/*int i = bus_->Read(PC);
 		if (i >= 0x80) {
 			i = -((~i + 1) & 0xFF);
@@ -1657,7 +1656,6 @@ namespace TKPEmu::Gameboy::Devices {
 
 	void CPU::HALT() {
 		halt = true;
-		mTemp = 1; tTemp = 4;
 	}
 
 	void CPU::XXX() {
@@ -1677,7 +1675,7 @@ namespace TKPEmu::Gameboy::Devices {
 		B &= 0xFF;
 		F = B ? 0 : 0x80;
 		F = (F & 0xEF) + o;
-		mTemp = 2;
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::RLCC() {
@@ -1687,7 +1685,7 @@ namespace TKPEmu::Gameboy::Devices {
 		C &= 0xFF;
 		F = C ? 0 : 0x80;
 		F = (F & 0xEF) + o;
-		mTemp = 2;
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::RLCD() {
@@ -1697,7 +1695,7 @@ namespace TKPEmu::Gameboy::Devices {
 		D &= 0xFF;
 		F = D ? 0 : 0x80;
 		F = (F & 0xEF) + o;
-		mTemp = 2;
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::RLCE() {
@@ -1707,7 +1705,7 @@ namespace TKPEmu::Gameboy::Devices {
 		E &= 0xFF;
 		F = E ? 0 : 0x80;
 		F = (F & 0xEF) + o;
-		mTemp = 2;
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::RLCH() {
@@ -1717,7 +1715,7 @@ namespace TKPEmu::Gameboy::Devices {
 		H &= 0xFF;
 		F = H ? 0 : 0x80;
 		F = (F & 0xEF) + o;
-		mTemp = 2;
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::RLCL() {
@@ -1727,7 +1725,7 @@ namespace TKPEmu::Gameboy::Devices {
 		L &= 0xFF;
 		F = L ? 0 : 0x80;
 		F = (F & 0xEF) + o;
-		mTemp = 2;
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::RLCAr() {
@@ -1737,7 +1735,7 @@ namespace TKPEmu::Gameboy::Devices {
 		A &= 0xFF;
 		F = A ? 0 : 0x80;
 		F = (F & 0xEF) + o;
-		mTemp = 2;
+		mTemp = 2; tTemp = 8;
 	}
 
 	void CPU::RLCHL() {
@@ -1749,7 +1747,7 @@ namespace TKPEmu::Gameboy::Devices {
 		F = (i) ? 0 : 0x80;
 		bus_->Write((H << 8) | L, i);
 		F = (F & 0xEF) + co;
-		mTemp = 4;
+		mTemp = 4; tTemp = 16;
 	}
 
 	void CPU::RRCB() {
@@ -2834,7 +2832,8 @@ namespace TKPEmu::Gameboy::Devices {
 		IF = 0xE1;
 		tClock = 0;
 		halt = false; stop = false;
-		div_index_ = 0;
+		oscillator_ = 0xABCC;
+		DIVIDER = oscillator_ >> 8;
 		div_reset_index_ = -1;
 		TimerCounter = 0;
 		old_tac_ = 0;
@@ -2844,7 +2843,22 @@ namespace TKPEmu::Gameboy::Devices {
 		if (halt) {
 			PC--;
 		}
+		auto old_if = IF;
 		(this->*Instructions[bus_->Read(PC++)].op)();
+		// Maybe needed to confirm tTemp == 4 also?
+		if (tima_overflow_) {
+			// TIMA might've changed in this strange cycle (see the comment below)
+			// If it changes in that cycle, it doesn't update to be equal to TMA
+			if (TIMA == 0) {
+				TIMA = TMA;
+				// If this isn't true, IF has changed during this instruction so the new value persists
+				if (IF == old_if) {
+					IF |= 1 << 2;
+					halt = false;
+				}
+			}
+			tima_overflow_ = false;
+		}
 		update_timers(tTemp);
 		handle_interrupts();
 		tClock += tTemp;
@@ -2879,8 +2893,7 @@ namespace TKPEmu::Gameboy::Devices {
 			if (div_reset_index_ >= freq / 2) {
 				TIMA++;
 			}
-			DIVIDER = 0;
-			div_index_ = 0;
+			oscillator_ = 0;
 			TimerCounter = 0;
 			div_reset_index_ = 0;
 		}
@@ -2892,6 +2905,7 @@ namespace TKPEmu::Gameboy::Devices {
 			TAC = new_tac;
 			if ((old_tac_ >> 2) & 1) {
 				// If old tac was enabled
+				// TODO: prettify timer after its fully implemented
 				if (!((new_tac >> 2) & 1)) {
 					if ((div_reset_index_ & (old_freq / 2)) != 0) {
 						TIMA++;
@@ -2906,12 +2920,9 @@ namespace TKPEmu::Gameboy::Devices {
 			old_tac_ = new_tac;
 		}
 		bool enabled = (TAC >> 2) & 0x1;
-		div_index_ += cycles;
-
-		if (div_index_ > 0xFF) {
-			div_index_ = 0;
-			DIVIDER++;
-		}
+		oscillator_ += cycles;
+		// Divider always equals the top 8 bits of the oscillator
+		DIVIDER = oscillator_ >> 8;
 		if (div_reset_index_ != -1)
 			div_reset_index_ += cycles;
 		if (div_reset_index_ > freq) {
@@ -2924,9 +2935,12 @@ namespace TKPEmu::Gameboy::Devices {
 				TimerCounter -= freq;
 				//TimerCounter = get_clk_freq();
 				if (TIMA == 0xFF) {
-					TIMA = TMA;
+					/*TIMA = TMA;
 					IF |= 1 << 2;
-					halt = false;
+					halt = false;*/
+					// After TIMA overflows, it stays 00 for 1 clock and *then* becomes =TMA
+					TIMA = 0;
+					tima_overflow_ = true;
 				}
 				else {
 					TIMA++;

@@ -40,10 +40,11 @@ namespace TKPEmu::Gameboy::Devices {
 		bool IME = false;
 		int mTemp = 0;
 		int tTemp = 0;
-		int div_index_ = 0;
+		int oscillator_ = 0;
 		int div_reset_index_ = -1;
 		int old_tac_ = 0;
 		int tac_index_ = 0x1000;
+		int tima_overflow_ = false;
 		bool halt = false;
 		bool stop = false;
 
@@ -169,7 +170,6 @@ namespace TKPEmu::Gameboy::Devices {
 		const int MaxCycles = ClockSpeed / 60;
 		int TimerCounter = ClockSpeed / tac_index_;
 		int tClock = 0;
-
 		void Reset();
 		int Update();
 	};

@@ -32,7 +32,9 @@ namespace TKPEmu::Gameboy::Devices {
     const auto addr_s4c = 0xFF23;
     const auto addr_snd = 0xFF26;
     // PPU & OAM related registers
+    const auto addr_lcd = 0xFF40;
     const auto addr_sta = 0xFF41;
+    const auto addr_lly = 0xFF44;
     const auto addr_dma = 0xFF46;
     const auto addr_bgp = 0xFF47;
     const auto addr_ob0 = 0xFF48;
@@ -134,6 +136,7 @@ namespace TKPEmu::Gameboy::Devices {
         std::array<Sprite, 40> OAM;
         bool DIVReset = false;
         bool TACChanged = false;
+        uint8_t NextMode = 0;
     };
 }
 #endif

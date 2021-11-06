@@ -29,7 +29,7 @@ namespace TKPEmu::Gameboy::Devices {
 
 		int clock_ = 0;
 		int clock_target_ = 0;
-		int next_stat_mode = 0;
+		uint8_t& next_stat_mode;
 		std::mutex* draw_mutex_ = nullptr;
 		int set_mode(int mode);
 		int get_mode();

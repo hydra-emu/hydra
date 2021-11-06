@@ -86,6 +86,7 @@ namespace TKPEmu::Gameboy::Devices {
 	uint8_t Bus::Read(uint16_t address) {
 		// Make copy so you can't write to this
 		uint8_t read = redirect_address(address);
+		// TODO: implement joypad
 		if (address == 0xFF00)
 			return 0b11101111;
 		return read;
@@ -171,6 +172,20 @@ namespace TKPEmu::Gameboy::Devices {
 					}
 					break;
 				}
+				case addr_lcd: {
+					if (data & 0b1000'0000) {
+						// TODO:
+						// clock = 0
+						// clock_target = FRAME_CYCLES
+						// 
+						// Reset STAT mode
+						hram_[0x41] &= 0b1111'1100;
+						// Reset LY
+						hram_[0x44] = 0;
+						NextMode = 2;
+					}
+					break;
+				}
 
 				// Any unused bits in these registers are set, passes unused_hwio-GS.gb test (mooneye)
 				case addr_div: {
@@ -237,19 +252,16 @@ namespace TKPEmu::Gameboy::Devices {
 					break;
 				}
 			}
-			switch (address & 0xF000) {
-				case 0xF000: {
-					if (address >= 0xFE00 && address <= 0xFE9F) {
-						switch (address % 4) { 
-							case 0: OAM[(address & 0xFF) / 4].y_pos      = data; break;
-							case 1: OAM[(address & 0xFF) / 4].x_pos      = data; break;
-							case 2: OAM[(address & 0xFF) / 4].tile_index = data; break;
-							case 3: OAM[(address & 0xFF) / 4].flags      = data; break;
-						}
-					}
-
-					break;
+			if (address >= 0xFE00 && address <= 0xFE9F) {
+				switch (address % 4) { 
+					case 0: OAM[(address & 0xFF) / 4].y_pos      = data; break;
+					case 1: OAM[(address & 0xFF) / 4].x_pos      = data; break;
+					case 2: OAM[(address & 0xFF) / 4].tile_index = data; break;
+					case 3: OAM[(address & 0xFF) / 4].flags      = data; break;
 				}
+			}
+			if (address == 0xFF40) {
+				int test = 0;
 			}
 			redirect_address(address) = data;
 		}

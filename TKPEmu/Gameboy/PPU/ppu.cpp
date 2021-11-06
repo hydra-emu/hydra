@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 
 namespace TKPEmu::Gameboy::Devices {
-	PPU::PPU(Bus* bus, std::mutex* draw_mutex) : bus_(bus), draw_mutex_(draw_mutex),
+	PPU::PPU(Bus* bus, std::mutex* draw_mutex) : bus_(bus), draw_mutex_(draw_mutex), next_stat_mode(bus->NextMode),
 		LCDC(bus->GetReference(0xFF40)),
 		STAT(bus->GetReference(0xFF41)),
 		SCY(bus->GetReference(0xFF42)),
@@ -69,7 +69,8 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 	}
 	void PPU::Reset() {
-		LY = 0x91;
+		LY = 0x90;
+		LCDC = 0b1001'0001;
 		STAT = 0b1000'0000;
 		next_stat_mode = 2;
 		clock_ = 0;
@@ -209,16 +210,10 @@ namespace TKPEmu::Gameboy::Devices {
 			// safety check to make sure what im about 
 			// to set is int the 160x144 bounds
 			int idx = (pixel * 4) + (finaly * 4 * 160);
-			if (LCDC & 0x1) {
+			if (LCDC & 0b01) {
 				screen_color_data_[idx++] = bus_->Palette[bus_->BGPalette[colorNum]][0];
 				screen_color_data_[idx++] = bus_->Palette[bus_->BGPalette[colorNum]][1];
 				screen_color_data_[idx++] = bus_->Palette[bus_->BGPalette[colorNum]][2];
-				screen_color_data_[idx] = 255;
-			}
-			else {
-				screen_color_data_[idx++] = bus_->Palette[bus_->BGPalette[0]][0];
-				screen_color_data_[idx++] = bus_->Palette[bus_->BGPalette[0]][1];
-				screen_color_data_[idx++] = bus_->Palette[bus_->BGPalette[0]][2];
 				screen_color_data_[idx] = 255;
 			}
 		}
@@ -299,10 +294,12 @@ namespace TKPEmu::Gameboy::Devices {
 					}
 
 					int idx = (pixel * 4) + (scanLine * 4 * 160);
-					screen_color_data_[idx++] = bus_->Palette[color][0];
-					screen_color_data_[idx++] = bus_->Palette[color][1];
-					screen_color_data_[idx++] = bus_->Palette[color][2];
-					screen_color_data_[idx] = 255;
+					if (LCDC & 0b10) {
+						screen_color_data_[idx++] = bus_->Palette[color][0];
+						screen_color_data_[idx++] = bus_->Palette[color][1];
+						screen_color_data_[idx++] = bus_->Palette[color][2];
+						screen_color_data_[idx] = 255;
+					}
 				}
 			}
 		}
