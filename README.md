@@ -1,7 +1,6 @@
 # TKPEmu
 A multi-purpose emulator
-
-Work in progress, very early in development
+Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.githubusercontent.com/ocornut/imgui/master/LICENSE.txt))
 
 ## Current emulators
 - [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/Gameboy)
@@ -12,7 +11,7 @@ Work in progress, very early in development
 3. Open `TKPEmu.sln` with `Visual Studio 19`
 4. Add an include directory to `SDL2-2.x.xx/include`
 5. Add a library directory to `SDL2-2.x.xx/lib`
-6. Compile and run. Report any issues with these instructions using the Issues tab
+6. Compile and run
 
 ## License
 TKPEmu is licensed under the MIT license. Copyright (C) 2021-2021 Paris Oplopoios
