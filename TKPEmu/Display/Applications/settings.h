@@ -7,9 +7,10 @@ namespace TKPEmu::Applications {
     struct Settings : public IMApplication {
     private:
         AppSettings* current_settings_;
-        float* sleep_time_;
+        float* sleep_time_ = nullptr;
+        bool* rom_loaded_ = nullptr;
     public:
-        Settings(AppSettings* current_settings, float* sleep_time, bool* rom_loaded) : current_settings_(current_settings), sleep_time_(sleep_time), IMApplication(rom_loaded) {}
+        Settings(AppSettings* current_settings, float* sleep_time, bool* rom_loaded) : current_settings_(current_settings), sleep_time_(sleep_time), rom_loaded_(rom_loaded) {}
         static auto GetFpsValue(int i) {
             static const int fps_values[] = { 30, 60, 120, 144, 240 };
             return fps_values[i];

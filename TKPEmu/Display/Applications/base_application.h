@@ -10,9 +10,8 @@ namespace TKPEmu::Applications {
 	protected:
 		using Emulator = TKPEmu::Emulator;
 		using DisInstr = TKPEmu::Tools::DisInstr;
-		bool* rom_loaded_;
 	public:
-		IMApplication(bool* rom_loaded) : rom_loaded_(rom_loaded) {};
+		IMApplication() = default;
 		virtual ~IMApplication() = default;
 		IMApplication(const IMApplication&) = delete;
 		IMApplication& operator=(const IMApplication&) = delete;

@@ -7,7 +7,9 @@
 #include "../../Display/Applications/base_disassembler.h"
 #include "breakpoint.h"
 #include "../gameboy.h"
+// TODO: Issue #1
 #define WRAM_START 0xC000
+// TODO: put code in .cpp file
 namespace TKPEmu::Applications {
     class GameboyDisassembler : public BaseDisassembler {
     private:
@@ -20,8 +22,7 @@ namespace TKPEmu::Applications {
         int selected_bp = -1;
     public:
         std::vector<DisInstr> Instrs;
-        GameboyDisassembler(bool* rom_loaded) : BaseDisassembler(rom_loaded) {
-        }
+        GameboyDisassembler(bool* rom_loaded) : BaseDisassembler(rom_loaded) {};
         void Focus(int item) noexcept {
             ImGuiContext& g = *ImGui::GetCurrentContext();
             ImGuiWindow* window = g.CurrentWindow;
@@ -29,7 +30,7 @@ namespace TKPEmu::Applications {
             static const int item_height = 17;
             window->Scroll.y = IM_FLOOR(item_height * item);
         }
-        auto FindByPC(int target) {
+        auto FindByPC(int target) noexcept {
             return std::find_if(
                 std::execution::par_unseq,
                 Instrs.begin(),
@@ -44,13 +45,8 @@ namespace TKPEmu::Applications {
         }
         void Reset() noexcept final override {
             DisInstr::ResetId();
-            Loaded = false;
         }
-        void Draw(const char* title, bool* p_open = NULL) noexcept final override {
-            if (!ImGui::Begin(title, p_open, ImGuiWindowFlags_MenuBar)) {
-                ImGui::End();
-                return;
-            }
+        void v_draw() noexcept {
             bool goto_popup = false;
             bool bp_add_popup = false;
             int goto_pc = -1;
@@ -64,6 +60,7 @@ namespace TKPEmu::Applications {
                         emulator_->Step.notify_all();
                     }
                     if (ImGui::MenuItem("Goto PC")) {
+                        // TODO: if PC not found, go to nearest close to that value
                         goto_popup = true;
                     }
                     ImGui::EndMenu();
@@ -187,12 +184,9 @@ namespace TKPEmu::Applications {
                             ImGui::PopID();
                         }
                     }
-                    if (emulator_->Break.load()) {
-                        emulator_->Break.store(false);
-                        if (auto inst = emulator_->InstructionBreak.load(); inst != -1) {
-                            SetGotoPC(goto_pc, inst);
-                            emulator_->InstructionBreak.store(-1);
-                        }
+                    if (auto inst = emulator_->InstructionBreak.load(); inst != -1) {
+                        SetGotoPC(goto_pc, inst);
+                        emulator_->InstructionBreak.store(-1);
                     }
                     if (goto_pc != -1) {
                         Focus(goto_pc);
@@ -312,7 +306,6 @@ namespace TKPEmu::Applications {
                     ImGui::EndPopup();
                 }
             }
-            ImGui::End();
         }
         void SetGotoPC(int& goto_pc, int target) {
             auto it = FindByPC(target);

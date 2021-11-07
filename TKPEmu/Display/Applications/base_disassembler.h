@@ -3,10 +3,23 @@
 #include "base_application.h"
 namespace TKPEmu::Applications {
 	struct BaseDisassembler : public IMApplication {
+    protected:
+        bool* rom_loaded_ = nullptr;
+        BaseDisassembler() = delete;
+        virtual void v_draw() = 0;
     public:
-        std::atomic_bool Loaded = false;
-        BaseDisassembler(bool* rom_loaded) : IMApplication(rom_loaded) {};
+        BaseDisassembler(bool* rom_loaded) : rom_loaded_(rom_loaded) {};
+        virtual ~BaseDisassembler() = default;
         virtual void SetEmulator(Emulator* emulator) = 0;
+        void Draw(const char* title, bool* p_open = NULL) final {
+            ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+            if (!ImGui::Begin(title, p_open, ImGuiWindowFlags_MenuBar)) {
+                ImGui::End();
+                return;
+            }
+            v_draw();
+            ImGui::End();
+        };
         static void DrawMenuEmulation(Emulator* emulator, bool* rom_loaded) {
             if (!*rom_loaded) {
                 ImGui::MenuItem("Pause", "Ctrl+P", false, *rom_loaded);
@@ -18,7 +31,7 @@ namespace TKPEmu::Applications {
                     emulator->Step.notify_all();
                 }
             }
-            if (ImGui::MenuItem("Reset", "Ctrl+R")) {
+            if (ImGui::MenuItem("Reset", "Ctrl+R", false, *rom_loaded)) {
                 // Sets the stopped flag on the thread to true and then waits for it to become false
                 // The thread sets the flag to false upon exiting
                 ResetEmulatorState(emulator);

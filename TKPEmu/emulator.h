@@ -19,11 +19,12 @@ namespace TKPEmu {
 		std::atomic_bool Stopped = false;
 		std::atomic_bool Paused = false;
 		std::atomic_bool Step = false;
-		std::atomic_bool Break = false;
+		std::atomic_bool LogReady = false;
 		std::atomic_int InstructionBreak = -1;
 		constexpr virtual int GetPCHexCharSize() { return 1; }
 		virtual void Start() = 0;
 		virtual void StartDebug() = 0;
+		virtual void StartLog() = 0;
 		virtual void Reset() = 0;
 		virtual void Update() = 0;
 		virtual void LoadFromFile(std::string&& path) = 0;

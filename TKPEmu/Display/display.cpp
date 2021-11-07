@@ -9,6 +9,7 @@
 #include "../Tools/disassembly_instr.h"
 #include "../Gameboy/gameboy.h"
 #include "../Gameboy/Utils/disassembler.h"
+#include "../Gameboy/Utils/tracelogger.h"
 
 namespace TKPEmu::Graphics {
     using TKPEmu::Tools::DisInstr;
@@ -134,6 +135,7 @@ namespace TKPEmu::Graphics {
         display_initializer_(pretty_printer_),
         settings_(&app_settings_, &sleep_time_, &rom_loaded_)
     {
+        std::ios_base::sync_with_stdio(false);
         #ifdef _WIN32
         GetModuleFileNameW(NULL, exe_dir, MAX_PATH);
         char DefChar = ' ';
@@ -195,16 +197,13 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_trace_logger(bool* draw) {
         if (*draw && is_rom_loaded_and_debugmode()) {
-            static LogApp trace_logger;
-            ImGui::SetNextWindowSize(ImVec2(300, 300), ImGuiCond_FirstUseEver);
-            trace_logger.Draw("Trace Logger", draw);
+            tracelogger_->Draw("Trace Logger", draw);
         }
     }
 
     // TODO: add filtering, breakpoints, searching
     void Display::draw_disassembler(bool* draw) {
         if (*draw && is_rom_loaded_and_debugmode()) {
-            ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
             disassembler_->Draw("Disassembler", draw);
         }
     }
@@ -267,7 +266,7 @@ namespace TKPEmu::Graphics {
     void Display::draw_game_background(bool* draw) {
         if (*draw) {
             std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
-            //glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
+            glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
             glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
             glTexSubImage2D(
                 GL_TEXTURE_2D,
@@ -281,7 +280,7 @@ namespace TKPEmu::Graphics {
                 emulator_->GetScreenData()
             );
             glBindTexture(GL_TEXTURE_2D, 0);
-            //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
         }
         else {
@@ -429,11 +428,13 @@ namespace TKPEmu::Graphics {
         if (ext == ".gb") {
             using Gameboy = TKPEmu::Gameboy::Gameboy;
             using GameboyDisassembler = TKPEmu::Applications::GameboyDisassembler;
+            using GameboyTracelogger = TKPEmu::Applications::GameboyTracelogger;
             if (emulator_) {
                 close_emulator_and_wait();
             }
             emulator_ = std::make_unique<Gameboy>();
             disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
+            tracelogger_ = std::make_unique<GameboyTracelogger>(&log_mode_);
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             GameboyDisassembler* dis = dynamic_cast<GameboyDisassembler*>(disassembler_.get());
             disassembler_->Reset();
@@ -445,7 +446,7 @@ namespace TKPEmu::Graphics {
             setup_gameboy_palette();
             if (app_settings_.debug_mode) {
                 emulator_->StartDebug();
-                temp->LoadInstrToVec(dis->Instrs, dis->Loaded);
+                temp->LoadInstrToVec(dis->Instrs);
             }
             else {
                 emulator_->Start();
@@ -488,14 +489,16 @@ namespace TKPEmu::Graphics {
         std::chrono::duration<double, std::milli> sleep_time = b - a;
     }
 
-    inline bool Display::is_rom_loaded()
-    {
+    inline bool Display::is_rom_loaded() {
         return rom_loaded_;
     }
 
-    inline bool Display::is_rom_loaded_and_debugmode()
-    {
+    inline bool Display::is_rom_loaded_and_debugmode() {
         return rom_loaded_ && app_settings_.debug_mode;
+    }
+
+    inline bool Display::is_rom_loaded_and_logmode() {
+        return rom_loaded_ && log_mode_;
     }
 
     void Display::setup_gameboy_palette() {

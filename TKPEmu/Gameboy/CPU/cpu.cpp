@@ -8,7 +8,9 @@ namespace TKPEmu::Gameboy::Devices {
 		DIVIDER(bus->GetReference(0xFF04)),
 		TIMA(bus->GetReference(0xFF05)),
 		TMA(bus->GetReference(0xFF06)),
-		TAC(bus->GetReference(0xFF07)) {
+		TAC(bus->GetReference(0xFF07)),
+		LY(bus->GetReference(0xFF44))
+	{
 		A = 0; B = 0; C = 0; D = 0; E = 0; H = 0; L = 0;
 		F = 0; SP = 0; PC = 0x0; IME = true;
 		tClock = 0;
@@ -2832,8 +2834,8 @@ namespace TKPEmu::Gameboy::Devices {
 		IF = 0xE1;
 		tClock = 0;
 		halt = false; stop = false;
-		oscillator_ = 0xABCC;
-		DIVIDER = oscillator_ >> 8;
+		Oscillator = 0xABCC;
+		DIVIDER = Oscillator >> 8;
 		div_reset_index_ = -1;
 		TimerCounter = 0;
 		old_tac_ = 0;
@@ -2862,6 +2864,7 @@ namespace TKPEmu::Gameboy::Devices {
 		update_timers(tTemp);
 		handle_interrupts();
 		tClock += tTemp;
+		TotalClocks += tTemp;
 		return tTemp;
 	}
 
@@ -2893,7 +2896,7 @@ namespace TKPEmu::Gameboy::Devices {
 			if (div_reset_index_ >= freq / 2) {
 				TIMA++;
 			}
-			oscillator_ = 0;
+			Oscillator = 0;
 			TimerCounter = 0;
 			div_reset_index_ = 0;
 		}
@@ -2920,9 +2923,9 @@ namespace TKPEmu::Gameboy::Devices {
 			old_tac_ = new_tac;
 		}
 		bool enabled = (TAC >> 2) & 0x1;
-		oscillator_ += cycles;
+		Oscillator += cycles;
 		// Divider always equals the top 8 bits of the oscillator
-		DIVIDER = oscillator_ >> 8;
+		DIVIDER = Oscillator >> 8;
 		if (div_reset_index_ != -1)
 			div_reset_index_ += cycles;
 		if (div_reset_index_ > freq) {

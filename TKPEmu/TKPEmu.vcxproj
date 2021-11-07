@@ -170,6 +170,7 @@
     <ClCompile Include="Gameboy\CPU\cpu.cpp" />
     <ClCompile Include="Gameboy\gameboy.cpp" />
     <ClCompile Include="Gameboy\PPU\ppu.cpp" />
+    <ClCompile Include="Gameboy\Utils\tracelogger.cpp" />
     <ClCompile Include="ImGui\glad.c" />
     <ClCompile Include="ImGui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -225,6 +226,7 @@
   <ItemGroup>
     <ClInclude Include="Display\Applications\application_settings.h" />
     <ClInclude Include="Display\Applications\base_application.h" />
+    <ClInclude Include="Display\Applications\base_tracelogger.h" />
     <ClInclude Include="Display\Applications\settings.h" />
     <ClInclude Include="Display\display.h" />
     <ClInclude Include="emulator.h" />
@@ -237,6 +239,7 @@
     <ClInclude Include="Gameboy\Utils\cpu_const.h" />
     <ClInclude Include="Display\Applications\imfilebrowser.h" />
     <ClInclude Include="Gameboy\Utils\disassembler.h" />
+    <ClInclude Include="Gameboy\Utils\tracelogger.h" />
     <ClInclude Include="ImGui\imconfig.h" />
     <ClInclude Include="ImGui\imgui.h" />
     <ClInclude Include="ImGui\imgui_impl_opengl3.h" />

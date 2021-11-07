@@ -22,6 +22,7 @@ static_assert(false);
 #include "../ImGui/imgui_internal.h"
 #include "Applications/application_settings.h"
 #include "Applications/base_disassembler.h"
+#include "Applications/base_tracelogger.h"
 #include "Applications/imfilebrowser.h"
 #include "Applications/settings.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
@@ -60,6 +61,7 @@ namespace TKPEmu::Graphics {
         using SDL_GLContextType = std::remove_pointer_t<SDL_GLContext>;
         using PPMessageType = TKPEmu::Tools::PrettyPrinterMessageType;
         using BaseDisassembler = TKPEmu::Applications::BaseDisassembler;
+        using BaseTracelogger = TKPEmu::Applications::BaseTracelogger;
         using Settings = TKPEmu::Applications::Settings;
         const std::string glsl_version = "#version 430";
         std::string BackgroundImageFile = "tkp_bg.jpg";
@@ -108,6 +110,7 @@ namespace TKPEmu::Graphics {
 
         std::unique_ptr<Emulator> emulator_ = nullptr;
         std::unique_ptr<BaseDisassembler> disassembler_ = nullptr;
+        std::unique_ptr<BaseTracelogger> tracelogger_ = nullptr;
         std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window_ptr_;
         std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
@@ -119,6 +122,9 @@ namespace TKPEmu::Graphics {
         // return static members
         bool rom_loaded_ = false;
         bool rom_paused_ = false;
+        // Log mode is a mode that waits for the tracelogger to log each instruction before
+        // stepping into the next one
+        bool log_mode_ = false;
         EmulatorType emulator_type_ = EmulatorType::None;
         bool menu_bar_open_ = true;
         bool window_tracelogger_open_ = false;
@@ -149,6 +155,7 @@ namespace TKPEmu::Graphics {
         void limit_fps();
         inline bool is_rom_loaded();
         inline bool is_rom_loaded_and_debugmode();
+        inline bool is_rom_loaded_and_logmode();
 
         // This function deals with scaling the gameboy screen texture without stretching it
         inline void image_scale(ImVec2& topleft, ImVec2& bottomright);

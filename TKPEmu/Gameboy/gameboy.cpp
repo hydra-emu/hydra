@@ -62,7 +62,7 @@ namespace TKPEmu::Gameboy {
 			Reset();
 			Paused = true;
 			Stopped = false;
-			while (!Stopped.load(std::memory_order_seq_cst)) {
+			while (!Stopped.load()) {
 				if (!Paused.load()) {
 					bool broken = false;
 					for (const auto& bp : Breakpoints) {
@@ -76,15 +76,44 @@ namespace TKPEmu::Gameboy {
 						Update();
 				}
 				else {
-					InstructionBreak.store(cpu_.PC);
-					Break.store(true);
 					Step.wait(false);
 					Step.store(false);
 					Update();
+					InstructionBreak.store(cpu_.PC);
 				}
 			}
-			// As the thread closes, set store to false so the next thread enters the loop
-			Stopped.store(false, std::memory_order_seq_cst);
+			return;
+		};
+		UpdateThread = std::thread(func);
+		UpdateThread.detach();
+	}
+
+	// Starts the emulator in log mode
+	void Gameboy::StartLog() {
+		auto func = [this]() {
+			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
+			Reset();
+			Paused = true;
+			Stopped = false;
+			while (!Stopped.load()) {
+				if (!Paused.load()) {
+					bool broken = false;
+					for (const auto& bp : Breakpoints) {
+						bool brk = bp.Check();
+						if (brk) {
+							Paused.store(true);
+							broken = true;
+						}
+					}
+					if (!broken)
+						Update();
+				} else {
+					Step.wait(false);
+					Step.store(false);
+					Update();
+					LogReady.store(true);
+				}
+			}
 			return;
 		};
 		UpdateThread = std::thread(func);
@@ -111,9 +140,9 @@ namespace TKPEmu::Gameboy {
 		bus_.LoadCartridge(std::forward<std::string>(path));
 	}
 	// TODO: LoadInstrToVec only works for rom_only for now
-	void Gameboy::LoadInstrToVec(std::vector<DisInstr>& vec, std::atomic_bool& finished) {
+	void Gameboy::LoadInstrToVec(std::vector<DisInstr>& vec) {
 		// TODO: make this std::async
-		auto func = [this, &finished](std::vector<DisInstr>& vec) {
+		auto func = [this](std::vector<DisInstr>& vec) {
 			std::vector<DisInstr> ret;
 			ret.reserve(0xFFFF);
 			for (uint16_t i = 0; i < 0xFFFF;) {
@@ -138,8 +167,6 @@ namespace TKPEmu::Gameboy {
 				}
 				i += 1 + x.skip;
 			}
-			finished.store(true);
-			finished.notify_all();
 			vec = std::move(ret);
 		};
 		std::thread t1(func, std::ref(vec));

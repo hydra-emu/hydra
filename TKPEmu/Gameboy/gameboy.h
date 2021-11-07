@@ -22,10 +22,11 @@ namespace TKPEmu::Gameboy {
 		constexpr int GetPCHexCharSize() override { return 4; };
 		void Start() override;
 		void StartDebug() override;
+		void StartLog() override;
 		void Reset() override;
 		void Update() override;
 		void LoadFromFile(std::string&& path) override;
-		void LoadInstrToVec(std::vector<DisInstr>& vec, std::atomic_bool& finished);
+		void LoadInstrToVec(std::vector<DisInstr>& vec);
 		void AddBreakpoint(GameboyBreakpoint bp);
 		void RemoveBreakpoint(int index);
 		uint8_t* GetScreenData() override;

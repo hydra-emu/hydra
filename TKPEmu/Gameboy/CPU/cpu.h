@@ -40,7 +40,6 @@ namespace TKPEmu::Gameboy::Devices {
 		bool IME = false;
 		int mTemp = 0;
 		int tTemp = 0;
-		int oscillator_ = 0;
 		int div_reset_index_ = -1;
 		int old_tac_ = 0;
 		int tac_index_ = 0x1000;
@@ -164,12 +163,14 @@ namespace TKPEmu::Gameboy::Devices {
 		BigRegisterType PC, SP;
 
 		// Memory mapped registers, they are a reference to a position in memory
-		RegisterType &IF, &IE, &DIVIDER, &TIMA, &TMA, &TAC;
+		RegisterType &IF, &IE, &DIVIDER, &TIMA, &TMA, &TAC, &LY;
 
 		const int ClockSpeed = 4194304;
 		const int MaxCycles = ClockSpeed / 60;
+		int Oscillator = 0;
 		int TimerCounter = ClockSpeed / tac_index_;
 		int tClock = 0;
+		unsigned long TotalClocks = 0;
 		void Reset();
 		int Update();
 	};

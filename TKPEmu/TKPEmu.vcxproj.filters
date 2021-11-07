@@ -49,6 +49,7 @@
     </ClCompile>
     <ClCompile Include="Display\Applications\base_disassembler.h" />
     <ClCompile Include="Tools\disassembly_instr.cpp" />
+    <ClCompile Include="Gameboy\Utils\tracelogger.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Display\display.h">
@@ -115,6 +116,8 @@
     <ClInclude Include="Display\Applications\application_settings.h" />
     <ClInclude Include="Gameboy\Utils\breakpoint.h" />
     <ClInclude Include="Gameboy\Utils\disassembler.h" />
+    <ClInclude Include="Gameboy\Utils\tracelogger.h" />
+    <ClInclude Include="Display\Applications\base_tracelogger.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGui">
