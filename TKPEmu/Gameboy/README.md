@@ -9,6 +9,7 @@ Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
  - Save states (WIP)
  - Rewind functionality (WIP)
 ## Tests
+
 **[Blargg](https://github.com/gblargg)'s tests:**
 | Test | GameboyTKP  |
 |--|--|
@@ -45,7 +46,6 @@ Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
 | timer/tima_reload | ❌ |
 | timer/tima_write_reloading | ❌ |
 | timer/tma_write_reloading | ❌ |
-Note: any test that isn't listed here is untested.
 
 **[mattcurie](https://github.com/mattcurrie)'s tests:**
 |Test|GameboyTKP  |
