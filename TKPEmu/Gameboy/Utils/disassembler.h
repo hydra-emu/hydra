@@ -30,6 +30,9 @@ namespace TKPEmu::Applications {
             static const int item_height = 17;
             window->Scroll.y = IM_FLOOR(item_height * item);
         }
+        void SetEmulator(Emulator* emulator) {
+            emulator_ = dynamic_cast<Gameboy*>(emulator);
+        }
         auto FindByPC(int target) noexcept {
             return std::find_if(
                 std::execution::par_unseq,
@@ -39,9 +42,6 @@ namespace TKPEmu::Applications {
                     return ins.InstructionProgramCode == target;
                 }
             );
-        }
-        void SetEmulator(Emulator* emu) override {
-            emulator_ = dynamic_cast<Gameboy*>(emu);
         }
         void Reset() noexcept final override {
             DisInstr::ResetId();

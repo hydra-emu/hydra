@@ -10,7 +10,6 @@ namespace TKPEmu::Applications {
     public:
         BaseDisassembler(bool* rom_loaded) : rom_loaded_(rom_loaded) {};
         virtual ~BaseDisassembler() = default;
-        virtual void SetEmulator(Emulator* emulator) = 0;
         void Draw(const char* title, bool* p_open = NULL) final {
             ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
             if (!ImGui::Begin(title, p_open, ImGuiWindowFlags_MenuBar)) {

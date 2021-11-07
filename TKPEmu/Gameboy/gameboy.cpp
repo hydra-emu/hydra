@@ -111,6 +111,7 @@ namespace TKPEmu::Gameboy {
 					Step.wait(false);
 					Step.store(false);
 					Update();
+					InstructionBreak.store(cpu_.PC);
 					LogReady.store(true);
 				}
 			}

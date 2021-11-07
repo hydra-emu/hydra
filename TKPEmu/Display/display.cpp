@@ -437,8 +437,8 @@ namespace TKPEmu::Graphics {
             tracelogger_ = std::make_unique<GameboyTracelogger>(&log_mode_);
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             GameboyDisassembler* dis = dynamic_cast<GameboyDisassembler*>(disassembler_.get());
-            disassembler_->Reset();
-            disassembler_->SetEmulator(temp);
+            dis->Reset();
+            dis->SetEmulator(temp);
             rom_loaded_ = true;
             rom_paused_ = app_settings_.debug_mode;
             emulator_->Paused.store(rom_paused_);

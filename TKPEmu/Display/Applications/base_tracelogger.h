@@ -6,12 +6,15 @@ namespace TKPEmu::Applications {
     private:
         BaseTracelogger() = delete;
     protected:
+        Emulator* emulator_ = nullptr;
         bool* log_mode_ = nullptr;
         virtual void v_draw() = 0;
     public:
         BaseTracelogger(bool* log_mode) : log_mode_(log_mode) {};
         virtual ~BaseTracelogger() = default;
-        virtual void SetEmulator(Emulator* emulator) = 0;
+        void SetEmulator(Emulator* emulator) {
+            emulator_ = emulator;
+        }
         virtual void SetFile(std::string file) = 0;
         void Draw(const char* title, bool* p_open = nullptr) final {
             ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
@@ -21,7 +24,9 @@ namespace TKPEmu::Applications {
             }
             if (!*log_mode_) {
                 ImGui::Text("You need to activate LogMode to use the tracelogger.");
-                ImGui::Button("Restart in LogMode");
+                if (ImGui::Button("Restart in LogMode")) {
+                    
+                }
             }
             else {
                 v_draw();
