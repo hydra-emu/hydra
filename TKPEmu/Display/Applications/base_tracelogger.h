@@ -14,7 +14,7 @@ namespace TKPEmu::Applications {
         virtual void SetEmulator(Emulator* emulator) = 0;
         virtual void SetFile(std::string file) = 0;
         void Draw(const char* title, bool* p_open = nullptr) final {
-            ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
+            TKPEmu::Applications::IMApplication::SetupWindow();
             if (!ImGui::Begin(title, p_open, ImGuiWindowFlags_MenuBar)) {
                 ImGui::End();
                 return;

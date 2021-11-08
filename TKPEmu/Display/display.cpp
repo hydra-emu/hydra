@@ -1,4 +1,4 @@
-#define NOMINMAX
+﻿#define NOMINMAX
 #define STB_IMAGE_IMPLEMENTATION
 #include "display.h"
 #include <memory>
@@ -189,8 +189,51 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_settings(bool* draw) {
         if (*draw) {
-            //ImGui::SetNextWindowSize(ImVec2(300,300), ImGuiCond_FirstUseEver);
-            //settings_.Draw("Settings", draw);
+            TKPEmu::Applications::IMApplication::SetupWindow();
+            if (!ImGui::Begin("Settings", draw)) {
+                ImGui::End();
+                return;
+            }
+            if (ImGui::CollapsingHeader("Video")) {
+                ImGui::Text("General video settings:");
+                ImGui::Separator();
+                if (ImGui::Checkbox("Limit FPS", &limit_fps_)) {
+                    settings_.at("Video.limit_fps") = limit_fps_ ? "1" : "0";
+
+                }
+                if (ImGui::IsItemHovered()) {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("Enable to save CPU cycles.");
+                    ImGui::EndTooltip();
+                }
+                if (limit_fps_) {
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.4f);
+                    if (ImGui::InputInt("##max_fps", &max_fps_, 15, 15, ImGuiInputTextFlags_AllowTabInput)) {
+                        max_fps_ = ((max_fps_ + 15 / 2) / 15) * 15;
+                        if (max_fps_ <= 0) {
+                            max_fps_ = 15;
+                        }
+                        settings_.at("Video.max_fps") = std::to_string(max_fps_);
+                        sleep_time_ = 1000.0f / max_fps_;
+                    }
+                    ImGui::PopItemWidth();
+                }
+                ImGui::NewLine();
+            }
+            if (ImGui::CollapsingHeader("Emulation")) {
+                ImGui::Text("General emulation settings:");
+                ImGui::Separator();
+                if (rom_loaded_) {
+                    ImGui::Text("These settings require the emulator to be stopped in order to change.");
+                }
+                else {
+                    if (ImGui::Checkbox("Debug mode", &debug_mode_)) {
+                        settings_.at("General.debug_mode") = debug_mode_ ? "1" : "0";
+                    }
+                }
+                ImGui::NewLine();
+            }
+            ImGui::End();
         }
     }
 
@@ -470,8 +513,10 @@ namespace TKPEmu::Graphics {
     }
 
     inline void Display::init_settings_values() {
-        sleep_time_ = 1000.0f / std::stoi(settings_.at("Video.max_fps"));
         limit_fps_ = std::stoi(settings_.at("Video.limit_fps"));
+        max_fps_ = std::stoi(settings_.at("Video.max_fps"));
+        debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
+        sleep_time_ = 1000.0f / max_fps_;
     }
 
     inline bool Display::is_rom_loaded() {
@@ -609,7 +654,6 @@ namespace TKPEmu::Graphics {
             draw_settings(&window_settings_open_);
             draw_file_browser(&window_file_browser_open_);
             draw_disassembler(&window_disassembler_open_);
-
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window_ptr_.get());

@@ -22,6 +22,7 @@ static_assert(false);
 #include "../ImGui/imgui_internal.h"
 #include "Applications/base_disassembler.h"
 #include "Applications/base_tracelogger.h"
+#include "Applications/base_application.h"
 #include "Applications/imfilebrowser.h"
 #include "../Tools/settings_manager.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
@@ -109,6 +110,7 @@ namespace TKPEmu::Graphics {
         };
         SettingsManager settings_manager_;
         bool limit_fps_ = true;
+        int max_fps_ = 60;
         bool debug_mode_ = true;
 
         PrettyPrinter pretty_printer_;
