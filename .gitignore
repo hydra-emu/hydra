@@ -343,5 +343,3 @@ healthchecksdb
 # Other
 *.gb
 Deprecated/
-/TKPEmu/t
-/TKPEmu/o
