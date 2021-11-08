@@ -20,11 +20,10 @@ static_assert(false);
 #include "../ImGui/imgui_impl_sdl.h"
 #include "../ImGui/imgui_impl_opengl3.h"
 #include "../ImGui/imgui_internal.h"
-#include "Applications/application_settings.h"
 #include "Applications/base_disassembler.h"
 #include "Applications/base_tracelogger.h"
 #include "Applications/imfilebrowser.h"
-#include "Applications/settings.h"
+#include "../Tools/settings_manager.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__MINGW32__) && !defined(__clang__)
 #define IM_FMTARGS(FMT)             __attribute__((format(gnu_printf, FMT, FMT+1)))
@@ -62,11 +61,10 @@ namespace TKPEmu::Graphics {
         using PPMessageType = TKPEmu::Tools::PrettyPrinterMessageType;
         using BaseDisassembler = TKPEmu::Applications::BaseDisassembler;
         using BaseTracelogger = TKPEmu::Applications::BaseTracelogger;
-        using Settings = TKPEmu::Applications::Settings;
+        using SettingsManager = TKPEmu::Tools::SettingsManager;
         const std::string glsl_version = "#version 430";
         std::string BackgroundImageFile = "tkp_bg.jpg";
         std::string ImGuiSettingsFile = "imgui.ini";
-        std::string UserSettingsFile = "tkpuser.ini";
         std::string ResourcesDataDir = "\\Resources\\Data\\";
         std::string ResourcesRomsDir = "\\Resources\\ROMs";
         std::string ResourcesImagesDir = "\\Resources\\Images\\";
@@ -98,12 +96,23 @@ namespace TKPEmu::Graphics {
         // which is what we want to happen with the SDL_Init and the destroy functions
         DisplayInitializer display_initializer_;
 
-        // PrettyPrinter class is used to add strings to a buffer that
-        // the user can later get to print however they want.
+        // To be used with settings_manager, these are the settings keys with their default values
+        TKPEmu::Tools::SettingsMap settings_ =
+        {
+            {"General.debug_mode", "1"},
+            {"Video.limit_fps", "1"},
+            {"Video.max_fps", "60"},
+            {"Gameboy.color0", "d0d058"},
+            {"Gameboy.color1", "a0a840"},
+            {"Gameboy.color2", "708028"},
+            {"Gameboy.color3", "405010"},
+        };
+        SettingsManager settings_manager_;
+        bool limit_fps_ = true;
+        bool debug_mode_ = true;
+
         PrettyPrinter pretty_printer_;
         WindowSettings window_settings_;
-        AppSettings app_settings_;
-        Settings settings_;
         TKPImage background_image_;
         GLuint frame_buffer_;
         ImGui::FileBrowser file_browser_;
@@ -151,35 +160,22 @@ namespace TKPEmu::Graphics {
         void draw_menu_bar_view();
         
         // Helper functions
-        bool load_image_from_file(const char* filename, TKPImage& out);
-        void limit_fps();
+        inline bool load_image_from_file(const char* filename, TKPImage& out);
+        inline void limit_fps();
+        inline void init_settings_values();
         inline bool is_rom_loaded();
         inline bool is_rom_loaded_and_debugmode();
         inline bool is_rom_loaded_and_logmode();
 
         // This function deals with scaling the gameboy screen texture without stretching it
         inline void image_scale(ImVec2& topleft, ImVec2& bottomright);
-        // These two functions save and load user settings stored in the app_settings_ object
-        void load_user_settings();
-        void save_user_settings();
-        
+
         void load_rom(std::filesystem::path&& path);
         // Sends the appropriate flags to close the running emulator thread and waits until its closed
         void close_emulator_and_wait();
         void step_emulator();
-        // This function chooses fread or fwrite on compile time to minimize code duplication
-        template<FileAccess acc>
-        void access_user_settings(void* item, size_t size, size_t count, FILE* stream);
         void setup_gameboy_palette();
         void main_loop();
 	};
-    template<>
-    inline void Display::access_user_settings<FileAccess::Read>(void* item, size_t size, size_t count, FILE* stream) {
-        fread(item, size, count, stream);
-    }
-    template<>
-    inline void Display::access_user_settings<FileAccess::Write>(void* item, size_t size, size_t count, FILE* stream) {
-        fwrite(item, size, count, stream);
-    }
 }
 #endif

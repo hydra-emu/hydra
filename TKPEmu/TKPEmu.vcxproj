@@ -75,18 +75,18 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\CppData\SDL2-2.0.14\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\CppData\SDL2-2.0.14\lib\x64;$(LibraryPath)</LibraryPath>
-    <SourcePath>$(SourcePath)</SourcePath>
+    <IncludePath>C:\CppData\boost_1_77_0;C:\CppData\SDL2-2.0.14\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\CppData\boost_1_77_0\stage\lib;C:\CppData\SDL2-2.0.14\lib\x64;$(LibraryPath)</LibraryPath>
+    <SourcePath>C:\CppData\glad\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\CppData\SDL2-2.0.14\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\CppData\SDL2-2.0.14\lib\x64;$(LibraryPath)</LibraryPath>
-    <SourcePath>$(SourcePath)</SourcePath>
+    <IncludePath>C:\CppData\boost_1_77_0;C:\CppData\SDL2-2.0.14\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\CppData\boost_1_77_0\stage\lib;C:\CppData\SDL2-2.0.14\lib\x64;$(LibraryPath)</LibraryPath>
+    <SourcePath>C:\CppData\glad\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -107,7 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\CppData\glad\include;C:\CppData\SDL2-2.0.14\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\CppData\glad\src;C:\CppData\glad\include;C:\CppData\boost_1_77_0;C:\CppData\SDL2-2.0.14\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <EnableModules>false</EnableModules>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -116,7 +116,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\CppData\SDL2-2.0.14\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\CppData\boost_1_77_0\stage\lib;C:\CppData\SDL2-2.0.14\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -146,7 +146,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\CppData\glad\include;C:\CppData\SDL2-2.0.14\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\CppData\glad\src;C:\CppData\glad\include;C:\CppData\boost_1_77_0;C:\CppData\SDL2-2.0.14\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DebugInformationFormat>None</DebugInformationFormat>
       <EnableModules>false</EnableModules>
@@ -157,12 +157,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\CppData\SDL2-2.0.14\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\CppData\boost_1_77_0\stage\lib;C:\CppData\SDL2-2.0.14\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\CppData\glad\src\glad.c" />
     <ClCompile Include="Display\Applications\base_disassembler.h" />
     <ClCompile Include="Display\display.cpp" />
     <ClCompile Include="Gameboy\Bus\bus.cpp" />
@@ -171,7 +172,6 @@
     <ClCompile Include="Gameboy\gameboy.cpp" />
     <ClCompile Include="Gameboy\PPU\ppu.cpp" />
     <ClCompile Include="Gameboy\Utils\tracelogger.cpp" />
-    <ClCompile Include="ImGui\glad.c" />
     <ClCompile Include="ImGui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -222,12 +222,12 @@
     </ClCompile>
     <ClCompile Include="Tools\disassembly_instr.cpp" />
     <ClCompile Include="Tools\prettyprinter.cpp" />
+    <ClCompile Include="Tools\settings_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Display\Applications\application_settings.h" />
     <ClInclude Include="Display\Applications\base_application.h" />
     <ClInclude Include="Display\Applications\base_tracelogger.h" />
-    <ClInclude Include="Display\Applications\settings.h" />
+    <ClInclude Include="Tools\settings_manager.h" />
     <ClInclude Include="Display\display.h" />
     <ClInclude Include="emulator.h" />
     <ClInclude Include="Gameboy\Bus\bus.h" />

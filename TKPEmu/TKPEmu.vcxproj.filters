@@ -23,9 +23,6 @@
     <ClCompile Include="ImGui\imgui_widgets.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="ImGui\glad.c">
-      <Filter>ImGui</Filter>
-    </ClCompile>
     <ClCompile Include="Display\display.cpp">
       <Filter>Display</Filter>
     </ClCompile>
@@ -50,6 +47,8 @@
     <ClCompile Include="Display\Applications\base_disassembler.h" />
     <ClCompile Include="Tools\disassembly_instr.cpp" />
     <ClCompile Include="Gameboy\Utils\tracelogger.cpp" />
+    <ClCompile Include="Tools\settings_manager.cpp" />
+    <ClCompile Include="..\..\..\..\..\..\CppData\glad\src\glad.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Display\display.h">
@@ -112,12 +111,11 @@
     </ClInclude>
     <ClInclude Include="Tools\disassembly_instr.h" />
     <ClInclude Include="Display\Applications\base_application.h" />
-    <ClInclude Include="Display\Applications\settings.h" />
-    <ClInclude Include="Display\Applications\application_settings.h" />
     <ClInclude Include="Gameboy\Utils\breakpoint.h" />
     <ClInclude Include="Gameboy\Utils\disassembler.h" />
     <ClInclude Include="Gameboy\Utils\tracelogger.h" />
     <ClInclude Include="Display\Applications\base_tracelogger.h" />
+    <ClInclude Include="Tools\settings_manager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ImGui">
