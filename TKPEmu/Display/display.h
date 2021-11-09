@@ -2,7 +2,7 @@
 #ifndef TKP_GB_DISPLAY_H
 #define TKP_GB_DISPLAY_H
 #include <glad/glad.h>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <string>
 #include <mutex>
 #include <atomic>
@@ -12,7 +12,7 @@
 #ifdef linux
 #include <unistd.h>
 #include <linux/limits.h>
-static_assert(false);
+#include <libgen.h>
 #endif
 #include "../emulator.h"
 #include "../Tools/prettyprinter.h"

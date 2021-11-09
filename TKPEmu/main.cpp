@@ -4,6 +4,6 @@
 int main() {
 	using TKPEmu::Graphics::Display;
 	Display d;
-	d.EnterMainLoop();
-	return 0;
+	//d.EnterMainLoop();
+	//return 0;
 }

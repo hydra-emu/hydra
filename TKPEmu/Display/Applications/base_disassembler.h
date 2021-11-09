@@ -46,7 +46,7 @@ namespace TKPEmu::Applications {
             emulator->Step.store(true);
             emulator->Paused.store(false);
             emulator->Stopped.store(true);
-            emulator->Step.notify_all();
+            emulator->Step.notify_one();
         }
 	};
 }

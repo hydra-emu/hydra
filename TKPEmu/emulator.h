@@ -7,6 +7,7 @@
 #include <vector>
 #include <atomic>
 #include <functional>
+#include <thread>
 namespace TKPEmu {
 	using TKPImage = TKPEmu::Tools::TKPImage;
 	using DisInstr = TKPEmu::Tools::DisInstr;

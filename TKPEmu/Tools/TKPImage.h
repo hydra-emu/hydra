@@ -11,4 +11,4 @@ namespace TKPEmu::Tools {
         ImVec2 botright;
     };
 }
-#endif;
+#endif
