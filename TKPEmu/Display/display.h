@@ -63,6 +63,8 @@ namespace TKPEmu::Graphics {
         using BaseDisassembler = TKPEmu::Applications::BaseDisassembler;
         using BaseTracelogger = TKPEmu::Applications::BaseTracelogger;
         using SettingsManager = TKPEmu::Tools::SettingsManager;
+        using DisInstr = TKPEmu::Tools::DisInstr;
+        using GameboyPalettes = std::array<std::array<float, 3>,4>;
         const std::string glsl_version = "#version 430";
         std::string BackgroundImageFile = "tkp_bg.jpg";
         std::string ImGuiSettingsFile = "imgui.ini";
@@ -104,6 +106,10 @@ namespace TKPEmu::Graphics {
             {"Gameboy.color3", "405010"},
         };
         SettingsManager settings_manager_;
+
+        // Emulation specific settings
+        GameboyPalettes gb_palettes_{};
+
         bool limit_fps_ = true;
         int max_fps_ = 60;
         bool debug_mode_ = true;
@@ -160,6 +166,7 @@ namespace TKPEmu::Graphics {
         inline bool load_image_from_file(const char* filename, TKPImage& out);
         inline void limit_fps();
         inline void init_settings_values();
+        inline void init_gameboy_values();
         inline bool is_rom_loaded();
         inline bool is_rom_loaded_and_debugmode();
         inline bool is_rom_loaded_and_logmode();

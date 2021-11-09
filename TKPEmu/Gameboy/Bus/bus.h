@@ -129,7 +129,7 @@ namespace TKPEmu::Gameboy::Devices {
         void Reset();
         void SoftReset();
         void LoadCartridge(std::string&& fileName);
-        std::array<std::array<uint8_t, 3>, 4> Palette;
+        std::array<std::array<float, 3>, 4> Palette;
         std::array<uint8_t, 4> BGPalette{};
         std::array<uint8_t, 4> OBJ0Palette{};
         std::array<uint8_t, 4> OBJ1Palette{};

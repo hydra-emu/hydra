@@ -12,7 +12,6 @@
 #include "../Gameboy/Utils/tracelogger.h"
 
 namespace TKPEmu::Graphics {
-    using TKPEmu::Tools::DisInstr;
     struct LogApp
     {
         ImGuiTextBuffer     Buf;
@@ -129,6 +128,7 @@ namespace TKPEmu::Graphics {
         ImGui::DestroyContext();
         SDL_Quit();
     }
+    
     Display::Display() :
         window_ptr_(nullptr, SDL_DestroyWindow),
         gl_context_ptr_(nullptr, SDL_GL_DeleteContext),
@@ -237,6 +237,53 @@ namespace TKPEmu::Graphics {
                 }
                 ImGui::NewLine();
             }
+            if (ImGui::CollapsingHeader("Gameboy")) {
+                ImGui::Text("Palette:");
+                if (ImGui::ColorEdit3("Color 1", gb_palettes_[0].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                    std::stringstream color_stream;
+                    color_stream << std::setfill('0') 
+                        << std::hex << std::setw(2) << gb_palettes_[0][0]
+                        << std::hex << std::setw(2) << gb_palettes_[0][1]
+                        << std::hex << std::setw(2) << gb_palettes_[0][2];
+                    settings_.at("Gameboy.color0") = color_stream.str();
+                }
+                ImGui::SameLine();
+                if (ImGui::ColorEdit3("Color 2", gb_palettes_[1].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                    std::stringstream color_stream;
+                    color_stream << std::setfill('0') 
+                        << std::hex << std::setw(2) << gb_palettes_[1][0]
+                        << std::hex << std::setw(2) << gb_palettes_[1][1]
+                        << std::hex << std::setw(2) << gb_palettes_[1][2];
+                    settings_.at("Gameboy.color1") = color_stream.str();
+                }
+                ImGui::SameLine();
+                if (ImGui::ColorEdit3("Color 3", gb_palettes_[2].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                    std::stringstream color_stream;
+                    color_stream << std::setfill('0') 
+                        << std::hex << std::setw(2) << gb_palettes_[2][0]
+                        << std::hex << std::setw(2) << gb_palettes_[2][1]
+                        << std::hex << std::setw(2) << gb_palettes_[2][2];
+                    settings_.at("Gameboy.color2") = color_stream.str();
+                }
+                ImGui::SameLine();
+                if (ImGui::ColorEdit3("Color 4", gb_palettes_[3].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                    std::stringstream color_stream;
+                    color_stream << std::setfill('0') 
+                        << std::hex << std::setw(2) << gb_palettes_[3][0]
+                        << std::hex << std::setw(2) << gb_palettes_[3][1]
+                        << std::hex << std::setw(2) << gb_palettes_[3][2];
+                    settings_.at("Gameboy.color3") = color_stream.str();
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Click on a color to open the color picker.");
+                }
+                if (ImGui::Button("Reset")) {
+                    
+                }
+            }
             ImGui::End();
         }
     }
@@ -322,7 +369,7 @@ namespace TKPEmu::Graphics {
                 emulator_->EmulatorImage.width,
                 emulator_->EmulatorImage.height,
                 GL_RGBA,
-                GL_UNSIGNED_BYTE,
+                GL_FLOAT,
                 emulator_->GetScreenData()
             );
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -528,6 +575,26 @@ namespace TKPEmu::Graphics {
         max_fps_ = std::stoi(settings_.at("Video.max_fps"));
         debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
         sleep_time_ = 1000.0f / max_fps_;
+        init_gameboy_values();
+    }
+
+    inline void Display::init_gameboy_values(){
+        int color0 = std::stoi(settings_.at("Gameboy.color0"), 0, 16);
+        int color1 = std::stoi(settings_.at("Gameboy.color1"), 0, 16);
+        int color2 = std::stoi(settings_.at("Gameboy.color2"), 0, 16);
+        int color3 = std::stoi(settings_.at("Gameboy.color3"), 0, 16);
+        gb_palettes_[0][0] = (color0 >> 16) & 0xFF;
+        gb_palettes_[0][1] = (color0 >> 8) & 0xFF;
+        gb_palettes_[0][2] = (color0) & 0xFF;
+        gb_palettes_[1][0] = (color1 >> 16) & 0xFF;
+        gb_palettes_[1][1] = (color1 >> 8) & 0xFF;
+        gb_palettes_[1][2] = (color1) & 0xFF;
+        gb_palettes_[2][0] = (color2 >> 16) & 0xFF;
+        gb_palettes_[2][1] = (color2 >> 8) & 0xFF;
+        gb_palettes_[2][2] = (color2) & 0xFF;
+        gb_palettes_[3][0] = (color3 >> 16) & 0xFF;
+        gb_palettes_[3][1] = (color3 >> 8) & 0xFF;
+        gb_palettes_[3][2] = (color3) & 0xFF;
     }
 
     inline bool Display::is_rom_loaded() {
@@ -547,22 +614,7 @@ namespace TKPEmu::Graphics {
             using Gameboy = TKPEmu::Gameboy::Gameboy;
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             auto& pal = temp->GetPalette();
-            int color0 = std::stoi(settings_.at("Gameboy.color0"), 0, 16);
-            int color1 = std::stoi(settings_.at("Gameboy.color1"), 0, 16);
-            int color2 = std::stoi(settings_.at("Gameboy.color2"), 0, 16);
-            int color3 = std::stoi(settings_.at("Gameboy.color3"), 0, 16);
-            pal[0][0] = (color0 >> 16) & 0xFF;
-            pal[0][1] = (color0 >> 8) & 0xFF;
-            pal[0][2] = (color0) & 0xFF;
-            pal[1][0] = (color1 >> 16) & 0xFF;
-            pal[1][1] = (color1 >> 8) & 0xFF;
-            pal[1][2] = (color1) & 0xFF;
-            pal[2][0] = (color2 >> 16) & 0xFF;
-            pal[2][1] = (color2 >> 8) & 0xFF;
-            pal[2][2] = (color2) & 0xFF;
-            pal[3][0] = (color3 >> 16) & 0xFF;
-            pal[3][1] = (color3 >> 8) & 0xFF;
-            pal[3][2] = (color3) & 0xFF;
+            pal = gb_palettes_;
         }
     }
     void Display::load_loop(){

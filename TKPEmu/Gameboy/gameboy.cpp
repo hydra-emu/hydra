@@ -32,7 +32,7 @@ namespace TKPEmu::Gameboy {
 			144,
 			0,
 			GL_RGBA,
-			GL_UNSIGNED_BYTE,
+			GL_FLOAT,
 			NULL
 		);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -208,7 +208,7 @@ namespace TKPEmu::Gameboy {
 	void Gameboy::RemoveBreakpoint(int index) {
 		Breakpoints.erase(Breakpoints.begin() + index);
 	}
-	uint8_t* Gameboy::GetScreenData()
+	float* Gameboy::GetScreenData()
 	{
 		return ppu_.GetScreenData();
 	}
@@ -216,7 +216,7 @@ namespace TKPEmu::Gameboy {
 		return cpu_.Instructions[opc].name;
 	}
 
-	std::array<std::array<uint8_t, 3>, 4>& Gameboy::GetPalette() {
+	std::array<std::array<float, 3>, 4>& Gameboy::GetPalette() {
 		return bus_.Palette;
 	}
 }

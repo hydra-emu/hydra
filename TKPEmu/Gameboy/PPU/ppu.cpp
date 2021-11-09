@@ -13,9 +13,7 @@ namespace TKPEmu::Gameboy::Devices {
 		WY(bus->GetReference(0xFF4A)),
 		WX(bus->GetReference(0xFF4B)),
 		IF(bus->GetReference(0xFF0F))
-	{
-		//screen_.fill(0xFF);
-	}
+	{}
 
 	void PPU::Update(uint8_t tTemp) {
 		IF &= 0b11111110;
@@ -77,7 +75,7 @@ namespace TKPEmu::Gameboy::Devices {
 		clock_target_ = 0;
 	}
 	
-	uint8_t* PPU::GetScreenData() {
+	float* PPU::GetScreenData() {
 		return screen_color_data_.data();
 	}
 
@@ -214,7 +212,7 @@ namespace TKPEmu::Gameboy::Devices {
 				screen_color_data_[idx++] = bus_->Palette[bus_->BGPalette[colorNum]][0];
 				screen_color_data_[idx++] = bus_->Palette[bus_->BGPalette[colorNum]][1];
 				screen_color_data_[idx++] = bus_->Palette[bus_->BGPalette[colorNum]][2];
-				screen_color_data_[idx] = 255;
+				screen_color_data_[idx] = 255.0f;
 			}
 		}
 	}

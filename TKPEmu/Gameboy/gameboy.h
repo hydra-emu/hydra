@@ -29,9 +29,9 @@ namespace TKPEmu::Gameboy {
 		void LoadInstrToVec(std::vector<DisInstr>& vec);
 		void AddBreakpoint(GameboyBreakpoint bp);
 		void RemoveBreakpoint(int index);
-		uint8_t* GetScreenData() override;
+		float* GetScreenData() override;
 		const auto& GetOpcodeDescription(uint8_t opc);
-		std::array<std::array<uint8_t, 3>, 4>& GetPalette();
+		std::array<std::array<float, 3>, 4>& GetPalette();
 		CPU& GetCPU() { return cpu_; }
 		std::vector<GameboyBreakpoint> Breakpoints;
 	private:

@@ -19,9 +19,9 @@ namespace TKPEmu::Gameboy::Devices {
 		PPU(Bus* bus, std::mutex* draw_mutex);
 		void Update(uint8_t tTemp);
 		void Reset();
-		uint8_t* GetScreenData();
+		float* GetScreenData();
 		Bus* bus_;
-		std::array<uint8_t, 4 * 160 * 144> screen_color_data_{};
+		std::array<float, 4 * 160 * 144> screen_color_data_{};
 		std::array<std::array<Pixel, 144>, 160> pixel_data_{};
 
 		// PPU register pointers
