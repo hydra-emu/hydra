@@ -1,4 +1,4 @@
-#define NOMINMAX
+﻿#define NOMINMAX
 #define STB_IMAGE_IMPLEMENTATION
 #include "display.h"
 #include <memory>
@@ -133,7 +133,7 @@ namespace TKPEmu::Graphics {
         window_ptr_(nullptr, SDL_DestroyWindow),
         gl_context_ptr_(nullptr, SDL_GL_DeleteContext),
         display_initializer_(pretty_printer_),
-        settings_(&app_settings_, &sleep_time_, &rom_loaded_)
+        settings_manager_(settings_, "tkp_user.ini")
     {
         std::ios_base::sync_with_stdio(false);
         #ifdef _WIN32
@@ -148,7 +148,6 @@ namespace TKPEmu::Graphics {
             ExecutableDirectory = ExecutableDirectory.substr(0, last_slash_idx);
         }
         ImGuiSettingsFile = ExecutableDirectory + ResourcesDataDir + ImGuiSettingsFile;
-        UserSettingsFile = ExecutableDirectory + ResourcesDataDir + UserSettingsFile;
         #endif
         // TODO: Implement linux path
         // TODO: get rid of this enum warning
@@ -190,8 +189,51 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_settings(bool* draw) {
         if (*draw) {
-            ImGui::SetNextWindowSize(ImVec2(300,300), ImGuiCond_FirstUseEver);
-            settings_.Draw("Settings", draw);
+            TKPEmu::Applications::IMApplication::SetupWindow();
+            if (!ImGui::Begin("Settings", draw)) {
+                ImGui::End();
+                return;
+            }
+            if (ImGui::CollapsingHeader("Video")) {
+                ImGui::Text("General video settings:");
+                ImGui::Separator();
+                if (ImGui::Checkbox("Limit FPS", &limit_fps_)) {
+                    settings_.at("Video.limit_fps") = limit_fps_ ? "1" : "0";
+
+                }
+                if (ImGui::IsItemHovered()) {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("Enable to save CPU cycles.");
+                    ImGui::EndTooltip();
+                }
+                if (limit_fps_) {
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.4f);
+                    if (ImGui::InputInt("##max_fps", &max_fps_, 15, 15, ImGuiInputTextFlags_AllowTabInput)) {
+                        max_fps_ = ((max_fps_ + 15 / 2) / 15) * 15;
+                        if (max_fps_ <= 0) {
+                            max_fps_ = 15;
+                        }
+                        settings_.at("Video.max_fps") = std::to_string(max_fps_);
+                        sleep_time_ = 1000.0f / max_fps_;
+                    }
+                    ImGui::PopItemWidth();
+                }
+                ImGui::NewLine();
+            }
+            if (ImGui::CollapsingHeader("Emulation")) {
+                ImGui::Text("General emulation settings:");
+                ImGui::Separator();
+                if (rom_loaded_) {
+                    ImGui::Text("These settings require the emulator to be stopped in order to change.");
+                }
+                else {
+                    if (ImGui::Checkbox("Debug mode", &debug_mode_)) {
+                        settings_.at("General.debug_mode") = debug_mode_ ? "1" : "0";
+                    }
+                }
+                ImGui::NewLine();
+            }
+            ImGui::End();
         }
     }
 
@@ -403,26 +445,6 @@ namespace TKPEmu::Graphics {
         bottomright.y = new_h + topleft.y - MenuBarHeight;
     }
 
-    void Display::load_user_settings() {
-        FILE* file;
-        fopen_s(&file, UserSettingsFile.c_str(), "r+");
-        if (file) {
-            fseek(file, 0, SEEK_SET);
-            access_user_settings<FileAccess::Read>(&app_settings_, sizeof(AppSettingsType), AppSettingsSize, file);
-            fclose(file);
-        }
-    }
-
-    void Display::save_user_settings() {
-        FILE* file;
-        fopen_s(&file, UserSettingsFile.c_str(), "w+");
-        if (file) {
-            fseek(file, 0, SEEK_SET);
-            access_user_settings<FileAccess::Write>(&app_settings_, sizeof(AppSettingsType), AppSettingsSize, file);
-            fclose(file);
-        }
-    }
-
     void Display::load_rom(std::filesystem::path&& path) {
         auto ext = path.extension();
         if (ext == ".gb") {
@@ -437,14 +459,20 @@ namespace TKPEmu::Graphics {
             tracelogger_ = std::make_unique<GameboyTracelogger>(&log_mode_);
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             GameboyDisassembler* dis = dynamic_cast<GameboyDisassembler*>(disassembler_.get());
+<<<<<<< HEAD
             dis->Reset();
             dis->SetEmulator(temp);
+=======
+            disassembler_->Reset();
+            disassembler_->SetEmulator(temp);
+            debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
+>>>>>>> wip-better-settings
             rom_loaded_ = true;
-            rom_paused_ = app_settings_.debug_mode;
+            rom_paused_ = debug_mode_;
             emulator_->Paused.store(rom_paused_);
             emulator_->LoadFromFile(path.string());
             setup_gameboy_palette();
-            if (app_settings_.debug_mode) {
+            if (debug_mode_) {
                 emulator_->StartDebug();
                 temp->LoadInstrToVec(dis->Instrs);
             }
@@ -489,12 +517,19 @@ namespace TKPEmu::Graphics {
         std::chrono::duration<double, std::milli> sleep_time = b - a;
     }
 
+    inline void Display::init_settings_values() {
+        limit_fps_ = std::stoi(settings_.at("Video.limit_fps"));
+        max_fps_ = std::stoi(settings_.at("Video.max_fps"));
+        debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
+        sleep_time_ = 1000.0f / max_fps_;
+    }
+
     inline bool Display::is_rom_loaded() {
         return rom_loaded_;
     }
 
     inline bool Display::is_rom_loaded_and_debugmode() {
-        return rom_loaded_ && app_settings_.debug_mode;
+        return rom_loaded_ && debug_mode_;
     }
 
     inline bool Display::is_rom_loaded_and_logmode() {
@@ -506,18 +541,22 @@ namespace TKPEmu::Graphics {
             using Gameboy = TKPEmu::Gameboy::Gameboy;
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             auto& pal = temp->GetPalette();
-            pal[0][0] = app_settings_.dmg_color0_r;
-            pal[0][1] = app_settings_.dmg_color0_g;
-            pal[0][2] = app_settings_.dmg_color0_b;
-            pal[1][0] = app_settings_.dmg_color1_r;
-            pal[1][1] = app_settings_.dmg_color1_g;
-            pal[1][2] = app_settings_.dmg_color1_b;
-            pal[2][0] = app_settings_.dmg_color2_r;
-            pal[2][1] = app_settings_.dmg_color2_g;
-            pal[2][2] = app_settings_.dmg_color2_b;
-            pal[3][0] = app_settings_.dmg_color3_r;
-            pal[3][1] = app_settings_.dmg_color3_g;
-            pal[3][2] = app_settings_.dmg_color3_b;
+            int color0 = std::stoi(settings_.at("Gameboy.color0"), 0, 16);
+            int color1 = std::stoi(settings_.at("Gameboy.color1"), 0, 16);
+            int color2 = std::stoi(settings_.at("Gameboy.color2"), 0, 16);
+            int color3 = std::stoi(settings_.at("Gameboy.color3"), 0, 16);
+            pal[0][0] = (color0 >> 16) & 0xFF;
+            pal[0][1] = (color0 >> 8) & 0xFF;
+            pal[0][2] = (color0) & 0xFF;
+            pal[1][0] = (color1 >> 16) & 0xFF;
+            pal[1][1] = (color1 >> 8) & 0xFF;
+            pal[1][2] = (color1) & 0xFF;
+            pal[2][0] = (color2 >> 16) & 0xFF;
+            pal[2][1] = (color2 >> 8) & 0xFF;
+            pal[2][2] = (color2) & 0xFF;
+            pal[3][0] = (color3 >> 16) & 0xFF;
+            pal[3][1] = (color3 >> 8) & 0xFF;
+            pal[3][2] = (color3) & 0xFF;
         }
     }
 
@@ -532,9 +571,8 @@ namespace TKPEmu::Graphics {
         ImGui_ImplSDL2_InitForOpenGL(window_ptr_.get(), gl_context_ptr_.get());
         ImVec4 background = ImVec4(35 / 255.0f, 35 / 255.0f, 35 / 255.0f, 1.00f);
         glClearColor(background.x, background.y, background.z, background.w);
-        load_user_settings();
         SDL_GL_SetSwapInterval(0);
-        sleep_time_ = 1000.0f / Settings::GetFpsValue(app_settings_.max_fps_index);
+        init_settings_values();
         ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
         ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB | ImGuiColorEditFlags_PickerHueWheel);
         load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_);
@@ -555,7 +593,6 @@ namespace TKPEmu::Graphics {
                 switch (event.type)
                 {
                     case SDL_QUIT:
-                        save_user_settings();
                         loop = false;
                         break;
 
@@ -595,7 +632,7 @@ namespace TKPEmu::Graphics {
                     }
                 }
             }
-            if (app_settings_.limit_fps) {
+            if (limit_fps_) {
                 limit_fps();
             }
             if (emulator_ != nullptr) {
@@ -622,12 +659,10 @@ namespace TKPEmu::Graphics {
             draw_settings(&window_settings_open_);
             draw_file_browser(&window_file_browser_open_);
             draw_disassembler(&window_disassembler_open_);
-
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window_ptr_.get());
         }
-        save_user_settings();
         ImGui::SaveIniSettingsToDisk(ImGuiSettingsFile.c_str());
         // Locking this mutex ensures that the other thread gets
         // enough time to exit before we close the main application.

@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "version": "2.0.0",
     "command": "g++",
     "args": [
@@ -22,4 +23,35 @@
 			"kind": "build",
 			"isDefault": true
 		}
+=======
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++.exe build active file",
+			"command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+			"args": [
+				"-std=c++2a",
+				"-fdiagnostics-color=always",
+				"-g",
+				"${file}",
+				"-o",
+				"${fileDirname}\\${fileBasenameNoExtension}.exe",
+				"-IC:\\CppData\\glad\\include",
+				"-IC:\\CppData\\SDL2-2.0.14\\include"
+			],
+			"options": {
+				"cwd": "C:\\msys64\\mingw64\\bin"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compiler: C:\\msys64\\mingw64\\bin\\g++.exe"
+		}
+	]
+>>>>>>> wip-better-settings
 }

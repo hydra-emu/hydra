@@ -343,8 +343,3 @@ healthchecksdb
 # Other
 *.gb
 Deprecated/
-.vscode/
-TKPEmu.vcxproj
-TKPEmu.vcxproj.filters
-TKPEmu.filters
-TKPEmu.sln
