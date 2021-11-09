@@ -342,6 +342,7 @@ healthchecksdb
 
 #vscode json files
 .vscode/
+bin/
 
 # Other
 *.gb
