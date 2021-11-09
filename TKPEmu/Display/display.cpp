@@ -281,6 +281,7 @@ namespace TKPEmu::Graphics {
                     ImGui::SetTooltip("Click on a color to open the color picker.");
                 }
                 if (ImGui::Button("Reset")) {
+                    // TODO: Cleanup code duplication
                     settings_.at("Gameboy.color0") = "d0d058";
                     settings_.at("Gameboy.color1") = "a0a840";
                     settings_.at("Gameboy.color2") = "708028";
