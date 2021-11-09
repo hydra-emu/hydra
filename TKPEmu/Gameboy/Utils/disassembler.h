@@ -57,7 +57,7 @@ namespace TKPEmu::Applications {
                 if (ImGui::BeginMenu("Navigation")) {
                     if (ImGui::MenuItem("Step", "F7", false, emulator_->Paused.load())) {
                         emulator_->Step.store(true);
-                        //emulator_->Step.notify_all();
+                        emulator_->Step.notify_all();
                     }
                     if (ImGui::MenuItem("Goto PC")) {
                         // TODO: if PC not found, go to nearest close to that value

@@ -66,17 +66,12 @@ namespace TKPEmu::Graphics {
         const std::string glsl_version = "#version 430";
         std::string BackgroundImageFile = "tkp_bg.jpg";
         std::string ImGuiSettingsFile = "imgui.ini";
-        std::string ResourcesDataDir = "\\Resources\\Data\\";
-        std::string ResourcesRomsDir = "\\Resources\\ROMs";
-        std::string ResourcesImagesDir = "\\Resources\\Images\\";
+        std::string ResourcesDataDir = "/Resources/Data/";
+        std::string ResourcesRomsDir = "/Resources/ROMs";
+        std::string ResourcesImagesDir = "/Resources/Images/";
         std::vector<std::string> SupportedRoms = { ".gb" };
         #ifdef _WIN32
         wchar_t exe_dir[MAX_PATH];
-        #endif
-        #ifdef linux
-        char result[PATH_MAX];
-        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-        std::string exe_dir = dirname(result);
         #endif
         std::string ExecutableDirectory;
     private:
@@ -177,6 +172,7 @@ namespace TKPEmu::Graphics {
         void close_emulator_and_wait();
         void step_emulator();
         void setup_gameboy_palette();
+        void load_loop();
         void main_loop();
 	};
 }

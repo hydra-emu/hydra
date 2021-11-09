@@ -77,7 +77,7 @@ namespace TKPEmu::Gameboy {
 						Update();
 				}
 				else {
-					//Step.wait(false);
+					Step.wait(false);
 					Step.store(false);
 					Update();
 					InstructionBreak.store(cpu_.PC);
@@ -109,7 +109,7 @@ namespace TKPEmu::Gameboy {
 					if (!broken)
 						Update();
 				} else {
-					//Step.wait(false);
+					Step.wait(false);
 					Step.store(false);
 					Update();
 					InstructionBreak.store(cpu_.PC);

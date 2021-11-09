@@ -149,9 +149,13 @@ namespace TKPEmu::Graphics {
         {
             ExecutableDirectory = ExecutableDirectory.substr(0, last_slash_idx);
         }
-        ImGuiSettingsFile = ExecutableDirectory + ResourcesDataDir + ImGuiSettingsFile;
         #endif
-        // TODO: Implement linux path
+        #ifdef linux
+        char result[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+        ExecutableDirectory = dirname(result);
+        #endif
+        ImGuiSettingsFile = ExecutableDirectory + ResourcesDataDir + ImGuiSettingsFile;
         // TODO: get rid of this enum warning
         SDL_WindowFlags window_flags = (SDL_WindowFlags)(
             SDL_WINDOW_OPENGL
@@ -325,10 +329,12 @@ namespace TKPEmu::Graphics {
             );
             glBindTexture(GL_TEXTURE_2D, 0);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
+            ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
         }
         else {
-            ImGui::GetBackgroundDrawList()->AddImage((void*)(GLuint*)(background_image_.texture), background_image_.topleft, background_image_.botright);
+            ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)background_image_.texture, background_image_.topleft, background_image_.botright);
+            // TODO: allow for undocked window, disable above line when that happens
+            //ImGui::Image((void*)(intptr_t)background_image_.texture, ImVec2(512,512));
         }
     }
 
@@ -399,6 +405,10 @@ namespace TKPEmu::Graphics {
 
     bool Display::load_image_from_file(const char* filename, TKPImage& out) {
         // Load from file
+        std::cout << "Trying to load " << filename << std::endl;
+        if (!std::filesystem::exists(filename)){
+            std::cout << "ERROR: " << filename << " not found!" << std::endl;
+        }
         unsigned char* image_data = stbi_load(filename, &out.width, &out.height, NULL, 4);
         if (image_data == NULL)
             return false;
@@ -422,6 +432,7 @@ namespace TKPEmu::Graphics {
         stbi_image_free(image_data);
         out.texture = image_texture;
         image_scale(out.topleft, out.botright);
+        std::cout << "Loaded with id: " << out.texture << std::endl;
         return true;
     }
 
@@ -489,15 +500,14 @@ namespace TKPEmu::Graphics {
         emulator_->Stopped = true;
         emulator_->Paused = false;
         emulator_->Step = true;
-        //emulator_->Step.notify_all();
+        emulator_->Step.notify_all();
         std::lock_guard<std::mutex> lguard(emulator_->ThreadStartedMutex);
     }
 
     void Display::step_emulator() {
         if (emulator_ != nullptr) {
             emulator_->Step = true;
-            // TODO: remove this LINUX AAAAAAAAAA
-            //emulator_->Step.notify_all();
+            emulator_->Step.notify_all();
         }
     }
 
@@ -557,8 +567,7 @@ namespace TKPEmu::Graphics {
             pal[3][2] = (color3) & 0xFF;
         }
     }
-
-    void Display::main_loop() {
+    void Display::load_loop(){
         gladLoadGL();
         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
         IMGUI_CHECKVERSION();
@@ -574,13 +583,17 @@ namespace TKPEmu::Graphics {
         init_settings_values();
         ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
         ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB | ImGuiColorEditFlags_PickerHueWheel);
-        load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_);
+        if (!load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_)){
+            std::cout << "Error loading background image." << std::endl;
+        }
         file_browser_.SetWindowSize(300, 300);
+    }
+    void Display::main_loop() {
+        load_loop();
         bool loop = true;
         while (loop)
         {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
@@ -645,7 +658,7 @@ namespace TKPEmu::Graphics {
                     pause_pressed_ = false;
                     emulator_->Paused.store(!emulator_->Paused.load());
                     emulator_->Step.store(true);
-                    //emulator_->Step.notify_all();
+                    emulator_->Step.notify_all();
                 }
             }
 

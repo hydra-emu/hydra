@@ -28,7 +28,7 @@ namespace TKPEmu::Applications {
                 if (ImGui::MenuItem("Pause", "Ctrl+P", emulator->Paused.load(), *rom_loaded)) {
                     emulator->Paused.store(!emulator->Paused.load());
                     emulator->Step.store(true);
-                    //emulator->Step.notify_all();
+                    emulator->Step.notify_all();
                 }
             }
             if (ImGui::MenuItem("Reset", "Ctrl+R", false, *rom_loaded)) {
@@ -47,7 +47,7 @@ namespace TKPEmu::Applications {
             emulator->Step.store(true);
             emulator->Paused.store(false);
             emulator->Stopped.store(true);
-            //emulator->Step.notify_one();
+            emulator->Step.notify_all();
         }
 	};
 }
