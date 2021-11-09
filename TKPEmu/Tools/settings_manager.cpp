@@ -4,9 +4,13 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#ifdef linux
+#include <unistd.h>
+#include <linux/limits.h>
+#include <libgen.h>
+#endif
 namespace TKPEmu::Tools {
 	SettingsManager::SettingsManager(SettingsMap& settings_, std::string config_file) : settings_(settings_), config_file_(config_file) {
-		return;
 		try {
 
 			// ini_parser::read_ini throws if file doesn't exist, so we create it
@@ -25,10 +29,16 @@ namespace TKPEmu::Tools {
 			}
 			directory += "/Resources/Data/";
 			#endif
+			#ifdef linux
+			char result[PATH_MAX];
+			ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+			directory = dirname(result);
+			#endif
 			if (!std::filesystem::exists(directory)) {
+				std::cout << "Creating " << directory << " for the first time..." << std::endl;
 				std::filesystem::create_directories(directory);
 			}
-			config_file_ = directory + config_file_;
+			config_file_ = directory + "/Resources/Data/" + config_file_;
 			if (!std::filesystem::exists(config_file_)) {
 				std::fstream temp;
 				temp.open(config_file_, std::fstream::in | std::fstream::out | std::fstream::trunc);

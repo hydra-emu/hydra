@@ -112,8 +112,6 @@ namespace TKPEmu::Graphics {
     };
     
 	Display::DisplayInitializer::DisplayInitializer(PrettyPrinter& pprinter) {
-        std::cout << "testa1" << std::endl;
-
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             std::cout << SDL_GetError() << std::endl;
         }
@@ -173,9 +171,9 @@ namespace TKPEmu::Graphics {
         gl_context_ptr_.reset(SDL_GL_CreateContext(window_ptr_.get()));
         SDL_SetWindowMinimumSize(window_ptr_.get(), window_settings_.minimum_width, window_settings_.minimum_height);
         SDL_SetWindowMaximumSize(window_ptr_.get(), window_settings_.maximum_width, window_settings_.maximum_height);
-        std::filesystem::create_directory(ExecutableDirectory + ResourcesDataDir);
-        std::filesystem::create_directory(ExecutableDirectory + ResourcesImagesDir);
-        std::filesystem::create_directory(ExecutableDirectory + ResourcesRomsDir);
+        std::filesystem::create_directories(ExecutableDirectory + ResourcesDataDir);
+        std::filesystem::create_directories(ExecutableDirectory + ResourcesImagesDir);
+        std::filesystem::create_directories(ExecutableDirectory + ResourcesRomsDir);
         SDL_GL_MakeCurrent(window_ptr_.get(), gl_context_ptr_.get());
         if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
             pretty_printer_.PrettyAdd<PPMessageType::Error>("Couldn't initialize glad.");
