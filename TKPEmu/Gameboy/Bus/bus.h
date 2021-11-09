@@ -7,6 +7,7 @@
 #include <vector>
 #include <fstream>
 #include <iterator>
+#include <memory>
 #include "../Cartridge/cartridge.h"
 
 namespace TKPEmu::Gameboy::Devices {

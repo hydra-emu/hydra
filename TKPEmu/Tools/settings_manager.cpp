@@ -1,11 +1,14 @@
 #include "settings_manager.h"
 #include <filesystem>
+#include <iostream>
 #ifdef _WIN32
 #include <windows.h>
 #endif
 namespace TKPEmu::Tools {
 	SettingsManager::SettingsManager(SettingsMap& settings_, std::string config_file) : settings_(settings_), config_file_(config_file) {
+		return;
 		try {
+
 			// ini_parser::read_ini throws if file doesn't exist, so we create it
 			std::string directory;
 			#ifdef _WIN32
@@ -35,6 +38,7 @@ namespace TKPEmu::Tools {
 		}
 		catch (std::exception& ex) {
 			// Ini file doesn't exist or is inaccessible
+			std::cout << "Error opening user .ini file" << std::endl;
 			throw ex;
 		}
 		for (auto& item : settings_) {

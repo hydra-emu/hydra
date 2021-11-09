@@ -112,11 +112,13 @@ namespace TKPEmu::Graphics {
     };
     
 	Display::DisplayInitializer::DisplayInitializer(PrettyPrinter& pprinter) {
+        std::cout << "testa1" << std::endl;
+
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-            pprinter.PrettyAdd<PPMessageType::Error>(SDL_GetError());
+            std::cout << SDL_GetError() << std::endl;
         }
         else {
-            pprinter.PrettyAdd<PPMessageType::Success>("SDL initialized successfully.");
+            std::cout << "SDL_init success" << std::endl;
         }
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -459,14 +461,9 @@ namespace TKPEmu::Graphics {
             tracelogger_ = std::make_unique<GameboyTracelogger>(&log_mode_);
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             GameboyDisassembler* dis = dynamic_cast<GameboyDisassembler*>(disassembler_.get());
-<<<<<<< HEAD
-            dis->Reset();
-            dis->SetEmulator(temp);
-=======
             disassembler_->Reset();
             disassembler_->SetEmulator(temp);
             debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
->>>>>>> wip-better-settings
             rom_loaded_ = true;
             rom_paused_ = debug_mode_;
             emulator_->Paused.store(rom_paused_);
@@ -492,14 +489,15 @@ namespace TKPEmu::Graphics {
         emulator_->Stopped = true;
         emulator_->Paused = false;
         emulator_->Step = true;
-        emulator_->Step.notify_all();
+        //emulator_->Step.notify_all();
         std::lock_guard<std::mutex> lguard(emulator_->ThreadStartedMutex);
     }
 
     void Display::step_emulator() {
         if (emulator_ != nullptr) {
             emulator_->Step = true;
-            emulator_->Step.notify_all();
+            // TODO: remove this LINUX AAAAAAAAAA
+            //emulator_->Step.notify_all();
         }
     }
 
@@ -561,6 +559,7 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::main_loop() {
+        gladLoadGL();
         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
         IMGUI_CHECKVERSION();
         auto g = ImGui::CreateContext();
@@ -632,6 +631,7 @@ namespace TKPEmu::Graphics {
                     }
                 }
             }
+
             if (limit_fps_) {
                 limit_fps();
             }
@@ -645,7 +645,7 @@ namespace TKPEmu::Graphics {
                     pause_pressed_ = false;
                     emulator_->Paused.store(!emulator_->Paused.load());
                     emulator_->Step.store(true);
-                    emulator_->Step.notify_all();
+                    //emulator_->Step.notify_all();
                 }
             }
 

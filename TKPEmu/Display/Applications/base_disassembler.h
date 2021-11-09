@@ -19,6 +19,7 @@ namespace TKPEmu::Applications {
             v_draw();
             ImGui::End();
         };
+        virtual void SetEmulator(Emulator* emulator) = 0;
         static void DrawMenuEmulation(Emulator* emulator, bool* rom_loaded) {
             if (!*rom_loaded) {
                 ImGui::MenuItem("Pause", "Ctrl+P", false, *rom_loaded);
@@ -27,7 +28,7 @@ namespace TKPEmu::Applications {
                 if (ImGui::MenuItem("Pause", "Ctrl+P", emulator->Paused.load(), *rom_loaded)) {
                     emulator->Paused.store(!emulator->Paused.load());
                     emulator->Step.store(true);
-                    emulator->Step.notify_all();
+                    //emulator->Step.notify_all();
                 }
             }
             if (ImGui::MenuItem("Reset", "Ctrl+R", false, *rom_loaded)) {
@@ -46,7 +47,7 @@ namespace TKPEmu::Applications {
             emulator->Step.store(true);
             emulator->Paused.store(false);
             emulator->Stopped.store(true);
-            emulator->Step.notify_one();
+            //emulator->Step.notify_one();
         }
 	};
 }

@@ -1,22 +1,11 @@
 {
     "configurations": [
         {
-<<<<<<< HEAD
-            "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "/home/offtkp/CppData/glad/include",
-                "/usr/include"
-            ],
-            "defines": [],
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c17",
-            "cppStandard": "c++20",
-            "intelliSenseMode": "linux-gcc-x64"
-=======
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/usr/include/",
+                "/home/offtkp/CppData/glad/include/"
             ],
             "defines": [
                 "_DEBUG",
@@ -26,7 +15,6 @@
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-msvc-x64"
->>>>>>> wip-better-settings
         }
     ],
     "version": 4

@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <cmath>
 #include "cartridge.h"
 namespace TKPEmu::Gameboy::Devices {
 	void Cartridge::Load(const std::string& fileName, std::vector<std::array<uint8_t, 0x4000>>& romBanks, std::vector<std::array<uint8_t, 0x2000>>& ramBanks) {
@@ -65,7 +66,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void Cartridge::PrintHeader() {
 		std::cout << "Header: {"
-			<< "\nname: " << (int)header_.name
+			<< "\nname: " << header_.name
 			<< "\ncartridge_type:" << (int)header_.cartridgeType
 			<< "\nrom_size: " << (int)header_.romSize
 			<< "\nram_size: " << (int)header_.ramSize

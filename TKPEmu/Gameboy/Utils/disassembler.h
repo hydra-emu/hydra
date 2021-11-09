@@ -30,7 +30,7 @@ namespace TKPEmu::Applications {
             static const int item_height = 17;
             window->Scroll.y = IM_FLOOR(item_height * item);
         }
-        void SetEmulator(Emulator* emulator) {
+        void SetEmulator(Emulator* emulator) override {
             emulator_ = dynamic_cast<Gameboy*>(emulator);
         }
         auto FindByPC(int target) noexcept {
@@ -57,7 +57,7 @@ namespace TKPEmu::Applications {
                 if (ImGui::BeginMenu("Navigation")) {
                     if (ImGui::MenuItem("Step", "F7", false, emulator_->Paused.load())) {
                         emulator_->Step.store(true);
-                        emulator_->Step.notify_all();
+                        //emulator_->Step.notify_all();
                     }
                     if (ImGui::MenuItem("Goto PC")) {
                         // TODO: if PC not found, go to nearest close to that value
