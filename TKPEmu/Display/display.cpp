@@ -242,36 +242,36 @@ namespace TKPEmu::Graphics {
                 if (ImGui::ColorEdit3("Color 1", gb_palettes_[0].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
                     std::stringstream color_stream;
                     color_stream << std::setfill('0') 
-                        << std::hex << std::setw(2) << gb_palettes_[0][0]
-                        << std::hex << std::setw(2) << gb_palettes_[0][1]
-                        << std::hex << std::setw(2) << gb_palettes_[0][2];
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[0][0] * 255.0f) & 0xFF)
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[0][1] * 255.0f) & 0xFF)
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[0][2] * 255.0f) & 0xFF);
                     settings_.at("Gameboy.color0") = color_stream.str();
                 }
                 ImGui::SameLine();
                 if (ImGui::ColorEdit3("Color 2", gb_palettes_[1].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
                     std::stringstream color_stream;
                     color_stream << std::setfill('0') 
-                        << std::hex << std::setw(2) << gb_palettes_[1][0]
-                        << std::hex << std::setw(2) << gb_palettes_[1][1]
-                        << std::hex << std::setw(2) << gb_palettes_[1][2];
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[1][0] * 255.0f) & 0xFF)
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[1][1] * 255.0f) & 0xFF)
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[1][2] * 255.0f) & 0xFF);
                     settings_.at("Gameboy.color1") = color_stream.str();
                 }
                 ImGui::SameLine();
                 if (ImGui::ColorEdit3("Color 3", gb_palettes_[2].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
                     std::stringstream color_stream;
                     color_stream << std::setfill('0') 
-                        << std::hex << std::setw(2) << gb_palettes_[2][0]
-                        << std::hex << std::setw(2) << gb_palettes_[2][1]
-                        << std::hex << std::setw(2) << gb_palettes_[2][2];
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[2][0] * 255.0f) & 0xFF)
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[2][1] * 255.0f) & 0xFF)
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[2][2] * 255.0f) & 0xFF);
                     settings_.at("Gameboy.color2") = color_stream.str();
                 }
                 ImGui::SameLine();
                 if (ImGui::ColorEdit3("Color 4", gb_palettes_[3].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
                     std::stringstream color_stream;
                     color_stream << std::setfill('0') 
-                        << std::hex << std::setw(2) << gb_palettes_[3][0]
-                        << std::hex << std::setw(2) << gb_palettes_[3][1]
-                        << std::hex << std::setw(2) << gb_palettes_[3][2];
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[3][0] * 255.0f) & 0xFF)
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[3][1] * 255.0f) & 0xFF)
+                        << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[3][2] * 255.0f) & 0xFF);
                     settings_.at("Gameboy.color3") = color_stream.str();
                 }
                 ImGui::SameLine();
@@ -281,7 +281,22 @@ namespace TKPEmu::Graphics {
                     ImGui::SetTooltip("Click on a color to open the color picker.");
                 }
                 if (ImGui::Button("Reset")) {
-                    
+                    settings_.at("Gameboy.color0") = "d0d058";
+                    settings_.at("Gameboy.color1") = "a0a840";
+                    settings_.at("Gameboy.color2") = "708028";
+                    settings_.at("Gameboy.color3") = "405010";
+                    gb_palettes_[0][0] = 0xd0 / 255.0f;
+                    gb_palettes_[0][1] = 0xd0 / 255.0f;
+                    gb_palettes_[0][2] = 0x58 / 255.0f;
+                    gb_palettes_[1][0] = 0xa0 / 255.0f;
+                    gb_palettes_[1][1] = 0xa8 / 255.0f;
+                    gb_palettes_[1][2] = 0x40 / 255.0f;
+                    gb_palettes_[2][0] = 0x70 / 255.0f;
+                    gb_palettes_[2][1] = 0x80 / 255.0f;
+                    gb_palettes_[2][2] = 0x28 / 255.0f;
+                    gb_palettes_[3][0] = 0x40 / 255.0f;
+                    gb_palettes_[3][1] = 0x50 / 255.0f;
+                    gb_palettes_[3][2] = 0x10 / 255.0f;
                 }
             }
             ImGui::End();
@@ -583,18 +598,18 @@ namespace TKPEmu::Graphics {
         int color1 = std::stoi(settings_.at("Gameboy.color1"), 0, 16);
         int color2 = std::stoi(settings_.at("Gameboy.color2"), 0, 16);
         int color3 = std::stoi(settings_.at("Gameboy.color3"), 0, 16);
-        gb_palettes_[0][0] = (color0 >> 16) & 0xFF;
-        gb_palettes_[0][1] = (color0 >> 8) & 0xFF;
-        gb_palettes_[0][2] = (color0) & 0xFF;
-        gb_palettes_[1][0] = (color1 >> 16) & 0xFF;
-        gb_palettes_[1][1] = (color1 >> 8) & 0xFF;
-        gb_palettes_[1][2] = (color1) & 0xFF;
-        gb_palettes_[2][0] = (color2 >> 16) & 0xFF;
-        gb_palettes_[2][1] = (color2 >> 8) & 0xFF;
-        gb_palettes_[2][2] = (color2) & 0xFF;
-        gb_palettes_[3][0] = (color3 >> 16) & 0xFF;
-        gb_palettes_[3][1] = (color3 >> 8) & 0xFF;
-        gb_palettes_[3][2] = (color3) & 0xFF;
+        gb_palettes_[0][0] = ((color0 >> 16) & 0xFF) / 255.0f;
+        gb_palettes_[0][1] = ((color0 >> 8) & 0xFF) / 255.0f;
+        gb_palettes_[0][2] = ((color0) & 0xFF) / 255.0f;
+        gb_palettes_[1][0] = ((color1 >> 16) & 0xFF) / 255.0f;
+        gb_palettes_[1][1] = ((color1 >> 8) & 0xFF) / 255.0f;
+        gb_palettes_[1][2] = ((color1) & 0xFF) / 255.0f;
+        gb_palettes_[2][0] = ((color2 >> 16) & 0xFF) / 255.0f;
+        gb_palettes_[2][1] = ((color2 >> 8) & 0xFF) / 255.0f;
+        gb_palettes_[2][2] = ((color2) & 0xFF) / 255.0f;
+        gb_palettes_[3][0] = ((color3 >> 16) & 0xFF) / 255.0f;
+        gb_palettes_[3][1] = ((color3 >> 8) & 0xFF) / 255.0f;
+        gb_palettes_[3][2] = ((color3) & 0xFF) / 255.0f;
     }
 
     inline bool Display::is_rom_loaded() {
