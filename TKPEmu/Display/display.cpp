@@ -691,21 +691,24 @@ namespace TKPEmu::Graphics {
                     case SDL_KEYDOWN: {
                         switch (event.key.keysym.sym)
                         {
-                        case SDLK_ESCAPE:
-                            loop = false;
-                            break;
-                        case SDLK_F7:
-                            step_emulator();
-                            break;
+                            case SDLK_ESCAPE:
+                                loop = false;
+                                break;
+                            case SDLK_F7:
+                                step_emulator();
+                                break;
+                            default:{
+                                // Handle the shortcuts
+                                const auto k = SDL_GetKeyboardState(NULL);
+                                if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_P]) {
+                                    pause_pressed_ = true;
+                                }
+                                if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_R]) {
+                                    reset_pressed_ = true;
+                                }
+                            }
                         }
-                        // Handle the shortcuts
-                        const auto k = SDL_GetKeyboardState(NULL);
-                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_P]) {
-                            pause_pressed_ = true;
-                        }
-                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_R]) {
-                            reset_pressed_ = true;
-                        }
+
                         break;
                     }
                 }
