@@ -65,6 +65,7 @@ namespace TKPEmu::Graphics {
         using SettingsManager = TKPEmu::Tools::SettingsManager;
         using DisInstr = TKPEmu::Tools::DisInstr;
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
+        using GameboyKeys = std::array<SDL_Keycode, 4>;
         const std::string glsl_version = "#version 430";
         std::string BackgroundImageFile = "tkp_bg.jpg";
         std::string ImGuiSettingsFile = "imgui.ini";
@@ -104,11 +105,22 @@ namespace TKPEmu::Graphics {
             {"Gameboy.color1", "a0a840"},
             {"Gameboy.color2", "708028"},
             {"Gameboy.color3", "405010"},
+            {"Gameboy.key_right", "79"},
+            {"Gameboy.key_left", "80"},
+            {"Gameboy.key_down", "81"},
+            {"Gameboy.key_up", "82"},
+            {"Gameboy.key_a", "29"},
+            {"Gameboy.key_b", "27"},
+            {"Gameboy.key_start", "13"},
+            {"Gameboy.key_select", "32"},
         };
         SettingsManager settings_manager_;
 
         // Emulation specific settings
         GameboyPalettes gb_palettes_{};
+        GameboyKeys gb_keys_directional_{};
+        GameboyKeys gb_keys_action_{};
+
 
         bool limit_fps_ = true;
         int max_fps_ = 60;
