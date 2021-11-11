@@ -115,7 +115,7 @@ namespace TKPEmu::Graphics {
             std::cout << SDL_GetError() << std::endl;
         }
         else {
-            std::cout << "SDL_init success" << std::endl;
+            std::cout << "SDL_Init success..." << std::endl;
         }
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -482,8 +482,8 @@ namespace TKPEmu::Graphics {
         // Setup filtering parameters for display
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         // Upload pixels into texture
         #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
@@ -493,7 +493,7 @@ namespace TKPEmu::Graphics {
         stbi_image_free(image_data);
         out.texture = image_texture;
         image_scale(out.topleft, out.botright);
-        std::cout << "Loaded with id: " << out.texture << std::endl;
+        std::cout << "Image loaded successfully!" << std::endl;
         return true;
     }
 
@@ -650,10 +650,11 @@ namespace TKPEmu::Graphics {
         ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
         ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB | ImGuiColorEditFlags_PickerHueWheel);
         if (!load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_)){
-            std::cout << "Error loading background image." << std::endl;
+            std::cerr << "Background image seems to be missing. Default background is going to be empty." << std::endl;
         }
         file_browser_.SetWindowSize(300, 300);
     }
+    
     void Display::main_loop() {
         load_loop();
         bool loop = true;

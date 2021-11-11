@@ -66,10 +66,10 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void Cartridge::PrintHeader() {
 		std::cout << "Header: {"
-			<< "\nname: " << header_.name
-			<< "\ncartridge_type:" << (int)header_.cartridgeType
-			<< "\nrom_size: " << (int)header_.romSize
-			<< "\nram_size: " << (int)header_.ramSize
-			<< "\n}";
+				<< "\nname: " << header_.name
+				<< "\ncartridge_type:" << (int)header_.cartridgeType
+				<< "\nrom_size: " << (int)header_.romSize
+				<< "\nram_size: " << (int)header_.ramSize
+				<< "\n}" << std::endl;
 	}
 }

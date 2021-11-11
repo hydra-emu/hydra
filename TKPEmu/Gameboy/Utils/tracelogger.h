@@ -6,6 +6,7 @@
 namespace TKPEmu::Applications {
 	using Gameboy = TKPEmu::Gameboy::Gameboy;
 	using LogType = unsigned;
+	// TODO: make into enum
 	const LogType LOG_PC   = 1 << 1;
 	const LogType LOG_SP   = 1 << 2;
 	const LogType LOG_A    = 1 << 3;

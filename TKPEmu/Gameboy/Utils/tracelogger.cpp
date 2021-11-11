@@ -11,6 +11,7 @@ namespace TKPEmu::Applications {
 	}
 	// Logs the current emulator state
 	// Example usage: log_emu_state(LOG_PC | LOG_SP | LOG_A) will log "PC:**** SP:**** A:**"
+	// TODO: (!) overwrite warning 
 	void GameboyTracelogger::log_emu_state(LogType type) {
 		bool first = true;
 		auto& emu_cpu = emulator_->GetCPU();

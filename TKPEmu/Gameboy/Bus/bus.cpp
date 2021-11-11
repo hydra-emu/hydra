@@ -133,12 +133,11 @@ namespace TKPEmu::Gameboy::Devices {
 		else {
 			switch (address) {
 				case addr_joy: {
+					// TODO: implement joystick after implementing key selection
 					return;
 				}
 				case addr_std: {
-					#ifndef NDEBUG
-					std::cout << data;
-					#endif
+					// TODO: implement serial
 					break;
 				}
 				case addr_bgp: {
