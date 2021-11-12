@@ -1,5 +1,7 @@
 #define SDL_MAIN_HANDLED
-#define TKPEMU_VERSION "0.1.0"
+#define TKPEMU_VERSION_MAJOR @TKPEMU_VERSION_MAJOR@
+#define TKPEMU_VERSION_MINOR @TKPEMU_VERSION_MINOR@
+#define TKPEMU_VERSION_PATCH @TKPEMU_VERSION_PATCH@
 #include "Display/display.h"
 #include <iostream>
 
@@ -51,7 +53,8 @@ int main(int argc, char *argv[]) {
 				}
 				case hash("--version"):
 				case hash("-v"): {
-					std::cout << "TKPEmu by OFFTKP. Version:" << TKPEMU_VERSION << std::endl;
+					// Print version	
+					//std::cout << "TKPEmu by OFFTKP. Version:" << TKPEMU_VERSION << std::endl;
 					return 0;
 				}
 				case hash("--open"): 
