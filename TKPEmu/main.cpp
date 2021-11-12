@@ -2,7 +2,7 @@
 #define TKPEmu_VERSION_MAJOR 0
 #define TKPEmu_VERSION_MINOR 1
 #define TKPEmu_VERSION_PATCH 0
-#include "Display/display.h"
+#include "include/display.h"
 #include <iostream>
 
 // Function for hashing a string in compile time in order to be used in a switch statement
