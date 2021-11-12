@@ -12,7 +12,6 @@
 namespace TKPEmu::Tools {
 	SettingsManager::SettingsManager(SettingsMap& settings_, std::string config_file) : settings_(settings_), config_file_(config_file) {
 		try {
-
 			// ini_parser::read_ini throws if file doesn't exist, so we create it
 			std::string directory;
 			#ifdef _WIN32
@@ -33,18 +32,21 @@ namespace TKPEmu::Tools {
 			char result[PATH_MAX];
 			ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
 			directory = dirname(result);
+			directory += "/Resources/Data/";
 			#endif
 			if (!std::filesystem::exists(directory)) {
-				std::cout << "Creating " << directory << " for the first time..." << std::endl;
+				std::cout << "Creating " << directory << " directories..." << std::endl;
 				std::filesystem::create_directories(directory);
 			}
-			config_file_ = directory + "/Resources/Data/" + config_file_;
+			config_file_ = directory + config_file_;
 			if (!std::filesystem::exists(config_file_)) {
+				std::cout << "User settings not found. Loading default settings..." << std::endl;
 				std::fstream temp;
 				temp.open(config_file_, std::fstream::in | std::fstream::out | std::fstream::trunc);
 				temp.close();
+			} else {
+				boost::property_tree::ini_parser::read_ini(config_file_, ptree_);
 			}
-			boost::property_tree::ini_parser::read_ini(config_file_, ptree_);
 		}
 		catch (std::exception& ex) {
 			// Ini file doesn't exist or is inaccessible

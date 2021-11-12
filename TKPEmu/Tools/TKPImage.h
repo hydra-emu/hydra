@@ -4,7 +4,7 @@
 #include "../ImGui/imgui.h"
 namespace TKPEmu::Tools {
     struct TKPImage {
-        unsigned int texture = 0;
+        unsigned int texture = -1;
         int width = 0;
         int height = 0;
         ImVec2 topleft;

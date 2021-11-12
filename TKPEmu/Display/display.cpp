@@ -393,7 +393,8 @@ namespace TKPEmu::Graphics {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
         }
         else {
-            ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)background_image_.texture, background_image_.topleft, background_image_.botright);
+            if (background_image_.texture != -1)
+                ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)background_image_.texture, background_image_.topleft, background_image_.botright);
             // TODO: allow for undocked window, disable above line when that happens
             //ImGui::Image((void*)(intptr_t)background_image_.texture, ImVec2(512,512));
         }
@@ -466,13 +467,15 @@ namespace TKPEmu::Graphics {
 
     bool Display::load_image_from_file(const char* filename, TKPImage& out) {
         // Load from file
-        std::cout << "Trying to load " << filename << std::endl;
         if (!std::filesystem::exists(filename)){
             std::cout << "ERROR: " << filename << " not found!" << std::endl;
+            return false;
         }
         unsigned char* image_data = stbi_load(filename, &out.width, &out.height, NULL, 4);
-        if (image_data == NULL)
+        if (image_data == NULL) {
+            std::cout << "ERROR: " << filename << " was found, but could not be loaded." << std::endl;
             return false;
+        }
 
         // Create a OpenGL texture identifier
         GLuint image_texture;
@@ -498,7 +501,9 @@ namespace TKPEmu::Graphics {
     }
 
     inline void Display::image_scale(ImVec2& topleft, ImVec2& bottomright) {
-        float wi = background_image_.width; float hi = background_image_.height;
+        // TODO: (!) set custom ratio based on emulator loaded
+        // TODO: (!) either make tkp_bg copy to resources, or (better) generate a cool image on runtime
+        float wi = 160; float hi = 144;
         float ws = window_settings_.window_width; float hs = window_settings_.window_height;
         float ri = wi / hi;
         float rs = ws / hs;
