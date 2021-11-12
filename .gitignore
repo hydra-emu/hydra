@@ -343,8 +343,10 @@ healthchecksdb
 #vscode json files
 .vscode/
 bin/
+CMakeFiles/
 
 # Other
 *.gb
 Deprecated/
-CMakeLists.txt
+cmake_install.cmake
+Makefile

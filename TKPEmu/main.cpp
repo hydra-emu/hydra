@@ -1,7 +1,7 @@
 #define SDL_MAIN_HANDLED
-#define TKPEMU_VERSION_MAJOR @TKPEMU_VERSION_MAJOR@
-#define TKPEMU_VERSION_MINOR @TKPEMU_VERSION_MINOR@
-#define TKPEMU_VERSION_PATCH @TKPEMU_VERSION_PATCH@
+#define TKPEMU_VERSION_MAJOR 
+#define TKPEMU_VERSION_MINOR 
+#define TKPEMU_VERSION_PATCH 
 #include "Display/display.h"
 #include <iostream>
 
@@ -36,9 +36,11 @@ int main(int argc, char *argv[]) {
 	// Whenever we get an argument that needs parameters, this bool is set to true
 	bool expects_parameter = false;
 	ParameterType next_parameter_type;
-
+	if (argc == 1) {
+		std::cout << "No parameters specified. Try -h or --help." << std::endl;
+		return 0;
+	}
 	for (int i = 1; i < argc; i++) {
-		std::cout << argv[i] << std::endl;
 		if (!expects_parameter) {
 			switch (hash(argv[i])) {
 				case hash("--display"):
