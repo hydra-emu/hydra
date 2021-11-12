@@ -347,3 +347,4 @@ bin/
 # Other
 *.gb
 Deprecated/
+CMakeLists.txt
