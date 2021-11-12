@@ -11,7 +11,7 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 ### Archlinux, using gcc, temporary solution before adding to AUR
 - Clone the project
 - `pacman -S boost sdl2`
-- Run `cmake -S . -D /bin`
+- Run `cmake -S . -B ./bin`
 - `cd bin`
 - `make`
 - `./TKPEmu -h` to list commands
