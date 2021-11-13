@@ -123,11 +123,9 @@ namespace TKPEmu::Graphics {
         GameboyKeys gb_keys_directional_{};
         GameboyKeys gb_keys_action_{};
 
-
         bool limit_fps_ = true;
         int max_fps_ = 60;
-        bool debug_mode_ = true;
-        
+        bool debug_mode_ = true;  
         // This variable helps for setting up the controls
         SDL_Keycode last_key_pressed_ = 0;
 

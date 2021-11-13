@@ -1,6 +1,7 @@
 #include "../include/gameboy.h"
 #include <iostream>
 #include <atomic>
+#include <bitset>
 #include "../glad/glad/glad.h"
 namespace TKPEmu::Gameboy {
 	void Gameboy::limit_fps() {
@@ -19,7 +20,10 @@ namespace TKPEmu::Gameboy {
 		cpu_(&bus_),
 		ppu_(&bus_, &DrawMutex),
 		direction_keys_(direction_keys),
-		action_keys_(action_keys) {
+		action_keys_(action_keys),
+		joypad_(bus_.GetReference(0xFF00)),
+		interrupt_flag_(bus_.GetReference(0xFF0F))
+	{
 		GLuint image_texture;
 		glGenTextures(1, &image_texture);
 		glBindTexture(GL_TEXTURE_2D, image_texture);
@@ -43,6 +47,7 @@ namespace TKPEmu::Gameboy {
 		EmulatorImage.texture = image_texture;
 		EmulatorImage.width = 160;
 		EmulatorImage.height = 144;
+		std::cout << direction_keys_[0] << " " << direction_keys_[1] << " " << std::endl;
 	}
 	Gameboy::~Gameboy() {
 		Stopped.store(true);
@@ -142,8 +147,22 @@ namespace TKPEmu::Gameboy {
 			limit_fps();
 		}
 	}
-	void Gameboy::HandleKey(SDL_Keycode key) {
-		// TODO: implement gameboy::handlekey
+	void Gameboy::HandleKeyDown(SDL_Keycode key) {
+		static const uint8_t joy_direction = 0b1110'1111;
+		static const uint8_t joy_action = 0b1101'1111;
+		if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key); it_dir != direction_keys_.end()) {
+			int index = it_dir - direction_keys_.begin();
+			joypad_ = (~(1UL << index)) & joy_direction;
+			interrupt_flag_ = TKPEmu::Gameboy::Devices::Bus::JOYPAD;
+		}
+		if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key); it_dir != action_keys_.end()) {
+			int index = it_dir - action_keys_.begin();
+			joypad_ = (~(1UL << index)) & joy_action;
+			interrupt_flag_ = TKPEmu::Gameboy::Devices::Bus::JOYPAD;
+		}
+	}
+	void Gameboy::HandleKeyUp(SDL_Keycode key) {
+		joypad_ |= 0b1100'1111;
 	}
 	void Gameboy::LoadFromFile(std::string&& path) {
 		bus_.LoadCartridge(std::forward<std::string>(path));

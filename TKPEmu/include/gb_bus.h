@@ -47,6 +47,7 @@ namespace TKPEmu::Gameboy::Devices {
         uint8_t selected_ram_bank_ = 0;
         uint8_t selected_rom_bank_ = 1;
         uint8_t rom_banks_size_ = 2;
+        bool action_key_mode_ = false;
         uint8_t unused_mem_area_ = 0;
         std::vector<RamBank> ram_banks_;
         std::vector<RomBank> rom_banks_;

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <bitset>
 #include "../include/gb_bus.h"
 namespace TKPEmu::Gameboy::Devices {
 
@@ -84,11 +85,27 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	uint8_t Bus::Read(uint16_t address) {
-		// Make copy so you can't write to this
-		uint8_t read = redirect_address(address);
-		// TODO: implement joypad
-		if (address == 0xFF00)
-			return 0b11101111;
+		// Making copy so you can't write to this
+		uint8_t& real_addr = redirect_address(address);
+		switch(address) {
+			case addr_joy:{
+				if (action_key_mode_) { 
+					if ((hram_[0] >> 4) & 0b0001) {
+						return real_addr;
+					} else {
+						// TODO: fix this hacky way, might need perfect timing however
+						return real_addr | 0xF;
+					}
+				} else {
+					if ((hram_[0] >> 4) & 0b0010) {
+						return hram_[0];
+					} else {
+						return hram_[0] | 0xF;
+					}
+				}
+			}
+		}
+		uint8_t read = real_addr;
 		return read;
 	}
 
@@ -114,6 +131,7 @@ namespace TKPEmu::Gameboy::Devices {
 			}
 			else if (address <= 0x3FFF) {
 				// Keep 3 highest bits
+				// TODO: this only happens on mbc1
 				selected_rom_bank_ &= 0b11100000;
 				selected_rom_bank_ |= data & 0b11111;
 				selected_rom_bank_ %= rom_banks_size_;
@@ -132,10 +150,6 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 		else {
 			switch (address) {
-				case addr_joy: {
-					// TODO: implement joystick after implementing key selection
-					return;
-				}
 				case addr_std: {
 					// TODO: implement serial
 					break;
@@ -173,13 +187,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				case addr_lcd: {
 					if (data & 0b1000'0000) {
-						// TODO: LCDC write behavior
-						// clock = 0
-						// clock_target = FRAME_CYCLES
-						// 
-						// Reset STAT mode
 						hram_[0x41] &= 0b1111'1100;
-						// Reset LY
 						hram_[0x44] = 0;
 						NextMode = 2;
 					}
@@ -195,6 +203,10 @@ namespace TKPEmu::Gameboy::Devices {
 					TACChanged = true;
 					data |= 0b1111'1000;
 					break;
+				}
+				case addr_joy: {
+					action_key_mode_ = (data == 0x10);
+					return;
 				}
 				case addr_stc: {
 					data |= 0b01111110;
@@ -259,9 +271,6 @@ namespace TKPEmu::Gameboy::Devices {
 					case 3: OAM[(address & 0xFF) / 4].flags      = data; break;
 				}
 			}
-			if (address == 0xFF40) {
-				int test = 0;
-			}
 			redirect_address(address) = data;
 		}
 	}
@@ -275,8 +284,7 @@ namespace TKPEmu::Gameboy::Devices {
 		SoftReset();
 		for (auto& rom : rom_banks_) {
 			rom.fill(0);
-		}
-		
+		}	
 	}
 
 	void Bus::SoftReset() {

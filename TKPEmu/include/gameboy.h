@@ -28,7 +28,8 @@ namespace TKPEmu::Gameboy {
 		void StartLog() override;
 		void Reset() override;
 		void Update() override;
-		void HandleKey(SDL_Keycode key) override;
+		void HandleKeyDown(SDL_Keycode key) override;
+		void HandleKeyUp(SDL_Keycode key) override;
 		void LoadFromFile(std::string&& path) override;
 		void LoadInstrToVec(std::vector<DisInstr>& vec);
 		void AddBreakpoint(GameboyBreakpoint bp);
@@ -45,6 +46,7 @@ namespace TKPEmu::Gameboy {
 		Cartridge cartridge_;
 		GameboyKeys& direction_keys_;
 		GameboyKeys& action_keys_;
+		uint8_t& joypad_, &interrupt_flag_;
 		std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
 		std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
 		float sleep_time_ = 16.75f;

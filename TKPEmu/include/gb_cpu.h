@@ -163,7 +163,7 @@ namespace TKPEmu::Gameboy::Devices {
 		BigRegisterType PC, SP;
 
 		// Memory mapped registers, they are a reference to a position in memory
-		RegisterType &IF, &IE, &DIVIDER, &TIMA, &TMA, &TAC, &LY;
+		RegisterType &IF, &IE, &DIVIDER, &TIMA, &TMA, &TAC, &LY, &JOYP;
 
 		const int ClockSpeed = 4194304;
 		const int MaxCycles = ClockSpeed / 60;

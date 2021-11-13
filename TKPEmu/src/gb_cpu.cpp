@@ -9,7 +9,8 @@ namespace TKPEmu::Gameboy::Devices {
 		TIMA(bus->GetReference(0xFF05)),
 		TMA(bus->GetReference(0xFF06)),
 		TAC(bus->GetReference(0xFF07)),
-		LY(bus->GetReference(0xFF44))
+		LY(bus->GetReference(0xFF44)),
+		JOYP(bus->GetReference(0xFF00))
 	{
 		A = 0; B = 0; C = 0; D = 0; E = 0; H = 0; L = 0;
 		F = 0; SP = 0; PC = 0x0; IME = true;
@@ -2838,6 +2839,7 @@ namespace TKPEmu::Gameboy::Devices {
 		div_reset_index_ = -1;
 		TimerCounter = 0;
 		old_tac_ = 0;
+		JOYP = 0b1110'1111;
 	}
 
 	int CPU::Update() {

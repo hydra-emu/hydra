@@ -161,7 +161,7 @@ namespace TKPEmu::Graphics {
             | SDL_WINDOW_ALLOW_HIGHDPI
             );
         window_ptr_.reset(SDL_CreateWindow(
-            "GameboyEmuTKP",
+            "TKPEmu",
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
             window_settings_.window_width,
@@ -192,6 +192,14 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::draw_settings(bool* draw) {
+        static KeySelector key_right("Direction Right:", "Gameboy.key_right", gb_keys_directional_[0]);
+        static KeySelector  key_left("Direction Left: ", "Gameboy.key_left", gb_keys_directional_[1]);
+        static KeySelector    key_up("Direction Up:   ", "Gameboy.key_up", gb_keys_directional_[2]);
+        static KeySelector  key_down("Direction Down: ", "Gameboy.key_down", gb_keys_directional_[3]);
+        static KeySelector     key_a("Action A:       ", "Gameboy.key_a", gb_keys_action_[0]);
+        static KeySelector     key_b("Action B:       ", "Gameboy.key_b", gb_keys_action_[1]);
+        static KeySelector   key_sel("Action Select:  ", "Gameboy.key_select", gb_keys_action_[2]);
+        static KeySelector key_start("Action Start:   ", "Gameboy.key_start", gb_keys_action_[3]);
         if (*draw) {
             TKPEmu::Applications::IMApplication::SetupWindow();
             if (!ImGui::Begin("Settings", draw)) {
@@ -304,22 +312,14 @@ namespace TKPEmu::Graphics {
                 ImGui::Spacing();
                 ImGui::TextUnformatted("Controls:");
                 ImGui::Separator();
-                static KeySelector key_right("Direction Right:", "Gameboy.key_right", gb_keys_directional_[0]);
-                static KeySelector  key_left("Direction Left: ", "Gameboy.key_left", gb_keys_directional_[1]);
-                static KeySelector  key_down("Direction Down: ", "Gameboy.key_down", gb_keys_directional_[2]);
-                static KeySelector    key_up("Direction Up:   ", "Gameboy.key_up", gb_keys_directional_[3]);
                 key_right.Draw(last_key_pressed_);
                 key_left.Draw(last_key_pressed_);
-                key_down.Draw(last_key_pressed_);
                 key_up.Draw(last_key_pressed_);
-                static KeySelector     key_a("Action A:       ", "Gameboy.key_a", gb_keys_action_[0]);
-                static KeySelector     key_b("Action B:       ", "Gameboy.key_b", gb_keys_action_[1]);
-                static KeySelector key_start("Action Start:   ", "Gameboy.key_start", gb_keys_action_[2]);
-                static KeySelector   key_sel("Action Select:  ", "Gameboy.key_select", gb_keys_action_[3]);
+                key_down.Draw(last_key_pressed_);
                 key_a.Draw(last_key_pressed_);
                 key_b.Draw(last_key_pressed_);
-                key_start.Draw(last_key_pressed_);
                 key_sel.Draw(last_key_pressed_);
+                key_start.Draw(last_key_pressed_);
             }
             ImGui::End();
         }
@@ -739,9 +739,19 @@ namespace TKPEmu::Graphics {
                                     break;
                                 }
                                 last_key_pressed_ = key;
+                                if (emulator_ != nullptr) {
+                                    emulator_->HandleKeyDown(key);
+                                }
                             }
                         }
 
+                        break;
+                    }
+                    case SDL_KEYUP:{
+                        if (emulator_ != nullptr) {
+                            auto key = event.key.keysym.sym;
+                            emulator_->HandleKeyUp(key);
+                        }
                         break;
                     }
                 }
