@@ -299,6 +299,8 @@ namespace TKPEmu::Graphics {
                     gb_palettes_[3][1] = 0x50 / 255.0f;
                     gb_palettes_[3][2] = 0x10 / 255.0f;
                 }
+		static KeySelector key_left;
+		key_left.Draw("Key Left", gb_keys_directional_[0]);
             }
             ImGui::End();
         }

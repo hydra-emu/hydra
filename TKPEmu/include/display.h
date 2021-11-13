@@ -20,6 +20,7 @@
 #include "../lib/imgui_impl_sdl.h"
 #include "../lib/imgui_impl_opengl3.h"
 #include "../lib/imgui_internal.h"
+#include "widget_keyselector.h"
 #include "base_disassembler.h"
 #include "base_tracelogger.h"
 #include "base_application.h"
@@ -41,7 +42,8 @@ namespace TKPEmu::Graphics {
     constexpr auto GameboyHeight = 144;
     constexpr auto MenuBarHeight = 19;
     using TKPImage = TKPEmu::Tools::TKPImage;
-    enum class FileAccess { Read, Write };
+    using KeySelector = TKPEmu::Tools::KeySelector;
+   enum class FileAccess { Read, Write };
     struct WindowSettings {
         int window_width = 640;
         int window_height = 480;
