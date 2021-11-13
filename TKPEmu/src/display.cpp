@@ -299,8 +299,25 @@ namespace TKPEmu::Graphics {
                     gb_palettes_[3][1] = 0x50 / 255.0f;
                     gb_palettes_[3][2] = 0x10 / 255.0f;
                 }
-		static KeySelector key_left;
-		key_left.Draw("Key Left", gb_keys_directional_[0]);
+                ImGui::Separator();
+                ImGui::TextUnformatted("Controls:");
+                ImGui::Spacing();
+                static KeySelector key_right("Direction Right:", "Gameboy.key_right", gb_keys_directional_[0]);
+                static KeySelector  key_left("Direction Left: ", "Gameboy.key_left", gb_keys_directional_[1]);
+                static KeySelector  key_down("Direction Down: ", "Gameboy.key_down", gb_keys_directional_[2]);
+                static KeySelector    key_up("Direction Up:   ", "Gameboy.key_up", gb_keys_directional_[3]);
+                key_right.Draw(last_key_pressed_);
+                key_left.Draw(last_key_pressed_);
+                key_down.Draw(last_key_pressed_);
+                key_up.Draw(last_key_pressed_);
+                static KeySelector     key_a("Action A:       ", "Gameboy.key_a", gb_keys_action_[0]);
+                static KeySelector     key_b("Action B:       ", "Gameboy.key_b", gb_keys_action_[1]);
+                static KeySelector key_start("Action Start:   ", "Gameboy.key_start", gb_keys_action_[2]);
+                static KeySelector   key_sel("Action Select:  ", "Gameboy.key_select", gb_keys_action_[3]);
+                key_a.Draw(last_key_pressed_);
+                key_b.Draw(last_key_pressed_);
+                key_start.Draw(last_key_pressed_);
+                key_sel.Draw(last_key_pressed_);
             }
             ImGui::End();
         }
@@ -598,6 +615,7 @@ namespace TKPEmu::Graphics {
         max_fps_ = std::stoi(settings_.at("Video.max_fps"));
         debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
         sleep_time_ = 1000.0f / max_fps_;
+        KeySelector::Initialize(&settings_);
         init_gameboy_values();
     }
 
@@ -669,13 +687,13 @@ namespace TKPEmu::Graphics {
         {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
             SDL_Event event;
+            last_key_pressed_ = 0;
             while (SDL_PollEvent(&event))
             {
                 // without it you won't have keyboard input and other things
                 ImGui_ImplSDL2_ProcessEvent(&event);
                 // you might also want to check io.WantCaptureMouse and io.WantCaptureKeyboard
                 // before processing events
-
                 switch (event.type)
                 {
                     case SDL_QUIT:
@@ -697,12 +715,14 @@ namespace TKPEmu::Graphics {
                         break;
 
                     case SDL_KEYDOWN: {
-                        switch (event.key.keysym.sym)
+                        auto key = event.key.keysym.sym;
+                        switch (key)
                         {
                             case SDLK_ESCAPE:
                                 loop = false;
                                 break;
                             case SDLK_F7:
+                                // This function checks if the emulator is nullptr also
                                 step_emulator();
                                 break;
                             default:{
@@ -710,10 +730,13 @@ namespace TKPEmu::Graphics {
                                 const auto k = SDL_GetKeyboardState(NULL);
                                 if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_P]) {
                                     pause_pressed_ = true;
+                                    break;
                                 }
                                 if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_R]) {
                                     reset_pressed_ = true;
+                                    break;
                                 }
+                                last_key_pressed_ = key;
                             }
                         }
 

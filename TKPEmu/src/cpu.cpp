@@ -1612,7 +1612,6 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	void CPU::LDHA8() {
-		int k = 0xFF00 + bus_->Read(PC);
 		A = bus_->Read(0xFF00 + bus_->Read(PC));
 		PC++;
 		mTemp = 3; tTemp = 12;

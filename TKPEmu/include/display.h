@@ -107,14 +107,14 @@ namespace TKPEmu::Graphics {
             {"Gameboy.color1", "a0a840"},
             {"Gameboy.color2", "708028"},
             {"Gameboy.color3", "405010"},
-            {"Gameboy.key_right", "79"},
-            {"Gameboy.key_left", "80"},
-            {"Gameboy.key_down", "81"},
-            {"Gameboy.key_up", "82"},
-            {"Gameboy.key_a", "29"},
-            {"Gameboy.key_b", "27"},
-            {"Gameboy.key_start", "13"},
-            {"Gameboy.key_select", "32"},
+            {"Gameboy.key_right", std::to_string(SDLK_RIGHT)},
+            {"Gameboy.key_left", std::to_string(SDLK_LEFT)},
+            {"Gameboy.key_down", std::to_string(SDLK_DOWN)},
+            {"Gameboy.key_up", std::to_string(SDLK_UP)},
+            {"Gameboy.key_a", std::to_string(SDLK_z)},
+            {"Gameboy.key_b", std::to_string(SDLK_x)},
+            {"Gameboy.key_start", std::to_string(SDLK_RETURN)},
+            {"Gameboy.key_select", std::to_string(SDLK_SPACE)},
         };
         SettingsManager settings_manager_;
 
@@ -127,6 +127,9 @@ namespace TKPEmu::Graphics {
         bool limit_fps_ = true;
         int max_fps_ = 60;
         bool debug_mode_ = true;
+        
+        // This variable helps for setting up the controls
+        SDL_Keycode last_key_pressed_ = 0;
 
         PrettyPrinter pretty_printer_;
         WindowSettings window_settings_;

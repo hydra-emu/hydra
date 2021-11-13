@@ -4,38 +4,38 @@
 #include <SDL2/SDL.h>
 #include <string>
 #include <memory>
+#include <iostream>
 #include "../lib/imgui.h"
+#include "../include/settings_manager.h"
 namespace TKPEmu::Tools {
 	struct KeySelector {
-	    void Draw(std::string&& key_name, SDL_Keycode& key_code, SDL_Keycode* new_key_press = nullptr) {
-		static std::string label = "##" + key_name;
-		static std::string buffer = SDL_GetKeyName(key_code);
-		static bool buffer_changed = false;
-		static bool selected = false;
-		static bool was_selected = false;
-		if (!key_name.empty()) {
-		    ImGui::TextUnformatted(key_name.c_str());
-		    ImGui::SameLine();
-		}
-		ImGui::InputText(label.c_str(), buffer.data(), buffer.size());
-		if (ImGui::IsItemActive()) {
-		    selected = true;
-		    was_selected = true;
-		} else {
-		    selected = false;
-		    if (was_selected) {
-				buffer = SDL_GetKeyName(key_code);
-				was_selected = false;
-		    }
-		}
-		if (selected && !buffer_changed) {
-		    buffer = "Press a new key...";
-		    if (new_key_press != nullptr) {
-				key_code = *new_key_press;
-				buffer_changed = true;
-		    }
-		}
-	    }
+		public:
+		KeySelector(std::string button_name, std::string button_key, SDL_Keycode& key_ref) : 
+			button_name_(std::move(button_name)),
+			button_key_(std::move(button_key)),
+			key_ref_(key_ref),
+			old_button_text_(button_text_)
+    	{
+			button_text_ += "##" + button_key_;
+			if (settings_map_ != nullptr) 
+				key_ref_ = std::stoi(settings_map_->at(button_key_));
+			else
+				throw("KeySelector::settings_map_ is not initialized. Run Initialize() first!");
+			button_text_ = SDL_GetKeyName(key_ref);
+		};
+		static void Initialize(SettingsMap* settings_map);
+	    void Draw(SDL_Keycode& new_key_press);
+		private:
+		std::string button_name_;
+		std::string button_text_;
+		std::string button_key_;
+		SDL_Keycode old_keycode_ = 0;
+		std::string old_button_text_;
+		bool select_key_mode = false;
+		SDL_Keycode& key_ref_;
+		
+		static bool lock_key_mode_;
+		static SettingsMap* settings_map_;
 	};
 }
 #endif
