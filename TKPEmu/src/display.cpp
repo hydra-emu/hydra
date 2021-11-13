@@ -239,6 +239,7 @@ namespace TKPEmu::Graphics {
             }
             if (ImGui::CollapsingHeader("Gameboy")) {
                 ImGui::Text("Palette:");
+                ImGui::Separator();
                 if (ImGui::ColorEdit3("Color 1", gb_palettes_[0].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
                     std::stringstream color_stream;
                     color_stream << std::setfill('0') 
@@ -299,9 +300,9 @@ namespace TKPEmu::Graphics {
                     gb_palettes_[3][1] = 0x50 / 255.0f;
                     gb_palettes_[3][2] = 0x10 / 255.0f;
                 }
-                ImGui::Separator();
-                ImGui::TextUnformatted("Controls:");
                 ImGui::Spacing();
+                ImGui::TextUnformatted("Controls:");
+                ImGui::Separator();
                 static KeySelector key_right("Direction Right:", "Gameboy.key_right", gb_keys_directional_[0]);
                 static KeySelector  key_left("Direction Left: ", "Gameboy.key_left", gb_keys_directional_[1]);
                 static KeySelector  key_down("Direction Down: ", "Gameboy.key_down", gb_keys_directional_[2]);
