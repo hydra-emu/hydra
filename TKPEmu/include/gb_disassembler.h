@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <execution>
 #include "base_disassembler.h"
-#include "breakpoint.h"
+#include "gb_breakpoint.h"
 #include "gameboy.h"
 // TODO: Issue #1
 #define WRAM_START 0xC000

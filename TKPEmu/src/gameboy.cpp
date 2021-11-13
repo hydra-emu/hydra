@@ -15,7 +15,11 @@ namespace TKPEmu::Gameboy {
 		b = std::chrono::system_clock::now();
 		std::chrono::duration<double, std::milli> sleep_time = b - a;
 	}
-	Gameboy::Gameboy() : cpu_(&bus_), ppu_(&bus_, &DrawMutex), cartridge_() {
+	Gameboy::Gameboy(GameboyKeys& direction_keys, GameboyKeys& action_keys) :
+		cpu_(&bus_),
+		ppu_(&bus_, &DrawMutex),
+		direction_keys_(direction_keys),
+		action_keys_(action_keys) {
 		GLuint image_texture;
 		glGenTextures(1, &image_texture);
 		glBindTexture(GL_TEXTURE_2D, image_texture);
@@ -219,7 +223,7 @@ namespace TKPEmu::Gameboy {
 		return cpu_.Instructions[opc].name;
 	}
 
-	std::array<std::array<float, 3>, 4>& Gameboy::GetPalette() {
+	GameboyPalettes& Gameboy::GetPalette() {
 		return bus_.Palette;
 	}
 }

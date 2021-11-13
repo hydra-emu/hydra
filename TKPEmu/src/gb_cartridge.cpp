@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
-#include "../include/cartridge.h"
+#include "../include/gb_cartridge.h"
 namespace TKPEmu::Gameboy::Devices {
 	void Cartridge::Load(const std::string& fileName, std::vector<std::array<uint8_t, 0x4000>>& romBanks, std::vector<std::array<uint8_t, 0x2000>>& ramBanks) {
 		std::ifstream is;

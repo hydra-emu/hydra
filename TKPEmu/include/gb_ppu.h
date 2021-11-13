@@ -1,7 +1,7 @@
 #pragma once
 #ifndef TKP_GB_PPU_H
 #define TKP_GB_PPU_H
-#include "bus.h"
+#include "gb_bus.h"
 #include "TKPImage.h"
 #include <mutex>
 #include <queue>

@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iterator>
 #include <memory>
-#include "cartridge.h"
+#include "gb_cartridge.h"
 
 namespace TKPEmu::Gameboy::Devices {
     const auto cl_white = 0;

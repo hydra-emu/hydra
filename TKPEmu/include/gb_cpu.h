@@ -6,9 +6,9 @@
 #include <array>
 #include <iomanip>
 #include <fstream>
-#include "bus.h"
-#include "ppu.h"
-#include "cpu_const.h"
+#include "gb_bus.h"
+#include "gb_ppu.h"
+#include "gb_cpu_const.h"
 #include "disassembly_instr.h"
 namespace TKPEmu::Gameboy::Devices {
 	using namespace TKPEmu::Gameboy::Utils;

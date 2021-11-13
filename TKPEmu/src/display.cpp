@@ -8,8 +8,8 @@
 #include "../lib/stb_image.h"
 #include "../include/disassembly_instr.h"
 #include "../include/gameboy.h"
-#include "../include/disassembler.h" // TODO: rename this to gb_disassembler
-#include "../include/tracelogger.h"
+#include "../include/gb_disassembler.h" // TODO: rename this to gb_disassembler
+#include "../include/gb_tracelogger.h"
 
 namespace TKPEmu::Graphics {
     struct LogApp
@@ -241,6 +241,7 @@ namespace TKPEmu::Graphics {
                 ImGui::Text("Palette:");
                 ImGui::Separator();
                 if (ImGui::ColorEdit3("Color 1", gb_palettes_[0].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
+                    // TODO: use formatted strings (%02x or w.e it was)
                     std::stringstream color_stream;
                     color_stream << std::setfill('0') 
                         << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[0][0] * 255.0f) & 0xFF)
@@ -553,7 +554,7 @@ namespace TKPEmu::Graphics {
             if (emulator_) {
                 close_emulator_and_wait();
             }
-            emulator_ = std::make_unique<Gameboy>();
+            emulator_ = std::make_unique<Gameboy>(gb_keys_directional_, gb_keys_action_);
             disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
             tracelogger_ = std::make_unique<GameboyTracelogger>(&log_mode_);
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());

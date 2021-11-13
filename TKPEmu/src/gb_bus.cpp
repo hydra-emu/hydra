@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
-#include "../include/bus.h"
+#include "../include/gb_bus.h"
 namespace TKPEmu::Gameboy::Devices {
 
 	Bus::Bus() {

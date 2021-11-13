@@ -1,4 +1,4 @@
-#include "../include/ppu.h"
+#include "../include/gb_ppu.h"
 #include <mutex>
 #include "../glad/glad/glad.h"
 
