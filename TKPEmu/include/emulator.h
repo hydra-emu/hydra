@@ -3,6 +3,7 @@
 #define TKP_EMULATOR_H
 #include "TKPImage.h"
 #include "disassembly_instr.h"
+#include <SDL2/SDL.h>
 #include <mutex>
 #include <vector>
 #include <atomic>
@@ -28,6 +29,7 @@ namespace TKPEmu {
 		virtual void StartLog() = 0;
 		virtual void Reset() = 0;
 		virtual void Update() = 0;
+		virtual void HandleKey(SDL_Keycode keycode) = 0;
 		virtual void LoadFromFile(std::string&& path) = 0;
 		virtual float* GetScreenData() { return nullptr; };
 		std::mutex ThreadStartedMutex;

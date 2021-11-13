@@ -25,6 +25,7 @@ namespace TKPEmu::Gameboy {
 		void StartLog() override;
 		void Reset() override;
 		void Update() override;
+		void HandleKey(SDL_Keycode key) override;
 		void LoadFromFile(std::string&& path) override;
 		void LoadInstrToVec(std::vector<DisInstr>& vec);
 		void AddBreakpoint(GameboyBreakpoint bp);

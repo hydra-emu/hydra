@@ -138,6 +138,9 @@ namespace TKPEmu::Gameboy {
 			limit_fps();
 		}
 	}
+	void Gameboy::HandleKey(SDL_Keycode key) {
+		// TODO: implement gameboy::handlekey
+	}
 	void Gameboy::LoadFromFile(std::string&& path) {
 		bus_.LoadCartridge(std::forward<std::string>(path));
 	}
