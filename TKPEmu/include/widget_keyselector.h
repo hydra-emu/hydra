@@ -24,15 +24,15 @@ namespace TKPEmu::Tools {
 		} else {
 		    selected = false;
 		    if (was_selected) {
-			buffer = SDL_GetKeyName(key_code);
-			was_selected = false;
+				buffer = SDL_GetKeyName(key_code);
+				was_selected = false;
 		    }
 		}
 		if (selected && !buffer_changed) {
 		    buffer = "Press a new key...";
 		    if (new_key_press != nullptr) {
-			key_code = *new_key_press;
-			buffer_changed = true;
+				key_code = *new_key_press;
+				buffer_changed = true;
 		    }
 		}
 	    }

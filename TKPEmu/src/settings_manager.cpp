@@ -30,7 +30,7 @@ namespace TKPEmu::Tools {
 			#endif
 			#ifdef linux
 			char result[PATH_MAX];
-			ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+			readlink("/proc/self/exe", result, PATH_MAX);
 			directory = dirname(result);
 			directory += "/Resources/Data/";
 			#endif

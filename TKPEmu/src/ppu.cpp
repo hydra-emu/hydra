@@ -116,9 +116,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	inline void PPU::renderTiles() {
-		uint8_t lcdControl = bus_->Read(0xFF40);
 		uint16_t tileData = (LCDC & 0b10000) ? 0x8000 : 0x8800;
-		uint8_t currScanline = bus_->Read(0xFF44);
 
 		uint8_t scrollY = bus_->Read(0xFF42);
 		uint8_t scrollX = bus_->Read(0xFF43);
@@ -217,9 +215,7 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 	}
 
-	void PPU::renderSprites()
-	{
-		uint8_t lcdControl = bus_->Read(0xFF40);
+	void PPU::renderSprites() {
 		bool use8x16 = false;
 		if (LCDC & 0b100)
 			use8x16 = true;

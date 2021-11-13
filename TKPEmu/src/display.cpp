@@ -395,7 +395,7 @@ namespace TKPEmu::Graphics {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
         }
         else {
-            if (background_image_.texture != -1)
+            if (background_image_.texture != 0)
                 ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)background_image_.texture, background_image_.topleft, background_image_.botright);
             // TODO: allow for undocked window, disable above line when that happens
             //ImGui::Image((void*)(intptr_t)background_image_.texture, ImVec2(512,512));
