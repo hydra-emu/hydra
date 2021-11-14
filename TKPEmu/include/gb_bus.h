@@ -138,6 +138,8 @@ namespace TKPEmu::Gameboy::Devices {
         bool DIVReset = false;
         bool TACChanged = false;
         uint8_t NextMode = 0;
+        uint8_t DirectionKeys = 0b1110'1111;
+        uint8_t ActionKeys = 0b1101'1111;
     };
 }
 #endif

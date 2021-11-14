@@ -47,7 +47,6 @@ namespace TKPEmu::Gameboy {
 		EmulatorImage.texture = image_texture;
 		EmulatorImage.width = 160;
 		EmulatorImage.height = 144;
-		std::cout << direction_keys_[0] << " " << direction_keys_[1] << " " << std::endl;
 	}
 	Gameboy::~Gameboy() {
 		Stopped.store(true);
@@ -152,17 +151,26 @@ namespace TKPEmu::Gameboy {
 		static const uint8_t joy_action = 0b1101'1111;
 		if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key); it_dir != direction_keys_.end()) {
 			int index = it_dir - direction_keys_.begin();
-			joypad_ = (~(1UL << index)) & joy_direction;
+			bus_.DirectionKeys = (~(1UL << index)) & joy_direction;
 			interrupt_flag_ = TKPEmu::Gameboy::Devices::Bus::JOYPAD;
 		}
 		if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key); it_dir != action_keys_.end()) {
 			int index = it_dir - action_keys_.begin();
-			joypad_ = (~(1UL << index)) & joy_action;
+			bus_.ActionKeys = (~(1UL << index)) & joy_action;
 			interrupt_flag_ = TKPEmu::Gameboy::Devices::Bus::JOYPAD;
 		}
 	}
 	void Gameboy::HandleKeyUp(SDL_Keycode key) {
-		joypad_ |= 0b1100'1111;
+		static const uint8_t joy_direction = 0b1110'1111;
+		static const uint8_t joy_action = 0b1101'1111;
+		if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key); it_dir != direction_keys_.end()) {
+			int index = it_dir - direction_keys_.begin();
+			bus_.DirectionKeys = (1UL << index) | joy_direction;
+		}
+		if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key); it_dir != action_keys_.end()) {
+			int index = it_dir - action_keys_.begin();
+			bus_.ActionKeys = (1UL << index) | joy_action;
+		}
 	}
 	void Gameboy::LoadFromFile(std::string&& path) {
 		bus_.LoadCartridge(std::forward<std::string>(path));

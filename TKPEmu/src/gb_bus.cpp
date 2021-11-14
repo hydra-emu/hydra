@@ -86,26 +86,27 @@ namespace TKPEmu::Gameboy::Devices {
 
 	uint8_t Bus::Read(uint16_t address) {
 		// Making copy so you can't write to this
-		uint8_t& real_addr = redirect_address(address);
 		switch(address) {
-			case addr_joy:{
+			case addr_joy: {
 				if (action_key_mode_) { 
-					if ((hram_[0] >> 4) & 0b0001) {
-						return real_addr;
-					} else {
-						// TODO: fix this hacky way, might need perfect timing however
-						return real_addr | 0xF;
-					}
+					// if ((hram_[0] >> 4) & 0b0001) {
+					// 	return real_addr;
+					// } else {
+					// 	// TODO: fix this hacky way, might need perfect timing however
+					// 	return real_addr | 0xF;
+					// }
+					return ActionKeys;
 				} else {
-					if ((hram_[0] >> 4) & 0b0010) {
-						return hram_[0];
-					} else {
-						return hram_[0] | 0xF;
-					}
+					// if ((hram_[0] >> 4) & 0b0010) {
+					// 	return hram_[0];
+					// } else {
+					// 	return hram_[0] | 0xF;
+					// }
+					return DirectionKeys;
 				}
 			}
 		}
-		uint8_t read = real_addr;
+		uint8_t read = redirect_address(address);
 		return read;
 	}
 
@@ -209,7 +210,7 @@ namespace TKPEmu::Gameboy::Devices {
 					return;
 				}
 				case addr_stc: {
-					data |= 0b01111110;
+					data |= 0b0111'1110;
 					break;
 				}
 				case addr_ifl: {
