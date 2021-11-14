@@ -9,7 +9,6 @@ namespace TKPEmu::Applications {
 	class IMApplication {
 	protected:
 		using Emulator = TKPEmu::Emulator;
-		using DisInstr = TKPEmu::Tools::DisInstr;
 	public:
 		IMApplication() = default;
 		virtual ~IMApplication() = default;

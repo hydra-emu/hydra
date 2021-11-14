@@ -9,36 +9,8 @@
 #include <iterator>
 #include <memory>
 #include "gb_cartridge.h"
-
+#include "gb_addresses.h"
 namespace TKPEmu::Gameboy::Devices {
-    const auto cl_white = 0;
-    const auto cl_lgray = 1;
-    const auto cl_dgray = 2;
-    const auto cl_black = 3;
-    const auto addr_joy = 0xFF00;
-    // Serial registers
-    const auto addr_std = 0xFF01;
-    const auto addr_stc = 0xFF02;
-    // Timer registers
-    const auto addr_div = 0xFF04;
-    const auto addr_tac = 0xFF07;
-    // Interrupt flag
-    const auto addr_ifl = 0xFF0F;
-    // Sound registers
-    const auto addr_s1s = 0xFF10;
-    const auto addr_s3e = 0xFF1A;
-    const auto addr_s3o = 0xFF1C;
-    const auto addr_s4l = 0xFF20;
-    const auto addr_s4c = 0xFF23;
-    const auto addr_snd = 0xFF26;
-    // PPU & OAM related registers
-    const auto addr_lcd = 0xFF40;
-    const auto addr_sta = 0xFF41;
-    const auto addr_lly = 0xFF44;
-    const auto addr_dma = 0xFF46;
-    const auto addr_bgp = 0xFF47;
-    const auto addr_ob0 = 0xFF48;
-    const auto addr_ob1 = 0xFF49;
     class Bus {
     private:
         using RamBank = std::array<uint8_t, 0x2000>;
@@ -57,7 +29,7 @@ namespace TKPEmu::Gameboy::Devices {
         std::array<uint8_t, 0x2000> eram_default_{};
         std::array<uint8_t, 0x2000> wram_{}; // TODO: cgb uses larger wram, maybe change, maybe inherit
         std::array<uint8_t, 0x2000> vram_{};
-
+        std::vector<DisInstr>& instructions_;
         uint8_t& redirect_address(uint16_t address);
     public:
         enum LCDCFlag {
@@ -121,7 +93,7 @@ namespace TKPEmu::Gameboy::Devices {
         0x21, 0x04, 0x01, 0x11, 0xA8, 0x00, 0x1A, 0x13, 0xBE, 0x20, 0xFE, 0x23, 0x7D, 0xFE, 0x34, 0x20,
         0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50,
         };
-        Bus();
+        Bus(std::vector<DisInstr>& instrs);
         uint8_t Read(uint16_t address);
         uint16_t ReadL(uint16_t address);
         uint8_t& GetReference(uint16_t address);

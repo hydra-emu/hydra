@@ -569,7 +569,7 @@ namespace TKPEmu::Graphics {
             setup_gameboy_palette();
             if (debug_mode_) {
                 emulator_->StartDebug();
-                temp->LoadInstrToVec(dis->Instrs);
+                //temp->LoadInstrToVec(dis->Instrs);
             }
             else {
                 emulator_->Start();

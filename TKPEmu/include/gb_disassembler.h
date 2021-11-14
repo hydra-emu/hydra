@@ -21,7 +21,6 @@ namespace TKPEmu::Applications {
         bool clear_all_flag = false;
         int selected_bp = -1;
     public:
-        std::vector<DisInstr> Instrs;
         GameboyDisassembler(bool* rom_loaded) : BaseDisassembler(rom_loaded) {};
         void Focus(int item) noexcept {
             ImGuiContext& g = *ImGui::GetCurrentContext();
@@ -34,14 +33,14 @@ namespace TKPEmu::Applications {
             emulator_ = dynamic_cast<Gameboy*>(emulator);
         }
         auto FindByPC(int target) noexcept {
-            return std::find_if(
-                std::execution::par_unseq,
-                Instrs.begin(),
-                Instrs.end(),
-                [&target](DisInstr ins) {
-                    return ins.InstructionProgramCode == target;
-                }
-            );
+            // return std::find_if(
+            //     std::execution::par_unseq,
+            //     Instrs.begin(),
+            //     Instrs.end(),
+            //     [&target](DisInstr ins) {
+            //         return ins.InstructionProgramCode == target;
+            //     }
+            // );
         }
         void Reset() noexcept final override {
             DisInstr::ResetId();
@@ -106,25 +105,35 @@ namespace TKPEmu::Applications {
                     ImGui::TableHeadersRow();
                     if (clear_all_flag) {
                         clear_all_flag = false;
-                        for (auto& i : Instrs) {
-                            i.Selected = false;
-                        }
+                        // for (auto& i : Instrs) {
+                        //     i.Selected = false;
+                        // }
                     }
                     ImGuiListClipper clipper;
-                    clipper.Begin(Instrs.size());
+                    clipper.Begin(0x10000);
+                    //clipper.Begin(Instrs.size());
+                    // TODO: cache disassembly instructions (overhead might not be enough for it to matter however)
+                    int skip = 0;
                     while (clipper.Step()) {
                         for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
-                            DisInstr* ins = &Instrs[row_n];
-                            ImGui::PushID(ins->ID);
+                            bool is_skipped = false;
+                            DisInstr ins = emulator_->GetInstruction(row_n);
+                            if (skip == 0) {
+                                skip += ins.ParamSize;
+                            } else {
+                                skip = 0;
+                                is_skipped = true;
+                            }
+                            ImGui::PushID(ins.ID);
                             ImGui::TableNextRow();
                             ImGui::TableSetColumnIndex(0);
-                            if (ImGui::Selectable("$", ins->Selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                            if (ImGui::Selectable("$", ins.Selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                                 if (emulator_->Paused.load()) {
-                                    ins->Selected ^= true;
-                                    if (ins->Selected) {
+                                    ins.Selected ^= true;
+                                    if (ins.Selected) {
                                         GameboyBreakpoint bp;
                                         bp.PC_using = true;
-                                        bp.PC_value = ins->InstructionProgramCode;
+                                        bp.PC_value = ins.InstructionProgramCode;
                                         bp.breakpoint_from_table = true;
                                         emulator_->AddBreakpoint(bp);
                                     }
@@ -133,7 +142,7 @@ namespace TKPEmu::Applications {
                                             std::execution::par_unseq,
                                             emulator_->Breakpoints.begin(),
                                             emulator_->Breakpoints.end(),
-                                            [target = ins->InstructionProgramCode](GameboyBreakpoint bp) {
+                                            [target = ins.InstructionProgramCode](GameboyBreakpoint bp) {
                                             return bp.breakpoint_from_table && bp.PC_value == target;
                                         }
                                         );
@@ -142,36 +151,36 @@ namespace TKPEmu::Applications {
                                 }
                             }
                             ImGui::SameLine();
-                            ImGui::Text("%04X", ins->InstructionProgramCode);
+                            ImGui::Text("%04X", ins.InstructionProgramCode);
                             ImGui::TableSetColumnIndex(1);
-                            ImGui::Text("%02X", ins->Instruction);
-                            switch (ins->ParamSize) {
+                            ImGui::Text("%02X", ins.Instruction);
+                            switch (ins.ParamSize) {
                             case 0:
                                 ImGui::SameLine();
                                 ImGui::TextUnformatted("     ");
                                 break;
                             case 1:
                                 ImGui::SameLine();
-                                ImGui::Text("%02X   ", ins->Params[0]);
+                                ImGui::Text("%02X   ", ins.Params[0]);
                                 break;
                             case 2:
                                 ImGui::SameLine();
-                                ImGui::Text("%02X,%02X", ins->Params[0], ins->Params[1]);
+                                ImGui::Text("%02X,%02X", ins.Params[0], ins.Params[1]);
                                 break;
                             }
                             ImGui::TableSetColumnIndex(2);
-                            ImGui::TextUnformatted(emulator_->GetCPU().Instructions[ins->Instruction].name.c_str());
-                            switch (ins->ParamSize) {
+                            ImGui::TextUnformatted(emulator_->GetCPU().Instructions[ins.Instruction].name.c_str());
+                            switch (ins.ParamSize) {
                             case 1:
                                 ImGui::SameLine();
-                                ImGui::Text("0x%02X", ins->Params[0]);
+                                ImGui::Text("0x%02X", ins.Params[0]);
                                 break;
                             case 2:
                                 ImGui::SameLine();
-                                ImGui::Text("0x%02X%02X", ins->Params[1], ins->Params[0]);
+                                ImGui::Text("0x%02X%02X", ins.Params[1], ins.Params[0]);
                                 break;
                             }
-                            if (ins->InstructionProgramCode > WRAM_START) {
+                            if (ins.InstructionProgramCode > WRAM_START) {
                                 ImGui::SameLine();
                                 ImGui::TextColored(ImVec4(128, 128, 0, 255), "(!)");
                                 if (ImGui::IsItemHovered()) {
@@ -237,8 +246,8 @@ namespace TKPEmu::Applications {
                 if (ImGui::Button("Remove", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.15f))) {
                     if (emulator_->Breakpoints[selected_bp].breakpoint_from_table) {
                         // We have to remove the breakpoint selection from the table too
-                        auto it = FindByPC(emulator_->Breakpoints[selected_bp].PC_value);
-                        it->Selected = false;
+                        //auto it = FindByPC(emulator_->Breakpoints[selected_bp].PC_value);
+                        //it->Selected = false;
                     }
                     emulator_->Breakpoints.erase(emulator_->Breakpoints.begin() + selected_bp);
                     selected_bp = -1;
@@ -308,8 +317,8 @@ namespace TKPEmu::Applications {
             }
         }
         void SetGotoPC(int& goto_pc, int target) {
-            auto it = FindByPC(target);
-            goto_pc = it - Instrs.begin();
+            //auto it = FindByPC(target);
+            //goto_pc = it - Instrs.begin();
         }
     private:
         template<typename T>

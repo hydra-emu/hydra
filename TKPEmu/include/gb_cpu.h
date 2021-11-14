@@ -8,10 +8,9 @@
 #include <fstream>
 #include "gb_bus.h"
 #include "gb_ppu.h"
-#include "gb_cpu_const.h"
+#include "gb_addresses.h"
 #include "disassembly_instr.h"
 namespace TKPEmu::Gameboy::Devices {
-	using namespace TKPEmu::Gameboy::Utils;
 	class CPU {
 	private:
 		using RegisterType = uint8_t;
@@ -121,6 +120,7 @@ namespace TKPEmu::Gameboy::Devices {
 			void(CPU::* op)() = nullptr;
 			int skip = 0;
 		};
+		// TODO: remove instr times, use the ones in gb_addresses instead
 		std::array<Instruction, 0x100> Instructions = { {
 			{ "NOP" , &CPU::NOP }, { "LDBC16" , &CPU::LDBC16 , 2}, { "LDBCA" , &CPU::LDBCA }, { "INCBC" , &CPU::INCBC }, { "INCB" , &CPU::INCB }, { "DECB" , &CPU::DECB }, { "LDB8" , &CPU::LDB8 , 1}, { "RLCA" , &CPU::RLCA }, { "LD16SP" , &CPU::LD16SP }, { "ADDHLBC" , &CPU::ADDHLBC }, { "LDABC" , &CPU::LDABC }, { "DECBC" , &CPU::DECBC }, { "INCC" , &CPU::INCC }, { "DECC" , &CPU::DECC }, { "LDC8" , &CPU::LDC8 , 1}, { "RRCA" , &CPU::RRCA },
 			{ "STOP" , &CPU::STOP }, { "LDDE16" , &CPU::LDDE16 , 2}, { "LDDEA" , &CPU::LDDEA }, { "INCDE" , &CPU::INCDE }, { "INCD" , &CPU::INCD }, { "DECD" , &CPU::DECD }, { "LDD8" , &CPU::LDD8 , 1}, { "RLA" , &CPU::RLA }, { "JR8" , &CPU::JR8 , 1}, { "ADDHLDE" , &CPU::ADDHLDE }, { "LDADE" , &CPU::LDADE }, { "DECDE" , &CPU::DECDE }, { "INCE" , &CPU::INCE }, { "DECE" , &CPU::DECE }, { "LDE8" , &CPU::LDE8 , 1}, { "RRA" , &CPU::RRA },

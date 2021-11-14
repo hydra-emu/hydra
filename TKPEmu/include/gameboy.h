@@ -4,6 +4,7 @@
 #include "emulator.h"
 #include "disassembly_instr.h"
 #include "gb_breakpoint.h"
+#include "gb_addresses.h"
 #include "gb_cpu.h"
 #include <unordered_map>
 #include <array>
@@ -32,13 +33,15 @@ namespace TKPEmu::Gameboy {
 		void HandleKeyUp(SDL_Keycode key) override;
 		void LoadFromFile(std::string&& path) override;
 		void LoadInstrToVec(std::vector<DisInstr>& vec);
+        DisInstr GetInstruction(uint16_t address);
 		void AddBreakpoint(GameboyBreakpoint bp);
 		void RemoveBreakpoint(int index);
 		float* GetScreenData() override;
 		const auto& GetOpcodeDescription(uint8_t opc);
 		GameboyPalettes& GetPalette();
 		CPU& GetCPU() { return cpu_; }
-		std::vector<GameboyBreakpoint> Breakpoints;
+		std::vector<GameboyBreakpoint> Breakpoints{};
+		std::vector<DisInstr> Instructions{};
 	private:
 		Bus bus_;
 		CPU cpu_;
@@ -50,6 +53,9 @@ namespace TKPEmu::Gameboy {
 		std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
 		std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
 		float sleep_time_ = 16.75f;
+		// Disassembler loads up instructions from memory. If the emulator is paused,
+		// there is no reason to do this over and over.
+		void uncache_all();
 	};
 }
 #endif

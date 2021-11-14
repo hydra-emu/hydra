@@ -3,9 +3,10 @@
 #include <algorithm>
 #include <bitset>
 #include "../include/gb_bus.h"
+#include "../include/gb_addresses.h"
 namespace TKPEmu::Gameboy::Devices {
 
-	Bus::Bus() {
+	Bus::Bus(std::vector<DisInstr>& instrs) : instructions_(instrs) {
 		inBios = true;
 	}
 
@@ -89,19 +90,8 @@ namespace TKPEmu::Gameboy::Devices {
 		switch(address) {
 			case addr_joy: {
 				if (action_key_mode_) { 
-					// if ((hram_[0] >> 4) & 0b0001) {
-					// 	return real_addr;
-					// } else {
-					// 	// TODO: fix this hacky way, might need perfect timing however
-					// 	return real_addr | 0xF;
-					// }
 					return ActionKeys;
 				} else {
-					// if ((hram_[0] >> 4) & 0b0010) {
-					// 	return hram_[0];
-					// } else {
-					// 	return hram_[0] | 0xF;
-					// }
 					return DirectionKeys;
 				}
 			}

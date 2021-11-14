@@ -21,8 +21,9 @@ namespace TKPEmu::Gameboy {
 		ppu_(&bus_, &DrawMutex),
 		direction_keys_(direction_keys),
 		action_keys_(action_keys),
-		joypad_(bus_.GetReference(0xFF00)),
-		interrupt_flag_(bus_.GetReference(0xFF0F))
+		joypad_(bus_.GetReference(addr_joy)),
+		interrupt_flag_(bus_.GetReference(addr_if)),
+		bus_(Instructions)
 	{
 		GLuint image_texture;
 		glGenTextures(1, &image_texture);
@@ -180,7 +181,7 @@ namespace TKPEmu::Gameboy {
 		// TODO: make this std::async
 		auto func = [this](std::vector<DisInstr>& vec) {
 			std::vector<DisInstr> ret;
-			ret.reserve(0xFFFF);
+			ret.reserve(0x10000);
 			for (uint16_t i = 0; i < 0xFFFF;) {
 				uint8_t ins = bus_.Read(i);
 				auto x = cpu_.Instructions[ins];
@@ -203,10 +204,32 @@ namespace TKPEmu::Gameboy {
 				}
 				i += 1 + x.skip;
 			}
+			std::cout << (int)ret.size() << std::endl;
 			vec = std::move(ret);
 		};
 		std::thread t1(func, std::ref(vec));
 		t1.detach();
+	}
+	DisInstr Gameboy::GetInstruction(uint16_t address) {
+		uint8_t ins = bus_.Read(address);
+		auto time = InstrTimes[ins];
+		auto instr = DisInstr(address, ins, time);
+		uint8_t p1 = 0, p2 = 0;
+		if (time == 1) {
+			p1 = bus_.Read(address + 1);
+			instr.Params[0] = p1;
+			return instr;
+		}
+		else if (time == 2) {
+			p1 = bus_.Read(address + 1);
+			p2 = bus_.Read(address + 2);
+			instr.Params[0] = p1;
+			instr.Params[1] = p2;
+			return instr;
+		}
+		else {
+			return instr;
+		}
 	}
 	void Gameboy::AddBreakpoint(GameboyBreakpoint bp) {
 		using RegCheckVector = std::vector<std::function<bool()>>;

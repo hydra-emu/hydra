@@ -12,6 +12,10 @@ namespace TKPEmu::Tools {
 		DisInstr(uint16_t iPC, uint8_t ins, uint8_t skip) : InstructionProgramCode(iPC), Instruction(ins), ParamSize(skip) {
 			ID = get_id_and_inc();
 		}
+		DisInstr(const DisInstr&) = delete;
+		DisInstr& operator=(const DisInstr&) = delete;
+		DisInstr(DisInstr&&) = default;
+		DisInstr& operator=(DisInstr&&) = default;
 		int ID = 0;
 		uint16_t InstructionProgramCode = 0;
 		uint8_t Instruction = 0;
