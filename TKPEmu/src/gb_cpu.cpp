@@ -2827,7 +2827,7 @@ namespace TKPEmu::Gameboy::Devices {
 		B = 0; C = 0;
 		D = 0; E = 0;
 		H = 0; L = 0;
-		SP = 0xFFFE;
+		SP = 0;
 		PC = 0;
 		tClock = 0;
 		halt = false; stop = false;
