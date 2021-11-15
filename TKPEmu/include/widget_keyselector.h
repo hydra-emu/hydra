@@ -13,8 +13,8 @@ namespace TKPEmu::Tools {
 		KeySelector(std::string button_name, std::string button_key, SDL_Keycode& key_ref) : 
 			button_name_(std::move(button_name)),
 			button_key_(std::move(button_key)),
-			key_ref_(key_ref),
-			old_button_text_(button_text_)
+			old_button_text_(button_text_),
+			key_ref_(key_ref)
     	{
 			button_text_ += "##" + button_key_;
 			if (settings_map_ != nullptr) 

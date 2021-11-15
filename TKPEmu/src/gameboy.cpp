@@ -17,13 +17,13 @@ namespace TKPEmu::Gameboy {
 		std::chrono::duration<double, std::milli> sleep_time = b - a;
 	}
 	Gameboy::Gameboy(GameboyKeys& direction_keys, GameboyKeys& action_keys) :
+		bus_(Instructions),
 		cpu_(&bus_),
 		ppu_(&bus_, &DrawMutex),
 		direction_keys_(direction_keys),
 		action_keys_(action_keys),
 		joypad_(bus_.GetReference(addr_joy)),
-		interrupt_flag_(bus_.GetReference(addr_if)),
-		bus_(Instructions)
+		interrupt_flag_(bus_.GetReference(addr_if))
 	{
 		GLuint image_texture;
 		glGenTextures(1, &image_texture);
@@ -72,16 +72,22 @@ namespace TKPEmu::Gameboy {
 			Reset();
 			Paused = true;
 			Stopped = false;
+			// Emulation doesn't break on first instruction
+			bool first_instr = true;
 			while (!Stopped.load()) {
 				if (!Paused.load()) {
 					bool broken = false;
-					for (const auto& bp : Breakpoints) {
-						bool brk = bp.Check();
-						if (brk) {
-							Paused.store(true);
-							broken = true;
+					if (!first_instr) {
+						for (const auto& bp : Breakpoints) {
+							bool brk = bp.Check();
+							if (brk) {
+								InstructionBreak.store(cpu_.PC);
+								Paused.store(true);
+								broken = true;
+							}
 						}
 					}
+					first_instr = false;
 					if (!broken)
 						Update();
 				}
@@ -105,16 +111,23 @@ namespace TKPEmu::Gameboy {
 			Reset();
 			Paused = true;
 			Stopped = false;
+			// TODO: avoid code duplication
+			// Emulation doesn't break on first instruction
+			bool first_instr = true;
 			while (!Stopped.load()) {
 				if (!Paused.load()) {
 					bool broken = false;
-					for (const auto& bp : Breakpoints) {
-						bool brk = bp.Check();
-						if (brk) {
-							Paused.store(true);
-							broken = true;
+					if (!first_instr) {
+						for (const auto& bp : Breakpoints) {
+							bool brk = bp.Check();
+							if (brk) {
+								InstructionBreak.store(cpu_.PC);
+								Paused.store(true);
+								broken = true;
+							}
 						}
 					}
+					first_instr = false;
 					if (!broken)
 						Update();
 				} else {
@@ -137,10 +150,8 @@ namespace TKPEmu::Gameboy {
 		ppu_.Reset();
 	}
 	void Gameboy::Update() {
-		//while (cpu_.tClock < cpu_.MaxCycles) {
 		int clk = cpu_.Update();
 		ppu_.Update(clk);
-		//}
 		if (cpu_.tClock >= cpu_.MaxCycles) {
 			cpu_.tClock = 0;
 			cpu_.TimerCounter = cpu_.ClockSpeed / 0x400;
@@ -231,9 +242,10 @@ namespace TKPEmu::Gameboy {
 			return instr;
 		}
 	}
-	void Gameboy::AddBreakpoint(GameboyBreakpoint bp) {
+	bool Gameboy::AddBreakpoint(GBBPArguments bp) {
 		using RegCheckVector = std::vector<std::function<bool()>>;
 		RegCheckVector register_checks;
+		// TODO: Check if breakpoint already exists before adding it
 		// We calculate which of these checks we need, and add them all to a vector to save execution time
 		// Before being copied to the lambda, the values are decremented, as to keep them (1-256) -> (0-255)
 		// because we used the value of 0 to check whether this is used or not.
@@ -259,8 +271,15 @@ namespace TKPEmu::Gameboy {
 			// Every check is passed, trigger breakpoint
 			return true;
 		};
-		bp.SetChecks(std::move(lamb));
-		Breakpoints.push_back(bp);
+		GameboyBreakpoint gbp;
+		gbp.Args = std::move(bp);
+		gbp.SetChecks(std::move(lamb));
+		std::cout << "Breakpoint added:\n" << gbp.GetName() << std::endl;
+		bool ret = false;
+		if (gbp.BPFromTable)
+			ret = true;
+		Breakpoints.push_back(std::move(gbp));
+		return ret;
 	}
 	void Gameboy::RemoveBreakpoint(int index) {
 		Breakpoints.erase(Breakpoints.begin() + index);

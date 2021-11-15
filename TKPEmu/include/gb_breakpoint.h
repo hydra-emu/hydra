@@ -1,10 +1,9 @@
 #pragma once
 #ifndef TKP_TOOLS_GBBP_H
 #define TKP_TOOLS_GBBP_H
+#include <functional>
 namespace TKPEmu::Gameboy::Utils {
-	struct GameboyBreakpoint {
-	public:
-		using BreakFunction = std::function<bool()>;
+	struct GBBPArguments {
 		bool A_using = false; uint16_t A_value = 0;
 		bool B_using = false; uint16_t B_value = 0;
 		bool C_using = false; uint16_t C_value = 0;
@@ -16,38 +15,47 @@ namespace TKPEmu::Gameboy::Utils {
 		bool PC_using = false; uint16_t PC_value = 0;
 		bool SP_using = false; uint16_t SP_value = 0;
 		bool Ins_using = false; uint16_t Ins_value = 0;
-
-		bool breakpoint_from_table = false;
-		void SetChecks(BreakFunction&& func) {
+	};
+	struct GameboyBreakpoint {
+	public:
+		using BreakFunction = std::function<bool()>;
+		bool Loaded = false;
+		bool BPFromTable = true;
+		GBBPArguments Args;
+		GameboyBreakpoint() = default;
+		GameboyBreakpoint(const GameboyBreakpoint&) = delete;
+		GameboyBreakpoint& operator=(const GameboyBreakpoint&) = delete;
+		GameboyBreakpoint(GameboyBreakpoint&&) = default;
+		GameboyBreakpoint& operator=(GameboyBreakpoint&&) = default;
+		void SetChecks(BreakFunction func) {
 			checks = std::move(func);
 		}
 		bool Check() const {
 			return checks();
 		}
 		const std::string& GetName() {
-			if (!loaded) {
+			if (!Loaded) {
 				std::stringstream ss;
 				ss << std::setfill('0');
-				if (A_using) { ss << "A=" << std::hex << std::setw(2) << A_value << "&&"; }
-				if (B_using) { ss << "B=" << std::hex << std::setw(2) << B_value << "&&"; }
-				if (C_using) { ss << "C=" << std::hex << std::setw(2) << C_value << "&&"; }
-				if (D_using) { ss << "D=" << std::hex << std::setw(2) << D_value << "&&"; }
-				if (E_using) { ss << "E=" << std::hex << std::setw(2) << E_value << "&&"; }
-				if (F_using) { ss << "F=" << std::hex << std::setw(2) << F_value << "&&"; }
-				if (H_using) { ss << "H=" << std::hex << std::setw(2) << H_value << "&&"; }
-				if (L_using) { ss << "L=" << std::hex << std::setw(2) << L_value << "&&"; }
-				if (PC_using) { ss << "PC=" << std::hex << std::setw(4) << PC_value << "&&"; }
-				if (SP_using) { ss << "SP=" << std::hex << std::setw(4) << SP_value << "&&"; }
-				if (Ins_using) { ss << "Ins=" << std::hex << std::setw(2) << Ins_value << "&&"; }
+				if (Args.A_using) { ss << "A=" << std::hex << std::setw(2) << Args.A_value << "&&"; BPFromTable = false; }
+				if (Args.B_using) { ss << "B=" << std::hex << std::setw(2) << Args.B_value << "&&"; BPFromTable = false; }
+				if (Args.C_using) { ss << "C=" << std::hex << std::setw(2) << Args.C_value << "&&"; BPFromTable = false; }
+				if (Args.D_using) { ss << "D=" << std::hex << std::setw(2) << Args.D_value << "&&"; BPFromTable = false; }
+				if (Args.E_using) { ss << "E=" << std::hex << std::setw(2) << Args.E_value << "&&"; BPFromTable = false; }
+				if (Args.F_using) { ss << "F=" << std::hex << std::setw(2) << Args.F_value << "&&"; BPFromTable = false; }
+				if (Args.H_using) { ss << "H=" << std::hex << std::setw(2) << Args.H_value << "&&"; BPFromTable = false; }
+				if (Args.L_using) { ss << "L=" << std::hex << std::setw(2) << Args.L_value << "&&"; BPFromTable = false; }
+				if (Args.PC_using) { ss << "PC=" << std::hex << std::setw(4) << Args.PC_value << "&&"; }
+				if (Args.SP_using) { ss << "SP=" << std::hex << std::setw(4) << Args.SP_value << "&&"; BPFromTable = false; }
+				if (Args.Ins_using) { ss << "Ins=" << std::hex << std::setw(2) << Args.Ins_value << "&&"; BPFromTable = false; }
 				ss.seekp(-2, ss.cur);
 				ss << "  ";
 				name = ss.str();
-				loaded = true;
+				Loaded = true;
 			}
 			return name;
 		}
 	private:
-		bool loaded = false;
 		std::string name = "error-breakpoint";
 		BreakFunction checks;
 	};

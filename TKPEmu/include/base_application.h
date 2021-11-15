@@ -18,7 +18,7 @@ namespace TKPEmu::Applications {
 		virtual void Reset() {};
 		static void SetupWindow() {
 			ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-			ImGui::SetNextWindowSizeConstraints(ImVec2(300, 300), ImVec2(450, 450));
+			ImGui::SetNextWindowSizeConstraints(ImVec2(300, 300), ImVec2(550, 550));
 		};
 	};
 }

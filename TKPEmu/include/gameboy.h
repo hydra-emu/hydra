@@ -34,7 +34,7 @@ namespace TKPEmu::Gameboy {
 		void LoadFromFile(std::string&& path) override;
 		void LoadInstrToVec(std::vector<DisInstr>& vec);
         DisInstr GetInstruction(uint16_t address);
-		void AddBreakpoint(GameboyBreakpoint bp);
+		bool AddBreakpoint(GBBPArguments bp);
 		void RemoveBreakpoint(int index);
 		float* GetScreenData() override;
 		const auto& GetOpcodeDescription(uint8_t opc);

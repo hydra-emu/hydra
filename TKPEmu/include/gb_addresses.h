@@ -2,9 +2,10 @@
 #ifndef TKP_TOOLS_GBADDR_H
 #define TKP_TOOLS_GBADDR_H
 #include "disassembly_instr.h"
+#include "gb_breakpoint.h"
 #include <cstdint>
 using DisInstr = TKPEmu::Tools::DisInstr;
-
+using GBBPArguments = TKPEmu::Gameboy::Utils::GBBPArguments;
 constexpr std::array<uint8_t, 0x100> InstrTimes = {
     0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
     0, 2, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0,

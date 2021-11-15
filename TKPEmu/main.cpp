@@ -78,9 +78,16 @@ int main(int argc, char *argv[]) {
 		} else {
 			switch(next_parameter_type) {
 				case ParameterType::File: {
-					rom_file = argv[i];
-					expects_parameter = false;
+					if (std::filesystem::exists(argv[i])) {
+						rom_file = argv[i];
+						expects_parameter = false;
+					} else {
+						throw("Error: Specified file does not exist.");
+					}
 					break;
+				}
+				default: {
+					throw ("Error: Invalid parameter to argument.");
 				}
 			}
 		}

@@ -83,7 +83,7 @@ namespace TKPEmu::Graphics {
         // RAII class for the initialization functions
         class DisplayInitializer {
         public:
-            DisplayInitializer(PrettyPrinter&);
+            DisplayInitializer();
             ~DisplayInitializer();
         };
     public:
@@ -134,12 +134,11 @@ namespace TKPEmu::Graphics {
         TKPImage background_image_;
         GLuint frame_buffer_;
         ImGui::FileBrowser file_browser_;
-
         std::unique_ptr<Emulator> emulator_ = nullptr;
         std::unique_ptr<BaseDisassembler> disassembler_ = nullptr;
         std::unique_ptr<BaseTracelogger> tracelogger_ = nullptr;
-        std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window_ptr_;
+        std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
         std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
         float sleep_time_ = 16.75f;

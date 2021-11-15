@@ -110,7 +110,7 @@ namespace TKPEmu::Graphics {
         }
     };
     
-	Display::DisplayInitializer::DisplayInitializer(PrettyPrinter& pprinter) {
+	Display::DisplayInitializer::DisplayInitializer() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             std::cout << SDL_GetError() << std::endl;
         }
@@ -130,10 +130,10 @@ namespace TKPEmu::Graphics {
     }
     
     Display::Display() :
+        display_initializer_(),
+        settings_manager_(settings_, "tkp_user.ini"),
         window_ptr_(nullptr, SDL_DestroyWindow),
-        gl_context_ptr_(nullptr, SDL_GL_DeleteContext),
-        display_initializer_(pretty_printer_),
-        settings_manager_(settings_, "tkp_user.ini")
+        gl_context_ptr_(nullptr, SDL_GL_DeleteContext)
     {
         std::ios_base::sync_with_stdio(false);
         #ifdef _WIN32
@@ -150,7 +150,7 @@ namespace TKPEmu::Graphics {
         #endif
         #ifdef linux
         char result[PATH_MAX];
-        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+        readlink("/proc/self/exe", result, PATH_MAX);
         ExecutableDirectory = dirname(result);
         #endif
         ImGuiSettingsFile = ExecutableDirectory + ResourcesDataDir + ImGuiSettingsFile;
@@ -341,7 +341,6 @@ namespace TKPEmu::Graphics {
     void Display::draw_fps_counter(bool* draw){
         if (*draw) {
             static int corner = 0;
-            ImGuiIO& io = ImGui::GetIO();
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
             if (corner != -1)
             {
@@ -558,7 +557,6 @@ namespace TKPEmu::Graphics {
             disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
             tracelogger_ = std::make_unique<GameboyTracelogger>(&log_mode_);
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
-            GameboyDisassembler* dis = dynamic_cast<GameboyDisassembler*>(disassembler_.get());
             disassembler_->Reset();
             disassembler_->SetEmulator(temp);
             debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
@@ -569,7 +567,6 @@ namespace TKPEmu::Graphics {
             setup_gameboy_palette();
             if (debug_mode_) {
                 emulator_->StartDebug();
-                //temp->LoadInstrToVec(dis->Instrs);
             }
             else {
                 emulator_->Start();
@@ -664,7 +661,7 @@ namespace TKPEmu::Graphics {
         gladLoadGL();
         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
         IMGUI_CHECKVERSION();
-        auto g = ImGui::CreateContext();
+        ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.IniFilename = NULL;
         ImGui::StyleColorsDark();
