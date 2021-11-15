@@ -2837,24 +2837,6 @@ namespace TKPEmu::Gameboy::Devices {
 		div_reset_index_ = -1;
 		TimerCounter = 0;
 		old_tac_ = 0;
-		/*
-		bus_->inBios = false;
-		A = 0x1; F = 0x90;
-		B = 0x0; C = 0x13;
-		D = 0x0; E = 0xD8;
-		H = 0x1; L = 0x4D;
-		SP = 0xFFFE;
-		PC = 0x100;
-		IME = true;
-		IF = 0xE1;
-		tClock = 0;
-		halt = false; stop = false;
-		Oscillator = 0xABCC;
-		DIVIDER = Oscillator >> 8;
-		div_reset_index_ = -1;
-		TimerCounter = 0;
-		old_tac_ = 0;
-		JOYP = 0b1110'1111;*/
 	}
 
 	int CPU::Update() {

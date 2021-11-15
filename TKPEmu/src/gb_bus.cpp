@@ -309,6 +309,7 @@ namespace TKPEmu::Gameboy::Devices {
 		oam_.fill(0);
 		selected_rom_bank_ = 1;
 		selected_ram_bank_ = 0;
+		bios_enabled_ = true;
 	}
 
 	void Bus::LoadCartridge(std::string&& fileName) {
