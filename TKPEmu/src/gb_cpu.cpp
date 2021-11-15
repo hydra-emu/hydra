@@ -2823,6 +2823,21 @@ namespace TKPEmu::Gameboy::Devices {
 	#pragma endregion
 
 	void CPU::Reset() {
+		A = 0; F = 0;
+		B = 0; C = 0;
+		D = 0; E = 0;
+		H = 0; L = 0;
+		SP = 0xFFFE;
+		PC = 0;
+		tClock = 0;
+		halt = false; stop = false;
+		JOYP = 0b1110'1111;
+		Oscillator = 0;
+		DIVIDER = 0;
+		div_reset_index_ = -1;
+		TimerCounter = 0;
+		old_tac_ = 0;
+		/*
 		bus_->inBios = false;
 		A = 0x1; F = 0x90;
 		B = 0x0; C = 0x13;
@@ -2839,7 +2854,7 @@ namespace TKPEmu::Gameboy::Devices {
 		div_reset_index_ = -1;
 		TimerCounter = 0;
 		old_tac_ = 0;
-		JOYP = 0b1110'1111;
+		JOYP = 0b1110'1111;*/
 	}
 
 	int CPU::Update() {

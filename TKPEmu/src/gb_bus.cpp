@@ -6,16 +6,39 @@
 #include "../include/gb_addresses.h"
 namespace TKPEmu::Gameboy::Devices {
 
-	Bus::Bus(std::vector<DisInstr>& instrs) : instructions_(instrs) {
-		inBios = true;
-	}
+	Bus::Bus(std::vector<DisInstr>& instrs) : instructions_(instrs) {}
 
 	uint8_t& Bus::redirect_address(uint16_t address) {
 		using CT = Cartridge::CartridgeType;
 		// Return address from ROM banks
 		// TODO: create better exceptions
+		// TODO: make bios optional, can be disabled in settings
 		switch (address & 0xF000) {
-			case 0x0000:
+			case 0x0000: {
+				if (bios_enabled_) {
+					static constexpr uint16_t bios_verify_start = 0xA8;
+					static constexpr uint16_t bios_verify_end = 0xD7;
+					static constexpr uint16_t logo_cartridge_start = 0x104;
+					static constexpr uint16_t logo_cartridge_end = 0x133;
+					// The logo is hardcoded in the bios normally to check validity of cartridges, so
+					// these two ifs allow us to circmvent the validity check and provide our own logo
+					if (address >= bios_verify_start && address <= bios_verify_end) {
+						return logo[address - bios_verify_start];
+					}
+					if (address >= logo_cartridge_start && address <= logo_cartridge_end) {
+						return logo[address - logo_cartridge_start];
+					}
+					if (address < 0x100) {
+						return bios[address];
+					} else if (address == 0x100) {
+						// 0x100 is the first address reached after bios finishes
+						bios_enabled_ = false;
+					}
+				}
+				// If gameboy is not in bios mode, or if the address >= 0x100, we fallthrough
+				// to the next case
+				[[fallthrough]];  // This avoids a compiler warning. Fallthrough is intentional
+			}
 			case 0x1000:
 			case 0x2000:
 			case 0x3000:
