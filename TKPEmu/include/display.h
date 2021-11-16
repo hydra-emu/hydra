@@ -6,14 +6,6 @@
 #include <string>
 #include <mutex>
 #include <atomic>
-#ifdef _WIN32
-#include <windows.h>
-#endif
-#ifdef linux
-#include <unistd.h>
-#include <linux/limits.h>
-#include <libgen.h>
-#endif
 #include "emulator.h"
 #include "prettyprinter.h"
 #include "TKPImage.h"

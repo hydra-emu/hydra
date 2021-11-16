@@ -107,8 +107,11 @@ int main(int argc, char *argv[]) {
 void print_help() noexcept {
 	std::cout << "Commands:\n" 
 				"-h or --help: Shows this dialog\n"
-				"-d or --display: Activates GUI mode\n"
+				"-d or --display: Starts in GUI mode\n"
 				"-o or --open (filename): Open and start a rom\n"
-				"-f or --fast-mode: Force emulator to run as fast as possible\n" 
+				"-f or --fast-mode: Force emulator to run as fast as possible\n"
+				"-s or --screenshot (time): Take a screenshot of the screen after (time) milliseconds\n"
+				"-sd or --screenshot-directory (path): Change the directory where the screenshot will be saved (cwd by default)\n"
+				"-c or --config: Returns the configuration file path, edit it with your favorite text editor "
 		<< std::endl;
 }

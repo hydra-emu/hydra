@@ -1,6 +1,9 @@
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../lib/stb_image_write.h"
 #include "../include/gameboy.h"
 #include <iostream>
 #include <atomic>
+#include <filesystem>
 #include <bitset>
 #include "../glad/glad/glad.h"
 namespace TKPEmu::Gameboy {
@@ -220,6 +223,24 @@ namespace TKPEmu::Gameboy {
 		};
 		std::thread t1(func, std::ref(vec));
 		t1.detach();
+	}
+	void Gameboy::Screenshot() {
+		std::lock_guard<std::mutex> lg(DrawMutex);
+		static const std::string scrnshot_dir = std::string(std::filesystem::current_path()) + "/Resources/Screenshots/";
+		bool found = false;
+		int index = 1;
+		do {
+			// Find available screenshot name
+			found = !std::filesystem::exists(scrnshot_dir + "/gb_screenshot_" + std::to_string(index) + ".bmp");
+			if (index > 200){
+				std::cerr << "Failed to take screenshot: more than 200 screenshots detected. Delete or move some from " << scrnshot_dir << std::endl;
+			}
+		} while (!found);
+		uint8_t* pixels = new uint8_t[160 * 144 * 4];
+		glBindTexture(GL_TEXTURE_2D, EmulatorImage.texture);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		stbi_write_bmp("test.bmp", 160, 144, 3, pixels);
 	}
 	DisInstr Gameboy::GetInstruction(uint16_t address) {
 		uint8_t ins = bus_.Read(address);

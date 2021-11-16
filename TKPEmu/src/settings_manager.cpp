@@ -1,39 +1,13 @@
 #include "../include/settings_manager.h"
 #include <filesystem>
 #include <iostream>
-#ifdef _WIN32
-#include <windows.h>
-#endif
-#ifdef linux
-#include <unistd.h>
-#include <linux/limits.h>
-#include <libgen.h>
-#endif
 namespace TKPEmu::Tools {
 	SettingsManager::SettingsManager(SettingsMap& settings_, std::string config_file) : settings_(settings_), config_file_(config_file) {
 		try {
 			// ini_parser::read_ini throws if file doesn't exist, so we create it
 			std::string directory;
-			#ifdef _WIN32
-			wchar_t exe_dir[MAX_PATH];
-			GetModuleFileNameW(NULL, exe_dir, MAX_PATH);
-			char DefChar = ' ';
-			char res[260];
-			WideCharToMultiByte(CP_ACP, 0, exe_dir, -1, res, MAX_PATH, &DefChar, NULL);
-			directory = res;
-			const size_t last_slash_idx = directory.rfind('\\');
-			if (std::string::npos != last_slash_idx)
-			{
-				directory = directory.substr(0, last_slash_idx);
-			}
+			directory = std::filesystem::current_path();
 			directory += "/Resources/Data/";
-			#endif
-			#ifdef linux
-			char result[PATH_MAX];
-			readlink("/proc/self/exe", result, PATH_MAX);
-			directory = dirname(result);
-			directory += "/Resources/Data/";
-			#endif
 			if (!std::filesystem::exists(directory)) {
 				std::cout << "Creating " << directory << " directories..." << std::endl;
 				std::filesystem::create_directories(directory);

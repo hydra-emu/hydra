@@ -76,7 +76,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	
 	float* PPU::GetScreenData() {
-		return screen_color_data_.data();
+		return &screen_color_data_[0];
 	}
 
 	int PPU::set_mode(int mode) {

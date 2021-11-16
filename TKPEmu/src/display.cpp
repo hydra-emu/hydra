@@ -136,23 +136,7 @@ namespace TKPEmu::Graphics {
         gl_context_ptr_(nullptr, SDL_GL_DeleteContext)
     {
         std::ios_base::sync_with_stdio(false);
-        #ifdef _WIN32
-        GetModuleFileNameW(NULL, exe_dir, MAX_PATH);
-        char DefChar = ' ';
-        char res[260];
-        WideCharToMultiByte(CP_ACP, 0, exe_dir, -1, res, MAX_PATH, &DefChar, NULL);
-        ExecutableDirectory = res;
-        const size_t last_slash_idx = ExecutableDirectory.rfind('\\');
-        if (std::string::npos != last_slash_idx)
-        {
-            ExecutableDirectory = ExecutableDirectory.substr(0, last_slash_idx);
-        }
-        #endif
-        #ifdef linux
-        char result[PATH_MAX];
-        readlink("/proc/self/exe", result, PATH_MAX);
-        ExecutableDirectory = dirname(result);
-        #endif
+        ExecutableDirectory = std::filesystem::current_path();
         ImGuiSettingsFile = ExecutableDirectory + ResourcesDataDir + ImGuiSettingsFile;
         // TODO: get rid of this enum warning
         SDL_WindowFlags window_flags = (SDL_WindowFlags)(
@@ -458,6 +442,10 @@ namespace TKPEmu::Graphics {
         // TODO: implement save and load state, disable these buttons if no rom loaded
         if (ImGui::MenuItem("Save State", "Ctrl+S", false, is_rom_loaded())) {}
         if (ImGui::MenuItem("Load State", "Ctrl+L", false, is_rom_loaded())) {}
+        ImGui::Separator();
+        if (ImGui::MenuItem("Screenshot", NULL, false, is_rom_loaded())) {
+            emulator_->Screenshot();
+        }
         ImGui::Separator();
         if (ImGui::MenuItem("Settings", NULL, window_settings_open_, true)) { 
             window_settings_open_ ^= true; 

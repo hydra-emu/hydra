@@ -20,9 +20,9 @@ namespace TKPEmu::Gameboy::Devices {
 		void Update(uint8_t tTemp);
 		void Reset();
 		float* GetScreenData();
+	private:
 		Bus* bus_;
 		std::array<float, 4 * 160 * 144> screen_color_data_{};
-		std::array<std::array<Pixel, 144>, 160> pixel_data_{};
 
 		// PPU register pointers
 		uint8_t& LCDC, &STAT, &LYC, &LY, &IF, &SCY, &SCX, &WY, &WX;
