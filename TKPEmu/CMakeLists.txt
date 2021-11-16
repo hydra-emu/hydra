@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Enable maximum warning levels
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+# Enable maximum optimization, comment out if you need to debug or 
+# see https://stackoverflow.com/questions/41361631/optimize-in-cmake-by-default
+set(CMAKE_CXX_FLAGS "-O3")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 add_subdirectory("src/")
 add_subdirectory("lib/")
