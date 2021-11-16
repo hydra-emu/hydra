@@ -93,6 +93,7 @@ namespace TKPEmu::Graphics {
         TKPEmu::Tools::SettingsMap settings_ =
         {
             {"General.debug_mode", "1"},
+            {"General.fast_mode", "0"},
             {"Video.limit_fps", "1"},
             {"Video.max_fps", "60"},
             {"Gameboy.color0", "d0d058"},
@@ -167,6 +168,7 @@ namespace TKPEmu::Graphics {
         void draw_menu_bar_file_recent();
         void draw_menu_bar_tools();
         void draw_menu_bar_view();
+        void open_file_browser();
         
         // Helper functions
         inline bool load_image_from_file(const char* filename, TKPImage& out);

@@ -331,12 +331,8 @@ namespace TKPEmu::Graphics {
     void Display::draw_menu_bar_file() {
         if (ImGui::MenuItem("Open ROM", "Ctrl+O", window_file_browser_open_, true)) {
             window_file_browser_open_ ^= true;
-            if (window_file_browser_open_) {
-                file_browser_.SetTitle("Select a ROM...");
-                file_browser_.SetTypeFilters(SupportedRoms);
-                file_browser_.SetPwd(ExecutableDirectory + ResourcesRomsDir);
-                file_browser_.Open();
-            }
+            if (window_file_browser_open_)
+                open_file_browser();
         }
         if (ImGui::BeginMenu("Open Recent")) {
             draw_menu_bar_file_recent();
@@ -480,7 +476,7 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::step_emulator() {
-        if (emulator_ != nullptr) {
+        if (emulator_ != nullptr && window_disassembler_open_ && emulator_->Paused.load()) {
             emulator_->Step = true;
             emulator_->Step.notify_all();
         }
@@ -569,7 +565,14 @@ namespace TKPEmu::Graphics {
         }
         file_browser_.SetWindowSize(300, 300);
     }
-    
+    void Display::open_file_browser() {
+        if (!file_browser_.IsOpened()) {
+            file_browser_.SetTitle("Select a ROM...");
+            file_browser_.SetTypeFilters(SupportedRoms);
+            file_browser_.SetPwd(ExecutableDirectory + ResourcesRomsDir);
+            file_browser_.Open();
+        }
+    }
     void Display::main_loop() {
         load_loop();
         bool loop = true;
@@ -624,6 +627,11 @@ namespace TKPEmu::Graphics {
                                 }
                                 if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_R]) {
                                     reset_pressed_ = true;
+                                    break;
+                                }
+                                if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_O]) {
+                                    window_file_browser_open_ = true;
+                                    open_file_browser();
                                     break;
                                 }
                                 last_key_pressed_ = key;
