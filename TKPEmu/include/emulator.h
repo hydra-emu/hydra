@@ -32,7 +32,7 @@ namespace TKPEmu {
 		virtual void HandleKeyDown(SDL_Keycode keycode) = 0;
 		virtual void HandleKeyUp(SDL_Keycode keycode) = 0;
 		virtual void LoadFromFile(std::string&& path) = 0;
-		virtual void Screenshot() {};
+		virtual void Screenshot(std::string filename) { throw("Screenshot was not implemented for this emulator" ); };
 		virtual float* GetScreenData() { return nullptr; };
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
