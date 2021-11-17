@@ -28,7 +28,6 @@ namespace TKPEmu::Gameboy {
 		void StartDebug() override;
 		void StartLog() override;
 		void Reset() override;
-		void Update() override;
 		void HandleKeyDown(SDL_Keycode key) override;
 		void HandleKeyUp(SDL_Keycode key) override;
 		void LoadFromFile(std::string&& path) override;
@@ -54,9 +53,8 @@ namespace TKPEmu::Gameboy {
 		std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
 		std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
 		float sleep_time_ = 16.75f;
-		// Disassembler loads up instructions from memory. If the emulator is paused,
-		// there is no reason to do this over and over.
-		void uncache_all();
+		void update() override;
+		std::string print() const override;
 	};
 }
 #endif

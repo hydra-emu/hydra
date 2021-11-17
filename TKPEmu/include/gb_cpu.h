@@ -17,15 +17,14 @@ namespace TKPEmu::Gameboy::Devices {
 		using BigRegisterType = uint16_t;
 	private:
 		Bus* bus_;
-		bool IME = false;
-		int mTemp = 0;
+		bool ime_ = false;
 		int tTemp = 0;
 		int div_reset_index_ = -1;
 		int old_tac_ = 0;
 		int tac_index_ = 0x1000;
 		int tima_overflow_ = false;
-		bool halt = false;
-		bool stop = false;
+		bool halt_ = false;
+		bool stop_ = false;
 
 		// Instruction functions
 		void NOP(); void LDBC16(); void LDBCA(); void INCBC(); void INCB(); void DECB(); void LDB8(); void RLCA(); void LD16SP(); void ADDHLBC(); void LDABC(); void DECBC(); void INCC(); void DECC(); void LDC8(); void RRCA();
@@ -150,7 +149,7 @@ namespace TKPEmu::Gameboy::Devices {
 		const int MaxCycles = ClockSpeed / 60;
 		int Oscillator = 0;
 		int TimerCounter = ClockSpeed / tac_index_;
-		int tClock = 0;
+		int TClock = 0;
 		unsigned long TotalClocks = 0;
 		void Reset();
 		int Update();

@@ -4,6 +4,7 @@
 #include "TKPImage.h"
 #include "disassembly_instr.h"
 #include <SDL2/SDL.h>
+#include <iostream>
 #include <mutex>
 #include <vector>
 #include <atomic>
@@ -24,21 +25,25 @@ namespace TKPEmu {
 		std::atomic_bool LogReady = false;
 		std::atomic_bool FastMode = false;
 		std::atomic_int InstructionBreak = -1;
-		constexpr virtual int GetPCHexCharSize() { return 1; }
+		constexpr virtual int GetPCHexCharSize();
 		virtual void Start() = 0;
 		virtual void StartDebug() = 0;
 		virtual void StartLog() = 0;
 		virtual void Reset() = 0;
-		virtual void Update() = 0;
-		virtual void HandleKeyDown(SDL_Keycode keycode) = 0;
-		virtual void HandleKeyUp(SDL_Keycode keycode) = 0;
+		virtual void HandleKeyDown(SDL_Keycode keycode);
+		virtual void HandleKeyUp(SDL_Keycode keycode);
 		virtual void LoadFromFile(std::string&& path) = 0;
-		virtual void Screenshot(std::string filename) { throw("Screenshot was not implemented for this emulator" ); };
-		virtual float* GetScreenData() { return nullptr; };
+		virtual void Screenshot(std::string filename);
+		virtual float* GetScreenData();
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
 		std::thread UpdateThread;
 		TKPImage EmulatorImage{};
+		protected:
+		virtual void update() = 0;
+		virtual std::string print() const;
+		private:
+		friend std::ostream& operator<<(std::ostream& os, const Emulator& obj);
 	};
 }
 #endif

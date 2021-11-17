@@ -61,7 +61,7 @@ namespace TKPEmu::Gameboy {
 		auto func = [this]() {
 			while (!Stopped.load()) {
 				if (!Paused.load()) {
-					Update();
+					update();
 				}
 			}
 		};
@@ -92,12 +92,12 @@ namespace TKPEmu::Gameboy {
 					}
 					first_instr = false;
 					if (!broken)
-						Update();
+						update();
 				}
 				else {
 					Step.wait(false);
 					Step.store(false);
-					Update();
+					update();
 					InstructionBreak.store(cpu_.PC);
 				}
 			}
@@ -132,11 +132,11 @@ namespace TKPEmu::Gameboy {
 					}
 					first_instr = false;
 					if (!broken)
-						Update();
+						update();
 				} else {
 					Step.wait(false);
 					Step.store(false);
-					Update();
+					update();
 					InstructionBreak.store(cpu_.PC);
 					LogReady.store(true);
 				}
@@ -152,14 +152,18 @@ namespace TKPEmu::Gameboy {
 		cpu_.Reset();
 		ppu_.Reset();
 	}
-	void Gameboy::Update() {
+	void Gameboy::update() {
 		int clk = cpu_.Update();
 		ppu_.Update(clk);
-		if (cpu_.tClock >= cpu_.MaxCycles) {
-			cpu_.tClock = 0;
+		if (cpu_.TClock >= cpu_.MaxCycles) {
+			cpu_.TClock = 0;
 			cpu_.TimerCounter = cpu_.ClockSpeed / 0x400;
 			limit_fps();
 		}
+	}
+	std::string Gameboy::print() const { 
+		return "GameboyTKP for TKPEmu\n"
+		       "Read more: https://github.com/OFFTKP/TKPEmu/blob/master/gb_README.md";
 	}
 	void Gameboy::HandleKeyDown(SDL_Keycode key) {
 		static const uint8_t joy_direction = 0b1110'1111;
