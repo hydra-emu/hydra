@@ -31,7 +31,6 @@ namespace TKPEmu::Graphics {
         ImGui::DestroyContext();
         SDL_Quit();
     }
-    
     Display::Display() :
         display_initializer_(),
         settings_manager_(settings_, "tkp_user.ini"),
@@ -128,6 +127,9 @@ namespace TKPEmu::Graphics {
                 else {
                     if (ImGui::Checkbox("Debug mode", &debug_mode_)) {
                         settings_.at("General.debug_mode") = debug_mode_ ? "1" : "0";
+                        if (debug_mode_) {
+                            emulator_start_opt_ = EmuStartOptions::Debug;
+                        }
                     }
                 }
                 ImGui::NewLine();
@@ -442,22 +444,17 @@ namespace TKPEmu::Graphics {
             }
             emulator_ = std::make_unique<Gameboy>(gb_keys_directional_, gb_keys_action_);
             disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
-            tracelogger_ = std::make_unique<GameboyTracelogger>(&log_mode_);
+            //tracelogger_ = std::make_unique<GameboyTracelogger>(&log_mode_);
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             disassembler_->Reset();
             disassembler_->SetEmulator(temp);
-            debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
             rom_loaded_ = true;
             rom_paused_ = debug_mode_;
             emulator_->Paused.store(rom_paused_);
             emulator_->LoadFromFile(path.string());
             setup_gameboy_palette();
-            if (debug_mode_) {
-                emulator_->StartDebug();
-            }
-            else {
-                emulator_->Start();
-            }
+            EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
+            emulator_->Start(options);
         }
 
         glGenFramebuffers(1, &frame_buffer_);
@@ -530,10 +527,6 @@ namespace TKPEmu::Graphics {
 
     inline bool Display::is_rom_loaded_and_debugmode() {
         return rom_loaded_ && debug_mode_;
-    }
-
-    inline bool Display::is_rom_loaded_and_logmode() {
-        return rom_loaded_ && log_mode_;
     }
 
     void Display::setup_gameboy_palette() {
@@ -660,7 +653,7 @@ namespace TKPEmu::Graphics {
                 if (reset_pressed_) {
                     reset_pressed_ = false;
                     BaseDisassembler::ResetEmulatorState(emulator_.get());
-                    emulator_->StartDebug();
+                    emulator_->Start(emulator_start_opt_);
                 }
                 if (pause_pressed_) {
                     pause_pressed_ = false;

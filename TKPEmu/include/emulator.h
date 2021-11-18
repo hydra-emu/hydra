@@ -13,6 +13,10 @@
 namespace TKPEmu {
 	using TKPImage = TKPEmu::Tools::TKPImage;
 	using DisInstr = TKPEmu::Tools::DisInstr;
+	enum class EmuStartOptions {
+		Normal,
+		Debug
+	};
 	class Emulator {
 	public:
 		Emulator() = default;
@@ -26,10 +30,8 @@ namespace TKPEmu {
 		std::atomic_bool FastMode = false;
 		std::atomic_int InstructionBreak = -1;
 		constexpr virtual int GetPCHexCharSize();
-		virtual void Start() = 0;
-		virtual void StartDebug() = 0;
-		virtual void StartLog() = 0;
-		virtual void Reset() = 0;
+		virtual void Start(EmuStartOptions start_mode);
+		virtual void Reset();
 		virtual void HandleKeyDown(SDL_Keycode keycode);
 		virtual void HandleKeyUp(SDL_Keycode keycode);
 		virtual void LoadFromFile(std::string&& path) = 0;
@@ -40,7 +42,9 @@ namespace TKPEmu {
 		std::thread UpdateThread;
 		TKPImage EmulatorImage{};
 		protected:
-		virtual void update() = 0;
+		virtual void start_normal();
+		virtual void start_debug();
+		virtual void update();
 		virtual std::string print() const;
 		private:
 		friend std::ostream& operator<<(std::ostream& os, const Emulator& obj);

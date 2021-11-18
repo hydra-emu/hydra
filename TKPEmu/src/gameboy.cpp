@@ -56,7 +56,7 @@ namespace TKPEmu::Gameboy {
 		Stopped.store(true);
 		glDeleteTextures(1, &EmulatorImage.texture);
 	}
-	void Gameboy::Start() {
+	void Gameboy::start_normal() { 
 		Reset();
 		auto func = [this]() {
 			while (!Stopped.load()) {
@@ -68,8 +68,7 @@ namespace TKPEmu::Gameboy {
 		UpdateThread = std::thread(func);
 		UpdateThread.detach();
 	}
-
-	void Gameboy::StartDebug() {
+	void Gameboy::start_debug() {
 		auto func = [this]() {
 			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
 			Reset();
@@ -106,47 +105,6 @@ namespace TKPEmu::Gameboy {
 		UpdateThread = std::thread(func);
 		UpdateThread.detach();
 	}
-
-	// Starts the emulator in log mode
-	void Gameboy::StartLog() {
-		auto func = [this]() {
-			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
-			Reset();
-			Paused = true;
-			Stopped = false;
-			// TODO: avoid code duplication
-			// Emulation doesn't break on first instruction
-			bool first_instr = true;
-			while (!Stopped.load()) {
-				if (!Paused.load()) {
-					bool broken = false;
-					if (!first_instr) {
-						for (const auto& bp : Breakpoints) {
-							bool brk = bp.Check();
-							if (brk) {
-								InstructionBreak.store(cpu_.PC);
-								Paused.store(true);
-								broken = true;
-							}
-						}
-					}
-					first_instr = false;
-					if (!broken)
-						update();
-				} else {
-					Step.wait(false);
-					Step.store(false);
-					update();
-					InstructionBreak.store(cpu_.PC);
-					LogReady.store(true);
-				}
-			}
-			return;
-		};
-		UpdateThread = std::thread(func);
-		UpdateThread.detach();
-	}
-
 	void Gameboy::Reset() {
 		bus_.SoftReset();
 		cpu_.Reset();

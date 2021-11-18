@@ -35,7 +35,7 @@ namespace TKPEmu::Applications {
                 // Sets the stopped flag on the thread to true and then waits for it to become false
                 // The thread sets the flag to false upon exiting
                 ResetEmulatorState(emulator);
-                emulator->StartDebug();
+                emulator->Start(EmuStartOptions::Debug);
             }
             if (ImGui::MenuItem("Stop", NULL, false, *rom_loaded)) {
                 *rom_loaded = false;

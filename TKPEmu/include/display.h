@@ -35,6 +35,7 @@ namespace TKPEmu::Graphics {
     constexpr auto MenuBarHeight = 19;
     using TKPImage = TKPEmu::Tools::TKPImage;
     using KeySelector = TKPEmu::Tools::KeySelector;
+    using EmuStartOptions = TKPEmu::EmuStartOptions;
    enum class FileAccess { Read, Write };
     struct WindowSettings {
         int window_width = 640;
@@ -118,7 +119,8 @@ namespace TKPEmu::Graphics {
 
         bool limit_fps_ = true;
         int max_fps_ = 60;
-        bool debug_mode_ = true;  
+        bool debug_mode_ = true;
+        EmuStartOptions emulator_start_opt_ = EmuStartOptions::Normal;
         // This variable helps for setting up the controls
         SDL_Keycode last_key_pressed_ = 0;
 
@@ -141,9 +143,6 @@ namespace TKPEmu::Graphics {
         // return static members
         bool rom_loaded_ = false;
         bool rom_paused_ = false;
-        // Log mode is a mode that waits for the tracelogger to log each instruction before
-        // stepping into the next one
-        bool log_mode_ = false;
         EmulatorType emulator_type_ = EmulatorType::None;
         bool menu_bar_open_ = true;
         bool window_tracelogger_open_ = false;
@@ -177,7 +176,6 @@ namespace TKPEmu::Graphics {
         inline void init_gameboy_values();
         inline bool is_rom_loaded();
         inline bool is_rom_loaded_and_debugmode();
-        inline bool is_rom_loaded_and_logmode();
 
         // This function deals with scaling the gameboy screen texture without stretching it
         inline void image_scale(ImVec2& topleft, ImVec2& bottomright);

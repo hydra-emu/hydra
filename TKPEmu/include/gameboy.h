@@ -24,9 +24,6 @@ namespace TKPEmu::Gameboy {
 		Gameboy(GameboyKeys& direction_keys, GameboyKeys& action_keys);
 		~Gameboy();
 		constexpr int GetPCHexCharSize() override { return 4; };
-		void Start() override;
-		void StartDebug() override;
-		void StartLog() override;
 		void Reset() override;
 		void HandleKeyDown(SDL_Keycode key) override;
 		void HandleKeyUp(SDL_Keycode key) override;
@@ -55,6 +52,8 @@ namespace TKPEmu::Gameboy {
 		float sleep_time_ = 16.75f;
 		void update() override;
 		std::string print() const override;
+		void start_normal() override;
+		void start_debug() override;
 	};
 }
 #endif
