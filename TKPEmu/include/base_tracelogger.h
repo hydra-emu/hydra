@@ -14,6 +14,7 @@ namespace TKPEmu::Applications {
         Emulator* emulator_ = nullptr;
     private:
         virtual void v_draw() = 0;
+        bool ready_to_log_ = false;
     };
 }
 #endif
