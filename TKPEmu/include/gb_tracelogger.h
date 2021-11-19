@@ -32,7 +32,7 @@ namespace TKPEmu::Applications {
 		std::unique_ptr<std::ofstream> buffer_ptr_ = nullptr;
 		void log_emu_state(LogType);
 	public:
-		GameboyTracelogger(bool* log_mode) : BaseTracelogger(log_mode) {};
+		GameboyTracelogger() {};
 		void SetEmulator(Emulator* emulator) noexcept;
 		void SetFile(std::string file) final override;
 	};

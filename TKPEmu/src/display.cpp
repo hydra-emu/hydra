@@ -216,7 +216,7 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_trace_logger(bool* draw) {
         if (*draw && is_rom_loaded_and_debugmode()) {
-            tracelogger_->Draw("Trace Logger", draw);
+            tracelogger_->Draw("Tracelogger", draw);
         }
     }
 
@@ -364,7 +364,7 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_menu_bar_tools() {
         // TODO: add seperator and text that tells you what to do to activate these
-        if (ImGui::MenuItem("Trace Logger", NULL, window_tracelogger_open_, is_rom_loaded_and_debugmode())) { window_tracelogger_open_ ^= true; }
+        if (ImGui::MenuItem("Tracelogger", NULL, window_tracelogger_open_, is_rom_loaded_and_debugmode())) { window_tracelogger_open_ ^= true; }
         if (ImGui::MenuItem("Disassembler", NULL, window_disassembler_open_, is_rom_loaded_and_debugmode())) { window_disassembler_open_ ^= true; }
         ImGui::EndMenu();
     }
@@ -444,7 +444,7 @@ namespace TKPEmu::Graphics {
             }
             emulator_ = std::make_unique<Gameboy>(gb_keys_directional_, gb_keys_action_);
             disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
-            //tracelogger_ = std::make_unique<GameboyTracelogger>(&log_mode_);
+            tracelogger_ = std::make_unique<GameboyTracelogger>();
             Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             disassembler_->Reset();
             disassembler_->SetEmulator(temp);

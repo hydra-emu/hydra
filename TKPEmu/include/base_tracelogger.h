@@ -3,14 +3,11 @@
 #include "base_application.h"
 namespace TKPEmu::Applications {
     struct BaseTracelogger : public IMApplication {
-    private:
-        BaseTracelogger() = delete;
     protected:
         Emulator* emulator_ = nullptr;
-        bool* log_mode_ = nullptr;
         virtual void v_draw() = 0;
     public:
-        BaseTracelogger(bool* log_mode) : log_mode_(log_mode) {};
+        BaseTracelogger() {};
         virtual ~BaseTracelogger() = default;
         void SetEmulator(Emulator* emulator) {
             emulator_ = emulator;
@@ -22,15 +19,7 @@ namespace TKPEmu::Applications {
                 ImGui::End();
                 return;
             }
-            if (!*log_mode_) {
-                ImGui::Text("You need to activate LogMode to use the tracelogger.");
-                if (ImGui::Button("Restart in LogMode")) {
-                    
-                }
-            }
-            else {
-                v_draw();
-            }
+            v_draw();
             ImGui::End();
         }
     };
