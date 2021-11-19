@@ -1,15 +1,15 @@
 #pragma once
 #ifndef TKP_EMULATOR_H
 #define TKP_EMULATOR_H
-#include "TKPImage.h"
-#include "disassembly_instr.h"
 #include <SDL2/SDL.h>
-#include <iostream>
+#include <iosfwd>
 #include <mutex>
 #include <vector>
 #include <atomic>
 #include <functional>
 #include <thread>
+#include "TKPImage.h"
+#include "disassembly_instr.h"
 namespace TKPEmu {
 	using TKPImage = TKPEmu::Tools::TKPImage;
 	using DisInstr = TKPEmu::Tools::DisInstr;
@@ -30,18 +30,18 @@ namespace TKPEmu {
 		std::atomic_bool FastMode = false;
 		std::atomic_int InstructionBreak = -1;
 		constexpr virtual int GetPCHexCharSize();
-		virtual void Start(EmuStartOptions start_mode);
+		void Start(EmuStartOptions start_mode);
 		virtual void Reset();
 		virtual void HandleKeyDown(SDL_Keycode keycode);
 		virtual void HandleKeyUp(SDL_Keycode keycode);
 		virtual void LoadFromFile(std::string&& path) = 0;
-		virtual void Screenshot(std::string filename);
+		void Screenshot(std::string filename);
 		virtual float* GetScreenData();
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
 		std::thread UpdateThread;
 		TKPImage EmulatorImage{};
-		protected:
+		private:
 		virtual void start_normal();
 		virtual void start_debug();
 		virtual void update();

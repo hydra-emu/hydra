@@ -1,11 +1,8 @@
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../lib/stb_image_write.h"
-#include "../include/gameboy.h"
 #include <iostream>
 #include <atomic>
-#include <filesystem>
 #include <bitset>
 #include "../glad/glad/glad.h"
+#include "../include/gameboy.h"
 namespace TKPEmu::Gameboy {
 	void Gameboy::limit_fps() {
 		// TODO: speedhack that sleeps for less time
@@ -185,36 +182,6 @@ namespace TKPEmu::Gameboy {
 		};
 		std::thread t1(func, std::ref(vec));
 		t1.detach();
-	}
-	void Gameboy::Screenshot(std::string filename) {
-		std::lock_guard<std::mutex> lg(DrawMutex);
-		static const std::string scrnshot_dir = std::string(std::filesystem::current_path()) + "/Resources/Screenshots/";
-		if (!std::filesystem::is_directory(scrnshot_dir)) {
-			std::filesystem::create_directories(scrnshot_dir);
-		}
-		int index = 0;
-		std::string filename_final;
-		do {
-			// Find available screenshot name
-			filename_final = scrnshot_dir + filename + "_" + std::to_string(++index) + ".bmp";
-			if (!std::filesystem::exists(filename_final)) {
-				break;
-			}
-			if (index > 200){
-				std::cerr << "Failed to take screenshot: more than 200 screenshots detected. Delete or move some from " << scrnshot_dir << std::endl;
-				return;
-			}
-		} while (true);
-		// TODO: remove these magic numbers, and every 160 144 number
-		auto pixels = std::make_unique<uint8_t[]>(160 * 144 * 4);
-		glBindTexture(GL_TEXTURE_2D, EmulatorImage.texture);
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.get());
-		glBindTexture(GL_TEXTURE_2D, 0);
-		try {
-			stbi_write_bmp(filename_final.c_str(), 160, 144, 3, pixels.get());
-		} catch (const std::exception& e) {
-			std::cerr << "Error writing screenshot: " << e.what() << std::endl;
-		}
 	}
 	DisInstr Gameboy::GetInstruction(uint16_t address) {
 		uint8_t ins = bus_.Read(address);

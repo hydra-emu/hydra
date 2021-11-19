@@ -28,7 +28,6 @@ namespace TKPEmu::Gameboy {
 		void HandleKeyDown(SDL_Keycode key) override;
 		void HandleKeyUp(SDL_Keycode key) override;
 		void LoadFromFile(std::string&& path) override;
-		void Screenshot(std::string filename) override;
 		void LoadInstrToVec(std::vector<DisInstr>& vec);
         DisInstr GetInstruction(uint16_t address);
 		bool AddBreakpoint(GBBPArguments bp);
