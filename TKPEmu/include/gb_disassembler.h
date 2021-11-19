@@ -70,7 +70,10 @@ namespace TKPEmu::Applications {
                 constexpr size_t buf_size = 4 + 1;
                 static char buf[buf_size] = "";
                 bool close = false;
-                if (ImGui::InputText("hexadecimal", buf, buf_size, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                if (ImGui::InputText("hexadecimal", buf, buf_size, 
+                        ImGuiInputTextFlags_CharsHexadecimal |
+                        ImGuiInputTextFlags_CharsUppercase |
+                        ImGuiInputTextFlags_EnterReturnsTrue)) {
                     close = true;
                 }
                 if (ImGui::Button("OK", ImVec2(120, 0))) {

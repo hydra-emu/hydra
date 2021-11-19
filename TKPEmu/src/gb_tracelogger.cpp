@@ -3,21 +3,15 @@ namespace TKPEmu::Applications {
 	void GameboyTracelogger::v_draw() noexcept {
 
 	}
-	void GameboyTracelogger::SetEmulator(Emulator* emulator) noexcept {
-		emulator_ = dynamic_cast<Gameboy*>(emulator);
-	}
-	void GameboyTracelogger::SetFile(std::string file) {
-		buffer_ptr_ = std::make_unique<std::ofstream>(file, std::ofstream::out);
-	}
 	// Logs the current emulator state
 	// Example usage: log_emu_state(LOG_PC | LOG_SP | LOG_A) will log "PC:**** SP:**** A:**"
 	// TODO: (!) overwrite warning 
-	void GameboyTracelogger::log_emu_state(LogType type) {
+	void GameboyTracelogger::log_emu_state() {
 		bool first = true;
 		auto& emu_cpu = emulator_->GetCPU();
 		for (int i = 1; i <= LogTypeSize; i++) {
 			LogType cur_type = 1 << i;
-			if (type && cur_type) {
+			if (log_type_ && cur_type) {
 				if (!first) {
 					*buffer_ptr_ << " ";
 				}

@@ -13,8 +13,6 @@
 #include "../lib/imgui_impl_opengl3.h"
 #include "../lib/imgui_internal.h"
 #include "widget_keyselector.h"
-#include "base_disassembler.h"
-#include "base_tracelogger.h"
 #include "base_application.h"
 #include "imfilebrowser.h"
 #include "settings_manager.h"
@@ -29,6 +27,10 @@
 #define IM_FMTARGS(FMT)
 #define IM_FMTLIST(FMT)
 #endif
+namespace TKPEmu::Applications {
+    class BaseTracelogger;
+    class BaseDisassembler;
+}
 namespace TKPEmu::Graphics {
     constexpr auto GameboyWidth = 160;
     constexpr auto GameboyHeight = 144;
@@ -130,8 +132,8 @@ namespace TKPEmu::Graphics {
         GLuint frame_buffer_;
         ImGui::FileBrowser file_browser_;
         std::unique_ptr<Emulator> emulator_ = nullptr;
-        std::unique_ptr<BaseDisassembler> disassembler_ = nullptr;
-        std::unique_ptr<BaseTracelogger> tracelogger_ = nullptr;
+        std::unique_ptr<BaseDisassembler> disassembler_;
+        std::unique_ptr<BaseTracelogger> tracelogger_;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window_ptr_;
         std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::chrono::system_clock::time_point a = std::chrono::system_clock::now();

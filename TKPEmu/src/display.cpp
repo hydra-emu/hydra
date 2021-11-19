@@ -8,6 +8,8 @@
 #include "../lib/stb_image.h"
 #include "../include/disassembly_instr.h"
 #include "../include/gameboy.h"
+#include "../include/base_tracelogger.h"
+#include "../include/base_disassembler.h"
 #include "../include/gb_disassembler.h"
 #include "../include/gb_tracelogger.h"
 
