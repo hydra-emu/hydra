@@ -66,9 +66,11 @@ namespace TKPEmu::Applications {
             if (ImGui::BeginPopupModal("Goto Program Code", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
                 ImGui::Text("Program Code (in hex) to go to:");
                 ImGui::Separator();
-                static char buf[16] = "";
+                // 4 hexadecimal characters and a null terminator
+                constexpr size_t buf_size = 4 + 1;
+                static char buf[buf_size] = "";
                 bool close = false;
-                if (ImGui::InputText("hexadecimal", buf, static_cast<size_t>(emulator_->GetPCHexCharSize()) + 1, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                if (ImGui::InputText("hexadecimal", buf, buf_size, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     close = true;
                 }
                 if (ImGui::Button("OK", ImVec2(120, 0))) {

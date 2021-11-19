@@ -1,13 +1,12 @@
 #pragma once
 #ifndef TKP_GB_GAMEBOY_H
 #define TKP_GB_GAMEBOY_H
+#include <array>
 #include "emulator.h"
 #include "disassembly_instr.h"
 #include "gb_breakpoint.h"
 #include "gb_addresses.h"
 #include "gb_cpu.h"
-#include <unordered_map>
-#include <array>
 namespace TKPEmu::Gameboy {
 	using GameboyPalettes = std::array<std::array<float, 3>,4>;
 	using GameboyKeys = std::array<SDL_Keycode, 4>;
@@ -19,20 +18,17 @@ namespace TKPEmu::Gameboy {
 		using Cartridge = TKPEmu::Gameboy::Devices::Cartridge;
 		using DisInstr = TKPEmu::Tools::DisInstr;
 		using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
-		void limit_fps();
 	public:
 		Gameboy(GameboyKeys& direction_keys, GameboyKeys& action_keys);
 		~Gameboy();
-		constexpr int GetPCHexCharSize() override { return 4; };
 		void Reset() override;
 		void HandleKeyDown(SDL_Keycode key) override;
 		void HandleKeyUp(SDL_Keycode key) override;
 		void LoadFromFile(std::string&& path) override;
-		void LoadInstrToVec(std::vector<DisInstr>& vec);
+		float* GetScreenData() override;
         DisInstr GetInstruction(uint16_t address);
 		bool AddBreakpoint(GBBPArguments bp);
 		void RemoveBreakpoint(int index);
-		float* GetScreenData() override;
 		const auto& GetOpcodeDescription(uint8_t opc);
 		GameboyPalettes& GetPalette();
 		CPU& GetCPU() { return cpu_; }
@@ -53,6 +49,7 @@ namespace TKPEmu::Gameboy {
 		std::string print() const override;
 		void start_normal() override;
 		void start_debug() override;
+		void limit_fps();
 	};
 }
 #endif

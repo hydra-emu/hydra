@@ -5,9 +5,6 @@
 #include "../lib/stb_image_write.h"
 #include "../glad/glad/glad.h"
 namespace TKPEmu {
-    constexpr int Emulator::GetPCHexCharSize() { 
-		return 1; 
-	}
     void Emulator::HandleKeyDown(SDL_Keycode keycode) { 
         std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was pressed but\n"
         "emulator.HandleKeyDown was not implemented" << std::endl;

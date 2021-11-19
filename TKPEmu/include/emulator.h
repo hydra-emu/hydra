@@ -29,7 +29,6 @@ namespace TKPEmu {
 		std::atomic_bool LogReady = false;
 		std::atomic_bool FastMode = false;
 		std::atomic_int InstructionBreak = -1;
-		constexpr virtual int GetPCHexCharSize();
 		void Start(EmuStartOptions start_mode);
 		virtual void Reset();
 		virtual void HandleKeyDown(SDL_Keycode keycode);

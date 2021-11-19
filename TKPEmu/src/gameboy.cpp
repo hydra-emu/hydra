@@ -149,40 +149,6 @@ namespace TKPEmu::Gameboy {
 	void Gameboy::LoadFromFile(std::string&& path) {
 		bus_.LoadCartridge(std::forward<std::string>(path));
 	}
-	// TODO: LoadInstrToVec only works for rom_only for now
-	void Gameboy::LoadInstrToVec(std::vector<DisInstr>& vec) {
-		// TODO: make this std::async
-		auto func = [this](std::vector<DisInstr>& vec) {
-			std::vector<DisInstr> ret;
-			ret.reserve(0x10000);
-			for (uint16_t i = 0; i < 0xFFFF;) {
-				uint8_t ins = bus_.Read(i);
-				auto x = cpu_.Instructions[ins];
-				auto d = DisInstr(i, ins, x.skip);
-				uint8_t p1, p2;
-				if (x.skip == 1) {
-					p1 = bus_.Read(i + 1);
-					d.Params[0] = p1;
-					ret.push_back(std::move(d));
-				}
-				else if (x.skip == 2) {
-					p1 = bus_.Read(i + 1);
-					p2 = bus_.Read(i + 2);
-					d.Params[0] = p1;
-					d.Params[1] = p2;
-					ret.push_back(std::move(d));
-				}
-				else {
-					ret.push_back(std::move(d));
-				}
-				i += 1 + x.skip;
-			}
-			std::cout << (int)ret.size() << std::endl;
-			vec = std::move(ret);
-		};
-		std::thread t1(func, std::ref(vec));
-		t1.detach();
-	}
 	DisInstr Gameboy::GetInstruction(uint16_t address) {
 		uint8_t ins = bus_.Read(address);
 		auto time = InstrTimes[ins];
