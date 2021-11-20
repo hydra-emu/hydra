@@ -26,15 +26,30 @@ namespace TKPEmu::Applications {
             overwrite = false;
         }
         if (path_changed) {
+            path_changed = false;
             if (std::filesystem::is_directory(path_buf)) {
                 std::cout << "Error: Path is directory" << std::endl;
             } else if (!overwrite && std::filesystem::exists(path_buf)) {
                 file_exists = true;
-                path_changed = false;
                 ImGui::OpenPopup("Overwrite?");
             } else {
                 ready_to_log_ = true;
             }
+        }
+        if (!ready_to_log_) {
+            // Push disabled
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.6f);
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        }
+        if (!is_logging_) {
+            ImGui::Button("Start logging");
+        } else {
+            ImGui::Button("Stop logging");
+        }
+        if (!ready_to_log_) {
+            // Pop disabled
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
         }
         v_draw();
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();

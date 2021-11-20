@@ -15,6 +15,7 @@ namespace TKPEmu::Applications {
     private:
         virtual void v_draw() = 0;
         bool ready_to_log_ = false;
+        bool is_logging_ = false;
     };
 }
 #endif
