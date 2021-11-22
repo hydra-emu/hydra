@@ -302,6 +302,7 @@ namespace TKPEmu::Graphics {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
         }
         else {
+            if (!window_settings_open_)
             if (background_image_.texture != 0)
                 ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)background_image_.texture, background_image_.topleft, background_image_.botright);
             // TODO: allow for undocked window, disable above line when that happens
@@ -406,7 +407,7 @@ namespace TKPEmu::Graphics {
         stbi_image_free(image_data);
         out.texture = image_texture;
         image_scale(out.topleft, out.botright, out.width, out.height);
-        std::cout << "Image loaded successfully!" << std::endl;
+        std::cout << "Background loaded successfully" << std::endl;
         return true;
     }
 
@@ -647,7 +648,7 @@ namespace TKPEmu::Graphics {
                             image_scale(background_image_.topleft, background_image_.botright, background_image_.width, background_image_.height);
                             if (emulator_ != nullptr)
                                 image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
-                            //glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
+                            glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
                             break;
                         }
                         break;
