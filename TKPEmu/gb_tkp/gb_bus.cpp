@@ -2,8 +2,8 @@
 #include <iomanip>
 #include <algorithm>
 #include <bitset>
-#include "../include/gb_bus.h"
-#include "../include/gb_addresses.h"
+#include "gb_bus.h"
+#include "gb_addresses.h"
 namespace TKPEmu::Gameboy::Devices {
 
 	Bus::Bus(std::vector<DisInstr>& instrs) : instructions_(instrs) {}

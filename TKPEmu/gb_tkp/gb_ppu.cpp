@@ -1,5 +1,4 @@
-#include "../include/gb_ppu.h"
-#include <mutex>
+#include "gb_ppu.h"
 #include "../glad/glad/glad.h"
 
 namespace TKPEmu::Gameboy::Devices {

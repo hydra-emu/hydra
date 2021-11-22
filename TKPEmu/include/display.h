@@ -7,7 +7,6 @@
 #include <mutex>
 #include <atomic>
 #include "emulator.h"
-#include "prettyprinter.h"
 #include "TKPImage.h"
 #include "../lib/imgui_impl_sdl.h"
 #include "../lib/imgui_impl_opengl3.h"
@@ -54,9 +53,7 @@ namespace TKPEmu::Graphics {
     };
 	class Display {
     private:
-        using PrettyPrinter = TKPEmu::Tools::PrettyPrinter;
         using SDL_GLContextType = std::remove_pointer_t<SDL_GLContext>;
-        using PPMessageType = TKPEmu::Tools::PrettyPrinterMessageType;
         using BaseDisassembler = TKPEmu::Applications::BaseDisassembler;
         using BaseTracelogger = TKPEmu::Applications::BaseTracelogger;
         using SettingsManager = TKPEmu::Tools::SettingsManager;
@@ -123,10 +120,6 @@ namespace TKPEmu::Graphics {
         int max_fps_ = 60;
         bool debug_mode_ = true;
         EmuStartOptions emulator_start_opt_ = EmuStartOptions::Normal;
-        // This variable helps for setting up the controls
-        SDL_Keycode last_key_pressed_ = 0;
-
-        PrettyPrinter pretty_printer_;
         WindowSettings window_settings_;
         TKPImage background_image_;
         GLuint frame_buffer_;
@@ -138,6 +131,9 @@ namespace TKPEmu::Graphics {
         std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
         std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
+        // This variable helps for setting up the controls
+        SDL_Keycode last_key_pressed_ = 0;
+        EmulatorType emulator_type_ = EmulatorType::None;
         float sleep_time_ = 16.75f;
 
         // These bools determine whether certain windows are open
@@ -145,7 +141,6 @@ namespace TKPEmu::Graphics {
         // return static members
         bool rom_loaded_ = false;
         bool rom_paused_ = false;
-        EmulatorType emulator_type_ = EmulatorType::None;
         bool menu_bar_open_ = true;
         bool window_tracelogger_open_ = false;
         bool window_fpscounter_open_ = false;

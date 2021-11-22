@@ -2,9 +2,8 @@
 #ifndef TKP_GB_PPU_H
 #define TKP_GB_PPU_H
 #include "gb_bus.h"
-#include "TKPImage.h"
+#include "../include/TKPImage.h"
 #include <mutex>
-#include <queue>
 #include <array>
 namespace TKPEmu::Gameboy::Devices {
 	constexpr int FRAME_CYCLES = 70224;

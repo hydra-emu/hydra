@@ -1,7 +1,7 @@
 #pragma once
 #ifndef TKP_TOOLS_GBADDR_H
 #define TKP_TOOLS_GBADDR_H
-#include "disassembly_instr.h"
+#include "../include/disassembly_instr.h"
 #include "gb_breakpoint.h"
 #include <cstdint>
 using DisInstr = TKPEmu::Tools::DisInstr;

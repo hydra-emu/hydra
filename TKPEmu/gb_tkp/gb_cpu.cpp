@@ -1,4 +1,4 @@
-#include "../include/gb_cpu.h"
+#include "gb_cpu.h"
 #include <stdexcept>
 #include <iostream>
 namespace TKPEmu::Gameboy::Devices {

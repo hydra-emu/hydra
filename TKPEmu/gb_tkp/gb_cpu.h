@@ -9,7 +9,7 @@
 #include "gb_bus.h"
 #include "gb_ppu.h"
 #include "gb_addresses.h"
-#include "disassembly_instr.h"
+#include "../include/disassembly_instr.h"
 namespace TKPEmu::Gameboy::Devices {
 	class CPU {
 	private:

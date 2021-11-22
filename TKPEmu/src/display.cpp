@@ -7,11 +7,12 @@
 #include <algorithm>
 #include "../lib/stb_image.h"
 #include "../include/disassembly_instr.h"
-#include "../include/gameboy.h"
 #include "../include/base_tracelogger.h"
 #include "../include/base_disassembler.h"
-#include "../include/gb_disassembler.h"
-#include "../include/gb_tracelogger.h"
+
+#include "../gb_tkp/gameboy.h"
+#include "../gb_tkp/gb_disassembler.h"
+#include "../gb_tkp/gb_tracelogger.h"
 
 namespace TKPEmu::Graphics {
 	Display::DisplayInitializer::DisplayInitializer() {
@@ -20,7 +21,7 @@ namespace TKPEmu::Graphics {
             throw("SDL could not be initialized");
         }
         else {
-            std::cout << "SDL initialization success" << std::endl;
+            std::cout << "SDL initialized successfully" << std::endl;
         }
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -64,10 +65,10 @@ namespace TKPEmu::Graphics {
         std::filesystem::create_directories(ExecutableDirectory + ResourcesRomsDir);
         SDL_GL_MakeCurrent(window_ptr_.get(), gl_context_ptr_.get());
         if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-            pretty_printer_.PrettyAdd<PPMessageType::Error>("Couldn't initialize glad.");
+            throw("Error: coudl not initialize glad");
         }
         else {
-            pretty_printer_.PrettyAdd<PPMessageType::Success>("Glad initialized successfully.");
+            std::cout << "Glad initialized successfully" << std::endl;
         }
     }
     Display::~Display() {

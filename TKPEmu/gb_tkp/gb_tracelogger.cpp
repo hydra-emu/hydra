@@ -1,5 +1,5 @@
-#include "../include/gb_tracelogger.h"
-#include "../include/gb_addresses.h"
+#include "gb_tracelogger.h"
+#include "gb_addresses.h"
 #include "../lib/imgui.h"
 namespace TKPEmu::Applications {
 	void GameboyTracelogger::v_draw() {

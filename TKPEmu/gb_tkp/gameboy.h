@@ -2,8 +2,8 @@
 #ifndef TKP_GB_GAMEBOY_H
 #define TKP_GB_GAMEBOY_H
 #include <array>
-#include "emulator.h"
-#include "disassembly_instr.h"
+#include "../include/emulator.h"
+#include "../include/disassembly_instr.h"
 #include "gb_breakpoint.h"
 #include "gb_addresses.h"
 #include "gb_cpu.h"

@@ -2,7 +2,7 @@
 #ifndef TKP_GB_TRACELOGGER_H
 #define TKP_GB_TRACELOGGER_H
 #include <array>
-#include "base_tracelogger.h"
+#include "../include/base_tracelogger.h"
 #include "gameboy.h"
 namespace TKPEmu::Applications {
 	using Gameboy = TKPEmu::Gameboy::Gameboy;
