@@ -37,7 +37,6 @@ namespace TKPEmu::Applications {
             emulator_ = dynamic_cast<Gameboy*>(emulator);
         }
         void v_draw() noexcept {
-            bool goto_popup = false;
             bool bp_add_popup = false;
             int goto_pc = -1;
             if (ImGui::BeginMenuBar()) {
@@ -51,13 +50,13 @@ namespace TKPEmu::Applications {
                     }
                     if (ImGui::MenuItem("Goto PC")) {
                         // TODO: if PC not found, go to nearest close to that value
-                        goto_popup = true;
+                        OpenGotoPopup = true;
                     }
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();
             }
-            if (goto_popup) {
+            if (OpenGotoPopup) {
                 ImGui::OpenPopup("Goto Program Code");
             }
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -69,10 +68,10 @@ namespace TKPEmu::Applications {
                 constexpr size_t buf_size = 4 + 1;
                 static char buf[buf_size] = "";
                 bool close = false;
-                if (goto_popup) {
+                if (OpenGotoPopup) {
                     if (!ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
                         ImGui::SetKeyboardFocusHere(0);
-                    goto_popup = false;
+                    OpenGotoPopup = false;
                 }
                 if (ImGui::InputText("hexadecimal", buf, buf_size, 
                         ImGuiInputTextFlags_CharsHexadecimal |

@@ -123,6 +123,7 @@ namespace TKPEmu::Gameboy {
 			Reset();
 			Paused = true;
 			Stopped = false;
+			Step = false;
 			// Emulation doesn't break on first instruction
 			bool first_instr = true;
 			while (!Stopped.load()) {

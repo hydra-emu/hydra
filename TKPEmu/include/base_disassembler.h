@@ -10,6 +10,7 @@ namespace TKPEmu::Applications {
     public:
         BaseDisassembler(bool* rom_loaded) : rom_loaded_(rom_loaded) {};
         virtual ~BaseDisassembler() = default;
+        bool OpenGotoPopup = false;
         void Draw(const char* title, bool* p_open = NULL) final {
             TKPEmu::Applications::IMApplication::SetupWindow();
             if (!ImGui::Begin(title, p_open, ImGuiWindowFlags_MenuBar)) {
@@ -35,7 +36,6 @@ namespace TKPEmu::Applications {
                 // Sets the stopped flag on the thread to true and then waits for it to become false
                 // The thread sets the flag to false upon exiting
                 ResetEmulatorState(emulator);
-                // TODO: restart with correct mode
                 emulator->Start(EmuStartOptions::Debug);
             }
             if (ImGui::MenuItem("Stop", NULL, false, *rom_loaded)) {

@@ -129,9 +129,6 @@ namespace TKPEmu::Graphics {
                 else {
                     if (ImGui::Checkbox("Debug mode", &debug_mode_)) {
                         settings_.at("General.debug_mode") = debug_mode_ ? "1" : "0";
-                        if (debug_mode_) {
-                            emulator_start_opt_ = EmuStartOptions::Debug;
-                        }
                     }
                 }
                 ImGui::NewLine();
@@ -273,9 +270,9 @@ namespace TKPEmu::Graphics {
             file_browser_.Display();
             if (file_browser_.HasSelected()) {
                 std::cout << "Selected filename" << file_browser_.GetSelected().string() << std::endl;
-                window_file_browser_open_ = false;
                 load_rom(std::move(file_browser_.GetSelected()));
                 file_browser_.ClearSelected();
+                window_file_browser_open_ = false;
             }
             if (file_browser_.ShouldClose()) {
                 window_file_browser_open_ = false;
@@ -333,11 +330,11 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::draw_menu_bar_file() {
-        if (ImGui::MenuItem("Open ROM", "Ctrl+O", window_file_browser_open_, true)) {
-            // TODO: not workign after opening twice
-            window_file_browser_open_ ^= true;
-            if (window_file_browser_open_)
+        if (ImGui::MenuItem("Open ROM", "Ctrl+O")) {
+            if (!window_file_browser_open_) {
+                window_file_browser_open_ = true;
                 open_file_browser();
+            }
         }
         if (ImGui::BeginMenu("Open Recent")) {
             draw_menu_bar_file_recent();
@@ -438,6 +435,9 @@ namespace TKPEmu::Graphics {
 
     void Display::load_rom(std::filesystem::path&& path) {
         auto ext = path.extension();
+        if (debug_mode_) {
+            emulator_start_opt_ = EmuStartOptions::Debug;
+        }
         if (ext == ".gb") {
             using Gameboy = TKPEmu::Gameboy::Gameboy;
             using GameboyDisassembler = TKPEmu::Applications::GameboyDisassembler;
@@ -562,12 +562,10 @@ namespace TKPEmu::Graphics {
         file_browser_.SetWindowSize(300, 300);
     }
     void Display::open_file_browser() {
-        if (!file_browser_.IsOpened()) {
-            file_browser_.SetTitle("Select a ROM...");
-            file_browser_.SetTypeFilters(SupportedRoms);
-            file_browser_.SetPwd(ExecutableDirectory + ResourcesRomsDir);
-            file_browser_.Open();
-        }
+        file_browser_.SetTitle("Select a ROM...");
+        file_browser_.SetTypeFilters(SupportedRoms);
+        file_browser_.SetPwd(ExecutableDirectory + ResourcesRomsDir);
+        file_browser_.Open();
     }
     void Display::main_loop() {
         load_loop();
@@ -607,9 +605,6 @@ namespace TKPEmu::Graphics {
                         auto key = event.key.keysym.sym;
                         switch (key)
                         {
-                            case SDLK_ESCAPE:
-                                loop = false;
-                                break;
                             case SDLK_F7:
                                 // This function checks if the emulator is nullptr also
                                 step_emulator();
@@ -625,9 +620,17 @@ namespace TKPEmu::Graphics {
                                     reset_pressed_ = true;
                                     break;
                                 }
+                                if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_F]) {
+                                    if (window_disassembler_open_) {
+                                        disassembler_->OpenGotoPopup = true;
+                                    }
+                                    break;
+                                }
                                 if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_O]) {
-                                    window_file_browser_open_ = true;
-                                    open_file_browser();
+                                    if (!window_file_browser_open_) {
+                                        window_file_browser_open_ = true;
+                                        open_file_browser();
+                                    }
                                     break;
                                 }
                                 last_key_pressed_ = key;
