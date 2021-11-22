@@ -405,15 +405,12 @@ namespace TKPEmu::Graphics {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, out.width, out.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
         stbi_image_free(image_data);
         out.texture = image_texture;
-        image_scale(out.topleft, out.botright);
+        image_scale(out.topleft, out.botright, out.width, out.height);
         std::cout << "Image loaded successfully!" << std::endl;
         return true;
     }
 
-    inline void Display::image_scale(ImVec2& topleft, ImVec2& bottomright) {
-        // TODO: (!) set custom ratio based on emulator loaded
-        // TODO: (!) either make tkp_bg copy to resources, or (better) generate a cool image on runtime
-        float wi = 160; float hi = 144;
+    inline void Display::image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi) {
         float ws = window_settings_.window_width; float hs = window_settings_.window_height;
         float ri = wi / hi;
         float rs = ws / hs;
@@ -465,7 +462,7 @@ namespace TKPEmu::Graphics {
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
+        image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
     }
 
     void Display::close_emulator_and_wait() {
@@ -548,7 +545,7 @@ namespace TKPEmu::Graphics {
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.IniFilename = NULL;
-        ImGui::StyleColorsDark();
+        load_theme();
         ImGui_ImplOpenGL3_Init(glsl_version.c_str());
         ImGui_ImplSDL2_InitForOpenGL(window_ptr_.get(), gl_context_ptr_.get());
         ImVec4 background = ImVec4(35 / 255.0f, 35 / 255.0f, 35 / 255.0f, 1.00f);
@@ -561,6 +558,59 @@ namespace TKPEmu::Graphics {
             std::cerr << "Background image seems to be missing. Default background is going to be empty." << std::endl;
         }
         file_browser_.SetWindowSize(300, 300);
+    }
+    void Display::load_theme() {
+        ImVec4* colors = ImGui::GetStyle().Colors;
+        colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+        colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+        colors[ImGuiCol_WindowBg]               = ImVec4(0.06f, 0.06f, 0.06f, 0.94f);
+        colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[ImGuiCol_PopupBg]                = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
+        colors[ImGuiCol_Border]                 = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
+        colors[ImGuiCol_BorderShadow]           = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[ImGuiCol_FrameBg]                = ImVec4(0.44f, 0.44f, 0.44f, 0.60f);
+        colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.57f, 0.57f, 0.57f, 0.70f);
+        colors[ImGuiCol_FrameBgActive]          = ImVec4(0.76f, 0.76f, 0.76f, 0.80f);
+        colors[ImGuiCol_TitleBg]                = ImVec4(0.04f, 0.04f, 0.04f, 1.00f);
+        colors[ImGuiCol_TitleBgActive]          = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
+        colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.60f);
+        colors[ImGuiCol_MenuBarBg]              = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+        colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
+        colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
+        colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+        colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
+        colors[ImGuiCol_CheckMark]              = ImVec4(0.13f, 0.75f, 0.55f, 0.80f);
+        colors[ImGuiCol_SliderGrab]             = ImVec4(0.13f, 0.75f, 0.75f, 0.80f);
+        colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.13f, 0.75f, 1.00f, 0.80f);
+        colors[ImGuiCol_Button]                 = ImVec4(0.13f, 0.75f, 0.55f, 0.40f);
+        colors[ImGuiCol_ButtonHovered]          = ImVec4(0.13f, 0.75f, 0.75f, 0.60f);
+        colors[ImGuiCol_ButtonActive]           = ImVec4(0.13f, 0.75f, 1.00f, 0.80f);
+        colors[ImGuiCol_Header]                 = ImVec4(0.13f, 0.75f, 0.55f, 0.40f);
+        colors[ImGuiCol_HeaderHovered]          = ImVec4(0.13f, 0.75f, 0.75f, 0.60f);
+        colors[ImGuiCol_HeaderActive]           = ImVec4(0.13f, 0.75f, 1.00f, 0.80f);
+        colors[ImGuiCol_ResizeGrip]             = ImVec4(0.13f, 0.75f, 0.55f, 0.40f);
+        colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.13f, 0.75f, 0.75f, 0.60f);
+        colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.13f, 0.75f, 1.00f, 0.80f);
+        colors[ImGuiCol_Tab]                    = ImVec4(0.13f, 0.75f, 0.55f, 0.80f);
+        colors[ImGuiCol_TabHovered]             = ImVec4(0.13f, 0.75f, 0.75f, 0.80f);
+        colors[ImGuiCol_TabActive]              = ImVec4(0.13f, 0.75f, 1.00f, 0.80f);
+        colors[ImGuiCol_TabUnfocused]           = ImVec4(0.18f, 0.18f, 0.18f, 1.00f);
+        colors[ImGuiCol_TabUnfocusedActive]     = ImVec4(0.36f, 0.36f, 0.36f, 0.54f);
+        colors[ImGuiCol_PlotLines]              = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+        colors[ImGuiCol_PlotLinesHovered]       = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+        colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+        colors[ImGuiCol_PlotHistogramHovered]   = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+        colors[ImGuiCol_TableHeaderBg]          = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
+        colors[ImGuiCol_TableBorderStrong]      = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);
+        colors[ImGuiCol_TableBorderLight]       = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
+        colors[ImGuiCol_TableRowBg]             = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[ImGuiCol_TableRowBgAlt]          = ImVec4(1.00f, 1.00f, 1.00f, 0.07f);
+        colors[ImGuiCol_TextSelectedBg]         = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+        colors[ImGuiCol_DragDropTarget]         = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+        colors[ImGuiCol_NavHighlight]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+        colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+        colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+        colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
     }
     void Display::open_file_browser() {
         file_browser_.SetTitle("Select a ROM...");
@@ -591,13 +641,13 @@ namespace TKPEmu::Graphics {
                     case SDL_WINDOWEVENT:
                         switch (event.window.event)
                         {
-                        case SDL_WINDOWEVENT_RESIZED:
+                            case SDL_WINDOWEVENT_RESIZED:
                             window_settings_.window_width = event.window.data1;
                             window_settings_.window_height = event.window.data2;
-                            image_scale(background_image_.topleft, background_image_.botright);
+                            image_scale(background_image_.topleft, background_image_.botright, background_image_.width, background_image_.height);
                             if (emulator_ != nullptr)
-                                image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
-                            glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
+                                image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
+                            //glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
                             break;
                         }
                         break;

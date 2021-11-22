@@ -61,7 +61,7 @@ namespace TKPEmu::Graphics {
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
         using GameboyKeys = std::array<SDL_Keycode, 4>;
         const std::string glsl_version = "#version 430";
-        std::string BackgroundImageFile = "tkp_bg.jpg";
+        std::string BackgroundImageFile = "background.jpg";
         std::string ImGuiSettingsFile = "imgui.ini";
         std::string ResourcesDataDir = "/Resources/Data/";
         std::string ResourcesRomsDir = "/Resources/ROMs";
@@ -175,7 +175,7 @@ namespace TKPEmu::Graphics {
         inline bool is_rom_loaded_and_debugmode();
 
         // This function deals with scaling the gameboy screen texture without stretching it
-        inline void image_scale(ImVec2& topleft, ImVec2& bottomright);
+        inline void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
 
         void load_rom(std::filesystem::path&& path);
         // Sends the appropriate flags to close the running emulator thread and waits until its closed
@@ -183,6 +183,7 @@ namespace TKPEmu::Graphics {
         void step_emulator();
         void setup_gameboy_palette();
         void load_loop();
+        void load_theme();
         void main_loop();
 	};
 }
