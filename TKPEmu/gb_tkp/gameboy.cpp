@@ -1,7 +1,7 @@
 #include <iostream>
 #include <atomic>
 #include "../glad/glad/glad.h"
-#include "../include/gameboy.h"
+#include "gameboy.h"
 namespace TKPEmu::Gameboy {
 	void Gameboy::limit_fps() {
 		// TODO: speedhack that sleeps for less time
