@@ -449,6 +449,7 @@ namespace TKPEmu::Graphics {
             tracelogger_ = std::make_unique<GameboyTracelogger>();
             disassembler_->Reset();
             disassembler_->SetEmulator(emulator_.get());
+            tracelogger_->SetEmulator(emulator_.get());
             rom_loaded_ = true;
             rom_paused_ = debug_mode_;
             emulator_->Paused.store(rom_paused_);

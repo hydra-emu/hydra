@@ -2,6 +2,7 @@
 #ifndef TKP_GB_GAMEBOY_H
 #define TKP_GB_GAMEBOY_H
 #include <array>
+#include <unordered_map>
 #include "emulator.h"
 #include "disassembly_instr.h"
 #include "gb_breakpoint.h"
@@ -10,6 +11,11 @@
 namespace TKPEmu::Gameboy {
 	using GameboyPalettes = std::array<std::array<float, 3>,4>;
 	using GameboyKeys = std::array<SDL_Keycode, 4>;
+	enum class LogType {
+		A, B, C, D, 
+		E, F, H, L,
+		PC, SP,
+	};
 	class Gameboy : public Emulator {
 	private:
 		using CPU = TKPEmu::Gameboy::Devices::CPU;
@@ -44,11 +50,13 @@ namespace TKPEmu::Gameboy {
 		uint8_t& joypad_, &interrupt_flag_;
 		std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
 		std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
+		std::vector<LogType> log_types_ { LogType::PC };
 		float sleep_time_ = 16.75f;
-		void update() override;
-		std::string print() const override;
+		void v_log_state() override;
 		void start_normal() override;
 		void start_debug() override;
+		void update() override;
+		std::string print() const override;
 		void limit_fps();
 	};
 }

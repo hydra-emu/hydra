@@ -34,6 +34,7 @@ namespace TKPEmu::Applications {
                 ImGui::OpenPopup("Overwrite?");
             } else {
                 ready_to_log_ = true;
+                log_path_ = path_buf;
             }
         }
         if (!ready_to_log_) {
@@ -42,9 +43,23 @@ namespace TKPEmu::Applications {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         }
         if (!is_logging_) {
-            ImGui::Button("Start logging");
+            if (ImGui::Button("Start logging")) {
+                if (emulator_ != nullptr) {
+                    set_logtypes();
+                    emulator_->StartLogging(log_path_);
+                } else {
+                    std::cerr << "Error: Emulator is nullptr" << std::endl;
+                }
+                is_logging_ = true;
+            }
         } else {
-            ImGui::Button("Stop logging");
+            if (ImGui::Button("Stop logging")) {
+                if (emulator_ != nullptr) {
+                    emulator_->StopLogging();
+                } else {
+                    std::cerr << "Error: Emulator is nullptr" << std::endl;
+                }
+            }
         }
         if (!ready_to_log_) {
             // Pop disabled

@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <iostream>
+#include <fstream>
 #include "../include/emulator.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../lib/stb_image_write.h"
@@ -60,6 +61,27 @@ namespace TKPEmu {
     void Emulator::Reset() {
         std::cout << "Warning: Reset was not implemented for this emulator" << std::endl;
     }
+	void Emulator::StartLogging(std::string filename) {
+		log_filename_ = std::move(filename);
+		logging_ = true;
+	}
+	void Emulator::StopLogging() {
+		logging_ = false;
+	}
+	void Emulator::log_state() {
+		if (logging_) {
+			// We initialize it here to avoid race conditions
+			if (ofstream_ptr_ == nullptr)
+				ofstream_ptr_ = std::make_unique<std::ofstream>(log_filename_.c_str());
+			v_log_state();
+		} else {
+			if (ofstream_ptr_ != nullptr)
+				ofstream_ptr_.reset(nullptr);
+		}
+	}
+	void Emulator::v_log_state() {
+		throw("log_state was not implemented for this emulator");
+	}
     void Emulator::start_normal() {
         throw("start_normal was not implemented for this emulator");
     }

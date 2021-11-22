@@ -53,6 +53,54 @@ namespace TKPEmu::Gameboy {
 		Stopped.store(true);
 		glDeleteTextures(1, &EmulatorImage.texture);
 	}
+	void Gameboy::v_log_state() {
+		for (const auto& t : log_types_) {
+			switch (t) {
+				case LogType::PC: {
+					/**ofstream_ptr_*/ std::cout << "PC:" << std::hex << std::setw(4) << cpu_.PC;
+					break;
+				}
+				// case LOG_SP: {
+				// 	*buffer_ptr_ << "SP:" << std::hex << std::setw(4) << emu_cpu.SP;
+				// 	break;
+				// }
+				// case LOG_A: {
+				// 	*buffer_ptr_ << "A:" << std::hex << std::setw(2) << emu_cpu.A;
+				// 	break;
+				// }
+				// case LOG_B: {
+				// 	*buffer_ptr_ << "B:" << std::hex << std::setw(2) << emu_cpu.B;
+				// 	break;
+				// }
+				// case LOG_C: {
+				// 	*buffer_ptr_ << "C:" << std::hex << std::setw(2) << emu_cpu.C;
+				// 	break;
+				// }
+				// case LOG_D: {
+				// 	*buffer_ptr_ << "D:" << std::hex << std::setw(2) << emu_cpu.D;
+				// 	break;
+				// }
+				// case LOG_E: {
+				// 	*buffer_ptr_ << "E:" << std::hex << std::setw(2) << emu_cpu.E;
+				// 	break;
+				// }
+				// case LOG_F: {
+				// 	*buffer_ptr_ << "F:" << std::hex << std::setw(2) << emu_cpu.F;
+				// 	break;
+				// }
+				// case LOG_H: {
+				// 	*buffer_ptr_ << "H:" << std::hex << std::setw(2) << emu_cpu.H;
+				// 	break;
+				// }
+				// case LOG_L: {
+				// 	*buffer_ptr_ << "L:" << std::hex << std::setw(2) << emu_cpu.L;
+				// 	break;
+				// }
+			}
+		}
+		std::cout << std::endl;
+		//*ofstream_ptr_ << "\n";
+	}
 	void Gameboy::start_normal() { 
 		Reset();
 		auto func = [this]() {
@@ -115,6 +163,7 @@ namespace TKPEmu::Gameboy {
 			cpu_.TimerCounter = cpu_.ClockSpeed / 0x400;
 			limit_fps();
 		}
+		log_state();
 	}
 	std::string Gameboy::print() const { 
 		return "GameboyTKP for TKPEmu\n"
