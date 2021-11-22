@@ -334,6 +334,7 @@ namespace TKPEmu::Graphics {
 
     void Display::draw_menu_bar_file() {
         if (ImGui::MenuItem("Open ROM", "Ctrl+O", window_file_browser_open_, true)) {
+            // TODO: not workign after opening twice
             window_file_browser_open_ ^= true;
             if (window_file_browser_open_)
                 open_file_browser();

@@ -72,7 +72,7 @@ namespace TKPEmu {
 		if (logging_) {
 			// We initialize it here to avoid race conditions
 			if (ofstream_ptr_ == nullptr)
-				ofstream_ptr_ = std::make_unique<std::ofstream>(log_filename_.c_str());
+				ofstream_ptr_ = std::make_unique<std::ofstream>(log_filename_.c_str(), std::ofstream::out | std::ofstream::trunc);
 			v_log_state();
 		} else {
 			if (ofstream_ptr_ != nullptr)

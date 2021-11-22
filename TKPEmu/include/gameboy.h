@@ -2,7 +2,6 @@
 #ifndef TKP_GB_GAMEBOY_H
 #define TKP_GB_GAMEBOY_H
 #include <array>
-#include <unordered_map>
 #include "emulator.h"
 #include "disassembly_instr.h"
 #include "gb_breakpoint.h"
@@ -11,11 +10,6 @@
 namespace TKPEmu::Gameboy {
 	using GameboyPalettes = std::array<std::array<float, 3>,4>;
 	using GameboyKeys = std::array<SDL_Keycode, 4>;
-	enum class LogType {
-		A, B, C, D, 
-		E, F, H, L,
-		PC, SP,
-	};
 	class Gameboy : public Emulator {
 	private:
 		using CPU = TKPEmu::Gameboy::Devices::CPU;
@@ -32,6 +26,7 @@ namespace TKPEmu::Gameboy {
 		void HandleKeyUp(SDL_Keycode key) override;
 		void LoadFromFile(std::string&& path) override;
 		float* GetScreenData() override;
+		void SetLogTypes(std::unique_ptr<std::vector<LogType>> types_ptr);
         DisInstr GetInstruction(uint16_t address);
 		bool AddBreakpoint(GBBPArguments bp);
 		void RemoveBreakpoint(int index);
@@ -50,7 +45,7 @@ namespace TKPEmu::Gameboy {
 		uint8_t& joypad_, &interrupt_flag_;
 		std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
 		std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
-		std::vector<LogType> log_types_ { LogType::PC };
+		std::unique_ptr<std::vector<LogType>> log_types_ptr_;
 		float sleep_time_ = 16.75f;
 		void v_log_state() override;
 		void start_normal() override;

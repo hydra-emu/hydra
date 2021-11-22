@@ -72,9 +72,7 @@ namespace TKPEmu::Gameboy::Devices {
         struct Tile {
             Pixel pixels[64];
         };
-        // Currently unused
-        // TODO: Implement bios, change reset default values
-        bool bios_enabled_ = true;
+        bool BiosEnabled = true;
         uint8_t logo[0x30] = {
             // Every 2 bytes is an 8x8 tile. If you convert the hex to binary, each bit is a 2x2 pixel
             // And within the byte each 4 bits is a new line

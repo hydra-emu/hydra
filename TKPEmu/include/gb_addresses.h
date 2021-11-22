@@ -6,6 +6,22 @@
 #include <cstdint>
 using DisInstr = TKPEmu::Tools::DisInstr;
 using GBBPArguments = TKPEmu::Gameboy::Utils::GBBPArguments;
+constexpr size_t LogTypeSize = 10;
+enum class LogType {
+    A, B, C, D, 
+    E, F, H, L,
+    PC, SP,
+};
+constexpr static std::array<LogType, LogTypeSize> LogTypeMap {
+    LogType::A, LogType::B, LogType::C, LogType::D,
+    LogType::E, LogType::F, LogType::H, LogType::L,
+    LogType::PC, LogType::SP
+};
+const static std::array<std::string, LogTypeSize> LogTypeNames {
+    "A   ", "B   ", "C   ", "D   ",
+    "E   ", "F   ", "H   ", "L   ",
+    "PC  ", "SP  "
+};
 constexpr std::array<uint8_t, 0x100> InstrTimes = {
     0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
     0, 2, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0,
@@ -24,7 +40,6 @@ constexpr std::array<uint8_t, 0x100> InstrTimes = {
     0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 2,
     1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0
 };
-
 constexpr auto cl_white = 0;
 constexpr auto cl_lgray = 1;
 constexpr auto cl_dgray = 2;

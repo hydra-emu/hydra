@@ -15,7 +15,7 @@ namespace TKPEmu::Gameboy::Devices {
 		// TODO: make bios optional, can be disabled in settings
 		switch (address & 0xF000) {
 			case 0x0000: {
-				if (bios_enabled_) {
+				if (BiosEnabled) {
 					static constexpr uint16_t bios_verify_start = 0xA8;
 					static constexpr uint16_t bios_verify_end = 0xD7;
 					static constexpr uint16_t logo_cartridge_start = 0x104;
@@ -30,9 +30,6 @@ namespace TKPEmu::Gameboy::Devices {
 					}
 					if (address < 0x100) {
 						return bios[address];
-					} else if (address == 0x100) {
-						// 0x100 is the first address reached after bios finishes
-						bios_enabled_ = false;
 					}
 				}
 				// If gameboy is not in bios mode, or if the address >= 0x100, we fallthrough
@@ -309,7 +306,7 @@ namespace TKPEmu::Gameboy::Devices {
 		oam_.fill(0);
 		selected_rom_bank_ = 1;
 		selected_ram_bank_ = 0;
-		bios_enabled_ = true;
+		BiosEnabled = true;
 	}
 
 	void Bus::LoadCartridge(std::string&& fileName) {

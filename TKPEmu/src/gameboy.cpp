@@ -1,6 +1,5 @@
 #include <iostream>
 #include <atomic>
-#include <bitset>
 #include "../glad/glad/glad.h"
 #include "../include/gameboy.h"
 namespace TKPEmu::Gameboy {
@@ -53,53 +52,58 @@ namespace TKPEmu::Gameboy {
 		Stopped.store(true);
 		glDeleteTextures(1, &EmulatorImage.texture);
 	}
+	void Gameboy::SetLogTypes(std::unique_ptr<std::vector<LogType>> types_ptr) {
+		log_types_ptr_ = std::move(types_ptr);
+	}
 	void Gameboy::v_log_state() {
-		for (const auto& t : log_types_) {
+		*ofstream_ptr_ << std::setfill('0');
+		bool first_type = true;
+		for (const auto& t : *log_types_ptr_) {
 			switch (t) {
 				case LogType::PC: {
-					/**ofstream_ptr_*/ std::cout << "PC:" << std::hex << std::setw(4) << cpu_.PC;
+					*ofstream_ptr_ << "PC:" << std::setw(4) << std::hex <<  cpu_.PC;
 					break;
 				}
-				// case LOG_SP: {
-				// 	*buffer_ptr_ << "SP:" << std::hex << std::setw(4) << emu_cpu.SP;
-				// 	break;
-				// }
-				// case LOG_A: {
-				// 	*buffer_ptr_ << "A:" << std::hex << std::setw(2) << emu_cpu.A;
-				// 	break;
-				// }
-				// case LOG_B: {
-				// 	*buffer_ptr_ << "B:" << std::hex << std::setw(2) << emu_cpu.B;
-				// 	break;
-				// }
-				// case LOG_C: {
-				// 	*buffer_ptr_ << "C:" << std::hex << std::setw(2) << emu_cpu.C;
-				// 	break;
-				// }
-				// case LOG_D: {
-				// 	*buffer_ptr_ << "D:" << std::hex << std::setw(2) << emu_cpu.D;
-				// 	break;
-				// }
-				// case LOG_E: {
-				// 	*buffer_ptr_ << "E:" << std::hex << std::setw(2) << emu_cpu.E;
-				// 	break;
-				// }
-				// case LOG_F: {
-				// 	*buffer_ptr_ << "F:" << std::hex << std::setw(2) << emu_cpu.F;
-				// 	break;
-				// }
-				// case LOG_H: {
-				// 	*buffer_ptr_ << "H:" << std::hex << std::setw(2) << emu_cpu.H;
-				// 	break;
-				// }
-				// case LOG_L: {
-				// 	*buffer_ptr_ << "L:" << std::hex << std::setw(2) << emu_cpu.L;
-				// 	break;
-				// }
+				case LogType::SP: {
+					*ofstream_ptr_ << "SP:" << std::setw(4) << std::hex <<  cpu_.SP;
+					break;
+				}
+				case LogType::A: {
+					*ofstream_ptr_ << "A:" << std::setw(2) << std::hex << (int)cpu_.A;
+					break;
+				}
+				case LogType::B: {
+					*ofstream_ptr_ << "B:" << std::setw(2) << std::hex << (int)cpu_.B;
+					break;
+				}
+				case LogType::C: {
+					*ofstream_ptr_ << "C:" << std::setw(2) <<  std::hex << (int)cpu_.C;
+					break;
+				}
+				case LogType::D: {
+					*ofstream_ptr_ << "D:" << std::setw(2) << std::hex << (int)cpu_.D;
+					break;
+				}
+				case LogType::E: {
+					*ofstream_ptr_ << "E:" << std::setw(2) << std::hex << (int)cpu_.A;
+					break;
+				}
+				case LogType::F: {
+					*ofstream_ptr_ << "F:" <<  std::setw(2) << std::hex << (int)cpu_.F;
+					break;
+				}
+				case LogType::H: {
+					*ofstream_ptr_ << "H:" << std::setw(2) << std::hex << (int)cpu_.H;
+					break;
+				}
+				case LogType::L: {
+					*ofstream_ptr_ << "L:" << std::setw(2) << std::hex << (int)cpu_.L;
+					break;
+				}
 			}
+			*ofstream_ptr_ << " ";
 		}
-		std::cout << std::endl;
-		//*ofstream_ptr_ << "\n";
+		*ofstream_ptr_ << "\n";
 	}
 	void Gameboy::start_normal() { 
 		Reset();
@@ -156,6 +160,9 @@ namespace TKPEmu::Gameboy {
 		ppu_.Reset();
 	}
 	void Gameboy::update() {
+		if (cpu_.PC == 0x100) {
+			bus_.BiosEnabled = false;
+		}
 		int clk = cpu_.Update();
 		ppu_.Update(clk);
 		if (cpu_.TClock >= cpu_.MaxCycles) {

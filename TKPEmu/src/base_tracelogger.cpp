@@ -6,7 +6,7 @@ namespace TKPEmu::Applications {
     }
     void BaseTracelogger::Draw(const char* title, bool* p_open) {
         TKPEmu::Applications::IMApplication::SetupWindow();
-        if (!ImGui::Begin(title, p_open, ImGuiWindowFlags_MenuBar)) {
+        if (!ImGui::Begin(title, p_open)) {
             ImGui::End();
             return;
         }
@@ -38,7 +38,7 @@ namespace TKPEmu::Applications {
             }
         }
         if (!ready_to_log_) {
-            // Push disabled
+            // This push makes the button seem disabled
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.6f);
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         }
@@ -47,15 +47,16 @@ namespace TKPEmu::Applications {
                 if (emulator_ != nullptr) {
                     set_logtypes();
                     emulator_->StartLogging(log_path_);
+                    is_logging_ = true;
                 } else {
                     std::cerr << "Error: Emulator is nullptr" << std::endl;
                 }
-                is_logging_ = true;
             }
         } else {
             if (ImGui::Button("Stop logging")) {
                 if (emulator_ != nullptr) {
                     emulator_->StopLogging();
+                    is_logging_ = false;
                 } else {
                     std::cerr << "Error: Emulator is nullptr" << std::endl;
                 }

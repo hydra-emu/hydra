@@ -59,7 +59,6 @@ namespace TKPEmu::Applications {
             }
             if (goto_popup) {
                 ImGui::OpenPopup("Goto Program Code");
-                goto_popup = false;
             }
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -70,6 +69,11 @@ namespace TKPEmu::Applications {
                 constexpr size_t buf_size = 4 + 1;
                 static char buf[buf_size] = "";
                 bool close = false;
+                if (goto_popup) {
+                    if (!ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
+                        ImGui::SetKeyboardFocusHere(0);
+                    goto_popup = false;
+                }
                 if (ImGui::InputText("hexadecimal", buf, buf_size, 
                         ImGuiInputTextFlags_CharsHexadecimal |
                         ImGuiInputTextFlags_CharsUppercase |
