@@ -5,7 +5,7 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 **Warning:** If you somehow stumble upon this project this early in development, tread carefully.
 
 ## Current emulators
-- [Gameboy](https://github.com/OFFTKP/TKPEmu/blob/master/gb_README.md)
+- [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp)
 
 ## Getting started
 ### Archlinux, using gcc, temporary solution before adding to AUR
