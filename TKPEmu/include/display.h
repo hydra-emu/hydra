@@ -11,9 +11,9 @@
 #include "../lib/imgui_impl_sdl.h"
 #include "../lib/imgui_impl_opengl3.h"
 #include "../lib/imgui_internal.h"
-#include "widget_keyselector.h"
+#include "../lib/widget_keyselector.h"
 #include "base_application.h"
-#include "imfilebrowser.h"
+#include "../lib/imfilebrowser.h"
 #include "settings_manager.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__MINGW32__) && !defined(__clang__)

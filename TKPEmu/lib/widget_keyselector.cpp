@@ -1,4 +1,4 @@
-#include "../include/widget_keyselector.h"	
+#include "widget_keyselector.h"	
 namespace TKPEmu::Tools {
     bool KeySelector::lock_key_mode_ = false;
     SettingsMap* KeySelector::settings_map_ = nullptr;
