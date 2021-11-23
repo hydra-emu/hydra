@@ -13,6 +13,8 @@
 #include "../lib/imgui_internal.h"
 #include "../lib/widget_keyselector.h"
 #include "base_application.h"
+#include "base_disassembler.h"
+#include "base_tracelogger.h"
 #include "../lib/imfilebrowser.h"
 #include "settings_manager.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
@@ -26,10 +28,6 @@
 #define IM_FMTARGS(FMT)
 #define IM_FMTLIST(FMT)
 #endif
-namespace TKPEmu::Applications {
-    class BaseTracelogger;
-    class BaseDisassembler;
-}
 namespace TKPEmu::Graphics {
     constexpr auto GameboyWidth = 160;
     constexpr auto GameboyHeight = 144;

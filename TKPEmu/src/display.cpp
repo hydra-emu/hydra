@@ -7,8 +7,6 @@
 #include <algorithm>
 #include "../lib/stb_image.h"
 #include "../include/disassembly_instr.h"
-#include "../include/base_tracelogger.h"
-#include "../include/base_disassembler.h"
 
 #include "../gb_tkp/gameboy.h"
 #include "../gb_tkp/gb_disassembler.h"
@@ -249,8 +247,6 @@ namespace TKPEmu::Graphics {
             if (ImGui::Begin("Overlay", draw, window_flags))
             {
                 ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
-                ImGui::Separator();
-                ImGui::Text("(right click for options)");
                 if (ImGui::BeginPopupContextWindow())
                 {
                     if (ImGui::MenuItem("Custom", NULL, corner == -1)) corner = -1;
@@ -447,8 +443,7 @@ namespace TKPEmu::Graphics {
             emulator_ = std::make_unique<Gameboy>(gb_keys_directional_, gb_keys_action_);
             disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
             tracelogger_ = std::make_unique<GameboyTracelogger>();
-            disassembler_->Reset();
-            disassembler_->SetEmulator(emulator_.get());
+            static_cast<GameboyDisassembler*>(disassembler_.get())->SetEmulator(static_cast<Gameboy*>(emulator_.get()));
             tracelogger_->SetEmulator(emulator_.get());
             rom_loaded_ = true;
             rom_paused_ = debug_mode_;
@@ -534,7 +529,7 @@ namespace TKPEmu::Graphics {
     void Display::setup_gameboy_palette() {
         if (emulator_ != nullptr) {
             using Gameboy = TKPEmu::Gameboy::Gameboy;
-            Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
+            Gameboy* temp = static_cast<Gameboy*>(emulator_.get());
             auto& pal = temp->GetPalette();
             pal = gb_palettes_;
         }
@@ -674,7 +669,7 @@ namespace TKPEmu::Graphics {
                                 }
                                 if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_F]) {
                                     if (window_disassembler_open_) {
-                                        disassembler_->OpenGotoPopup = true;
+                                        disassembler_.get()->OpenGotoPopup = true;
                                     }
                                     break;
                                 }

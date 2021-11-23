@@ -20,6 +20,6 @@ namespace TKPEmu::Applications {
 				ptr->push_back(LogTypeMap[i]);
 			}
 		}
-		(dynamic_cast<Gameboy*>(emulator_))->SetLogTypes(std::move(ptr));
+		static_cast<Gameboy*>(emulator_)->SetLogTypes(std::move(ptr));
 	}
 }
