@@ -5,10 +5,6 @@ namespace TKPEmu::Gameboy::Devices {
 	CPU::CPU(Bus* bus) : bus_(bus),
 		IF(bus->GetReference(0xFF0F)),
 		IE(bus->GetReference(0xFFFF)),
-		DIVIDER(bus->GetReference(0xFF04)),
-		TIMA(bus->GetReference(0xFF05)),
-		TMA(bus->GetReference(0xFF06)),
-		TAC(bus->GetReference(0xFF07)),
 		LY(bus->GetReference(0xFF44)),
 		JOYP(bus->GetReference(0xFF00))
 	{
@@ -2804,50 +2800,38 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	#pragma endregion
 
-	void CPU::Reset() {
-		A = 0; F = 0;
-		B = 0; C = 0;
-		D = 0; E = 0;
-		H = 0; L = 0;
-		SP = 0;
-		PC = 0;
+	void CPU::Reset(bool skip) {
+		if (!skip) {
+			A = 0; F = 0;
+			B = 0; C = 0;
+			D = 0; E = 0;
+			H = 0; L = 0;
+			SP = 0;
+			PC = 0;
+		} else {
+			A = 0x01; F = 0xB0;
+			B = 0x00; C = 0x13;
+			D = 0x00; E = 0xD8;
+			H = 0x01; L = 0x4D;
+			SP = 0xFFFE;
+			PC = 0x100;
+			LY = 0x91;
+		}
 		TClock = 0;
 		halt_ = false; stop_ = false;
 		JOYP = 0b1110'1111;
-		Oscillator = 0;
-		DIVIDER = 0;
-		div_reset_index_ = -1;
-		TimerCounter = 0;
-		old_tac_ = 0;
 	}
 
 	int CPU::Update() {
 		if (halt_) {
 			PC--;
 		}
-		auto old_if = IF;
 		(this->*Instructions[bus_->Read(PC++)].op)();
-		// Maybe needed to confirm tTemp == 4 also?
-		if (tima_overflow_) {
-			// TIMA might've changed in this strange cycle (see the comment below)
-			// If it changes in that cycle, it doesn't update to be equal to TMA
-			if (TIMA == 0) {
-				TIMA = TMA;
-				// If this isn't true, IF has changed during this instruction so the new value persists
-				if (IF == old_if) {
-					IF |= 1 << 2;
-					halt_ = false;
-				}
-			}
-			tima_overflow_ = false;
-		}
-		update_timers(tTemp);
 		handle_interrupts();
 		TClock += tTemp;
 		TotalClocks += tTemp;
 		return tTemp;
 	}
-
 	void CPU::handle_interrupts() {
 		if (auto temp = IE & IF; ime_ && IF) {
 			// Starting from the lowest bit (highest priority) and going up,
@@ -2860,83 +2844,11 @@ namespace TKPEmu::Gameboy::Devices {
 			}
 		}
 	}
-
 	void CPU::execute_interrupt(int bit) {
 		ime_ = false;
 		IF &= ~(1U << bit);
 		bus_->WriteL(SP, PC);
 		SP -= 2;
 		PC = 0x40 + bit * 0x8;
-	}
-
-	void CPU::update_timers(int cycles) {
-		int freq = get_clk_freq();
-		if (bus_->DIVReset) {
-			bus_->DIVReset = false;
-			if (div_reset_index_ >= freq / 2) {
-				TIMA++;
-			}
-			Oscillator = 0;
-			TimerCounter = 0;
-			div_reset_index_ = 0;
-		}
-		if (bus_->TACChanged) {
-			bus_->TACChanged = false;
-			uint8_t new_tac = TAC;
-			TAC = old_tac_;
-			int old_freq = get_clk_freq();
-			TAC = new_tac;
-			if ((old_tac_ >> 2) & 1) {
-				// If old tac was enabled
-				// TODO: prettify timer after its fully implemented
-				if (!((new_tac >> 2) & 1)) {
-					if ((div_reset_index_ & (old_freq / 2)) != 0) {
-						TIMA++;
-					}
-				}
-				else {
-					if ((div_reset_index_ & (old_freq / 2)) != 0 && ((div_reset_index_ & (freq / 2)) == 0)) {
-						TIMA++;
-					}
-				}
-			}
-			old_tac_ = new_tac;
-		}
-		bool enabled = (TAC >> 2) & 0x1;
-		Oscillator += cycles;
-		// Divider always equals the top 8 bits of the oscillator
-		DIVIDER = Oscillator >> 8;
-		if (div_reset_index_ != -1)
-			div_reset_index_ += cycles;
-		if (div_reset_index_ > freq) {
-			TIMA++;
-			div_reset_index_ = -1;
-		}
-		if (enabled) {
-			TimerCounter += cycles;
-			while (TimerCounter >= freq) {
-				TimerCounter -= freq;
-				//TimerCounter = get_clk_freq();
-				if (TIMA == 0xFF) {
-					/*TIMA = TMA;
-					IF |= 1 << 2;
-					halt_ = false;*/
-					// After TIMA overflows, it stays 00 for 1 clock and *then* becomes =TMA
-					TIMA = 0;
-					tima_overflow_ = true;
-				}
-				else {
-					TIMA++;
-				}
-			}
-		}
-	}
-	int CPU::get_clk_freq() {
-		switch (TAC & 0b11) {
-			case 0: return 1024;
-			case 1: return 16;
-			case 2: return 64;
-			case 3: return 256;
-		}
 	}
 }

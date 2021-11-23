@@ -59,7 +59,11 @@ namespace TKPEmu {
 		}
     }
     void Emulator::Reset() {
-        std::cout << "Warning: Reset was not implemented for this emulator" << std::endl;
+        if (SkipBoot) {
+			reset_skip();
+		} else {
+			reset_normal();
+		}
     }
 	void Emulator::StartLogging(std::string filename) {
 		log_filename_ = std::move(filename);
@@ -88,6 +92,12 @@ namespace TKPEmu {
     void Emulator::start_debug() {
         throw("start_debug was not implemented for this emulator");
     }
+	void Emulator::reset_normal() {
+		throw("reset_normal was not implemented for this emulator");
+	}
+	void Emulator::reset_skip() {
+		throw("reset_skip was not implemented for this emulator");
+	}
     void Emulator::update() {
         throw("update was not implemented for this emulator");
     }

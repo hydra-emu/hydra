@@ -93,6 +93,20 @@ namespace TKPEmu::Graphics {
                 ImGui::End();
                 return;
             }
+            if (ImGui::CollapsingHeader("General")) {
+                ImGui::Text("General emulation settings:");
+                ImGui::Separator();
+                if (ImGui::Checkbox("Debug mode", &debug_mode_)) {
+                    settings_.at("General.debug_mode") = debug_mode_ ? "1" : "0";
+                }
+                if (ImGui::Checkbox("Skip boot sequence", &skip_boot_)) {
+                    settings_.at("General.skip_boot") = skip_boot_ ? "1" : "0";
+                    if (emulator_ != nullptr) {
+                        emulator_->SkipBoot = skip_boot_;
+                    }
+                }
+                ImGui::NewLine();
+            }
             if (ImGui::CollapsingHeader("Video")) {
                 ImGui::Text("General video settings:");
                 ImGui::Separator();
@@ -116,19 +130,6 @@ namespace TKPEmu::Graphics {
                         sleep_time_ = 1000.0f / max_fps_;
                     }
                     ImGui::PopItemWidth();
-                }
-                ImGui::NewLine();
-            }
-            if (ImGui::CollapsingHeader("Emulation")) {
-                ImGui::Text("General emulation settings:");
-                ImGui::Separator();
-                if (rom_loaded_) {
-                    ImGui::Text("These settings require the emulator to be stopped in order to change.");
-                }
-                else {
-                    if (ImGui::Checkbox("Debug mode", &debug_mode_)) {
-                        settings_.at("General.debug_mode") = debug_mode_ ? "1" : "0";
-                    }
                 }
                 ImGui::NewLine();
             }
@@ -443,10 +444,11 @@ namespace TKPEmu::Graphics {
             emulator_ = std::make_unique<Gameboy>(gb_keys_directional_, gb_keys_action_);
             disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
             tracelogger_ = std::make_unique<GameboyTracelogger>();
-            static_cast<GameboyDisassembler*>(disassembler_.get())->SetEmulator(static_cast<Gameboy*>(emulator_.get()));
+            disassembler_->SetEmulator(emulator_.get());
             tracelogger_->SetEmulator(emulator_.get());
             rom_loaded_ = true;
             rom_paused_ = debug_mode_;
+            emulator_->SkipBoot = skip_boot_;
             emulator_->Paused.store(rom_paused_);
             emulator_->LoadFromFile(path.string());
             setup_gameboy_palette();
@@ -494,6 +496,7 @@ namespace TKPEmu::Graphics {
         limit_fps_ = std::stoi(settings_.at("Video.limit_fps"));
         max_fps_ = std::stoi(settings_.at("Video.max_fps"));
         debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
+        skip_boot_ = std::stoi(settings_.at("General.skip_boot"));
         sleep_time_ = 1000.0f / max_fps_;
         KeySelector::Initialize(&settings_);
         init_gameboy_values();

@@ -91,6 +91,7 @@ namespace TKPEmu::Graphics {
         TKPEmu::Tools::SettingsMap settings_ =
         {
             {"General.debug_mode", "1"},
+            {"General.skip_boot", "0"},
             {"General.fast_mode", "0"},
             {"Video.limit_fps", "1"},
             {"Video.max_fps", "60"},
@@ -117,6 +118,7 @@ namespace TKPEmu::Graphics {
         bool limit_fps_ = true;
         int max_fps_ = 60;
         bool debug_mode_ = true;
+        bool skip_boot_ = false;
         EmuStartOptions emulator_start_opt_ = EmuStartOptions::Normal;
         WindowSettings window_settings_;
         TKPImage background_image_;

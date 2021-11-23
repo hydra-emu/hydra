@@ -32,45 +32,11 @@ namespace TKPEmu::Gameboy::Devices {
         std::vector<DisInstr>& instructions_;
         uint8_t& redirect_address(uint16_t address);
     public:
-        enum LCDCFlag {
-            BG_ENABLE = 1 << 0,
-            OBJ_ENABLE = 1 << 1,
-            OBJ_SIZE = 1 << 2,
-            BG_TILEMAP = 1 << 3,
-            BG_TILES = 1 << 4,
-            WND_ENABLE = 1 << 5,
-            WND_TILEMAP = 1 << 6,
-            LCD_ENABLE = 1 << 7
-        };
-        enum STATFlag {
-            MODE = 0b11,
-            COINCIDENCE = 1 << 2,
-            MODE0_INTER = 1 << 3,
-            MODE1_INTER = 1 << 4,
-            MODE2_INTER = 1 << 5,
-            COINC_INTER = 1 << 6
-        };
-        enum IFInterrupt {
-            VBLANK = 1 << 0,
-            LCDSTAT = 1 << 1,
-            TIMER = 1 << 2,
-            SERIAL = 1 << 3,
-            JOYPAD = 1 << 4
-        };
         struct Sprite {
             uint8_t y_pos = 0;
             uint8_t x_pos = 0;
             uint8_t tile_index = 0;
             uint8_t flags = 0;
-        };
-        struct Pixel {
-            uint8_t color : 2;
-            uint8_t palette : 2;
-            // TODO: CGB Sprite priority
-            uint8_t bg_prio : 1;
-        };
-        struct Tile {
-            Pixel pixels[64];
         };
         bool BiosEnabled = true;
         uint8_t logo[0x30] = {

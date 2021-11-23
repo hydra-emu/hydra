@@ -14,9 +14,9 @@ namespace TKPEmu::Gameboy::Devices {
 		IF(bus->GetReference(0xFF0F))
 	{}
 
-	void PPU::Update(uint8_t tTemp) {
+	void PPU::Update(uint8_t cycles) {
 		IF &= 0b11111110;
-		clock_ += tTemp;
+		clock_ += cycles;
 		if (LCDC & LCDCFlag::LCD_ENABLE) {
 			if (clock_ >= clock_target_) {
 				if (LY == 153) {

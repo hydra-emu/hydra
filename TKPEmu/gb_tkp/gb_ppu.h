@@ -3,20 +3,17 @@
 #define TKP_GB_PPU_H
 #include "gb_bus.h"
 #include "../include/TKPImage.h"
+#include "gb_addresses.h"
 #include <mutex>
 #include <array>
 namespace TKPEmu::Gameboy::Devices {
 	constexpr int FRAME_CYCLES = 70224;
 	class PPU {
 	private:
-		using IFInterrupt = Bus::IFInterrupt;
-		using LCDCFlag = Bus::LCDCFlag;
-		using STATFlag = Bus::STATFlag;
 		using TKPImage = TKPEmu::Tools::TKPImage;
-		using Pixel = TKPEmu::Gameboy::Devices::Bus::Pixel;
 	public:
 		PPU(Bus* bus, std::mutex* draw_mutex);
-		void Update(uint8_t tTemp);
+		void Update(uint8_t cycles);
 		void Reset();
 		float* GetScreenData();
 	private:

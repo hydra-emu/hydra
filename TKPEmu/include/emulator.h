@@ -28,8 +28,9 @@ namespace TKPEmu {
 		std::atomic_bool Step = false;
 		std::atomic_bool FastMode = false;
 		std::atomic_int InstructionBreak = -1;
+		bool SkipBoot = false;
 		void Start(EmuStartOptions start_mode);
-		virtual void Reset();
+		void Reset();
 		virtual void HandleKeyDown(SDL_Keycode keycode);
 		virtual void HandleKeyUp(SDL_Keycode keycode);
 		virtual void LoadFromFile(std::string&& path) = 0;
@@ -42,12 +43,17 @@ namespace TKPEmu {
 		std::thread UpdateThread;
 		TKPImage EmulatorImage{};
 	protected:
+		// To be placed at the end of your update function
+		// Override v_log_state() to change what it does, log_state() will do the right
+		// checks for you
 		void log_state();
 		std::unique_ptr<std::ofstream> ofstream_ptr_;
 	private:
 		virtual void v_log_state();
 		virtual void start_normal();
 		virtual void start_debug();
+		virtual void reset_normal();
+		virtual void reset_skip();
 		virtual void update();
 		virtual std::string print() const;
 		friend std::ostream& operator<<(std::ostream& os, const Emulator& obj);

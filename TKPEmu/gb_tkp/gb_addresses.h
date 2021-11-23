@@ -4,6 +4,8 @@
 #include "../include/disassembly_instr.h"
 #include "gb_breakpoint.h"
 #include <cstdint>
+using RegisterType = uint8_t;
+using BigRegisterType = uint16_t;
 using DisInstr = TKPEmu::Tools::DisInstr;
 using GBBPArguments = TKPEmu::Gameboy::Utils::GBBPArguments;
 constexpr size_t LogTypeSize = 10;
@@ -11,6 +13,31 @@ enum class LogType {
     A, B, C, D, 
     E, F, H, L,
     PC, SP,
+};
+enum LCDCFlag {
+    BG_ENABLE = 1 << 0,
+    OBJ_ENABLE = 1 << 1,
+    OBJ_SIZE = 1 << 2,
+    BG_TILEMAP = 1 << 3,
+    BG_TILES = 1 << 4,
+    WND_ENABLE = 1 << 5,
+    WND_TILEMAP = 1 << 6,
+    LCD_ENABLE = 1 << 7
+};
+enum STATFlag {
+    MODE = 0b11,
+    COINCIDENCE = 1 << 2,
+    MODE0_INTER = 1 << 3,
+    MODE1_INTER = 1 << 4,
+    MODE2_INTER = 1 << 5,
+    COINC_INTER = 1 << 6
+};
+enum IFInterrupt {
+    VBLANK = 1 << 0,
+    LCDSTAT = 1 << 1,
+    TIMER = 1 << 2,
+    SERIAL = 1 << 3,
+    JOYPAD = 1 << 4
 };
 constexpr static std::array<LogType, LogTypeSize> LogTypeMap {
     LogType::A, LogType::B, LogType::C, LogType::D,
@@ -50,6 +77,8 @@ constexpr auto addr_std = 0xFF01;
 constexpr auto addr_stc = 0xFF02;
 // Timer registers
 constexpr auto addr_div = 0xFF04;
+constexpr auto addr_tim = 0xFF05;
+constexpr auto addr_tma = 0xFF06;
 constexpr auto addr_tac = 0xFF07;
 // Interrupt flag
 constexpr auto addr_ifl = 0xFF0F;

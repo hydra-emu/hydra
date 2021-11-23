@@ -13,9 +13,6 @@
 namespace TKPEmu::Gameboy::Devices {
 	class CPU {
 	private:
-		using RegisterType = uint8_t;
-		using BigRegisterType = uint16_t;
-	private:
 		Bus* bus_;
 		bool ime_ = false;
 		int tTemp = 0;
@@ -143,15 +140,13 @@ namespace TKPEmu::Gameboy::Devices {
 		BigRegisterType PC, SP;
 
 		// Memory mapped registers, they are a reference to a position in memory
-		RegisterType &IF, &IE, &DIVIDER, &TIMA, &TMA, &TAC, &LY, &JOYP;
+		RegisterType &IF, &IE, &LY, &JOYP;
 
 		const int ClockSpeed = 4194304;
 		const int MaxCycles = ClockSpeed / 60;
-		int Oscillator = 0;
-		int TimerCounter = ClockSpeed / tac_index_;
 		int TClock = 0;
 		unsigned long TotalClocks = 0;
-		void Reset();
+		void Reset(bool skip);
 		int Update();
 	};
 }

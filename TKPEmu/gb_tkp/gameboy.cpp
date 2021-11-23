@@ -19,6 +19,7 @@ namespace TKPEmu::Gameboy {
 		bus_(Instructions),
 		cpu_(&bus_),
 		ppu_(&bus_, &DrawMutex),
+		timer_(&bus_),
 		direction_keys_(direction_keys),
 		action_keys_(action_keys),
 		joypad_(bus_.GetReference(addr_joy)),
@@ -155,9 +156,16 @@ namespace TKPEmu::Gameboy {
 		UpdateThread = std::thread(func);
 		UpdateThread.detach();
 	}
-	void Gameboy::Reset() {
+	void Gameboy::reset_normal() {
 		bus_.SoftReset();
-		cpu_.Reset();
+		cpu_.Reset(false);
+		timer_.Reset();
+		ppu_.Reset();
+	}
+	void Gameboy::reset_skip() {
+		bus_.SoftReset();
+		cpu_.Reset(true);
+		timer_.Reset();
 		ppu_.Reset();
 	}
 	void Gameboy::update() {
@@ -165,17 +173,19 @@ namespace TKPEmu::Gameboy {
 			bus_.BiosEnabled = false;
 		}
 		int clk = cpu_.Update();
+		if (timer_.Update(clk)) {
+			interrupt_flag_ |= IFInterrupt::TIMER;
+		}
 		ppu_.Update(clk);
 		if (cpu_.TClock >= cpu_.MaxCycles) {
 			cpu_.TClock = 0;
-			cpu_.TimerCounter = cpu_.ClockSpeed / 0x400;
 			limit_fps();
 		}
 		log_state();
 	}
 	std::string Gameboy::print() const { 
 		return "GameboyTKP for TKPEmu\n"
-		       "Read more: https://github.com/OFFTKP/TKPEmu/blob/master/gb_README.md";
+		       "Read more: https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp";
 	}
 	void Gameboy::HandleKeyDown(SDL_Keycode key) {
 		static const uint8_t joy_direction = 0b1110'1111;
@@ -183,12 +193,12 @@ namespace TKPEmu::Gameboy {
 		if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key); it_dir != direction_keys_.end()) {
 			int index = it_dir - direction_keys_.begin();
 			bus_.DirectionKeys = (~(1UL << index)) & joy_direction;
-			interrupt_flag_ = TKPEmu::Gameboy::Devices::Bus::JOYPAD;
+			interrupt_flag_ |= IFInterrupt::JOYPAD;
 		}
 		if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key); it_dir != action_keys_.end()) {
 			int index = it_dir - action_keys_.begin();
 			bus_.ActionKeys = (~(1UL << index)) & joy_action;
-			interrupt_flag_ = TKPEmu::Gameboy::Devices::Bus::JOYPAD;
+			interrupt_flag_ |= IFInterrupt::JOYPAD;
 		}
 	}
 	void Gameboy::HandleKeyUp(SDL_Keycode key) {

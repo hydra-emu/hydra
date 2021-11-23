@@ -1,12 +1,16 @@
 #pragma once
 #ifndef TKP_GB_GAMEBOY_H
 #define TKP_GB_GAMEBOY_H
+// TODO: twitch plays plugin
 #include <array>
 #include "../include/emulator.h"
 #include "../include/disassembly_instr.h"
 #include "gb_breakpoint.h"
 #include "gb_addresses.h"
 #include "gb_cpu.h"
+#include "gb_ppu.h"
+#include "gb_bus.h"
+#include "gb_timer.h"
 namespace TKPEmu::Gameboy {
 	using GameboyPalettes = std::array<std::array<float, 3>,4>;
 	using GameboyKeys = std::array<SDL_Keycode, 4>;
@@ -15,13 +19,13 @@ namespace TKPEmu::Gameboy {
 		using CPU = TKPEmu::Gameboy::Devices::CPU;
 		using PPU = TKPEmu::Gameboy::Devices::PPU;
 		using Bus = TKPEmu::Gameboy::Devices::Bus;
+		using Timer = TKPEmu::Gameboy::Devices::Timer;
 		using Cartridge = TKPEmu::Gameboy::Devices::Cartridge;
 		using DisInstr = TKPEmu::Tools::DisInstr;
 		using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
 	public:
 		Gameboy(GameboyKeys& direction_keys, GameboyKeys& action_keys);
 		~Gameboy();
-		void Reset() override;
 		void HandleKeyDown(SDL_Keycode key) override;
 		void HandleKeyUp(SDL_Keycode key) override;
 		void LoadFromFile(std::string&& path) override;
@@ -39,6 +43,7 @@ namespace TKPEmu::Gameboy {
 		Bus bus_;
 		CPU cpu_;
 		PPU ppu_;
+		Timer timer_;
 		Cartridge cartridge_;
 		GameboyKeys& direction_keys_;
 		GameboyKeys& action_keys_;
@@ -50,6 +55,8 @@ namespace TKPEmu::Gameboy {
 		void v_log_state() override;
 		void start_normal() override;
 		void start_debug() override;
+		void reset_normal() override;
+		void reset_skip() override;
 		void update() override;
 		std::string print() const override;
 		void limit_fps();

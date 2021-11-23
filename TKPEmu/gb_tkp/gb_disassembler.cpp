@@ -1,5 +1,4 @@
 #include "gb_disassembler.h"
-
 namespace TKPEmu::Applications {
     GameboyDisassembler::GameboyDisassembler(bool* rom_loaded) : BaseDisassembler(rom_loaded) {
         sel_map_.resize(0x10000);
