@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <unordered_map>
 // TODO: task.h is deprecated warning
+// TODO: enter press on breakpoint adds breakpoint
 #include <execution>
 #include "../include/base_disassembler.h"
 #include "gb_breakpoint.h"
