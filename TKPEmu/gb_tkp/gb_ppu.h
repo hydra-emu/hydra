@@ -15,6 +15,7 @@ namespace TKPEmu::Gameboy::Devices {
 		PPU(Bus* bus, std::mutex* draw_mutex);
 		void Update(uint8_t cycles);
 		void Reset();
+        int CalcCycles();
 		float* GetScreenData();
 	private:
 		Bus* bus_;

@@ -20,7 +20,6 @@ namespace TKPEmu::Gameboy::Devices {
 		int old_tac_ = 0;
 		int tac_index_ = 0x1000;
 		int tima_overflow_ = false;
-		bool halt_ = false;
 		bool stop_ = false;
 
 		// Instruction functions
@@ -92,6 +91,7 @@ namespace TKPEmu::Gameboy::Devices {
 
 	public:
 		CPU(Bus* bus);
+		bool halt_ = false;
 		struct Instruction {
 			std::string name;
 			void(CPU::* op)() = nullptr;

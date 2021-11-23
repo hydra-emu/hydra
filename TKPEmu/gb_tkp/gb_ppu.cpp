@@ -13,7 +13,6 @@ namespace TKPEmu::Gameboy::Devices {
 		WX(bus->GetReference(0xFF4B)),
 		IF(bus->GetReference(0xFF0F))
 	{}
-
 	void PPU::Update(uint8_t cycles) {
 		IF &= 0b11111110;
 		clock_ += cycles;
@@ -26,7 +25,6 @@ namespace TKPEmu::Gameboy::Devices {
 					clock_target_ = FRAME_CYCLES;
 				}
 				IF |= set_mode(next_stat_mode);
-				
 				if (int mode = get_mode(); mode == 2) {
 					clock_target_ += 80;
 					next_stat_mode = 3;
@@ -73,11 +71,12 @@ namespace TKPEmu::Gameboy::Devices {
 		clock_ = 0;
 		clock_target_ = 0;
 	}
-	
+    int PPU::CalcCycles() {
+		return clock_target_ - clock_;
+	}
 	float* PPU::GetScreenData() {
 		return &screen_color_data_[0];
 	}
-
 	int PPU::set_mode(int mode) {
 		if (get_mode() == mode) {
 			return 0;

@@ -8,11 +8,13 @@ namespace TKPEmu::Gameboy::Devices {
     public:
         Timer(Bus* bus);
         void Reset();
-        bool Update(uint8_t cycles);
+        void Update(uint8_t cycles, uint8_t old_if);
     private:
         Bus* bus_;
-        RegisterType &DIV, &TIMA, &TAC, &TMA;
-        int oscillator_, timer_counter_;
+        RegisterType &DIV, &TIMA, &TAC, &TMA, &IF;
+        // TODO: Reduce these temporaries to oscillator_ and timer_counter_ only
+        int oscillator_, timer_counter_, div_reset_index_, old_tac_;
+        bool tima_overflow_;
         const std::array<const unsigned, 4> interr_times_ { 1024, 16, 64, 256 };
     };
 }

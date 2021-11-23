@@ -172,10 +172,9 @@ namespace TKPEmu::Gameboy {
 		if (cpu_.PC == 0x100) {
 			bus_.BiosEnabled = false;
 		}
+		uint8_t old_if = interrupt_flag_;
 		int clk = cpu_.Update();
-		if (timer_.Update(clk)) {
-			interrupt_flag_ |= IFInterrupt::TIMER;
-		}
+		timer_.Update(clk, old_if);
 		ppu_.Update(clk);
 		if (cpu_.TClock >= cpu_.MaxCycles) {
 			cpu_.TClock = 0;
