@@ -12,10 +12,10 @@
 #include "gb_bus.h"
 #include "gb_timer.h"
 namespace TKPEmu::Gameboy {
-	using GameboyPalettes = std::array<std::array<float, 3>,4>;
-	using GameboyKeys = std::array<SDL_Keycode, 4>;
 	class Gameboy : public Emulator {
 	private:
+		using GameboyPalettes = std::array<std::array<float, 3>,4>;
+		using GameboyKeys = std::array<SDL_Keycode, 4>;
 		using CPU = TKPEmu::Gameboy::Devices::CPU;
 		using PPU = TKPEmu::Gameboy::Devices::PPU;
 		using Bus = TKPEmu::Gameboy::Devices::Bus;

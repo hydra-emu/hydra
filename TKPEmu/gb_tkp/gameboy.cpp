@@ -288,7 +288,7 @@ namespace TKPEmu::Gameboy {
 		return cpu_.Instructions[opc].name;
 	}
 
-	GameboyPalettes& Gameboy::GetPalette() {
+	Gameboy::GameboyPalettes& Gameboy::GetPalette() {
 		return bus_.Palette;
 	}
 }
