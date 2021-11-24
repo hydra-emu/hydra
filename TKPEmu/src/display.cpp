@@ -7,8 +7,7 @@
 #include <algorithm>
 #include "../lib/stb_image.h"
 #include "../include/disassembly_instr.h"
-
-#include "../gb_tkp/gameboy.h"
+#include "../include/emulator_factory.h"
 #include "../gb_tkp/gb_disassembler.h"
 #include "../gb_tkp/gb_tracelogger.h"
 
@@ -435,13 +434,14 @@ namespace TKPEmu::Graphics {
             emulator_start_opt_ = EmuStartOptions::Debug;
         }
         if (ext == ".gb") {
+
             using Gameboy = TKPEmu::Gameboy::Gameboy;
             using GameboyDisassembler = TKPEmu::Applications::GameboyDisassembler;
             using GameboyTracelogger = TKPEmu::Applications::GameboyTracelogger;
             if (emulator_) {
                 close_emulator_and_wait();
             }
-            emulator_ = std::make_unique<Gameboy>(gb_keys_directional_, gb_keys_action_);
+            emulator_ = TKPEmu::EmulatorFactory::Create<Gameboy>(gb_keys_directional_, gb_keys_action_);
             disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
             tracelogger_ = std::make_unique<GameboyTracelogger>();
             disassembler_->SetEmulator(emulator_.get());

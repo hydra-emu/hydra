@@ -1,21 +1,20 @@
 #pragma once
 #ifndef TKP_GB_DISPLAY_H
 #define TKP_GB_DISPLAY_H
-#include "../glad/glad/glad.h"
 #include <SDL2/SDL.h>
 #include <string>
 #include <mutex>
 #include <atomic>
-#include "emulator.h"
-#include "TKPImage.h"
+#include "../glad/glad/glad.h"
+#include "../include/emulator_includes.h"
 #include "../lib/imgui_impl_sdl.h"
 #include "../lib/imgui_impl_opengl3.h"
 #include "../lib/imgui_internal.h"
 #include "../lib/widget_keyselector.h"
-#include "base_application.h"
+#include "../lib/imfilebrowser.h"
+#include "TKPImage.h"
 #include "base_disassembler.h"
 #include "base_tracelogger.h"
-#include "../lib/imfilebrowser.h"
 #include "settings_manager.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__MINGW32__) && !defined(__clang__)
@@ -32,10 +31,6 @@ namespace TKPEmu::Graphics {
     constexpr auto GameboyWidth = 160;
     constexpr auto GameboyHeight = 144;
     constexpr auto MenuBarHeight = 19;
-    using TKPImage = TKPEmu::Tools::TKPImage;
-    using KeySelector = TKPEmu::Tools::KeySelector;
-    using EmuStartOptions = TKPEmu::EmuStartOptions;
-   enum class FileAccess { Read, Write };
     struct WindowSettings {
         int window_width = 640;
         int window_height = 480;
@@ -45,12 +40,11 @@ namespace TKPEmu::Graphics {
         int maximum_width = 1920;
         int maximum_height = 1080;
     };
-    enum class EmulatorType {
-        None,
-        Gameboy,
-    };
 	class Display {
     private:
+        using TKPImage = TKPEmu::Tools::TKPImage;
+        using KeySelector = TKPEmu::Tools::KeySelector;
+        using EmuStartOptions = TKPEmu::EmuStartOptions;
         using SDL_GLContextType = std::remove_pointer_t<SDL_GLContext>;
         using BaseDisassembler = TKPEmu::Applications::BaseDisassembler;
         using BaseTracelogger = TKPEmu::Applications::BaseTracelogger;
@@ -133,7 +127,6 @@ namespace TKPEmu::Graphics {
         std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
         // This variable helps for setting up the controls
         SDL_Keycode last_key_pressed_ = 0;
-        EmulatorType emulator_type_ = EmulatorType::None;
         float sleep_time_ = 16.75f;
 
         // These bools determine whether certain windows are open
