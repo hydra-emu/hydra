@@ -33,7 +33,7 @@ namespace TKPEmu {
 		void Reset();
 		virtual void HandleKeyDown(SDL_Keycode keycode);
 		virtual void HandleKeyUp(SDL_Keycode keycode);
-		virtual void LoadFromFile(std::string&& path) = 0;
+		void LoadFromFile(std::string path);
 		void StartLogging(std::string filename);
 		void StopLogging();
 		void Screenshot(std::string filename);
@@ -55,10 +55,12 @@ namespace TKPEmu {
 		virtual void reset_normal();
 		virtual void reset_skip();
 		virtual void update();
+		virtual void load_file(std::string path);
 		virtual std::string print() const;
 		friend std::ostream& operator<<(std::ostream& os, const Emulator& obj);
 		bool logging_ = false;
 		std::string log_filename_;
+		std::string rom_hash_;
 	};
 }
 #endif

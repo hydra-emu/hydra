@@ -28,7 +28,6 @@ namespace TKPEmu::Gameboy {
 		~Gameboy();
 		void HandleKeyDown(SDL_Keycode key) override;
 		void HandleKeyUp(SDL_Keycode key) override;
-		void LoadFromFile(std::string&& path) override;
 		float* GetScreenData() override;
 		void SetLogTypes(std::unique_ptr<std::vector<LogType>> types_ptr);
         DisInstr GetInstruction(uint16_t address);
@@ -57,6 +56,7 @@ namespace TKPEmu::Gameboy {
 		void start_debug() override;
 		void reset_normal() override;
 		void reset_skip() override;
+		void load_file(std::string path) override;
 		void update() override;
 		std::string print() const override;
 		void limit_fps();

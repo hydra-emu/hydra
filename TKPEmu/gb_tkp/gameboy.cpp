@@ -174,7 +174,9 @@ namespace TKPEmu::Gameboy {
 		}
 		uint8_t old_if = interrupt_flag_;
 		int clk = cpu_.Update();
-		timer_.Update(clk, old_if);
+		if (timer_.Update(clk, old_if)) {
+			cpu_.halt_ = false;
+		}
 		ppu_.Update(clk);
 		if (cpu_.TClock >= cpu_.MaxCycles) {
 			cpu_.TClock = 0;
@@ -212,7 +214,7 @@ namespace TKPEmu::Gameboy {
 			bus_.ActionKeys = (1UL << index) | joy_action;
 		}
 	}
-	void Gameboy::LoadFromFile(std::string&& path) {
+	void Gameboy::load_file(std::string path) {
 		bus_.LoadCartridge(std::forward<std::string>(path));
 	}
 	DisInstr Gameboy::GetInstruction(uint16_t address) {

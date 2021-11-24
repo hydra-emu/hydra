@@ -8,7 +8,7 @@ namespace TKPEmu::Gameboy::Devices {
     public:
         Timer(Bus* bus);
         void Reset();
-        void Update(uint8_t cycles, uint8_t old_if);
+        bool Update(uint8_t cycles, uint8_t old_if);
     private:
         Bus* bus_;
         RegisterType &DIV, &TIMA, &TAC, &TMA, &IF;

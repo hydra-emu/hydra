@@ -16,7 +16,7 @@ namespace TKPEmu::Gameboy::Devices {
         oscillator_ = 0;
         timer_counter_ = 0;
     }
-    void Timer::Update(uint8_t cycles, uint8_t old_if) {
+    bool Timer::Update(uint8_t cycles, uint8_t old_if) {
         if (tima_overflow_) {
 			// TIMA might've changed in this strange cycle (see the comment below)
 			// If it changes in that cycle, it doesn't update to be equal to TMA
@@ -83,11 +83,13 @@ namespace TKPEmu::Gameboy::Devices {
 					// After TIMA overflows, it stays 00 for 1 clock and *then* becomes =TMA
 					TIMA = 0;
 					tima_overflow_ = true;
+					return true;
 				}
 				else {
 					TIMA++;
 				}
 			}
 		}
+		return false;
 	}
 }

@@ -434,7 +434,6 @@ namespace TKPEmu::Graphics {
             emulator_start_opt_ = EmuStartOptions::Debug;
         }
         if (ext == ".gb") {
-
             using Gameboy = TKPEmu::Gameboy::Gameboy;
             using GameboyDisassembler = TKPEmu::Applications::GameboyDisassembler;
             using GameboyTracelogger = TKPEmu::Applications::GameboyTracelogger;

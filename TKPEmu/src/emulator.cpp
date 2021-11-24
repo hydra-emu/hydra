@@ -4,6 +4,7 @@
 #include "../include/emulator.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../lib/stb_image_write.h"
+#include "../lib/md5.h"
 #include "../glad/glad/glad.h"
 namespace TKPEmu {
     void Emulator::HandleKeyDown(SDL_Keycode keycode) { 
@@ -58,6 +59,14 @@ namespace TKPEmu {
 			}
 		}
     }
+	void Emulator::LoadFromFile(std::string path) {
+		std::ifstream t(path);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		rom_hash_ = md5(buffer.str());
+		std::cout << "Loading " << path << " with hash " << rom_hash_ << std::endl;
+		load_file(path);
+	}
     void Emulator::Reset() {
         if (SkipBoot) {
 			reset_skip();
@@ -101,6 +110,9 @@ namespace TKPEmu {
     void Emulator::update() {
         throw("update was not implemented for this emulator");
     }
+	void Emulator::load_file(std::string path) {
+		throw("load_file was not implemented for this emulator");
+	}
     std::string Emulator::print() const { 
         return "Error: Override print function for this emulator";
     }
