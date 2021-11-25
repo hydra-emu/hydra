@@ -113,6 +113,7 @@ namespace TKPEmu::Graphics {
         int max_fps_ = 60;
         bool debug_mode_ = true;
         bool skip_boot_ = false;
+        bool fast_mode_ = false;
         EmuStartOptions emulator_start_opt_ = EmuStartOptions::Normal;
         WindowSettings window_settings_;
         TKPImage background_image_;

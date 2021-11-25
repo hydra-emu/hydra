@@ -26,9 +26,9 @@ namespace TKPEmu {
 		std::atomic_bool Stopped = false;
 		std::atomic_bool Paused = false;
 		std::atomic_bool Step = false;
-		std::atomic_bool FastMode = false;
 		std::atomic_int InstructionBreak = -1;
 		bool SkipBoot = false;
+		bool FastMode = false;
 		void Start(EmuStartOptions start_mode);
 		void Reset();
 		virtual void HandleKeyDown(SDL_Keycode keycode);
@@ -47,6 +47,7 @@ namespace TKPEmu {
 		// Override v_log_state() to change what it does, log_state() will do the right
 		// checks for you
 		void log_state();
+		void limit_fps() const;
 		std::unique_ptr<std::ofstream> ofstream_ptr_;
 	private:
 		virtual void v_log_state();
@@ -61,6 +62,9 @@ namespace TKPEmu {
 		bool logging_ = false;
 		std::string log_filename_;
 		std::string rom_hash_;
+		mutable std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
+		mutable std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
+		float sleep_time_ = 16.75f;
 	};
 }
 #endif

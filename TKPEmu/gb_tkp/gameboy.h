@@ -47,10 +47,7 @@ namespace TKPEmu::Gameboy {
 		GameboyKeys& direction_keys_;
 		GameboyKeys& action_keys_;
 		uint8_t& joypad_, &interrupt_flag_;
-		std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
-		std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
 		std::unique_ptr<std::vector<LogType>> log_types_ptr_;
-		float sleep_time_ = 16.75f;
 		void v_log_state() override;
 		void start_normal() override;
 		void start_debug() override;
@@ -59,7 +56,6 @@ namespace TKPEmu::Gameboy {
 		void load_file(std::string path) override;
 		void update() override;
 		std::string print() const override;
-		void limit_fps();
 	};
 }
 #endif

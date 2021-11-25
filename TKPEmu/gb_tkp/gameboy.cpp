@@ -3,18 +3,6 @@
 #include "../glad/glad/glad.h"
 #include "gameboy.h"
 namespace TKPEmu::Gameboy {
-	void Gameboy::limit_fps() {
-		// TODO: speedhack that sleeps for less time
-		a = std::chrono::system_clock::now();
-		std::chrono::duration<double, std::milli> work_time = a - b;
-		if (work_time.count() < sleep_time_) {
-			std::chrono::duration<double, std::milli> delta_ms(sleep_time_ - work_time.count());
-			auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
-			std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
-		}
-		b = std::chrono::system_clock::now();
-		std::chrono::duration<double, std::milli> sleep_time = b - a;
-	}
 	Gameboy::Gameboy(GameboyKeys& direction_keys, GameboyKeys& action_keys) :
 		bus_(Instructions),
 		cpu_(&bus_),

@@ -49,7 +49,7 @@ struct ExpectedResult {
 };
 // This map helps with quality assurance, we can check multiple test roms
 // at once and compare their finished hashes with these known good results
-std::unordered_map<Hash, ExpectedResult> PassedTestMap {
+const static std::unordered_map<Hash, ExpectedResult> PassedTestMap {
     // cpu_instrs.gb by blargg
     { "662f04537286d13ee55a6df9de4dce24", { 0, "error-hash" } },
 };

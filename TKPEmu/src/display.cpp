@@ -98,6 +98,12 @@ namespace TKPEmu::Graphics {
                 if (ImGui::Checkbox("Debug mode", &debug_mode_)) {
                     settings_.at("General.debug_mode") = debug_mode_ ? "1" : "0";
                 }
+                if (ImGui::Checkbox("Fast mode", &fast_mode_)) {
+                    settings_.at("General.fast_mode") = fast_mode_ ? "1" : "0";
+                    if (emulator_ != nullptr) {
+                        emulator_->FastMode = fast_mode_;
+                    }
+                }
                 if (ImGui::Checkbox("Skip boot sequence", &skip_boot_)) {
                     settings_.at("General.skip_boot") = skip_boot_ ? "1" : "0";
                     if (emulator_ != nullptr) {
@@ -448,6 +454,7 @@ namespace TKPEmu::Graphics {
             rom_loaded_ = true;
             rom_paused_ = debug_mode_;
             emulator_->SkipBoot = skip_boot_;
+            emulator_->FastMode = fast_mode_;
             emulator_->Paused.store(rom_paused_);
             emulator_->LoadFromFile(path.string());
             setup_gameboy_palette();
@@ -496,6 +503,7 @@ namespace TKPEmu::Graphics {
         max_fps_ = std::stoi(settings_.at("Video.max_fps"));
         debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
         skip_boot_ = std::stoi(settings_.at("General.skip_boot"));
+        fast_mode_ = std::stoi(settings_.at("General.fast_mode"));
         sleep_time_ = 1000.0f / max_fps_;
         KeySelector::Initialize(&settings_);
         init_gameboy_values();
