@@ -217,20 +217,11 @@ namespace TKPEmu::Graphics {
             ImGui::End();
         }
     }
-
-    void Display::draw_trace_logger(bool* draw) {
-        if (*draw && is_rom_loaded_and_debugmode()) {
-            tracelogger_->Draw("Tracelogger", draw);
+    void Display::draw_tools() {
+        for (const auto& app : emulator_tools_) {
+            app->Draw();
         }
     }
-
-    // TODO: add filtering, breakpoints, searching
-    void Display::draw_disassembler(bool* draw) {
-        if (*draw && is_rom_loaded_and_debugmode()) {
-            disassembler_->Draw("Disassembler", draw);
-        }
-    }
-
     void Display::draw_fps_counter(bool* draw){
         if (*draw) {
             static int corner = 0;
@@ -367,9 +358,13 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::draw_menu_bar_tools() {
-        // TODO: add seperator and text that tells you what to do to activate these
-        if (ImGui::MenuItem("Tracelogger", NULL, window_tracelogger_open_, is_rom_loaded_and_debugmode())) { window_tracelogger_open_ ^= true; }
-        if (ImGui::MenuItem("Disassembler", NULL, window_disassembler_open_, is_rom_loaded_and_debugmode())) { window_disassembler_open_ ^= true; }
+        if (rom_loaded_) {
+            for (const auto& app : emulator_tools_) {
+                app->DrawMenuItem();
+            }
+        } else {
+            ImGui::TextDisabled("Emulator not loaded");
+        }
         ImGui::EndMenu();
     }
 
@@ -447,8 +442,7 @@ namespace TKPEmu::Graphics {
                 close_emulator_and_wait();
             }
             emulator_ = TKPEmu::EmulatorFactory::Create<Gameboy>(gb_keys_directional_, gb_keys_action_);
-            disassembler_ = std::make_unique<GameboyDisassembler>(&rom_loaded_);
-            tracelogger_ = std::make_unique<GameboyTracelogger>();
+            TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, TKPEmu::EmuType::Gameboy);
             disassembler_->SetEmulator(emulator_.get());
             tracelogger_->SetEmulator(emulator_.get());
             rom_loaded_ = true;
@@ -731,11 +725,10 @@ namespace TKPEmu::Graphics {
             ImGui::NewFrame();
             draw_game_background(&rom_loaded_);
             draw_menu_bar(&menu_bar_open_);
-            draw_trace_logger(&window_tracelogger_open_);
             draw_fps_counter(&window_fpscounter_open_);
+            draw_tools();
             draw_settings(&window_settings_open_);
             draw_file_browser(&window_file_browser_open_);
-            draw_disassembler(&window_disassembler_open_);
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window_ptr_.get());
