@@ -18,8 +18,9 @@ constexpr uint32_t hash(const char* data) noexcept {
 void print_help() noexcept;
 
 enum class ParameterType {
-	File,
-	Log
+	RomFile,
+	ScreenshotDir,
+	ScreenshotTime,
 };
 
 int main(int argc, char *argv[]) {
@@ -28,7 +29,9 @@ int main(int argc, char *argv[]) {
 	bool display_mode = false;
 	bool pre_open = false;
 	bool fast_mode = false;
-	bool log_mode = false;
+	bool screenshot = false;
+	int screenshot_clocks = 0;
+	std::string screenshot_dir = ""
 
 	// The first argument is expected to be an option (eg. -d or -o)
 	// Whenever we get an argument that needs parameters, this bool is set to true
@@ -44,7 +47,7 @@ int main(int argc, char *argv[]) {
 				case hash("--display"):
 				case hash("-d"): {
 					display_mode = true;
-					break;
+					goto after_args;
 				}
 				case hash("--help"):
 				case hash("-h"): {
@@ -60,12 +63,25 @@ int main(int argc, char *argv[]) {
 				case hash("-o"): {
 					pre_open = true;
 					expects_parameter = true;
-					next_parameter_type = ParameterType::File;
+					next_parameter_type = ParameterType::RomFile;
 					break;
 				}
 				case hash("--fast-mode"):
 				case hash("-f"): {
 					fast_mode = true;
+					break;
+				}
+				case hash("--screenshot-dir"):
+				case hash("-sd"): {
+					expects_parameter = true;
+					next_parameter_type = ParameterType::ScreenshotDir;
+					break;
+				}
+				case hash("--screenshot"):
+				case hash("-s"): {
+					screenshot = true;
+					expects_parameter = true;
+					next_parameter_type = ParameterType::ScreenshotTime;
 					break;
 				}
 				default: {
@@ -75,7 +91,7 @@ int main(int argc, char *argv[]) {
 			}
 		} else {
 			switch(next_parameter_type) {
-				case ParameterType::File: {
+				case ParameterType::RomFile: {
 					if (std::filesystem::exists(argv[i])) {
 						rom_file = argv[i];
 						expects_parameter = false;
@@ -84,13 +100,32 @@ int main(int argc, char *argv[]) {
 					}
 					break;
 				}
+				case ParameterType::ScreenshotDir: {
+					if (std::filesystem::is_directory(argv[i])) {
+						screenshot_dir = argv[i];
+						expects_parameter = false;
+					} else {
+						throw("Error: Specified directory does not exist.");
+					}
+				}
+				case ParameterType::ScreenshotTime: {
+					try {
+						screenshot_clocks = std::stoi(argv[i]);
+					} catch (const std::exception& e) {
+						std::cerr << "Error: " << e.what() << std::endl;
+						throw e;
+					}
+				}
 				default: {
 					throw ("Error: Invalid parameter to argument.");
 				}
 			}
 		}
 	}
+
+	after_args:
 	if (display_mode) {
+		// TODO: remake display constructor, takes runparameters class
 		std::cout << "Opening GUI..." << std::endl;
 		TKPEmu::Graphics::Display dis;
 		dis.EnterMainLoop();
@@ -108,8 +143,8 @@ void print_help() noexcept {
 				"-d or --display: Starts in GUI mode\n"
 				"-o or --open (filename): Open and start a rom\n"
 				"-f or --fast-mode: Force emulator to run as fast as possible\n"
-				"-s or --screenshot (time): Take a screenshot of the screen after (time) milliseconds\n"
-				"-sd or --screenshot-directory (path): Change the directory where the screenshot will be saved (cwd by default)\n"
-				"-c or --config: Returns the configuration file path, edit it with your favorite text editor "
+				"-s or --screenshot (time): Take a screenshot of the screen after (time) in clocks\n"
+				"-sd or --screenshot-directory (path): Set the screenshot directory for this screenshot (cwd by default)\n"
+				"-c or --config: Returns the configuration file path"
 		<< std::endl;
 }
