@@ -3,17 +3,23 @@
 #include "gb_tracelogger.h"
 #include "gb_addresses.h"
 #include "../lib/imgui.h"
-#include "../lib/imgui_stdlib.h"
+
 namespace TKPEmu::Applications {
-	void GameboyTracelogger::GameboyTracelogger(std::string menu_title, std::string window_title)
+	GameboyTracelogger::GameboyTracelogger(std::string menu_title, std::string window_title)
 		: IMApplication(menu_title, window_title)
-	{}
+	{
+        std::string path = std::filesystem::current_path();
+        if (path.length() < PATH_MAX) {
+            strncpy(path_buf_, path.data(), PATH_MAX);
+        } else {
+            std::cerr << "Error: Executable path too long" << std::endl;
+        }
+    }
 	void GameboyTracelogger::v_draw() {
-        static std::string path_buf = std::filesystem::current_path();
         static bool path_changed = false;
         static bool file_exists = false;
         static bool overwrite = false;
-        if (ImGui::InputText("##path", &path_buf, ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputText("##path", &(path_buf_[0]), PATH_MAX, ImGuiInputTextFlags_EnterReturnsTrue)) {
             ready_to_log_ = false;
             path_changed = true;
             overwrite = false;
@@ -26,14 +32,14 @@ namespace TKPEmu::Applications {
         }
         if (path_changed) {
             path_changed = false;
-            if (std::filesystem::is_directory(path_buf)) {
+            if (std::filesystem::is_directory(path_buf_)) {
                 std::cout << "Error: Path is directory" << std::endl;
-            } else if (!overwrite && std::filesystem::exists(path_buf)) {
+            } else if (!overwrite && std::filesystem::exists(path_buf_)) {
                 file_exists = true;
                 ImGui::OpenPopup("Overwrite?");
             } else {
                 ready_to_log_ = true;
-                log_path_ = path_buf;
+                log_path_ = path_buf_;
             }
         }
         if (!ready_to_log_) {

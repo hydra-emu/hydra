@@ -7,24 +7,28 @@
 // TODO: task.h is deprecated warning
 // TODO: enter press on breakpoint adds breakpoint
 #include <execution>
-#include "../include/base_disassembler.h"
+#include "../include/base_application.h"
 #include "gb_breakpoint.h"
 #include "gameboy.h"
 namespace TKPEmu::Applications {
-    using Gameboy = TKPEmu::Gameboy::Gameboy;
-    using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
-    using GBSelectionMap = std::vector<bool>;
-    class GameboyDisassembler : public BaseDisassembler {
+    class GameboyDisassembler : public IMApplication {
+    private:
+        using Gameboy = TKPEmu::Gameboy::Gameboy;
+        using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
+        using GBSelectionMap = std::vector<bool>;
     public:
-        GameboyDisassembler(bool* rom_loaded);
-        void Focus(int item);
-        void v_draw() override;
+        GameboyDisassembler(std::string menu_title, std::string window_title);
+        void HandleShortcut(const TKPShortcut& shortcut) override;
     private:
         GameboyBreakpoint debug_rvalues_;
         GBSelectionMap sel_map_{};
         uint8_t* LY_ = nullptr;
         bool clear_all_flag = false;
+        bool popup_goto = false;
         int selected_bp = -1;
+        void v_draw() override;
+        void focus(int item);
+
         template<typename T>
         void breakpoint_register_checkbox(const char* checkbox_l, T& value, bool& is_used, ImGuiDataType type = ImGuiDataType_U8) {
             ImGui::Checkbox(checkbox_l, &is_used);

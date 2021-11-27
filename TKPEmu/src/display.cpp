@@ -311,7 +311,7 @@ namespace TKPEmu::Graphics {
                     draw_menu_bar_file();
                 }
                 if (ImGui::BeginMenu("Emulation")) {
-                    BaseDisassembler::DrawMenuEmulation(emulator_.get(), &rom_loaded_);
+                    IMApplication::DrawMenuEmulation(emulator_.get());
                 }
                 if (ImGui::BeginMenu("View")) {
                     draw_menu_bar_view();
@@ -407,8 +407,42 @@ namespace TKPEmu::Graphics {
         std::cout << "Background loaded successfully" << std::endl;
         return true;
     }
-
-    inline void Display::image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi) {
+    void Display::handle_shortcuts() {
+        switch(last_shortcut_) {
+            case TKPShortcut::CTRL_O: {
+                if (!window_file_browser_open_) {
+                    window_file_browser_open_ = true;
+                    open_file_browser();
+                }
+                last_shortcut_ = TKPShortcut::NONE;
+                break;
+            }
+            case TKPShortcut::CTRL_R: {
+                emulator_->ResetState();
+                emulator_->Start(emulator_start_opt_);
+                last_shortcut_ = TKPShortcut::NONE;
+                break;
+            }
+            case TKPShortcut::CTRL_P: {
+                emulator_->Paused.store(!emulator_->Paused.load());
+                emulator_->Step.store(true);
+                emulator_->Step.notify_all();
+                last_shortcut_ = TKPShortcut::NONE;
+                break;
+            }
+        }
+        // Shortcut was not handled by display, pass to applications
+        if (last_shortcut_ != TKPShortcut::NONE) {
+            for (const auto& app : emulator_tools_) {
+                app->HandleShortcut(last_shortcut_);
+                if (last_shortcut_ == TKPShortcut::NONE) {
+                    // Shortcut was handled by this app
+                    return;
+                }
+            }
+        }
+    }
+    void Display::image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi) {
         float ws = window_settings_.window_width; float hs = window_settings_.window_height;
         float ri = wi / hi;
         float rs = ws / hs;
@@ -439,12 +473,10 @@ namespace TKPEmu::Graphics {
             using GameboyDisassembler = TKPEmu::Applications::GameboyDisassembler;
             using GameboyTracelogger = TKPEmu::Applications::GameboyTracelogger;
             if (emulator_) {
-                close_emulator_and_wait();
+                emulator_->CloseAndWait();
             }
             emulator_ = TKPEmu::EmulatorFactory::Create<Gameboy>(gb_keys_directional_, gb_keys_action_);
-            TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, TKPEmu::EmuType::Gameboy);
-            disassembler_->SetEmulator(emulator_.get());
-            tracelogger_->SetEmulator(emulator_.get());
+            TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), TKPEmu::EmuType::Gameboy);
             rom_loaded_ = true;
             rom_paused_ = debug_mode_;
             emulator_->SkipBoot = skip_boot_;
@@ -462,22 +494,6 @@ namespace TKPEmu::Graphics {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
     }
-
-    void Display::close_emulator_and_wait() {
-        emulator_->Stopped = true;
-        emulator_->Paused = false;
-        emulator_->Step = true;
-        emulator_->Step.notify_all();
-        std::lock_guard<std::mutex> lguard(emulator_->ThreadStartedMutex);
-    }
-
-    void Display::step_emulator() {
-        if (emulator_ != nullptr && window_disassembler_open_ && emulator_->Paused.load()) {
-            emulator_->Step = true;
-            emulator_->Step.notify_all();
-        }
-    }
-
     void Display::limit_fps() {
         a = std::chrono::system_clock::now();
         std::chrono::duration<double, std::milli> work_time = a - b;
@@ -491,8 +507,7 @@ namespace TKPEmu::Graphics {
         b = std::chrono::system_clock::now();
         std::chrono::duration<double, std::milli> sleep_time = b - a;
     }
-
-    inline void Display::init_settings_values() {
+    void Display::init_settings_values() {
         limit_fps_ = std::stoi(settings_.at("Video.limit_fps"));
         max_fps_ = std::stoi(settings_.at("Video.max_fps"));
         debug_mode_ = std::stoi(settings_.at("General.debug_mode"));
@@ -502,8 +517,7 @@ namespace TKPEmu::Graphics {
         KeySelector::Initialize(&settings_);
         init_gameboy_values();
     }
-
-    inline void Display::init_gameboy_values(){
+    void Display::init_gameboy_values(){
         int color0 = std::stoi(settings_.at("Gameboy.color0"), 0, 16);
         int color1 = std::stoi(settings_.at("Gameboy.color1"), 0, 16);
         int color2 = std::stoi(settings_.at("Gameboy.color2"), 0, 16);
@@ -522,11 +536,11 @@ namespace TKPEmu::Graphics {
         gb_palettes_[3][2] = ((color3) & 0xFF) / 255.0f;
     }
 
-    inline bool Display::is_rom_loaded() {
+    bool Display::is_rom_loaded() {
         return rom_loaded_;
     }
 
-    inline bool Display::is_rom_loaded_and_debugmode() {
+    bool Display::is_rom_loaded_and_debugmode() {
         return rom_loaded_ && debug_mode_;
     }
 
@@ -654,43 +668,32 @@ namespace TKPEmu::Graphics {
 
                     case SDL_KEYDOWN: {
                         auto key = event.key.keysym.sym;
-                        switch (key)
-                        {
-                            case SDLK_F7:
-                                // This function checks if the emulator is nullptr also
-                                step_emulator();
-                                break;
-                            default:{
-                                // Handle the shortcuts
-                                const auto k = SDL_GetKeyboardState(NULL);
-                                if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_P]) {
-                                    pause_pressed_ = true;
-                                    break;
-                                }
-                                if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_R]) {
-                                    reset_pressed_ = true;
-                                    break;
-                                }
-                                if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_F]) {
-                                    if (window_disassembler_open_) {
-                                        disassembler_.get()->OpenGotoPopup = true;
-                                    }
-                                    break;
-                                }
-                                if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_O]) {
-                                    if (!window_file_browser_open_) {
-                                        window_file_browser_open_ = true;
-                                        open_file_browser();
-                                    }
-                                    break;
-                                }
-                                last_key_pressed_ = key;
-                                if (emulator_ != nullptr) {
-                                    emulator_->HandleKeyDown(key);
-                                }
-                            }
+                        // Handle the shortcuts
+                        const auto k = SDL_GetKeyboardState(NULL);
+                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_P]) {
+                            last_shortcut_ = TKPShortcut::CTRL_R;
+                            break;
                         }
-
+                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_R]) {
+                            last_shortcut_ = TKPShortcut::CTRL_R;
+                            break;
+                        }
+                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_F]) {
+                            last_shortcut_ = TKPShortcut::CTRL_F;
+                            break;
+                        }
+                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_O]) {
+                            last_shortcut_ = TKPShortcut::CTRL_O;
+                            break;
+                        }
+                        if (k[SDL_SCANCODE_F7]) {
+                            last_shortcut_ = TKPShortcut::F7;
+                            break;
+                        }
+                        last_key_pressed_ = key;
+                        if (emulator_ != nullptr) {
+                            emulator_->HandleKeyDown(key);
+                        }
                         break;
                     }
                     case SDL_KEYUP:{
@@ -707,19 +710,8 @@ namespace TKPEmu::Graphics {
                 limit_fps();
             }
             if (emulator_ != nullptr) {
-                if (reset_pressed_) {
-                    reset_pressed_ = false;
-                    BaseDisassembler::ResetEmulatorState(emulator_.get());
-                    emulator_->Start(emulator_start_opt_);
-                }
-                if (pause_pressed_) {
-                    pause_pressed_ = false;
-                    emulator_->Paused.store(!emulator_->Paused.load());
-                    emulator_->Step.store(true);
-                    emulator_->Step.notify_all();
-                }
+                handle_shortcuts();
             }
-
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window_ptr_.get());
             ImGui::NewFrame();
@@ -737,9 +729,8 @@ namespace TKPEmu::Graphics {
         // Locking this mutex ensures that the other thread gets
         // enough time to exit before we close the main application.
         // TODO: code smell. find a different way to do this.
-        if (emulator_ != nullptr) {
-            BaseDisassembler::ResetEmulatorState(emulator_.get());
-            std::lock_guard<std::mutex> lguard(emulator_->ThreadStartedMutex);
+        if (emulator_) {
+            emulator_->CloseAndWait();
         }
     }
 }

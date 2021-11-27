@@ -40,6 +40,7 @@ namespace TKPEmu::Graphics {
     };
 	class Display {
     private:
+        using TKPShortcut = TKPEmu::Applications::TKPShortcut;
         using TKPImage = TKPEmu::Tools::TKPImage;
         using KeySelector = TKPEmu::Tools::KeySelector;
         using EmuStartOptions = TKPEmu::EmuStartOptions;
@@ -136,10 +137,7 @@ namespace TKPEmu::Graphics {
         bool window_fpscounter_open_ = false;
         bool window_settings_open_ = false;
         bool window_file_browser_open_ = false;
-
-        // Shortcut pressed booleans
-        bool reset_pressed_ = false;
-        bool pause_pressed_ = false;
+        TKPShortcut last_shortcut_ = TKPShortcut::NONE;
 
         // Window drawing functions for ImGui
         void draw_settings(bool* draw);
@@ -151,24 +149,22 @@ namespace TKPEmu::Graphics {
         void draw_menu_bar_file_recent();
         void draw_menu_bar_tools();
         void draw_menu_bar_view();
-        void open_file_browser();
         void draw_tools();
+        void open_file_browser();
+        void handle_shortcuts();
         
         // Helper functions
-        inline bool load_image_from_file(const char* filename, TKPImage& out);
-        inline void limit_fps();
-        inline void init_settings_values();
-        inline void init_gameboy_values();
-        inline bool is_rom_loaded();
-        inline bool is_rom_loaded_and_debugmode();
+        bool load_image_from_file(const char* filename, TKPImage& out);
+        void limit_fps();
+        void init_settings_values();
+        void init_gameboy_values();
+        bool is_rom_loaded();
+        bool is_rom_loaded_and_debugmode();
 
         // This function deals with scaling the gameboy screen texture without stretching it
-        inline void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
+        void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
 
         void load_rom(std::filesystem::path&& path);
-        // Sends the appropriate flags to close the running emulator thread and waits until its closed
-        void close_emulator_and_wait();
-        void step_emulator();
         void setup_gameboy_palette();
         void load_loop();
         void load_theme();

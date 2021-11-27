@@ -17,7 +17,7 @@ namespace TKPEmu {
                 "Bad type passed to EmulatorFactory, is not derived from Emulator class");
             return std::make_unique<Type>(args...);
         }
-        static void LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, EmuType emu_type);
+        static void LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, Emulator* emulator, EmuType emu_type);
     };
 }
 #endif
