@@ -6,16 +6,14 @@
 #include <mutex>
 #include <atomic>
 #include "../glad/glad/glad.h"
-#include "../include/emulator_includes.h"
 #include "../lib/imgui_impl_sdl.h"
 #include "../lib/imgui_impl_opengl3.h"
 #include "../lib/imgui_internal.h"
 #include "../lib/widget_keyselector.h"
 #include "../lib/imfilebrowser.h"
 #include "TKPImage.h"
-#include "base_disassembler.h"
-#include "base_tracelogger.h"
 #include "settings_manager.h"
+#include "base_application.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__MINGW32__) && !defined(__clang__)
 #define IM_FMTARGS(FMT)             __attribute__((format(gnu_printf, FMT, FMT+1)))
@@ -42,12 +40,12 @@ namespace TKPEmu::Graphics {
     };
 	class Display {
     private:
+        using TKPShortcut = TKPEmu::Applications::TKPShortcut;
         using TKPImage = TKPEmu::Tools::TKPImage;
         using KeySelector = TKPEmu::Tools::KeySelector;
         using EmuStartOptions = TKPEmu::EmuStartOptions;
         using SDL_GLContextType = std::remove_pointer_t<SDL_GLContext>;
-        using BaseDisassembler = TKPEmu::Applications::BaseDisassembler;
-        using BaseTracelogger = TKPEmu::Applications::BaseTracelogger;
+        using IMApplication = TKPEmu::Applications::IMApplication;
         using SettingsManager = TKPEmu::Tools::SettingsManager;
         using DisInstr = TKPEmu::Tools::DisInstr;
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
@@ -119,9 +117,9 @@ namespace TKPEmu::Graphics {
         TKPImage background_image_;
         GLuint frame_buffer_;
         ImGui::FileBrowser file_browser_;
-        std::unique_ptr<Emulator> emulator_ = nullptr;
-        std::unique_ptr<BaseDisassembler> disassembler_;
-        std::unique_ptr<BaseTracelogger> tracelogger_;
+        std::unique_ptr<Emulator> emulator_;
+        // Applications loaded according to the emulator (such as disassembler, tracelogger, other plugins etc)
+        std::vector<std::unique_ptr<IMApplication>> emulator_tools_;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window_ptr_;
         std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
@@ -136,20 +134,13 @@ namespace TKPEmu::Graphics {
         bool rom_loaded_ = false;
         bool rom_paused_ = false;
         bool menu_bar_open_ = true;
-        bool window_tracelogger_open_ = false;
         bool window_fpscounter_open_ = false;
         bool window_settings_open_ = false;
         bool window_file_browser_open_ = false;
-        bool window_disassembler_open_ = false;
-
-        // Shortcut pressed booleans
-        bool reset_pressed_ = false;
-        bool pause_pressed_ = false;
+        TKPShortcut last_shortcut_ = TKPShortcut::NONE;
 
         // Window drawing functions for ImGui
         void draw_settings(bool* draw);
-        void draw_trace_logger(bool* draw);
-        void draw_disassembler(bool* draw);
         void draw_fps_counter(bool* draw);
         void draw_file_browser(bool* draw);
         void draw_game_background(bool* draw);
@@ -158,23 +149,22 @@ namespace TKPEmu::Graphics {
         void draw_menu_bar_file_recent();
         void draw_menu_bar_tools();
         void draw_menu_bar_view();
+        void draw_tools();
         void open_file_browser();
+        void handle_shortcuts();
         
         // Helper functions
-        inline bool load_image_from_file(const char* filename, TKPImage& out);
-        inline void limit_fps();
-        inline void init_settings_values();
-        inline void init_gameboy_values();
-        inline bool is_rom_loaded();
-        inline bool is_rom_loaded_and_debugmode();
+        bool load_image_from_file(const char* filename, TKPImage& out);
+        void limit_fps();
+        void init_settings_values();
+        void init_gameboy_values();
+        bool is_rom_loaded();
+        bool is_rom_loaded_and_debugmode();
 
         // This function deals with scaling the gameboy screen texture without stretching it
-        inline void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
+        void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
 
         void load_rom(std::filesystem::path&& path);
-        // Sends the appropriate flags to close the running emulator thread and waits until its closed
-        void close_emulator_and_wait();
-        void step_emulator();
         void setup_gameboy_palette();
         void load_loop();
         void load_theme();

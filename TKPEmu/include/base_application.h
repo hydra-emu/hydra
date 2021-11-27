@@ -6,19 +6,38 @@
 #include "../lib/imgui_internal.h"
 #include "disassembly_instr.h"
 namespace TKPEmu::Applications {
+    enum class TKPShortcut {
+        NONE,
+        CTRL_R,
+        CTRL_P,
+        CTRL_F,
+		CTRL_O,
+        F7,
+    };
 	class IMApplication {
-	protected:
+	private:
 		using Emulator = TKPEmu::Emulator;
 	public:
-		IMApplication() = default;
+		IMApplication(std::string menu_title, std::string window_title);
 		virtual ~IMApplication() = default;
 		IMApplication(const IMApplication&) = delete;
 		IMApplication& operator=(const IMApplication&) = delete;
-		virtual void Draw(const char* title, bool* p_open = nullptr) = 0;
-		virtual void Reset() {};
+		void Draw();
+		void DrawMenuItem();
+		void Reset();
+		void SetEmulator(Emulator* emulator);
+		virtual void HandleShortcut(const TKPShortcut& shortcut);
 		static void SetupWindow();
-		static void DrawMenuEmulation(Emulator* emulator, bool* rom_loaded);
+		static void DrawMenuEmulation(Emulator* emulator);
         static void ResetEmulatorState(Emulator* emulator);
+	protected:
+		Emulator* emulator_ = nullptr;
+	private:
+		bool drawing_ = false;
+		const std::string menu_title_;
+		const std::string window_title_;
+		virtual void v_draw() = 0;
+		virtual void v_reset() {};
 	};
 }
 #endif

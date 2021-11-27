@@ -43,6 +43,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	// Returns the number of 8KB RAM banks
+	// TODO: constexpr, return from constexpr array
 	int Cartridge::GetRamSize() {
 		switch (header_.ramSize) {
 			case 0: return 0;

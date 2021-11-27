@@ -343,6 +343,7 @@ healthchecksdb
 #vscode json files
 .vscode/
 bin/
+build/
 CMakeFiles/
 
 # Other

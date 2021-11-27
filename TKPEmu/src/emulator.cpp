@@ -86,12 +86,25 @@ namespace TKPEmu {
 			reset_normal();
 		}
     }
+	void Emulator::ResetState() {
+		Step.store(true);
+        Paused.store(false);
+        Stopped.store(true);
+        Step.notify_all();
+	}
 	void Emulator::StartLogging(std::string filename) {
 		log_filename_ = std::move(filename);
 		logging_ = true;
 	}
 	void Emulator::StopLogging() {
 		logging_ = false;
+	}
+	void Emulator::CloseAndWait() {
+		Stopped = true;
+        Paused = false;
+        Step = true;
+        Step.notify_all();
+        std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
 	}
 	void Emulator::log_state() {
 		if (logging_) {

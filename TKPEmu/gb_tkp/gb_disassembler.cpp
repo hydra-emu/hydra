@@ -1,14 +1,29 @@
 #include "gb_disassembler.h"
 namespace TKPEmu::Applications {
-    GameboyDisassembler::GameboyDisassembler(bool* rom_loaded) : BaseDisassembler(rom_loaded) {
+    GameboyDisassembler::GameboyDisassembler(std::string menu_title, std::string window_title) : IMApplication(menu_title, window_title) {
         sel_map_.resize(0x10000);
     };
-    void GameboyDisassembler::Focus(int item) {
+    void GameboyDisassembler::focus(int item) {
         ImGuiContext& g = *ImGui::GetCurrentContext();
         ImGuiWindow* window = g.CurrentWindow;
         // TODO: find a way to make item_height not hard coded
         static const int item_height = 17;
         window->Scroll.y = IM_FLOOR(item_height * item);
+    }
+    void GameboyDisassembler::HandleShortcut(const TKPShortcut& shortcut) {
+        switch(shortcut) {
+            case TKPShortcut::F7: {
+                if (emulator_->Paused) {
+                    emulator_->Step = true;
+                    emulator_->Step.notify_all();
+                }
+                break;
+            }
+            case TKPShortcut::CTRL_F: {
+                popup_goto = true;
+                break;
+            }
+        }
     }
     void GameboyDisassembler::v_draw() {
         Gameboy* gameboy = static_cast<Gameboy*>(emulator_);
@@ -16,7 +31,7 @@ namespace TKPEmu::Applications {
         int goto_pc = -1;
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("Emulation")) {
-                DrawMenuEmulation(gameboy, rom_loaded_);
+                DrawMenuEmulation(gameboy);
             }
             if (ImGui::BeginMenu("Navigation")) {
                 if (ImGui::MenuItem("Step", "F7", false, gameboy->Paused.load())) {
@@ -25,13 +40,13 @@ namespace TKPEmu::Applications {
                 }
                 if (ImGui::MenuItem("Goto PC")) {
                     // TODO: if PC not found, go to nearest close to that value
-                    OpenGotoPopup = true;
+                    popup_goto = true;
                 }
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
         }
-        if (OpenGotoPopup) {
+        if (popup_goto) {
             ImGui::OpenPopup("Goto Program Code");
         }
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -43,10 +58,10 @@ namespace TKPEmu::Applications {
             constexpr size_t buf_size = 4 + 1;
             static char buf[buf_size] = "";
             bool close = false;
-            if (OpenGotoPopup) {
+            if (popup_goto) {
                 if (!ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
                     ImGui::SetKeyboardFocusHere(0);
-                OpenGotoPopup = false;
+                popup_goto = false;
             }
             if (ImGui::InputText("hexadecimal", buf, buf_size, 
                     ImGuiInputTextFlags_CharsHexadecimal |
@@ -180,7 +195,7 @@ namespace TKPEmu::Applications {
                     gameboy->InstructionBreak.store(-1);
                 }
                 if (goto_pc != -1) {
-                    Focus(goto_pc);
+                    focus(goto_pc);
                 }
                 ImGui::EndTable();
             }

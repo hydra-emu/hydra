@@ -31,12 +31,14 @@ namespace TKPEmu {
 		bool FastMode = false;
 		void Start(EmuStartOptions start_mode);
 		void Reset();
+		void ResetState();
 		virtual void HandleKeyDown(SDL_Keycode keycode);
 		virtual void HandleKeyUp(SDL_Keycode keycode);
 		void LoadFromFile(std::string path);
 		void StartLogging(std::string filename);
 		void StopLogging();
 		void Screenshot(std::string filename);
+		void CloseAndWait();
 		virtual float* GetScreenData();
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
