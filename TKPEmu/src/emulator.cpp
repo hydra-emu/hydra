@@ -65,6 +65,10 @@ namespace TKPEmu {
 				start_normal();
 				break;
 			}
+			case EmuStartOptions::Console: {
+				FastMode = true;
+				[[fallthrough]];
+			}
 			case EmuStartOptions::Debug: {
 				start_debug();
 				break;

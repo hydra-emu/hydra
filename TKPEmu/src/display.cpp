@@ -1,11 +1,12 @@
 ﻿#define NOMINMAX
 #define STB_IMAGE_IMPLEMENTATION
-#include "../include/display.h"
 #include <memory>
 #include <thread>
 #include <iostream>
 #include <algorithm>
+#include "../lib/str_hash.h"
 #include "../lib/stb_image.h"
+#include "../include/display.h"
 #include "../include/disassembly_instr.h"
 #include "../include/emulator_factory.h"
 #include "../gb_tkp/gb_disassembler.h"
@@ -464,30 +465,35 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::load_rom(std::filesystem::path&& path) {
+        using Gameboy = TKPEmu::Gameboy::Gameboy;
         auto ext = path.extension();
         if (debug_mode_) {
             emulator_start_opt_ = EmuStartOptions::Debug;
         }
-        if (ext == ".gb") {
-            using Gameboy = TKPEmu::Gameboy::Gameboy;
-            using GameboyDisassembler = TKPEmu::Applications::GameboyDisassembler;
-            using GameboyTracelogger = TKPEmu::Applications::GameboyTracelogger;
-            if (emulator_) {
-                emulator_->CloseAndWait();
-            }
-            emulator_ = TKPEmu::EmulatorFactory::Create<Gameboy>(gb_keys_directional_, gb_keys_action_);
-            TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), TKPEmu::EmuType::Gameboy);
-            rom_loaded_ = true;
-            rom_paused_ = debug_mode_;
-            emulator_->SkipBoot = skip_boot_;
-            emulator_->FastMode = fast_mode_;
-            emulator_->Paused.store(rom_paused_);
-            emulator_->LoadFromFile(path.string());
-            setup_gameboy_palette();
-            EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
-            emulator_->Start(options);
+        if (emulator_) {
+            emulator_->CloseAndWait();
         }
-
+        switch (int hash = str_hash(ext); hash) {
+            case str_hash(".gb"): {
+                emulator_ = TKPEmu::EmulatorFactory::Create<Gameboy>(gb_keys_directional_, gb_keys_action_);
+                TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), TKPEmu::EmuType::Gameboy);
+                setup_gameboy_palette();
+                break;
+            }
+            default: {
+                std::cerr << "Unknown file extension." << std::endl;
+                // TODO: Show error message as messagebox
+                return;
+            }
+        }
+        rom_loaded_ = true;
+        rom_paused_ = debug_mode_;
+        emulator_->SkipBoot = skip_boot_;
+        emulator_->FastMode = fast_mode_;
+        emulator_->Paused.store(rom_paused_);
+        emulator_->LoadFromFile(path.string());
+        EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
+        emulator_->Start(options);
         glGenFramebuffers(1, &frame_buffer_);
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
@@ -560,7 +566,7 @@ namespace TKPEmu::Graphics {
         ImGuiIO& io = ImGui::GetIO();
         io.IniFilename = NULL;
         load_theme();
-        ImGui_ImplOpenGL3_Init(glsl_version.c_str());
+        ImGui_ImplOpenGL3_Init(GLSLVersion.c_str());
         ImGui_ImplSDL2_InitForOpenGL(window_ptr_.get(), gl_context_ptr_.get());
         ImVec4 background = ImVec4(35 / 255.0f, 35 / 255.0f, 35 / 255.0f, 1.00f);
         glClearColor(background.x, background.y, background.z, background.w);

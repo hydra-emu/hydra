@@ -1,20 +1,12 @@
 #define SDL_MAIN_HANDLED
+#include <iostream>
 #include "include/version.h"
 #include "include/display.h"
-#include <iostream>
+#include "include/start_parameters.h"
+#include "lib/str_hash.h"
 
-// Function for hashing a string in compile time in order to be used in a switch statement
-// https://stackoverflow.com/a/46711735
-// If there's a collision between two strings, we will know
-// at compile time since the cases can't use the same number twice
-constexpr uint32_t hash(const char* data) noexcept {
-    uint32_t hash = 5381;
-	const size_t size = strlen(data);
-    for(const char *c = data; c < data + size; ++c)
-        hash = ((hash << 5) + hash) + (unsigned char) *c;
+// TODO: implement online version checking and updating
 
-    return hash;
-}
 void print_help() noexcept;
 
 enum class ParameterType {
@@ -24,100 +16,105 @@ enum class ParameterType {
 };
 
 int main(int argc, char *argv[]) {
-	std::string rom_file;
-	// Bools that depend on the arguments passed
-	bool display_mode = false;
-	bool pre_open = false;
-	bool fast_mode = false;
-	bool screenshot = false;
-	int screenshot_clocks = 0;
-	std::string screenshot_dir = ""
-
-	// The first argument is expected to be an option (eg. -d or -o)
 	// Whenever we get an argument that needs parameters, this bool is set to true
 	bool expects_parameter = false;
+	bool display_mode = false;
 	ParameterType next_parameter_type;
+	TKPEmu::StartParameters parameters;
 	if (argc == 1) {
 		std::cout << "No parameters specified. Try -h or --help." << std::endl;
 		return 0;
 	}
 	for (int i = 1; i < argc; i++) {
 		if (!expects_parameter) {
-			switch (hash(argv[i])) {
-				case hash("--display"):
-				case hash("-d"): {
+			switch (str_hash(argv[i])) {
+				case str_hash("--display"):
+				case str_hash("-d"): {
 					display_mode = true;
 					goto after_args;
 				}
-				case hash("--help"):
-				case hash("-h"): {
+				case str_hash("--help"):
+				case str_hash("-h"): {
 					print_help();
 					return 0;
 				}
-				case hash("--version"):
-				case hash("-v"): {	
+				case str_hash("--version"):
+				case str_hash("-v"): {	
 					std::cout << "TKPEmu by OFFTKP. Version: " << TKPEmu_VERSION_MAJOR << "." << TKPEmu_VERSION_MINOR << "." << TKPEmu_VERSION_PATCH <<std::endl;
 					return 0;
 				}
-				case hash("--open"): 
-				case hash("-o"): {
-					pre_open = true;
+				case str_hash("--open"): 
+				case str_hash("-o"): {
 					expects_parameter = true;
 					next_parameter_type = ParameterType::RomFile;
 					break;
 				}
-				case hash("--fast-mode"):
-				case hash("-f"): {
-					fast_mode = true;
+				case str_hash("--fast-mode"):
+				case str_hash("-f"): {
+					parameters.FastMode = true;
 					break;
 				}
-				case hash("--screenshot-dir"):
-				case hash("-sd"): {
+				case str_hash("--screenshot-dir"):
+				case str_hash("-sd"): {
 					expects_parameter = true;
 					next_parameter_type = ParameterType::ScreenshotDir;
 					break;
 				}
-				case hash("--screenshot"):
-				case hash("-s"): {
-					screenshot = true;
+				case str_hash("--screenshot"):
+				case str_hash("-s"): {
 					expects_parameter = true;
 					next_parameter_type = ParameterType::ScreenshotTime;
 					break;
 				}
 				default: {
 					std::cerr << "Error: Invalid parameter.\nUse -h or --help to get the parameter list." << std::endl;
-					exit(127);
+					return 1;
 				}
 			}
 		} else {
 			switch(next_parameter_type) {
+				expects_parameter = false;
 				case ParameterType::RomFile: {
-					if (std::filesystem::exists(argv[i])) {
-						rom_file = argv[i];
-						expects_parameter = false;
+					bool file_exists = false;
+					try {
+						file_exists = std::filesystem::exists(argv[i]);
+						if (std::filesystem::is_directory(argv[i])) {
+							std::cerr << "Error: Expected file, got directory " << argv[i] << std::endl;
+							return 1;
+						}
+					} catch (const std::exception& e) {
+						std::cerr << "Error: " << e.what() << std::endl;
+						return 1;
+					}
+					if (file_exists) {
+						parameters.RomFile = argv[i];
 					} else {
-						throw("Error: Specified file does not exist.");
+						std::cerr << "Error: File does not exist " << argv[i] << std::endl;
+						return 1;
 					}
 					break;
 				}
 				case ParameterType::ScreenshotDir: {
 					if (std::filesystem::is_directory(argv[i])) {
-						screenshot_dir = argv[i];
-						expects_parameter = false;
+						parameters.ScreenshotDir = argv[i];
 					} else {
-						throw("Error: Specified directory does not exist.");
+						std::cerr << "Error: Specified directory does not exist " << argv[i] << std::endl;
+						return 1;
 					}
+					break;
 				}
 				case ParameterType::ScreenshotTime: {
 					try {
-						screenshot_clocks = std::stoi(argv[i]);
+						parameters.ScreenshotTime = std::stoull(argv[i]);
 					} catch (const std::exception& e) {
-						std::cerr << "Error: " << e.what() << std::endl;
-						throw e;
+						std::cerr << "Error: Could not parse " << argv[i] << " to ull" << std::endl;
+						return 1;
 					}
+					break;
 				}
 				default: {
-					throw ("Error: Invalid parameter to argument.");
+					std::cerr << "Error: Unknown ParameterType" << std::endl;
+					return 1;
 				}
 			}
 		}

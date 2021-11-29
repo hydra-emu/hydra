@@ -5,6 +5,7 @@
 #include "base_application.h"
 namespace TKPEmu {
     enum class EmuType {
+        None,
         Gameboy,
     };
     class EmulatorFactory {

@@ -3,39 +3,21 @@
 #include "../glad/glad/glad.h"
 #include "gameboy.h"
 namespace TKPEmu::Gameboy {
-	Gameboy::Gameboy(GameboyKeys& direction_keys, GameboyKeys& action_keys) :
+	Gameboy::Gameboy() : 
 		bus_(Instructions),
 		cpu_(&bus_),
 		ppu_(&bus_, &DrawMutex),
 		timer_(&bus_),
-		direction_keys_(direction_keys),
-		action_keys_(action_keys),
 		joypad_(bus_.GetReference(addr_joy)),
 		interrupt_flag_(bus_.GetReference(addr_if))
 	{
-		GLuint image_texture;
-		glGenTextures(1, &image_texture);
-		glBindTexture(GL_TEXTURE_2D, image_texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glBindTexture(GL_TEXTURE_2D, image_texture);
-		glTexImage2D(
-			GL_TEXTURE_2D,
-			0,
-			GL_RGBA,
-			160,
-			144,
-			0,
-			GL_RGBA,
-			GL_FLOAT,
-			NULL
-		);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		EmulatorImage.texture = image_texture;
-		EmulatorImage.width = 160;
-		EmulatorImage.height = 144;
+		init_image();
+	}
+	Gameboy::Gameboy(GameboyKeys dirkeys, GameboyKeys actionkeys) :
+		Gameboy()
+	{
+		direction_keys_ = std::move(dirkeys);
+		action_keys_ = std::move(actionkeys);
 	}
 	Gameboy::~Gameboy() {
 		Stopped.store(true);
@@ -268,14 +250,37 @@ namespace TKPEmu::Gameboy {
 	void Gameboy::RemoveBreakpoint(int index) {
 		Breakpoints.erase(Breakpoints.begin() + index);
 	}
-	float* Gameboy::GetScreenData()
-	{
+	float* Gameboy::GetScreenData() {
 		return ppu_.GetScreenData();
 	}
 	const auto& Gameboy::GetOpcodeDescription(uint8_t opc) {
 		return cpu_.Instructions[opc].name;
 	}
-
+	void Gameboy::init_image() {
+		GLuint image_texture;
+		glGenTextures(1, &image_texture);
+		glBindTexture(GL_TEXTURE_2D, image_texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, image_texture);
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGBA,
+			160,
+			144,
+			0,
+			GL_RGBA,
+			GL_FLOAT,
+			NULL
+		);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		EmulatorImage.texture = image_texture;
+		EmulatorImage.width = 160;
+		EmulatorImage.height = 144;
+	}
 	Gameboy::GameboyPalettes& Gameboy::GetPalette() {
 		return bus_.Palette;
 	}

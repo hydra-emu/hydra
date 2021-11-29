@@ -24,7 +24,9 @@ namespace TKPEmu::Gameboy {
 		using DisInstr = TKPEmu::Tools::DisInstr;
 		using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
 	public:
-		Gameboy(GameboyKeys& direction_keys, GameboyKeys& action_keys);
+		// TODO: use unordered_map or map (key = sdl_key value = 1<<i <SDL_Keycode, int>)
+		Gameboy();
+		Gameboy(GameboyKeys dirkeys, GameboyKeys actionkeys);
 		~Gameboy();
 		void HandleKeyDown(SDL_Keycode key) override;
 		void HandleKeyUp(SDL_Keycode key) override;
@@ -44,8 +46,8 @@ namespace TKPEmu::Gameboy {
 		PPU ppu_;
 		Timer timer_;
 		Cartridge cartridge_;
-		GameboyKeys& direction_keys_;
-		GameboyKeys& action_keys_;
+		GameboyKeys direction_keys_;
+		GameboyKeys action_keys_;
 		uint8_t& joypad_, &interrupt_flag_;
 		std::unique_ptr<std::vector<LogType>> log_types_ptr_;
 		void v_log_state() override;
@@ -55,6 +57,7 @@ namespace TKPEmu::Gameboy {
 		void reset_skip() override;
 		void load_file(std::string path) override;
 		void update() override;
+		void init_image();
 		std::string print() const override;
 	};
 }
