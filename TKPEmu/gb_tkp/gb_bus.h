@@ -77,7 +77,8 @@ namespace TKPEmu::Gameboy::Devices {
         void WriteL(uint16_t address, uint16_t data);
         void Reset();
         void SoftReset();
-        void LoadCartridge(std::string&& fileName);
+        void LoadCartridge(std::string fileName);
+        std::string GetVramDump();
         std::array<std::array<float, 3>, 4> Palette;
         std::array<uint8_t, 4> BGPalette{};
         std::array<uint8_t, 4> OBJ0Palette{};

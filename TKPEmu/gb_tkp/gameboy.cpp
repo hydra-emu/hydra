@@ -2,6 +2,7 @@
 #include <atomic>
 #include "../glad/glad/glad.h"
 #include "gameboy.h"
+#include "../lib/md5.h"
 namespace TKPEmu::Gameboy {
 	Gameboy::Gameboy() : 
 		bus_(Instructions),
@@ -25,6 +26,9 @@ namespace TKPEmu::Gameboy {
 	}
 	void Gameboy::SetLogTypes(std::unique_ptr<std::vector<LogType>> types_ptr) {
 		log_types_ptr_ = std::move(types_ptr);
+	}
+	std::string Gameboy::GetScreenshotHash() {
+		return md5(bus_.GetVramDump());
 	}
 	void Gameboy::v_log_state() {
 		*ofstream_ptr_ << std::setfill('0');

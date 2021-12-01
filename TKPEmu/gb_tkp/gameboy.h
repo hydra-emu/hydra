@@ -31,6 +31,7 @@ namespace TKPEmu::Gameboy {
 		void HandleKeyDown(SDL_Keycode key) override;
 		void HandleKeyUp(SDL_Keycode key) override;
 		float* GetScreenData() override;
+		std::string GetScreenshotHash() override;
 		void SetLogTypes(std::unique_ptr<std::vector<LogType>> types_ptr);
         DisInstr GetInstruction(uint16_t address);
 		bool AddBreakpoint(GBBPArguments bp);

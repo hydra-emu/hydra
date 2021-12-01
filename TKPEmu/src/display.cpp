@@ -4,7 +4,6 @@
 #include <thread>
 #include <iostream>
 #include <algorithm>
-#include "../lib/str_hash.h"
 #include "../lib/stb_image.h"
 #include "../include/display.h"
 #include "../include/disassembly_instr.h"
@@ -342,6 +341,7 @@ namespace TKPEmu::Graphics {
         ImGui::Separator();
         if (ImGui::MenuItem("Screenshot", NULL, false, is_rom_loaded())) {
             emulator_->Screenshot("Screenshot");
+            std::cout << emulator_->GetScreenshotHash() << std::endl;
         }
         ImGui::Separator();
         if (ImGui::MenuItem("Settings", NULL, window_settings_open_, true)) { 
@@ -464,28 +464,19 @@ namespace TKPEmu::Graphics {
         bottomright.y = new_h + topleft.y - MenuBarHeight;
     }
 
-    void Display::load_rom(std::filesystem::path&& path) {
+    void Display::load_rom(std::filesystem::path path) {
         using Gameboy = TKPEmu::Gameboy::Gameboy;
-        auto ext = path.extension();
         if (debug_mode_) {
             emulator_start_opt_ = EmuStartOptions::Debug;
         }
         if (emulator_) {
             emulator_->CloseAndWait();
         }
-        switch (int hash = str_hash(ext); hash) {
-            case str_hash(".gb"): {
-                emulator_ = TKPEmu::EmulatorFactory::Create<Gameboy>(gb_keys_directional_, gb_keys_action_);
-                TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), TKPEmu::EmuType::Gameboy);
-                setup_gameboy_palette();
-                break;
-            }
-            default: {
-                std::cerr << "Unknown file extension." << std::endl;
-                // TODO: Show error message as messagebox
-                return;
-            }
-        }
+        auto type = EmulatorFactory::GetEmulatorType(path);
+        emulator_ = TKPEmu::EmulatorFactory::Create(type, gb_keys_directional_, gb_keys_action_);
+        TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), type);
+        // TODO: move setup_gameboy_palette elsewhere
+        setup_gameboy_palette();
         rom_loaded_ = true;
         rom_paused_ = debug_mode_;
         emulator_->SkipBoot = skip_boot_;

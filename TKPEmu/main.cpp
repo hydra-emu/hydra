@@ -3,6 +3,7 @@
 #include "include/version.h"
 #include "include/display.h"
 #include "include/start_parameters.h"
+#include "include/emulator_factory.h"
 #include "lib/str_hash.h"
 
 // TODO: implement online version checking and updating
@@ -72,8 +73,8 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		} else {
+			expects_parameter = false;
 			switch(next_parameter_type) {
-				expects_parameter = false;
 				case ParameterType::RomFile: {
 					bool file_exists = false;
 					try {
@@ -129,19 +130,25 @@ int main(int argc, char *argv[]) {
 	} else {
 		// TODO: implement console mode. Both display and console (make console class) should take a RunParameters class
 		// that explains fast_mode, log_mode and other settings. Display constructor takes this as param.
-		// TODO: console mode must use -o, std::cerr otherwise
+		// TODO: console mode must use -o, std::cerr otherwise /////////////////////////////////////////////////////////////////
+		if (!parameters.RomFile.empty()) {
+			auto type = TKPEmu::EmulatorFactory::GetEmulatorType(parameters.RomFile);
+			auto emu_ptr = TKPEmu::EmulatorFactory::Create(type);
+		} else {
+			std::cerr << "Error: No rom file specified. Use -h or --help for more help on the commands" << std::endl;
+		}
 	}
 	return 0;
 }
 
 void print_help() noexcept {
 	std::cout << "Commands:\n" 
-				"-h or --help: Shows this dialog\n"
-				"-d or --display: Starts in GUI mode\n"
-				"-o or --open (filename): Open and start a rom\n"
-				"-f or --fast-mode: Force emulator to run as fast as possible\n"
-				"-s or --screenshot (time): Take a screenshot of the screen after (time) in clocks\n"
-				"-sd or --screenshot-directory (path): Set the screenshot directory for this screenshot (cwd by default)\n"
-				"-c or --config: Returns the configuration file path"
-		<< std::endl;
+		"-h or --help: Shows this dialog\n"
+		"-d or --display: Starts in GUI mode\n"
+		"-o or --open (filename): Open and start a rom\n"
+		"-f or --fast-mode: Force emulator to run as fast as possible\n"
+		"-s or --screenshot (time): Take a screenshot of the screen after (time) in clocks\n"
+		"-sd or --screenshot-directory (path): Set the screenshot directory for this screenshot (cwd by default)\n"
+		"-c or --config: Returns the configuration file path"
+	<< std::endl;
 }

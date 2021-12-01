@@ -164,7 +164,7 @@ namespace TKPEmu::Graphics {
         // This function deals with scaling the gameboy screen texture without stretching it
         void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
 
-        void load_rom(std::filesystem::path&& path);
+        void load_rom(std::filesystem::path path);
         void setup_gameboy_palette();
         void load_loop();
         void load_theme();

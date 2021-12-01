@@ -1,5 +1,6 @@
 #ifndef STRHASH_H
 #define STRHASH_H
+#include <cstring>
 // Function for hashing a string in compile time in order to be used in a switch statement
 // https://stackoverflow.com/a/46711735
 // If there's a collision between two strings, we will know

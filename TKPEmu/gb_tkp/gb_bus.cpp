@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <algorithm>
 #include <bitset>
@@ -119,15 +120,25 @@ namespace TKPEmu::Gameboy::Devices {
 		uint8_t read = redirect_address(address);
 		return read;
 	}
-
 	uint16_t Bus::ReadL(uint16_t address) {
 		return Read(address) + (Read(address + 1) << 8);
 	}
-
 	uint8_t& Bus::GetReference(uint16_t address) {
 		return redirect_address(address);
 	}
-
+	std::string Bus::GetVramDump() {
+		std::stringstream s;
+		for (const auto& m : vram_) {
+			s << std::hex << std::setfill('0') << std::setw(2) << m;
+		}
+		for (const auto& m : OAM) {
+			s << std::hex << std::setfill('0') << std::setw(2) << m.flags;
+			s << std::hex << std::setfill('0') << std::setw(2) << m.tile_index;
+			s << std::hex << std::setfill('0') << std::setw(2) << m.x_pos;
+			s << std::hex << std::setfill('0') << std::setw(2) << m.y_pos;
+		}
+		return std::move(s.str());
+	}
 	void Bus::Write(uint16_t address, uint8_t data) {	
 		if (address <= 0x7FFF) {
 			if (address <= 0x1FFF) {
@@ -309,7 +320,7 @@ namespace TKPEmu::Gameboy::Devices {
 		BiosEnabled = true;
 	}
 
-	void Bus::LoadCartridge(std::string&& fileName) {
+	void Bus::LoadCartridge(std::string fileName) {
 		Reset();
 		cartridge_ = std::unique_ptr<Cartridge>(new Cartridge());
 		cartridge_->Load(fileName, rom_banks_, ram_banks_);

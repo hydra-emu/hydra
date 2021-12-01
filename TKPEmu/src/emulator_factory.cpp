@@ -1,4 +1,5 @@
 #include <iostream>
+#include "../lib/str_hash.h"
 #include "../include/emulator_factory.h"
 #include "../gb_tkp/gb_disassembler.h"
 #include "../gb_tkp/gb_tracelogger.h"
@@ -19,5 +20,14 @@ namespace TKPEmu {
         for (const auto& app : tools) {
             app->SetEmulator(emulator);
         }
+    }
+    EmuType EmulatorFactory::GetEmulatorType(std::filesystem::path path) {
+        auto ext = str_hash(path.extension().c_str());
+        switch (ext) {
+            case str_hash(".gb"): {
+                return EmuType::Gameboy;
+            }
+        }
+        return EmuType::None;
     }
 }
