@@ -466,6 +466,12 @@ namespace TKPEmu::Graphics {
 
     void Display::load_rom(std::filesystem::path path) {
         using Gameboy = TKPEmu::Gameboy::Gameboy;
+        if (path.has_parent_path()) {
+            settings_.at("General.last_dir") = path.parent_path();
+        } else {
+            std::cerr << "Error loading rom: Path has no parent path" << std::endl;
+            exit(1);
+        }
         if (debug_mode_) {
             emulator_start_opt_ = EmuStartOptions::Debug;
         }
@@ -626,7 +632,11 @@ namespace TKPEmu::Graphics {
     void Display::open_file_browser() {
         file_browser_.SetTitle("Select a ROM...");
         file_browser_.SetTypeFilters(SupportedRoms);
-        file_browser_.SetPwd(ExecutableDirectory + ResourcesRomsDir);
+        std::filesystem::path path = ExecutableDirectory + ResourcesRomsDir;
+        if (!(settings_.at("General.last_dir").empty())) {
+            path = settings_.at("General.last_dir");
+        }
+        file_browser_.SetPwd(path);
         file_browser_.Open();
     }
     void Display::main_loop() {
@@ -639,10 +649,7 @@ namespace TKPEmu::Graphics {
             last_key_pressed_ = 0;
             while (SDL_PollEvent(&event))
             {
-                // without it you won't have keyboard input and other things
                 ImGui_ImplSDL2_ProcessEvent(&event);
-                // you might also want to check io.WantCaptureMouse and io.WantCaptureKeyboard
-                // before processing events
                 switch (event.type)
                 {
                     case SDL_QUIT:

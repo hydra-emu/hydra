@@ -85,6 +85,7 @@ namespace TKPEmu::Graphics {
             {"General.debug_mode", "1"},
             {"General.skip_boot", "0"},
             {"General.fast_mode", "0"},
+            {"General.last_dir", ""},
             {"Video.limit_fps", "1"},
             {"Video.max_fps", "60"},
             {"Gameboy.color0", "d0d058"},
