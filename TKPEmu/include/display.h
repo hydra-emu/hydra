@@ -50,16 +50,16 @@ namespace TKPEmu::Graphics {
         using DisInstr = TKPEmu::Tools::DisInstr;
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
         using GameboyKeys = std::array<SDL_Keycode, 4>;
-        const std::string glsl_version = "#version 430";
-        std::string BackgroundImageFile = "background.jpg";
-        std::string ImGuiSettingsFile = "imgui.ini";
-        std::string ResourcesDataDir = "/Resources/Data/";
-        std::string ResourcesRomsDir = "/Resources/ROMs";
-        std::string ResourcesImagesDir = "/Resources/Images/";
+        const std::string GLSLVersion = "#version 430";
+        const std::string BackgroundImageFile = "background.jpg";
+        const std::string ResourcesDataDir = "/Resources/Data/";
+        const std::string ResourcesRomsDir = "/Resources/ROMs";
+        const std::string ResourcesImagesDir = "/Resources/Images/";
         std::vector<std::string> SupportedRoms = { ".gb" };
         #ifdef _WIN32
         wchar_t exe_dir[MAX_PATH];
         #endif
+        std::string ImGuiSettingsFile = "imgui.ini";
         std::string ExecutableDirectory;
     private:
         // RAII class for the initialization functions
@@ -85,6 +85,7 @@ namespace TKPEmu::Graphics {
             {"General.debug_mode", "1"},
             {"General.skip_boot", "0"},
             {"General.fast_mode", "0"},
+            {"General.last_dir", ""},
             {"Video.limit_fps", "1"},
             {"Video.max_fps", "60"},
             {"Gameboy.color0", "d0d058"},
@@ -164,7 +165,7 @@ namespace TKPEmu::Graphics {
         // This function deals with scaling the gameboy screen texture without stretching it
         void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
 
-        void load_rom(std::filesystem::path&& path);
+        void load_rom(std::filesystem::path path);
         void setup_gameboy_palette();
         void load_loop();
         void load_theme();

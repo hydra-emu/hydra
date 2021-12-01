@@ -1,11 +1,11 @@
 ﻿#define NOMINMAX
 #define STB_IMAGE_IMPLEMENTATION
-#include "../include/display.h"
 #include <memory>
 #include <thread>
 #include <iostream>
 #include <algorithm>
 #include "../lib/stb_image.h"
+#include "../include/display.h"
 #include "../include/disassembly_instr.h"
 #include "../include/emulator_factory.h"
 #include "../gb_tkp/gb_disassembler.h"
@@ -341,6 +341,7 @@ namespace TKPEmu::Graphics {
         ImGui::Separator();
         if (ImGui::MenuItem("Screenshot", NULL, false, is_rom_loaded())) {
             emulator_->Screenshot("Screenshot");
+            std::cout << emulator_->GetScreenshotHash() << std::endl;
         }
         ImGui::Separator();
         if (ImGui::MenuItem("Settings", NULL, window_settings_open_, true)) { 
@@ -463,31 +464,33 @@ namespace TKPEmu::Graphics {
         bottomright.y = new_h + topleft.y - MenuBarHeight;
     }
 
-    void Display::load_rom(std::filesystem::path&& path) {
-        auto ext = path.extension();
+    void Display::load_rom(std::filesystem::path path) {
+        using Gameboy = TKPEmu::Gameboy::Gameboy;
+        if (path.has_parent_path()) {
+            settings_.at("General.last_dir") = path.parent_path();
+        } else {
+            std::cerr << "Error loading rom: Path has no parent path" << std::endl;
+            exit(1);
+        }
         if (debug_mode_) {
             emulator_start_opt_ = EmuStartOptions::Debug;
         }
-        if (ext == ".gb") {
-            using Gameboy = TKPEmu::Gameboy::Gameboy;
-            using GameboyDisassembler = TKPEmu::Applications::GameboyDisassembler;
-            using GameboyTracelogger = TKPEmu::Applications::GameboyTracelogger;
-            if (emulator_) {
-                emulator_->CloseAndWait();
-            }
-            emulator_ = TKPEmu::EmulatorFactory::Create<Gameboy>(gb_keys_directional_, gb_keys_action_);
-            TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), TKPEmu::EmuType::Gameboy);
-            rom_loaded_ = true;
-            rom_paused_ = debug_mode_;
-            emulator_->SkipBoot = skip_boot_;
-            emulator_->FastMode = fast_mode_;
-            emulator_->Paused.store(rom_paused_);
-            emulator_->LoadFromFile(path.string());
-            setup_gameboy_palette();
-            EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
-            emulator_->Start(options);
+        if (emulator_) {
+            emulator_->CloseAndWait();
         }
-
+        auto type = EmulatorFactory::GetEmulatorType(path);
+        emulator_ = TKPEmu::EmulatorFactory::Create(type, gb_keys_directional_, gb_keys_action_);
+        TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), type);
+        // TODO: move setup_gameboy_palette elsewhere
+        setup_gameboy_palette();
+        rom_loaded_ = true;
+        rom_paused_ = debug_mode_;
+        emulator_->SkipBoot = skip_boot_;
+        emulator_->FastMode = fast_mode_;
+        emulator_->Paused.store(rom_paused_);
+        emulator_->LoadFromFile(path.string());
+        EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
+        emulator_->Start(options);
         glGenFramebuffers(1, &frame_buffer_);
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
@@ -560,7 +563,7 @@ namespace TKPEmu::Graphics {
         ImGuiIO& io = ImGui::GetIO();
         io.IniFilename = NULL;
         load_theme();
-        ImGui_ImplOpenGL3_Init(glsl_version.c_str());
+        ImGui_ImplOpenGL3_Init(GLSLVersion.c_str());
         ImGui_ImplSDL2_InitForOpenGL(window_ptr_.get(), gl_context_ptr_.get());
         ImVec4 background = ImVec4(35 / 255.0f, 35 / 255.0f, 35 / 255.0f, 1.00f);
         glClearColor(background.x, background.y, background.z, background.w);
@@ -629,7 +632,11 @@ namespace TKPEmu::Graphics {
     void Display::open_file_browser() {
         file_browser_.SetTitle("Select a ROM...");
         file_browser_.SetTypeFilters(SupportedRoms);
-        file_browser_.SetPwd(ExecutableDirectory + ResourcesRomsDir);
+        std::filesystem::path path = ExecutableDirectory + ResourcesRomsDir;
+        if (!(settings_.at("General.last_dir").empty())) {
+            path = settings_.at("General.last_dir");
+        }
+        file_browser_.SetPwd(path);
         file_browser_.Open();
     }
     void Display::main_loop() {
@@ -642,10 +649,7 @@ namespace TKPEmu::Graphics {
             last_key_pressed_ = 0;
             while (SDL_PollEvent(&event))
             {
-                // without it you won't have keyboard input and other things
                 ImGui_ImplSDL2_ProcessEvent(&event);
-                // you might also want to check io.WantCaptureMouse and io.WantCaptureKeyboard
-                // before processing events
                 switch (event.type)
                 {
                     case SDL_QUIT:

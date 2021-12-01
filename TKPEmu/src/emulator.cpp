@@ -9,11 +9,11 @@
 namespace TKPEmu {
     void Emulator::HandleKeyDown(SDL_Keycode keycode) { 
         std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was pressed but\n"
-        "emulator.HandleKeyDown was not implemented" << std::endl;
+        	"emulator.HandleKeyDown was not implemented" << std::endl;
     }
     void Emulator::HandleKeyUp(SDL_Keycode keycode) { 
         std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was released but\n"
-        "emulator.HandleKeyUp was not implemented" << std::endl;
+        	"emulator.HandleKeyUp was not implemented" << std::endl;
     }
     void Emulator::Screenshot(std::string filename) { 
 		std::lock_guard<std::mutex> lg(DrawMutex);
@@ -43,7 +43,10 @@ namespace TKPEmu {
 		} catch (const std::exception& e) {
 			std::cerr << "Error writing screenshot: " << e.what() << std::endl;
 		}
-    };
+    }
+	std::string Emulator::GetScreenshotHash() {
+		return "Warning: GetScreenshotHash not implemented, hash not printed";
+	}
 	void Emulator::limit_fps() const {
 		if (!FastMode) {
 			a = std::chrono::system_clock::now();
@@ -57,13 +60,18 @@ namespace TKPEmu {
 		}
 	}
     float* Emulator::GetScreenData() { 
-        throw("GetScreenData was not implemented for this emulator");
-    };
+        std::cerr << "GetScreenData was not implemented for this emulator" << std::endl;
+		exit(1);
+    }
     void Emulator::Start(EmuStartOptions start_mode) { 
         switch (start_mode) {
 			case EmuStartOptions::Normal: {
 				start_normal();
 				break;
+			}
+			case EmuStartOptions::Console: {
+				FastMode = true;
+				[[fallthrough]];
 			}
 			case EmuStartOptions::Debug: {
 				start_debug();
@@ -118,25 +126,32 @@ namespace TKPEmu {
 		}
 	}
 	void Emulator::v_log_state() {
-		throw("log_state was not implemented for this emulator");
+		std::cerr << "log_state was not implemented for this emulator" << std::endl;
+		exit(1);
 	}
     void Emulator::start_normal() {
-        throw("start_normal was not implemented for this emulator");
+        std::cerr << "start_normal was not implemented for this emulator" << std::endl;
+		exit(1);
     }
     void Emulator::start_debug() {
-        throw("start_debug was not implemented for this emulator");
+        std::cerr << "start_debug was not implemented for this emulator" << std::endl;
+		exit(1);
     }
 	void Emulator::reset_normal() {
-		throw("reset_normal was not implemented for this emulator");
+		std::cerr << "reset_normal was not implemented for this emulator" << std::endl;
+		exit(1);
 	}
 	void Emulator::reset_skip() {
-		throw("reset_skip was not implemented for this emulator");
+		std::cerr << "reset_skip was not implemented for this emulator" << std::endl;
+		exit(1);
 	}
     void Emulator::update() {
-        throw("update was not implemented for this emulator");
+        std::cerr << "update was not implemented for this emulator" << std::endl;
+		exit(1);
     }
 	void Emulator::load_file(std::string path) {
-		throw("load_file was not implemented for this emulator");
+		std::cerr << "load_file was not implemented for this emulator" << std::endl;
+		exit(1);
 	}
     std::string Emulator::print() const { 
         return "Error: Override print function for this emulator";

@@ -11,13 +11,15 @@
 #include "TKPImage.h"
 #include "disassembly_instr.h"
 namespace TKPEmu {
-	using TKPImage = TKPEmu::Tools::TKPImage;
-	using DisInstr = TKPEmu::Tools::DisInstr;
 	enum class EmuStartOptions {
 		Normal,
-		Debug
+		Debug,
+		Console
 	};
 	class Emulator {
+	private:
+		using TKPImage = TKPEmu::Tools::TKPImage;
+		using DisInstr = TKPEmu::Tools::DisInstr;
 	public:
 		Emulator() = default;
 		virtual ~Emulator() = default;
@@ -29,6 +31,9 @@ namespace TKPEmu {
 		std::atomic_int InstructionBreak = -1;
 		bool SkipBoot = false;
 		bool FastMode = false;
+		// TODO: (!) Remake update function so that it has a public function here (or remake start debug/start normal)
+		unsigned long long TotalClocks = 0;
+		unsigned long long ScreenshotClocks = 0;
 		void Start(EmuStartOptions start_mode);
 		void Reset();
 		void ResetState();
@@ -40,6 +45,7 @@ namespace TKPEmu {
 		void Screenshot(std::string filename);
 		void CloseAndWait();
 		virtual float* GetScreenData();
+		virtual std::string GetScreenshotHash();
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
 		std::thread UpdateThread;
@@ -50,6 +56,7 @@ namespace TKPEmu {
 		// checks for you
 		void log_state();
 		void limit_fps() const;
+		float sleep_time_ = 16.75f;
 		std::unique_ptr<std::ofstream> ofstream_ptr_;
 	private:
 		virtual void v_log_state();
@@ -66,7 +73,6 @@ namespace TKPEmu {
 		std::string rom_hash_;
 		mutable std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
 		mutable std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
-		float sleep_time_ = 16.75f;
 	};
 }
 #endif
