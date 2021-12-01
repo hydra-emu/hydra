@@ -2,7 +2,6 @@
 #define TKPEMU_STARTPARAMETERS_H
 namespace TKPEmu {
     struct StartParameters {
-       bool FastMode = false;
        unsigned long long ScreenshotTime = 0;
        std::string ScreenshotDir;
        std::string RomFile;

@@ -7,7 +7,7 @@
 #include "lib/str_hash.h"
 
 // TODO: implement online version checking and updating
-
+// TODO: last open files folder becomes the browser default folder
 void print_help() noexcept;
 
 enum class ParameterType {
@@ -29,39 +29,28 @@ int main(int argc, char *argv[]) {
 	for (int i = 1; i < argc; i++) {
 		if (!expects_parameter) {
 			switch (str_hash(argv[i])) {
-				case str_hash("--display"):
-				case str_hash("-d"): {
+				case str_hash("--display"): {
 					display_mode = true;
 					goto after_args;
 				}
-				case str_hash("--help"):
-				case str_hash("-h"): {
+				case str_hash("--help"): {
 					print_help();
 					return 0;
 				}
-				case str_hash("--version"):
-				case str_hash("-v"): {	
+				case str_hash("--version"): {	
 					std::cout << "TKPEmu by OFFTKP. Version: " << TKPEmu_VERSION_MAJOR << "." << TKPEmu_VERSION_MINOR << "." << TKPEmu_VERSION_PATCH <<std::endl;
 					return 0;
 				}
-				case str_hash("--open"): 
 				case str_hash("-o"): {
 					expects_parameter = true;
 					next_parameter_type = ParameterType::RomFile;
 					break;
 				}
-				case str_hash("--fast-mode"):
-				case str_hash("-f"): {
-					parameters.FastMode = true;
-					break;
-				}
-				case str_hash("--screenshot-dir"):
 				case str_hash("-sd"): {
 					expects_parameter = true;
 					next_parameter_type = ParameterType::ScreenshotDir;
 					break;
 				}
-				case str_hash("--screenshot"):
 				case str_hash("-s"): {
 					expects_parameter = true;
 					next_parameter_type = ParameterType::ScreenshotTime;
@@ -143,12 +132,11 @@ int main(int argc, char *argv[]) {
 
 void print_help() noexcept {
 	std::cout << "Commands:\n" 
-		"-h or --help: Shows this dialog\n"
-		"-d or --display: Starts in GUI mode\n"
-		"-o or --open (filename): Open and start a rom\n"
-		"-f or --fast-mode: Force emulator to run as fast as possible\n"
-		"-s or --screenshot (time): Take a screenshot of the screen after (time) in clocks\n"
-		"-sd or --screenshot-directory (path): Set the screenshot directory for this screenshot (cwd by default)\n"
-		"-c or --config: Returns the configuration file path"
+		"--help: Shows this dialog\n"
+		"--display: Starts in GUI mode\n"
+		"--version: Print version\n"
+		"-o (filename): Open and start a rom\n"
+		"-s (time): Take a screenshot of the screen after (time) in clocks\n"
+		"-sd (path): Set the screenshot directory for this screenshot (cwd by default)\n"
 	<< std::endl;
 }
