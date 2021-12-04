@@ -26,7 +26,7 @@ namespace TKPEmu::Applications {
         }
     }
     void GameboyDisassembler::v_draw() {
-        Gameboy* gameboy = static_cast<Gameboy*>(emulator_);
+        static Gameboy* gameboy = static_cast<Gameboy*>(emulator_);
         bool bp_add_popup = false;
         int goto_pc = -1;
         if (ImGui::BeginMenuBar()) {

@@ -295,7 +295,6 @@ namespace TKPEmu::Graphics {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
         }
         else {
-            if (!window_settings_open_)
             if (background_image_.texture != 0)
                 ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)background_image_.texture, background_image_.topleft, background_image_.botright);
             // TODO: allow for undocked window, disable above line when that happens
@@ -419,15 +418,19 @@ namespace TKPEmu::Graphics {
                 break;
             }
             case TKPShortcut::CTRL_R: {
-                emulator_->ResetState();
-                emulator_->Start(emulator_start_opt_);
+                if (emulator_ != nullptr) {
+                    emulator_->ResetState();
+                    emulator_->Start(emulator_start_opt_);
+                }
                 last_shortcut_ = TKPShortcut::NONE;
                 break;
             }
             case TKPShortcut::CTRL_P: {
-                emulator_->Paused.store(!emulator_->Paused.load());
-                emulator_->Step.store(true);
-                emulator_->Step.notify_all();
+                if (emulator_ != nullptr) {
+                    emulator_->Paused.store(!emulator_->Paused.load());
+                    emulator_->Step.store(true);
+                    emulator_->Step.notify_all();
+                }
                 last_shortcut_ = TKPShortcut::NONE;
                 break;
             }
@@ -713,9 +716,7 @@ namespace TKPEmu::Graphics {
             if (limit_fps_) {
                 limit_fps();
             }
-            if (emulator_ != nullptr) {
-                handle_shortcuts();
-            }
+            handle_shortcuts();
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window_ptr_.get());
             ImGui::NewFrame();

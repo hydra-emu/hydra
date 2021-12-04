@@ -50,8 +50,13 @@ struct ExpectedResult {
 // This map helps with quality assurance, we can check multiple test roms
 // at once and compare their finished hashes with these known good results
 const static std::unordered_map<Hash, ExpectedResult> PassedTestMap {
-    // cpu_instrs.gb by blargg
+    // cpu_instrs.gb
     { "662f04537286d13ee55a6df9de4dce24", { 0, "error-hash" } },
+
+    // /mbc1/bits_bank1.gb
+    { "31d2ad77d05566b1dcb92d7ff7232767", { 0, "f0553923b341e4e57f091f1ce8cc8cf0" } },
+    { "d7c8eb26b8c276f0d13e2a272a17c308", { 0, "f0553923b341e4e57f091f1ce8cc8cf0" } },
+    { "d807288f6cfe34225989dd0d9293043e", { 0, "f0553923b341e4e57f091f1ce8cc8cf0" } },
 };
 constexpr static std::array<LogType, LogTypeSize> LogTypeMap {
     LogType::A, LogType::B, LogType::C, LogType::D,

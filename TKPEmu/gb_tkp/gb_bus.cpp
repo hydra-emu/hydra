@@ -10,6 +10,7 @@ namespace TKPEmu::Gameboy::Devices {
 	Bus::Bus(std::vector<DisInstr>& instrs) : instructions_(instrs) {}
 
 	uint8_t& Bus::redirect_address(uint16_t address) {
+		unused_mem_area_ = 1;
 		using CT = Cartridge::CartridgeType;
 		// Return address from ROM banks
 		// TODO: create better exceptions
@@ -54,10 +55,12 @@ namespace TKPEmu::Gameboy::Devices {
 					case CT::MBC1_RAM:
 					case CT::MBC1_RAM_BATTERY: {
 						if (address <= 0x3FFF) {
-							return (rom_banks_[0])[address % 0x4000];
+							auto sel = (banking_mode_ ? selected_rom_bank_ & 0b1100000 : 0) % cartridge_->GetRomSize();
+							return (rom_banks_[sel])[address % 0x4000];
 						}
 						else {
-							return (rom_banks_[selected_rom_bank_])[address % 0x4000];
+							auto sel = (banking_mode_ ? selected_rom_bank_ : selected_rom_bank_ & 0b11111) % cartridge_->GetRomSize();
+							return (rom_banks_[sel])[address % 0x4000];
 						}
 						break;
 					}
@@ -71,10 +74,15 @@ namespace TKPEmu::Gameboy::Devices {
 			}
 			case 0xA000:
 			case 0xB000: {
-				if (cartridge_->GetRamSize() == 0)
-					return eram_default_[address % 0x2000];
-
-				return (ram_banks_[selected_ram_bank_])[address % 0x2000];
+				if (ram_enabled_) {
+					if (cartridge_->GetRamSize() == 0)
+						return eram_default_[address % 0x2000];
+					auto sel = (banking_mode_ ? selected_ram_bank_ : 0) % cartridge_->GetRamSize();
+					return (ram_banks_[sel])[address % 0x2000];
+				} else {
+					unused_mem_area_ = 1;
+					return unused_mem_area_;
+				}
 			}
 			case 0xC000:
 			case 0xD000: {
@@ -93,7 +101,6 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				else if (address <= 0xFEFF) {
 					// TODO: check if this is actually unused area
-					unused_mem_area_ = 1;
 					return unused_mem_area_;
 				}
 				else if (address <= 0xFFFF) {
@@ -144,7 +151,7 @@ namespace TKPEmu::Gameboy::Devices {
 			if (address <= 0x1FFF) {
 				// Any value "written" here with lower 4 bits == 0xA enables eram,
 				// other values disable eram
-				if ((data & 0xF) == 0xA) {
+				if (data == 0xA) {
 					ram_enabled_ = true;
 				}
 				else {
@@ -152,8 +159,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 			}
 			else if (address <= 0x3FFF) {
-				// Keep 3 highest bits
-				// TODO: this only happens on mbc1
+				// BANK register 1 (TODO: this doesnt happen on mbc0?)
 				selected_rom_bank_ &= 0b11100000;
 				selected_rom_bank_ |= data & 0b11111;
 				selected_rom_bank_ %= rom_banks_size_;
@@ -161,13 +167,15 @@ namespace TKPEmu::Gameboy::Devices {
 					selected_rom_bank_ = 1;
 			}
 			else if (address <= 0x5FFF) {
+				// BANK register 2
 				selected_rom_bank_ &= 0b11111;
-				selected_rom_bank_ |= (data << 5);
+				selected_rom_bank_ |= ((data & 0b11) << 5);
 				selected_rom_bank_ %= rom_banks_size_;
+				selected_ram_bank_ = data & 0b11;
 			}
-			else if (address <= 0x7FFF) {
-				// TODO: MBC1 1MB multi-carts might have different behavior, investigate
-				// This enables mbc1 1mb mode?
+			else {
+				// MODE register
+				banking_mode_ = data & 0b1;
 			}
 		}
 		else {
