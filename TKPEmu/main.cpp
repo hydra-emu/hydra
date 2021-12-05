@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
 	ParameterType next_parameter_type;
 	TKPEmu::StartParameters parameters;
 	if (argc == 1) {
-		std::cout << "No parameters specified. Try -h or --help." << std::endl;
-		return 0;
+		std::cout << "No parameters specified. Try -h or --help.\nRunning gui as a default..." << std::endl;
+		display_mode = true;
 	}
 	for (int i = 1; i < argc; i++) {
 		if (!expects_parameter) {

@@ -18,7 +18,7 @@ namespace TKPEmu::Applications {
         using GBSelectionMap = std::vector<bool>;
     public:
         GameboyDisassembler(std::string menu_title, std::string window_title);
-        void HandleShortcut(const TKPShortcut& shortcut) override;
+        void HandleShortcut(TKPShortcut& shortcut) override;
     private:
         GameboyBreakpoint debug_rvalues_;
         GBSelectionMap sel_map_{};

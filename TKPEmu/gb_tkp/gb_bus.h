@@ -15,22 +15,7 @@ namespace TKPEmu::Gameboy::Devices {
     private:
         using RamBank = std::array<uint8_t, 0x2000>;
         using RomBank = std::array<uint8_t, 0x4000>;
-        bool ram_enabled_ = false;
-        uint8_t selected_ram_bank_ = 0;
-        uint8_t selected_rom_bank_ = 1;
-        uint8_t rom_banks_size_ = 2;
-        bool action_key_mode_ = false;
-        uint8_t unused_mem_area_ = 0;
-        std::vector<RamBank> ram_banks_;
-        std::vector<RomBank> rom_banks_;
-        std::unique_ptr<Cartridge> cartridge_ = NULL;
-        std::array<uint8_t, 0xA0> oam_{};
-        std::array<uint8_t, 0x100> hram_{};
-        std::array<uint8_t, 0x2000> eram_default_{};
-        std::array<uint8_t, 0x2000> wram_{}; // TODO: cgb uses larger wram, maybe change, maybe inherit
-        std::array<uint8_t, 0x2000> vram_{};
-        std::vector<DisInstr>& instructions_;
-        uint8_t& redirect_address(uint16_t address);
+        using CartridgeType = TKPEmu::Gameboy::Devices::CartridgeType;
     public:
         struct Sprite {
             uint8_t y_pos = 0;
@@ -89,6 +74,25 @@ namespace TKPEmu::Gameboy::Devices {
         uint8_t NextMode = 0;
         uint8_t DirectionKeys = 0b1110'1111;
         uint8_t ActionKeys = 0b1101'1111;
+    private:
+        bool ram_enabled_ = false;
+        uint8_t selected_ram_bank_ = 0;
+        uint8_t selected_rom_bank_ = 1;
+        uint8_t rom_banks_size_ = 2;
+        bool banking_mode_ = false;
+        bool action_key_mode_ = false;
+        uint8_t unused_mem_area_ = 0;
+        std::vector<RamBank> ram_banks_;
+        std::vector<RomBank> rom_banks_;
+        std::unique_ptr<Cartridge> cartridge_;
+        std::array<uint8_t, 0xA0> oam_{};
+        std::array<uint8_t, 0x100> hram_{};
+        std::array<uint8_t, 0x2000> eram_default_{};
+        std::array<uint8_t, 0x2000> wram_{};
+        std::array<uint8_t, 0x2000> vram_{};
+        std::vector<DisInstr>& instructions_;
+        uint8_t& redirect_address(uint16_t address);
+        void handle_mbc(uint16_t address, uint8_t data);
     };
 }
 #endif
