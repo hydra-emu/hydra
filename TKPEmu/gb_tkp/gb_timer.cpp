@@ -15,6 +15,8 @@ namespace TKPEmu::Gameboy::Devices {
         TMA = 0;
         oscillator_ = 0;
         timer_counter_ = 0;
+		div_reset_index_ = 0;
+		tima_overflow_ = false;
     }
     bool Timer::Update(uint8_t cycles, uint8_t old_if) {
         if (tima_overflow_) {
@@ -37,29 +39,7 @@ namespace TKPEmu::Gameboy::Devices {
 			}
 			oscillator_ = 0;
 			timer_counter_ = 0;
-			div_reset_index_ = 0;
-		}
-		if (bus_->TACChanged) {
-			bus_->TACChanged = false;
-			uint8_t new_tac = TAC;
-			TAC = old_tac_;
-			int old_freq = interr_times_[TAC & 0b11];
-			TAC = new_tac;
-			if ((old_tac_ >> 2) & 1) {
-				// If old tac was enabled
-				// TODO: prettify timer after its fully implemented
-				if (!((new_tac >> 2) & 1)) {
-					if ((div_reset_index_ & (old_freq / 2)) != 0) {
-						TIMA++;
-					}
-				}
-				else {
-					if ((div_reset_index_ & (old_freq / 2)) != 0 && ((div_reset_index_ & (freq / 2)) == 0)) {
-						TIMA++;
-					}
-				}
-			}
-			old_tac_ = new_tac;
+			div_reset_index_ = -1;
 		}
 		bool enabled = (TAC >> 2) & 0x1;
 		oscillator_ += cycles;
