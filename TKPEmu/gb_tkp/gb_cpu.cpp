@@ -9,7 +9,7 @@ namespace TKPEmu::Gameboy::Devices {
 		JOYP(bus->GetReference(0xFF00))
 	{
 		A = 0; B = 0; C = 0; D = 0; E = 0; H = 0; L = 0;
-		F = 0; SP = 0; PC = 0x0; ime_ = true;
+		F = 0; SP = 0; PC = 0; ime_ = true;
 		TClock = 0;
 		halt_ = false; stop_ = false;
 		bus_->Write(0xFF00, 0b11011111);
@@ -2318,6 +2318,7 @@ namespace TKPEmu::Gameboy::Devices {
 		JOYP = 0b1110'1111;
 	}
 	int CPU::Update() {
+		LastPC = PC;
 		if (halt_) {
 			PC--;
 		}

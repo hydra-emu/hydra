@@ -138,7 +138,7 @@ namespace TKPEmu::Gameboy::Devices {
 		// CPU registers
 		RegisterType A, B, C, D, E, H, L, F;
 		BigRegisterType PC, SP;
-
+		BigRegisterType LastPC;
 		// Memory mapped registers, they are a reference to a position in memory
 		RegisterType &IF, &IE, &LY, &JOYP;
 

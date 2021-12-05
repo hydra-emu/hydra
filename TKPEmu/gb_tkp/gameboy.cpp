@@ -108,6 +108,7 @@ namespace TKPEmu::Gameboy {
 						for (const auto& bp : Breakpoints) {
 							bool brk = bp.Check();
 							if (brk) {
+								std::cout << "Breakpoint hit - Last PC: " << std::hex << cpu_.LastPC << std::endl;
 								InstructionBreak.store(cpu_.PC);
 								Paused.store(true);
 								broken = true;
