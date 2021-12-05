@@ -26,7 +26,8 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				default: {
 					// TODO: better error or implement all cartridge types
-					throw("error rom not implemented");
+					std::cerr << "Error: Cartridge type not implemented - " << (int)ct << std::endl;
+					exit(1);
 				}
 			}
 			is.close();
@@ -36,7 +37,7 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 	}
 
-	Cartridge::CartridgeType Cartridge::GetCartridgeType() {
+	CartridgeType Cartridge::GetCartridgeType() {
 		if (loaded) {
 			return (CartridgeType)header_.cartridgeType;
 		}

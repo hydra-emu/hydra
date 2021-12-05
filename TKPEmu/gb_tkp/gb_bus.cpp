@@ -6,12 +6,49 @@
 #include "gb_bus.h"
 #include "gb_addresses.h"
 namespace TKPEmu::Gameboy::Devices {
-
 	Bus::Bus(std::vector<DisInstr>& instrs) : instructions_(instrs) {}
-
+	void Bus::handle_mbc(uint16_t address, uint8_t data) {
+		auto type = cartridge_->GetCartridgeType();
+		switch (type) {
+			case CartridgeType::MBC1:
+			case CartridgeType::MBC1_RAM:
+			case CartridgeType::MBC1_RAM_BATTERY: {
+				if (address <= 0x1FFF) {
+					// Any value "written" here with lower 4 bits == 0xA enables eram,
+					// other values disable eram
+					if (data == 0xA) {
+						ram_enabled_ = true;
+					}
+					else {
+						ram_enabled_ = false;
+					}
+				}
+				else if (address <= 0x3FFF) {
+					// BANK register 1 (TODO: this doesnt happen on mbc0?)
+					selected_rom_bank_ &= 0b1100000;
+					selected_rom_bank_ |= data & 0b11111;
+					selected_rom_bank_ %= rom_banks_size_;
+				}
+				else if (address <= 0x5FFF) {
+					// BANK register 2
+					selected_rom_bank_ &= 0b11111;
+					selected_rom_bank_ |= ((data & 0b11) << 5);
+					selected_rom_bank_ %= rom_banks_size_;
+					selected_ram_bank_ = data & 0b11;
+				}
+				else {
+					// MODE register
+					banking_mode_ = data & 0b1;
+				}
+				break;
+			}
+			default: {
+				return;
+			}
+		}
+	}
 	uint8_t& Bus::redirect_address(uint16_t address) {
 		unused_mem_area_ = 0;
-		using CT = Cartridge::CartridgeType;
 		// Return address from ROM banks
 		// TODO: create better exceptions
 		// TODO: make bios optional, can be disabled in settings
@@ -47,13 +84,13 @@ namespace TKPEmu::Gameboy::Devices {
 			case 0x7000: {
 				auto ct = cartridge_->GetCartridgeType();
 				switch (ct) {
-					case CT::ROM_ONLY: {
+					case CartridgeType::ROM_ONLY: {
 						int index = address / 0x4000;
 						return (rom_banks_[index])[address % 0x4000];
 					}
-					case CT::MBC1:
-					case CT::MBC1_RAM:
-					case CT::MBC1_RAM_BATTERY: {
+					case CartridgeType::MBC1:
+					case CartridgeType::MBC1_RAM:
+					case CartridgeType::MBC1_RAM_BATTERY: {
 						if (address <= 0x3FFF) {
 							auto sel = (banking_mode_ ? selected_rom_bank_ & 0b1100000 : 0) % cartridge_->GetRomSize();
 							return (rom_banks_[sel])[address % 0x4000];
@@ -62,6 +99,7 @@ namespace TKPEmu::Gameboy::Devices {
 							auto sel = selected_rom_bank_ % cartridge_->GetRomSize();
 							if ((sel & 0b11111) == 0) {
 								// In 4000-7FFF, automatically maps to next addr if addr chosen is 00/20/40/60
+								// TODO: fix multicart roms
 								sel += 1;
 							}
 							return (rom_banks_[sel])[address % 0x4000];
@@ -69,7 +107,8 @@ namespace TKPEmu::Gameboy::Devices {
 						break;
 					}
 				}
-				throw("Bad cartridge type");
+				std::cerr << "Error: Cartridge type not implemented - " << (int)ct << std::endl;
+				exit(1);
 				break;
 			}
 			case 0x8000:
@@ -110,7 +149,7 @@ namespace TKPEmu::Gameboy::Devices {
 					return hram_[address % 0xFF00];
 				}
 				else {
-					throw("Bad memory address");
+					std::cerr << "Error: Tried to access address " << address << std::endl;
 				}
 			}
 		}
@@ -151,33 +190,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void Bus::Write(uint16_t address, uint8_t data) {	
 		if (address <= 0x7FFF) {
-			if (address <= 0x1FFF) {
-				// Any value "written" here with lower 4 bits == 0xA enables eram,
-				// other values disable eram
-				if (data == 0xA) {
-					ram_enabled_ = true;
-				}
-				else {
-					ram_enabled_ = false;
-				}
-			}
-			else if (address <= 0x3FFF) {
-				// BANK register 1 (TODO: this doesnt happen on mbc0?)
-				selected_rom_bank_ &= 0b1100000;
-				selected_rom_bank_ |= data & 0b11111;
-				selected_rom_bank_ %= rom_banks_size_;
-			}
-			else if (address <= 0x5FFF) {
-				// BANK register 2
-				selected_rom_bank_ &= 0b11111;
-				selected_rom_bank_ |= ((data & 0b11) << 5);
-				selected_rom_bank_ %= rom_banks_size_;
-				selected_ram_bank_ = data & 0b11;
-			}
-			else {
-				// MODE register
-				banking_mode_ = data & 0b1;
-			}
+			handle_mbc(address, data);
 		}
 		else {
 			switch (address) {
@@ -305,19 +318,16 @@ namespace TKPEmu::Gameboy::Devices {
 			redirect_address(address) = data;
 		}
 	}
-
 	void Bus::WriteL(uint16_t address, uint16_t data) {
 		Write(address, data & 0xFF);
 		Write(address + 1, data >> 8);
 	}
-
 	void Bus::Reset() {
 		SoftReset();
 		for (auto& rom : rom_banks_) {
 			rom.fill(0);
 		}	
 	}
-
 	void Bus::SoftReset() {
 		for (auto& ram : ram_banks_) {
 			ram.fill(0);
@@ -328,7 +338,6 @@ namespace TKPEmu::Gameboy::Devices {
 		selected_ram_bank_ = 0;
 		BiosEnabled = true;
 	}
-
 	void Bus::LoadCartridge(std::string fileName) {
 		Reset();
 		cartridge_ = std::unique_ptr<Cartridge>(new Cartridge());
