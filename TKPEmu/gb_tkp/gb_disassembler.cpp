@@ -2,6 +2,7 @@
 namespace TKPEmu::Applications {
     GameboyDisassembler::GameboyDisassembler(std::string menu_title, std::string window_title) : IMApplication(menu_title, window_title) {
         sel_map_.resize(0x10000);
+        window_flags_ = ImGuiWindowFlags_MenuBar;
     };
     void GameboyDisassembler::focus(int item) {
         ImGuiContext& g = *ImGui::GetCurrentContext();
@@ -10,17 +11,19 @@ namespace TKPEmu::Applications {
         static const int item_height = 17;
         window->Scroll.y = IM_FLOOR(item_height * item);
     }
-    void GameboyDisassembler::HandleShortcut(const TKPShortcut& shortcut) {
+    void GameboyDisassembler::HandleShortcut(TKPShortcut& shortcut) {
         switch(shortcut) {
             case TKPShortcut::F7: {
                 if (emulator_->Paused) {
                     emulator_->Step = true;
                     emulator_->Step.notify_all();
                 }
+                shortcut = TKPShortcut::NONE;
                 break;
             }
             case TKPShortcut::CTRL_F: {
                 popup_goto = true;
+                shortcut = TKPShortcut::NONE;
                 break;
             }
         }

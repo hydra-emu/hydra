@@ -10,7 +10,7 @@ namespace TKPEmu::Gameboy::Devices {
 	Bus::Bus(std::vector<DisInstr>& instrs) : instructions_(instrs) {}
 
 	uint8_t& Bus::redirect_address(uint16_t address) {
-		unused_mem_area_ = 1;
+		unused_mem_area_ = 0;
 		using CT = Cartridge::CartridgeType;
 		// Return address from ROM banks
 		// TODO: create better exceptions
@@ -59,7 +59,11 @@ namespace TKPEmu::Gameboy::Devices {
 							return (rom_banks_[sel])[address % 0x4000];
 						}
 						else {
-							auto sel = (banking_mode_ ? selected_rom_bank_ : selected_rom_bank_ & 0b11111) % cartridge_->GetRomSize();
+							auto sel = selected_rom_bank_ % cartridge_->GetRomSize();
+							if ((sel & 0b11111) == 0) {
+								// In 4000-7FFF, automatically maps to next addr if addr chosen is 00/20/40/60
+								sel += 1;
+							}
 							return (rom_banks_[sel])[address % 0x4000];
 						}
 						break;
@@ -80,7 +84,6 @@ namespace TKPEmu::Gameboy::Devices {
 					auto sel = (banking_mode_ ? selected_ram_bank_ : 0) % cartridge_->GetRamSize();
 					return (ram_banks_[sel])[address % 0x2000];
 				} else {
-					unused_mem_area_ = 1;
 					return unused_mem_area_;
 				}
 			}
@@ -160,11 +163,9 @@ namespace TKPEmu::Gameboy::Devices {
 			}
 			else if (address <= 0x3FFF) {
 				// BANK register 1 (TODO: this doesnt happen on mbc0?)
-				selected_rom_bank_ &= 0b11100000;
+				selected_rom_bank_ &= 0b1100000;
 				selected_rom_bank_ |= data & 0b11111;
 				selected_rom_bank_ %= rom_banks_size_;
-				if (selected_rom_bank_ == 0)
-					selected_rom_bank_ = 1;
 			}
 			else if (address <= 0x5FFF) {
 				// BANK register 2

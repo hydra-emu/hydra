@@ -25,13 +25,15 @@ namespace TKPEmu::Applications {
 		void Draw();
 		void DrawMenuItem();
 		void Reset();
+		bool* IsOpen();
 		void SetEmulator(Emulator* emulator);
-		virtual void HandleShortcut(const TKPShortcut& shortcut);
+		virtual void HandleShortcut(TKPShortcut& shortcut);
 		static void SetupWindow();
 		static void DrawMenuEmulation(Emulator* emulator);
         static void ResetEmulatorState(Emulator* emulator);
 	protected:
 		Emulator* emulator_ = nullptr;
+		unsigned window_flags_ = 0;
 	private:
 		bool drawing_ = false;
 		const std::string menu_title_;

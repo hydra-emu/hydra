@@ -427,7 +427,7 @@ namespace TKPEmu::Graphics {
             }
             case TKPShortcut::CTRL_P: {
                 if (emulator_ != nullptr) {
-                    emulator_->Paused.store(!emulator_->Paused.load());
+                    emulator_->Paused.store(!emulator_->Paused);
                     emulator_->Step.store(true);
                     emulator_->Step.notify_all();
                 }
@@ -678,7 +678,7 @@ namespace TKPEmu::Graphics {
                         // Handle the shortcuts
                         const auto k = SDL_GetKeyboardState(NULL);
                         if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_P]) {
-                            last_shortcut_ = TKPShortcut::CTRL_R;
+                            last_shortcut_ = TKPShortcut::CTRL_P;
                             break;
                         }
                         if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_R]) {

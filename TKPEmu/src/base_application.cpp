@@ -8,11 +8,11 @@ namespace TKPEmu::Applications {
     void IMApplication::SetEmulator(Emulator* emulator) {
         emulator_ = emulator;
     }
-    void IMApplication::HandleShortcut(const TKPShortcut& shortcut) {}
+    void IMApplication::HandleShortcut(TKPShortcut& shortcut) {}
     void IMApplication::Draw() {
         if (drawing_) {
             SetupWindow();
-            if (!ImGui::Begin(window_title_.c_str())) {
+            if (!ImGui::Begin(window_title_.c_str(), &drawing_, window_flags_)) {
                 ImGui::End();
                 return;
             }
@@ -24,6 +24,10 @@ namespace TKPEmu::Applications {
         if (ImGui::MenuItem(menu_title_.c_str(), NULL, drawing_)) {
              drawing_ ^= true;
         }
+    }
+    bool* IMApplication::IsOpen() {
+        // Returns bool* to be used with imgui
+        return &drawing_;
     }
     void IMApplication::Reset() {
         v_reset();
