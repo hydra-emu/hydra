@@ -15,11 +15,9 @@ namespace TKPEmu::Gameboy::Devices {
 			case CartridgeType::MBC1_RAM_BATTERY: {
 				if (address <= 0x1FFF) {
 					if (data == 0xA) {
-						std::cout << "RAM enabled (before:" << (int)ram_enabled_ <<  ")" << std::endl;
 						ram_enabled_ = true;
 					}
 					else {
-						std::cout << "RAM disabled (before:" << (int)ram_enabled_ <<  ")" << std::endl;
 						ram_enabled_ = false;
 					}
 				}
@@ -315,7 +313,6 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 			}
 			if (address == 0xFFFF) {
-				std::cout << "writing " << std::hex << (int)data << std::endl;
 			}
 			redirect_address(address) = data;
 		}
