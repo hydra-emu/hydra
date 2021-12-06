@@ -67,6 +67,7 @@ namespace TKPEmu::Graphics {
         else {
             std::cout << "Glad initialized successfully" << std::endl;
         }
+        glGenFramebuffers(1, &frame_buffer_);
     }
     Display::~Display() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -263,7 +264,9 @@ namespace TKPEmu::Graphics {
         if (*draw) {
             file_browser_.Display();
             if (file_browser_.HasSelected()) {
-                std::cout << "Selected filename" << file_browser_.GetSelected().string() << std::endl;
+                std::cout << "Selected filename " << file_browser_.GetSelected().string() << std::endl;
+                emulator_.reset();
+                emulator_tools_.clear();
                 load_rom(std::move(file_browser_.GetSelected()));
                 file_browser_.ClearSelected();
                 window_file_browser_open_ = false;
@@ -468,7 +471,6 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::load_rom(std::filesystem::path path) {
-        using Gameboy = TKPEmu::Gameboy::Gameboy;
         if (path.has_parent_path()) {
             settings_.at("General.last_dir") = path.parent_path();
         } else {
@@ -494,7 +496,6 @@ namespace TKPEmu::Graphics {
         emulator_->LoadFromFile(path.string());
         EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
         emulator_->Start(options);
-        glGenFramebuffers(1, &frame_buffer_);
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -103,11 +103,13 @@ namespace TKPEmu::Gameboy {
 			bool first_instr = true;
 			while (!Stopped.load()) {
 				if (!Paused.load()) {
+					std::lock_guard<std::mutex> lg(DebugUpdateMutex);
 					bool broken = false;
 					if (!first_instr) {
 						for (const auto& bp : Breakpoints) {
 							bool brk = bp.Check();
 							if (brk) {
+								std::cout << "Breakpoint hit - Last PC: " << std::hex << cpu_.LastPC << std::endl;
 								InstructionBreak.store(cpu_.PC);
 								Paused.store(true);
 								broken = true;
