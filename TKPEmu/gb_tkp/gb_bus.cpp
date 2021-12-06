@@ -14,12 +14,12 @@ namespace TKPEmu::Gameboy::Devices {
 			case CartridgeType::MBC1_RAM:
 			case CartridgeType::MBC1_RAM_BATTERY: {
 				if (address <= 0x1FFF) {
-					// Any value "written" here with lower 4 bits == 0xA enables eram,
-					// other values disable eram
 					if (data == 0xA) {
+						std::cout << "RAM enabled (before:" << (int)ram_enabled_ <<  ")" << std::endl;
 						ram_enabled_ = true;
 					}
 					else {
+						std::cout << "RAM disabled (before:" << (int)ram_enabled_ <<  ")" << std::endl;
 						ram_enabled_ = false;
 					}
 				}
@@ -51,7 +51,6 @@ namespace TKPEmu::Gameboy::Devices {
 		unused_mem_area_ = 0;
 		// Return address from ROM banks
 		// TODO: create better exceptions
-		// TODO: make bios optional, can be disabled in settings
 		switch (address & 0xF000) {
 			case 0x0000: {
 				if (BiosEnabled) {

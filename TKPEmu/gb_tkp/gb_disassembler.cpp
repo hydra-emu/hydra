@@ -136,12 +136,14 @@ namespace TKPEmu::Applications {
                             if (gameboy->Paused.load()) {
                                 sel_map_[row_n].flip();
                                 if (sel_map_[row_n]) {
+					                std::lock_guard<std::mutex> lg(emulator_->DebugUpdateMutex);
                                     GBBPArguments bp_arg;
                                     bp_arg.PC_using = true;
                                     bp_arg.PC_value = ins.InstructionProgramCode;
                                     gameboy->AddBreakpoint(bp_arg);
                                 }
                                 else {
+					                std::lock_guard<std::mutex> lg(emulator_->DebugUpdateMutex);
                                     auto it = std::find_if(
                                         std::execution::par_unseq,
                                         gameboy->Breakpoints.begin(),
@@ -244,6 +246,7 @@ namespace TKPEmu::Applications {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             if (ImGui::Button("Remove", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.15f))) {
+				std::lock_guard<std::mutex> lg(emulator_->DebugUpdateMutex);
                 if (gameboy->Breakpoints[selected_bp].BPFromTable) {
                     // We have to remove the breakpoint selection from the table too
                     sel_map_[gameboy->Breakpoints[selected_bp].Args.PC_value] = false;
@@ -256,6 +259,7 @@ namespace TKPEmu::Applications {
             }
             ImGui::SameLine();
             if (ImGui::Button("Clear", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.15f))) {
+				std::lock_guard<std::mutex> lg(emulator_->DebugUpdateMutex);
                 gameboy->Breakpoints.clear();
                 clear_all_flag = true;
             }

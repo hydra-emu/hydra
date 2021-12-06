@@ -5,11 +5,12 @@
 #include "../gb_tkp/gb_tracelogger.h"
 namespace TKPEmu {
     void EmulatorFactory::LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, Emulator* emulator, EmuType emu_type) {
-        tools.clear();
         switch (emu_type) {
             case EmuType::Gameboy: {
                 tools.push_back(std::make_unique<Applications::GameboyDisassembler>("Disassembler", "Gameboy disassembler"));
+                std::cout << "Disassembler loaded" << std::endl;
                 tools.push_back(std::make_unique<Applications::GameboyTracelogger>("Tracelogger", "Gameboy tracelogger"));
+                std::cout << "Tracelogger loaded" << std::endl;
                 break;
             }
             default: {

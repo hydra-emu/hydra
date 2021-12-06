@@ -31,7 +31,6 @@ namespace TKPEmu {
 		std::atomic_int InstructionBreak = -1;
 		bool SkipBoot = false;
 		bool FastMode = false;
-		// TODO: (!) Remake update function so that it has a public function here (or remake start debug/start normal)
 		unsigned long long TotalClocks = 0;
 		unsigned long long ScreenshotClocks = 0;
 		void Start(EmuStartOptions start_mode);
@@ -48,6 +47,7 @@ namespace TKPEmu {
 		virtual std::string GetScreenshotHash();
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
+		std::mutex DebugUpdateMutex;
 		std::thread UpdateThread;
 		TKPImage EmulatorImage{};
 	protected:
