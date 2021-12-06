@@ -314,6 +314,9 @@ namespace TKPEmu::Gameboy::Devices {
 					case 3: OAM[(address & 0xFF) / 4].flags      = data; break;
 				}
 			}
+			if (address == 0xFFFF) {
+				std::cout << "writing " << std::hex << (int)data << std::endl;
+			}
 			redirect_address(address) = data;
 		}
 	}
