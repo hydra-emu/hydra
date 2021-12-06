@@ -19,6 +19,10 @@ namespace TKPEmu::Gameboy::Devices {
 		tima_overflow_ = false;
     }
     bool Timer::Update(uint8_t cycles, uint8_t old_if) {
+		bool enabled = TAC & 0b100;
+		if (!enabled) {
+			return false;
+		}
         if (tima_overflow_) {
 			// TIMA might've changed in this strange cycle (see the comment below)
 			// If it changes in that cycle, it doesn't update to be equal to TMA
@@ -41,7 +45,6 @@ namespace TKPEmu::Gameboy::Devices {
 			timer_counter_ = 0;
 			div_reset_index_ = -1;
 		}
-		bool enabled = (TAC >> 2) & 0x1;
 		oscillator_ += cycles;
 		// Divider always equals the top 8 bits of the oscillator
 		DIV = oscillator_ >> 8;
@@ -51,23 +54,21 @@ namespace TKPEmu::Gameboy::Devices {
 			TIMA++;
 			div_reset_index_ = -1;
 		}
-		if (enabled) {
-			timer_counter_ += cycles;
-			while (timer_counter_ >= freq) {
-				timer_counter_ -= freq;
-				//timer_counter_ = get_clk_freq();
-				if (TIMA == 0xFF) {
-					/*TIMA = TMA;
-					IF |= 1 << 2;
-					halt_ = false;*/
-					// After TIMA overflows, it stays 00 for 1 clock and *then* becomes =TMA
-					TIMA = 0;
-					tima_overflow_ = true;
-					return true;
-				}
-				else {
-					TIMA++;
-				}
+		timer_counter_ += cycles;
+		while (timer_counter_ >= freq) {
+			timer_counter_ -= freq;
+			//timer_counter_ = get_clk_freq();
+			if (TIMA == 0xFF) {
+				/*TIMA = TMA;
+				IF |= 1 << 2;
+				halt_ = false;*/
+				// After TIMA overflows, it stays 00 for 1 clock and *then* becomes =TMA
+				TIMA = 0;
+				tima_overflow_ = true;
+				return true;
+			}
+			else {
+				TIMA++;
 			}
 		}
 		return false;

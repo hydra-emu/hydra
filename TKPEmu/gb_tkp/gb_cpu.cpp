@@ -2343,8 +2343,8 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::execute_interrupt(int bit) {
 		ime_ = false;
 		IF &= ~(1U << bit);
-		bus_->WriteL(SP, PC);
 		SP -= 2;
+		bus_->WriteL(SP, PC);
 		PC = 0x40 + bit * 0x8;
 	}
 }
