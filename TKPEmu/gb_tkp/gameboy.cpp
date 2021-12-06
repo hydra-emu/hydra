@@ -103,6 +103,7 @@ namespace TKPEmu::Gameboy {
 			bool first_instr = true;
 			while (!Stopped.load()) {
 				if (!Paused.load()) {
+					std::lock_guard<std::mutex> lg(DebugUpdateMutex);
 					bool broken = false;
 					if (!first_instr) {
 						for (const auto& bp : Breakpoints) {
