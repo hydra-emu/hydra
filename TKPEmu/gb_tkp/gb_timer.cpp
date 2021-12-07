@@ -51,21 +51,23 @@ namespace TKPEmu::Gameboy::Devices {
 			TIMA++;
 			div_reset_index_ = -1;
 		}
-		timer_counter_ += cycles;
-		while (timer_counter_ >= freq && enabled) {
-			timer_counter_ -= freq;
-			//timer_counter_ = get_clk_freq();
-			if (TIMA == 0xFF) {
-				/*TIMA = TMA;
-				IF |= 1 << 2;
-				halt_ = false;*/
-				// After TIMA overflows, it stays 00 for 1 clock and *then* becomes =TMA
-				TIMA = 0;
-				tima_overflow_ = true;
-				return true;
-			}
-			else {
-				TIMA++;
+		if (enabled) {
+			timer_counter_ += cycles;
+			while (timer_counter_ >= freq) {
+				timer_counter_ -= freq;
+				//timer_counter_ = get_clk_freq();
+				if (TIMA == 0xFF) {
+					/*TIMA = TMA;
+					IF |= 1 << 2;
+					halt_ = false;*/
+					// After TIMA overflows, it stays 00 for 1 clock and *then* becomes =TMA
+					TIMA = 0;
+					tima_overflow_ = true;
+					return true;
+				}
+				else {
+					TIMA++;
+				}
 			}
 		}
 		return false;
