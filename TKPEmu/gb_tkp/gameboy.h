@@ -50,6 +50,10 @@ namespace TKPEmu::Gameboy {
 		GameboyKeys direction_keys_;
 		GameboyKeys action_keys_;
 		uint8_t& joypad_, &interrupt_flag_;
+		std::chrono::system_clock::time_point frame_start = std::chrono::system_clock::now();
+		std::chrono::system_clock::time_point second_start = std::chrono::system_clock::now();
+		int frames = 0;
+		int frame_counter = 0;
 		std::unique_ptr<std::vector<LogType>> log_types_ptr_;
 		void v_log_state() override;
 		void start_normal() override;

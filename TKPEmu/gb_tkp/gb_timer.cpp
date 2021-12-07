@@ -20,7 +20,7 @@ namespace TKPEmu::Gameboy::Devices {
     }
     bool Timer::Update(uint8_t cycles, uint8_t old_if) {
 		bool enabled = TAC & 0b100;
-        if (tima_overflow_ && enabled) {
+        if (tima_overflow_) {
 			// TIMA might've changed in this strange cycle (see the comment below)
 			// If it changes in that cycle, it doesn't update to be equal to TMA
 			if (TIMA == 0) {
@@ -35,7 +35,7 @@ namespace TKPEmu::Gameboy::Devices {
         int freq = interr_times_[TAC & 0b11];
 		if (bus_->DIVReset) {
 			bus_->DIVReset = false;
-			if (div_reset_index_ >= freq / 2 && enabled) {
+			if (div_reset_index_ >= freq / 2) {
 				TIMA++;
 			}
 			oscillator_ = 0;
@@ -47,7 +47,7 @@ namespace TKPEmu::Gameboy::Devices {
 		DIV = oscillator_ >> 8;
 		if (div_reset_index_ != -1)
 			div_reset_index_ += cycles;
-		if (div_reset_index_ > freq && enabled) {
+		if (div_reset_index_ > freq) {
 			TIMA++;
 			div_reset_index_ = -1;
 		}

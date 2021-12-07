@@ -47,19 +47,6 @@ namespace TKPEmu {
 	std::string Emulator::GetScreenshotHash() {
 		return "Warning: GetScreenshotHash not implemented, hash not printed";
 	}
-	void Emulator::limit_fps() const {
-		// TODO: Gameboy clocking speed not accurate
-		if (!FastMode) {
-			a = std::chrono::system_clock::now();
-			std::chrono::duration<double, std::milli> work_time = a - b;
-			if (work_time.count() < sleep_time_) {
-				std::chrono::duration<double, std::milli> delta_ms(sleep_time_ - work_time.count());
-				auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
-				std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
-			}
-			b = std::chrono::system_clock::now();
-		}
-	}
     float* Emulator::GetScreenData() { 
         std::cerr << "GetScreenData was not implemented for this emulator" << std::endl;
 		exit(1);

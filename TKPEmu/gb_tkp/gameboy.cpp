@@ -1,5 +1,6 @@
 #include <iostream>
 #include <atomic>
+#include <chrono>
 #include "../glad/glad/glad.h"
 #include "gameboy.h"
 #include "../lib/md5.h"
@@ -112,7 +113,6 @@ namespace TKPEmu::Gameboy {
 						for (const auto& bp : Breakpoints) {
 							bool brk = bp.Check();
 							if (brk) {
-								std::cout << "Breakpoint hit - Last PC: " << std::hex << cpu_.LastPC << std::endl;
 								InstructionBreak.store(cpu_.PC);
 								Paused.store(true);
 								broken = true;
@@ -147,20 +147,25 @@ namespace TKPEmu::Gameboy {
 		ppu_.Reset();
 	}
 	void Gameboy::update() {
-		if (cpu_.PC == 0x100) {
-			bus_.BiosEnabled = false;
+		if ((cpu_.TClock / 2) < cpu_.MaxCycles || FastMode) {
+			if (cpu_.PC == 0x100) {
+				bus_.BiosEnabled = false;
+			}
+			uint8_t old_if = interrupt_flag_;
+			int clk = cpu_.Update();
+			if (timer_.Update(clk, old_if)) {
+				cpu_.halt_ = false;
+			}
+			ppu_.Update(clk);
+			log_state();
+		} else {
+			auto end = std::chrono::system_clock::now();
+			auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(end - frame_start).count();
+			if (dur > 16.6f) {
+				frame_start = std::chrono::system_clock::now();
+				cpu_.TClock = 0;
+			}
 		}
-		uint8_t old_if = interrupt_flag_;
-		int clk = cpu_.Update();
-		if (timer_.Update(clk, old_if)) {
-			cpu_.halt_ = false;
-		}
-		ppu_.Update(clk);
-		if (cpu_.TClock >= cpu_.MaxCycles) {
-			cpu_.TClock = 0;
-			limit_fps();
-		}
-		log_state();
 	}
 	std::string Gameboy::print() const { 
 		return "GameboyTKP for TKPEmu\n"

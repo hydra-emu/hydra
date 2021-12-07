@@ -55,8 +55,6 @@ namespace TKPEmu {
 		// Override v_log_state() to change what it does, log_state() will do the right
 		// checks for you
 		void log_state();
-		void limit_fps() const;
-		float sleep_time_ = 16.75f;
 		std::unique_ptr<std::ofstream> ofstream_ptr_;
 	private:
 		virtual void v_log_state();

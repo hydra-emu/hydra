@@ -2318,7 +2318,6 @@ namespace TKPEmu::Gameboy::Devices {
 		JOYP = 0b1110'1111;
 	}
 	int CPU::Update() {
-		LastPC = PC;
 		if (halt_) {
 			PC--;
 		}
