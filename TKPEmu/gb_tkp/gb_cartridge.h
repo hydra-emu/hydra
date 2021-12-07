@@ -54,8 +54,6 @@ namespace TKPEmu::Gameboy::Devices {
 		CartridgeType GetCartridgeType();
 		int GetRamSize();
 		int GetRomSize();
-		// TODO: return string&&, make window that shows the string
-		void PrintHeader();
 	};
 }
 #endif

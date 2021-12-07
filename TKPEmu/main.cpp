@@ -121,8 +121,8 @@ int main(int argc, char *argv[]) {
 		// that explains fast_mode, log_mode and other settings. Display constructor takes this as param.
 		// TODO: console mode must use -o, std::cerr otherwise /////////////////////////////////////////////////////////////////
 		if (!parameters.RomFile.empty()) {
-			auto type = TKPEmu::EmulatorFactory::GetEmulatorType(parameters.RomFile);
-			auto emu_ptr = TKPEmu::EmulatorFactory::Create(type);
+			//auto type = TKPEmu::EmulatorFactory::GetEmulatorType(parameters.RomFile);
+			//auto emu_ptr = TKPEmu::EmulatorFactory::Create(type);
 		} else {
 			std::cerr << "Error: No rom file specified. Use -h or --help for more help on the commands" << std::endl;
 		}

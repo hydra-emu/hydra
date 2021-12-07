@@ -33,16 +33,15 @@ namespace TKPEmu::Gameboy::Devices {
 			is.close();
 			// Empty init the rambanks
 			ramBanks.resize(GetRamSize());
-			PrintHeader();
+		} else {
+			std::cerr << "Error: Could not open file" << std::endl;
 		}
 	}
-
 	CartridgeType Cartridge::GetCartridgeType() {
 		if (loaded) {
 			return (CartridgeType)header_.cartridgeType;
 		}
 	}
-
 	// Returns the number of 8KB RAM banks
 	// TODO: constexpr, return from constexpr array
 	int Cartridge::GetRamSize() {
@@ -54,7 +53,6 @@ namespace TKPEmu::Gameboy::Devices {
 			case 5: return 8;
 		}
 	}
-
 	// Returns the number of 16kb ROM banks
 	int Cartridge::GetRomSize() {
 		switch (header_.romSize) {
@@ -65,13 +63,5 @@ namespace TKPEmu::Gameboy::Devices {
 		[[likely]] default:
 			return std::pow(2, (header_.romSize + 1));
 		}
-	}
-	void Cartridge::PrintHeader() {
-		std::cout << "Header: {"
-				<< "\nname: " << header_.name
-				<< "\ncartridge_type:" << (int)header_.cartridgeType
-				<< "\nrom_size: " << (int)header_.romSize
-				<< "\nram_size: " << (int)header_.ramSize
-				<< "\n}" << std::endl;
 	}
 }
