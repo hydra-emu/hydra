@@ -88,6 +88,7 @@ namespace TKPEmu::Gameboy {
 					update();
 				}
 			}
+			std::terminate();
 		};
 		UpdateThread = std::thread(func);
 		UpdateThread.detach();
@@ -95,10 +96,12 @@ namespace TKPEmu::Gameboy {
 	void Gameboy::start_debug() {
 		auto func = [this]() {
 			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
-			Reset();
+			Loaded = true;
+			Loaded.notify_all();
 			Paused = true;
 			Stopped = false;
 			Step = false;
+			Reset();
 			// Emulation doesn't break on first instruction
 			bool first_instr = true;
 			while (!Stopped.load()) {
@@ -127,7 +130,6 @@ namespace TKPEmu::Gameboy {
 					InstructionBreak.store(cpu_.PC);
 				}
 			}
-			return;
 		};
 		UpdateThread = std::thread(func);
 		UpdateThread.detach();

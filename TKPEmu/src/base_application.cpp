@@ -49,7 +49,7 @@ namespace TKPEmu::Applications {
             }
         }
         if (ImGui::MenuItem("Reset", "Ctrl+R", false, rom_loaded)) {
-            emulator->ResetState();
+            emulator->CloseAndWait();
             emulator->Start(EmuStartOptions::Debug);
         }
         if (ImGui::MenuItem("Stop", NULL, false, rom_loaded)) {

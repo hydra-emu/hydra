@@ -28,6 +28,7 @@ namespace TKPEmu {
 		std::atomic_bool Stopped = false;
 		std::atomic_bool Paused = false;
 		std::atomic_bool Step = false;
+		std::atomic_bool Loaded = false;
 		std::atomic_int InstructionBreak = -1;
 		bool SkipBoot = false;
 		bool FastMode = false;

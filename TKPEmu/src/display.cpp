@@ -264,9 +264,6 @@ namespace TKPEmu::Graphics {
         if (*draw) {
             file_browser_.Display();
             if (file_browser_.HasSelected()) {
-                std::cout << "Selected filename " << file_browser_.GetSelected().string() << std::endl;
-                emulator_.reset();
-                emulator_tools_.clear();
                 load_rom(std::move(file_browser_.GetSelected()));
                 file_browser_.ClearSelected();
                 window_file_browser_open_ = false;
@@ -422,8 +419,9 @@ namespace TKPEmu::Graphics {
             }
             case TKPShortcut::CTRL_R: {
                 if (emulator_ != nullptr) {
-                    emulator_->ResetState();
-                    emulator_->Start(emulator_start_opt_);
+                    emulator_->CloseAndWait();
+                    EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
+                    emulator_->Start(options);
                 }
                 last_shortcut_ = TKPShortcut::NONE;
                 break;
@@ -471,35 +469,41 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::load_rom(std::filesystem::path path) {
-        if (path.has_parent_path()) {
-            settings_.at("General.last_dir") = path.parent_path();
-        } else {
-            std::cerr << "Error loading rom: Path has no parent path" << std::endl;
-            exit(1);
-        }
-        if (debug_mode_) {
-            emulator_start_opt_ = EmuStartOptions::Debug;
-        }
-        if (emulator_) {
-            emulator_->CloseAndWait();
-        }
-        auto type = EmulatorFactory::GetEmulatorType(path);
-        emulator_ = TKPEmu::EmulatorFactory::Create(type, gb_keys_directional_, gb_keys_action_);
-        TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), type);
-        // TODO: move setup_gameboy_palette elsewhere
-        setup_gameboy_palette();
-        rom_loaded_ = true;
-        rom_paused_ = debug_mode_;
-        emulator_->SkipBoot = skip_boot_;
-        emulator_->FastMode = fast_mode_;
-        emulator_->Paused.store(rom_paused_);
-        emulator_->LoadFromFile(path.string());
-        EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
-        emulator_->Start(options);
-        glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
+        //for (int i = 0; i < 20; i++) {
+            if (path.has_parent_path()) {
+                settings_.at("General.last_dir") = path.parent_path();
+            } else {
+                std::cerr << "Error loading rom: Path has no parent path" << std::endl;
+                exit(1);
+            }
+            if (emulator_ != nullptr) {
+                if (!emulator_->Loaded) {
+                    // Tried to open a new emulator before the old one finished loading.
+                    // Impossibly rare, but would avoid a program hang
+                    return;
+                }
+                emulator_tools_.clear();
+                emulator_->CloseAndWait();
+                emulator_.reset();
+            }
+            auto type = EmulatorFactory::GetEmulatorType(path);
+            emulator_ = TKPEmu::EmulatorFactory::Create(type, gb_keys_directional_, gb_keys_action_);
+            TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), type);
+            // TODO: move setup_gameboy_palette elsewhere
+            setup_gameboy_palette();
+            rom_loaded_ = true;
+            rom_paused_ = debug_mode_;
+            emulator_->SkipBoot = skip_boot_;
+            emulator_->FastMode = fast_mode_;
+            emulator_->Paused.store(rom_paused_);
+            emulator_->LoadFromFile(path.string());
+            EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
+            glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
+            emulator_->Start(options);
+        //}
     }
     void Display::limit_fps() {
         a = std::chrono::system_clock::now();

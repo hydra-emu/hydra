@@ -108,10 +108,7 @@ namespace TKPEmu {
 		logging_ = false;
 	}
 	void Emulator::CloseAndWait() {
-		Stopped = true;
-        Paused = false;
-        Step = true;
-        Step.notify_all();
+		ResetState();
         std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
 	}
 	void Emulator::log_state() {
