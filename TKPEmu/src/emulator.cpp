@@ -48,6 +48,7 @@ namespace TKPEmu {
 		return "Warning: GetScreenshotHash not implemented, hash not printed";
 	}
 	void Emulator::limit_fps() const {
+		// TODO: Gameboy clocking speed not accurate
 		if (!FastMode) {
 			a = std::chrono::system_clock::now();
 			std::chrono::duration<double, std::milli> work_time = a - b;
@@ -94,12 +95,6 @@ namespace TKPEmu {
 			reset_normal();
 		}
     }
-	void Emulator::ResetState() {
-		Step.store(true);
-        Paused.store(false);
-        Stopped.store(true);
-        Step.notify_all();
-	}
 	void Emulator::StartLogging(std::string filename) {
 		log_filename_ = std::move(filename);
 		logging_ = true;
@@ -108,7 +103,10 @@ namespace TKPEmu {
 		logging_ = false;
 	}
 	void Emulator::CloseAndWait() {
-		ResetState();
+		Step.store(true);
+        Paused.store(false);
+        Stopped.store(true);
+        Step.notify_all();
         std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
 	}
 	void Emulator::log_state() {

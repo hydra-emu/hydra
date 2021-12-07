@@ -469,54 +469,49 @@ namespace TKPEmu::Graphics {
     }
 
     void Display::load_rom(std::filesystem::path path) {
-        //for (int i = 0; i < 20; i++) {
-            if (path.has_parent_path()) {
-                settings_.at("General.last_dir") = path.parent_path();
-            } else {
-                std::cerr << "Error loading rom: Path has no parent path" << std::endl;
-                exit(1);
+        if (path.has_parent_path()) {
+            settings_.at("General.last_dir") = path.parent_path();
+        } else {
+            std::cerr << "Error loading rom: Path has no parent path" << std::endl;
+            exit(1);
+        }
+        if (emulator_ != nullptr) {
+            if (!emulator_->Loaded) {
+                // Tried to open a new emulator before the old one finished loading.
+                // Impossibly rare, but would avoid a program hang
+                return;
             }
-            if (emulator_ != nullptr) {
-                if (!emulator_->Loaded) {
-                    // Tried to open a new emulator before the old one finished loading.
-                    // Impossibly rare, but would avoid a program hang
-                    return;
-                }
-                emulator_tools_.clear();
-                emulator_->CloseAndWait();
-                emulator_.reset();
-            }
-            auto type = EmulatorFactory::GetEmulatorType(path);
-            emulator_ = TKPEmu::EmulatorFactory::Create(type, gb_keys_directional_, gb_keys_action_);
-            TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), type);
-            // TODO: move setup_gameboy_palette elsewhere
-            setup_gameboy_palette();
-            rom_loaded_ = true;
-            rom_paused_ = debug_mode_;
-            emulator_->SkipBoot = skip_boot_;
-            emulator_->FastMode = fast_mode_;
-            emulator_->Paused.store(rom_paused_);
-            emulator_->LoadFromFile(path.string());
-            EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
-            glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
-            emulator_->Start(options);
-        //}
+            emulator_tools_.clear();
+            emulator_->CloseAndWait();
+            emulator_.reset();
+        }
+        auto type = EmulatorFactory::GetEmulatorType(path);
+        emulator_ = TKPEmu::EmulatorFactory::Create(type, gb_keys_directional_, gb_keys_action_);
+        TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), type);
+        // TODO: move setup_gameboy_palette elsewhere
+        setup_gameboy_palette();
+        rom_loaded_ = true;
+        rom_paused_ = debug_mode_;
+        emulator_->SkipBoot = skip_boot_;
+        emulator_->FastMode = fast_mode_;
+        emulator_->Paused.store(rom_paused_);
+        emulator_->LoadFromFile(path.string());
+        EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
+        glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
+        emulator_->Start(options);
     }
     void Display::limit_fps() {
         a = std::chrono::system_clock::now();
         std::chrono::duration<double, std::milli> work_time = a - b;
-
         if (work_time.count() < sleep_time_) {
             std::chrono::duration<double, std::milli> delta_ms(sleep_time_ - work_time.count());
             auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
             std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
         }
-
         b = std::chrono::system_clock::now();
-        std::chrono::duration<double, std::milli> sleep_time = b - a;
     }
     void Display::init_settings_values() {
         limit_fps_ = std::stoi(settings_.at("Video.limit_fps"));

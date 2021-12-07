@@ -2325,7 +2325,7 @@ namespace TKPEmu::Gameboy::Devices {
 		(this->*Instructions[bus_->Read(PC++)].op)();
 		handle_interrupts();
 		TClock += tTemp;
-		TotalClocks += tTemp;
+		TotalClocks += 1;
 		return tTemp;
 	}
 	void CPU::handle_interrupts() {

@@ -142,7 +142,7 @@ namespace TKPEmu::Gameboy::Devices {
 		// Memory mapped registers, they are a reference to a position in memory
 		RegisterType &IF, &IE, &LY, &JOYP;
 
-		const int ClockSpeed = 4194304;
+		const int ClockSpeed = 4194304 * 4;
 		const int MaxCycles = ClockSpeed / 60;
 		int TClock = 0;
 		unsigned long TotalClocks = 0;

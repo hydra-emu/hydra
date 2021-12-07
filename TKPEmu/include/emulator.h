@@ -36,7 +36,6 @@ namespace TKPEmu {
 		unsigned long long ScreenshotClocks = 0;
 		void Start(EmuStartOptions start_mode);
 		void Reset();
-		void ResetState();
 		virtual void HandleKeyDown(SDL_Keycode keycode);
 		virtual void HandleKeyUp(SDL_Keycode keycode);
 		void LoadFromFile(std::string path);
@@ -72,8 +71,6 @@ namespace TKPEmu {
 		bool logging_ = false;
 		std::string log_filename_;
 		std::string rom_hash_;
-		mutable std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
-		mutable std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
 	};
 }
 #endif
