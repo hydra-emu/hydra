@@ -1114,7 +1114,7 @@ namespace TKPEmu::Gameboy::Devices {
 		if ((F & 0x80) == 0x00) {
 			PC = bus_->ReadL(SP);
 			SP += 2;
-			; tTemp += 12;
+			tTemp += 12;
 		}
 	}
 	void CPU::RETZ() {
@@ -1122,7 +1122,7 @@ namespace TKPEmu::Gameboy::Devices {
 		if ((F & 0x80) == 0x80) {
 			PC = bus_->ReadL(SP);
 			SP += 2;
-			; tTemp += 12;
+			tTemp += 12;
 		}
 	}
 	void CPU::RETNC() {
@@ -1130,7 +1130,7 @@ namespace TKPEmu::Gameboy::Devices {
 		if ((F & 0x10) == 0x00) {
 			PC = bus_->ReadL(SP);
 			SP += 2;
-			; tTemp += 12;
+			tTemp += 12;
 		}
 	}
 	void CPU::RETC() {
@@ -1138,7 +1138,7 @@ namespace TKPEmu::Gameboy::Devices {
 		if ((F & 0x10) == 0x10) {
 			PC = bus_->ReadL(SP);
 			SP += 2;
-			; tTemp += 12;
+			tTemp += 12;
 		}
 	}
 	void CPU::RST0() {
