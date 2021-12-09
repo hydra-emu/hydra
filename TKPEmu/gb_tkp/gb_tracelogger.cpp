@@ -8,17 +8,22 @@ namespace TKPEmu::Applications {
 	GameboyTracelogger::GameboyTracelogger(std::string menu_title, std::string window_title)
 		: IMApplication(menu_title, window_title)
 	{
+        std::fill(available_types_.begin(), available_types_.end(), true);
         std::string path = std::filesystem::current_path();
         if (path.length() < PATH_MAX) {
             strncpy(path_buf_, path.data(), PATH_MAX);
         } else {
             std::cerr << "Error: Executable path too long" << std::endl;
+            exit(1);
         }
     }
 	void GameboyTracelogger::v_draw() {
         static bool path_changed = false;
         static bool file_exists = false;
         static bool overwrite = false;
+        if (is_logging_) {
+            push_disabled();
+        }
         if (ImGui::InputText("##path", &(path_buf_[0]), PATH_MAX, ImGuiInputTextFlags_EnterReturnsTrue)) {
             ready_to_log_ = false;
             path_changed = true;
@@ -30,22 +35,24 @@ namespace TKPEmu::Applications {
             path_changed = true;
             overwrite = false;
         }
+        if (is_logging_) {
+            pop_disabled();
+        }
         if (path_changed) {
             path_changed = false;
             if (std::filesystem::is_directory(path_buf_)) {
-                std::cout << "Error: Path is directory" << std::endl;
+                std::cerr << "Error: Path is directory" << std::endl;
             } else if (!overwrite && std::filesystem::exists(path_buf_)) {
                 file_exists = true;
                 ImGui::OpenPopup("Overwrite?");
             } else {
+                std::filesystem::create_directories(std::filesystem::path(path_buf_).parent_path());
                 ready_to_log_ = true;
                 log_path_ = path_buf_;
             }
         }
         if (!ready_to_log_) {
-            // This push makes the button seem disabled
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.6f);
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            push_disabled();
         }
         if (!is_logging_) {
             if (ImGui::Button("Start logging")) {
@@ -55,6 +62,7 @@ namespace TKPEmu::Applications {
                     is_logging_ = true;
                 } else {
                     std::cerr << "Error: Emulator is nullptr" << std::endl;
+                    exit(1);
                 }
             }
         } else {
@@ -64,13 +72,12 @@ namespace TKPEmu::Applications {
                     is_logging_ = false;
                 } else {
                     std::cerr << "Error: Emulator is nullptr" << std::endl;
+                    exit(1);
                 }
             }
         }
         if (!ready_to_log_) {
-            // Pop disabled
-            ImGui::PopItemFlag();
-            ImGui::PopStyleVar();
+            pop_disabled();
         }
 		ImGui::NewLine();
 		ImGui::TextUnformatted("Memory to log:");
@@ -107,4 +114,12 @@ namespace TKPEmu::Applications {
 		}
 		static_cast<Gameboy*>(emulator_)->SetLogTypes(std::move(ptr));
 	}
+    void GameboyTracelogger::push_disabled() {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.6f);
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    }
+    void GameboyTracelogger::pop_disabled() {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+    }
 }

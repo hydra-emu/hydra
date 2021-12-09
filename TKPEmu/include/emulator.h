@@ -66,7 +66,9 @@ namespace TKPEmu {
 		virtual void load_file(std::string path);
 		virtual std::string print() const;
 		friend std::ostream& operator<<(std::ostream& os, const Emulator& obj);
+		// TODO: move all this to gameboy class only - clean up emulator
 		bool logging_ = false;
+		bool log_changed_ = false;
 		std::string log_filename_;
 		std::string rom_hash_;
 	};

@@ -85,6 +85,7 @@ namespace TKPEmu {
 	void Emulator::StartLogging(std::string filename) {
 		log_filename_ = std::move(filename);
 		logging_ = true;
+		log_changed_ = true;
 	}
 	void Emulator::StopLogging() {
 		logging_ = false;
@@ -97,10 +98,12 @@ namespace TKPEmu {
         std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
 	}
 	void Emulator::log_state() {
-		if (logging_) {
+		if (logging_ || (log_changed_ && logging_)) {
 			// We initialize it here to avoid race conditions
-			if (ofstream_ptr_ == nullptr)
+			if (ofstream_ptr_ == nullptr) {
 				ofstream_ptr_ = std::make_unique<std::ofstream>(log_filename_.c_str(), std::ofstream::out | std::ofstream::trunc);
+				std::cout << "Logging at " << log_filename_.c_str() << std::endl;
+			}
 			v_log_state();
 		} else {
 			if (ofstream_ptr_ != nullptr)

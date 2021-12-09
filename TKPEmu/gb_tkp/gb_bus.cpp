@@ -47,6 +47,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	uint8_t& Bus::redirect_address(uint16_t address) {
 		unused_mem_area_ = 0;
+		WriteToVram = false;
 		// Return address from ROM banks
 		// TODO: create better exceptions
 		switch (address & 0xF000) {
@@ -110,6 +111,7 @@ namespace TKPEmu::Gameboy::Devices {
 			}
 			case 0x8000:
 			case 0x9000: {
+				WriteToVram = true;
 				return vram_[address % 0x2000];
 			}
 			case 0xA000:

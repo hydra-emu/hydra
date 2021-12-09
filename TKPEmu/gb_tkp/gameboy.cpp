@@ -79,6 +79,10 @@ namespace TKPEmu::Gameboy {
 			}
 			*ofstream_ptr_ << " ";
 		}
+		if (bus_.WriteToVram) {
+			// TODO: add checkbox for this (tracelogger)
+			*ofstream_ptr_ << "(VRAM)";
+		}
 		*ofstream_ptr_ << "\n";
 	}
 	void Gameboy::start_normal() { 

@@ -6,6 +6,7 @@
 #include <unordered_map>
 // TODO: task.h is deprecated warning
 // TODO: enter press on breakpoint adds breakpoint
+// TODO: list of instructions combo box
 #include <execution>
 #include "../include/base_application.h"
 #include "gb_breakpoint.h"

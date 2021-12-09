@@ -1,6 +1,8 @@
 #pragma once
 #ifndef TKP_GB_TRACELOGGER_H
 #define TKP_GB_TRACELOGGER_H
+// TODO: if no selected registers, show message
+// TODO: writes to vram have special string
 #include <array>
 #include "../include/base_application.h"
 #include "gameboy.h"
@@ -18,6 +20,8 @@ namespace TKPEmu::Applications {
         bool is_logging_ = false;
 		void v_draw() override;
 		void set_logtypes();
+		void push_disabled();
+		void pop_disabled();
 	};
 }
 #endif
