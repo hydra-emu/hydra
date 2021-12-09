@@ -1101,7 +1101,7 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::RET() {
 		PC = bus_->ReadL(SP);
 		SP += 2;
-		tTemp = 12;
+		tTemp = 16;
 	}
 	void CPU::RETI() {
 		ime_ = true;
@@ -1174,10 +1174,12 @@ namespace TKPEmu::Gameboy::Devices {
 		tTemp = 8;
 	}
 	void CPU::DI() {
-		ime_ = false; tTemp = 4;
+		ime_ = false;
+		tTemp = 4;
 	}
 	void CPU::EI() {
-		ime_ = true; tTemp = 4;
+		ime_scheduled_ = true;
+		tTemp = 4;
 	}
 	void CPU::RLA() {
 		bool carry = F & FLAG_CARRY_MASK;
@@ -1396,7 +1398,10 @@ namespace TKPEmu::Gameboy::Devices {
 		tTemp = 8;
 	}
 	void CPU::HALT() {
-		halt_ = true;
+		if (ime_scheduled_)
+			ime_ = true;
+		else
+			halt_ = true;
 	}
 	void CPU::XXX() {
 		stop_ = true;
@@ -2323,6 +2328,8 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 		(this->*Instructions[bus_->Read(PC++)].op)();
 		handle_interrupts();
+		if (ime_scheduled_)
+			ime_ = true;
 		TClock += tTemp;
 		TotalClocks += 1;
 		return tTemp;

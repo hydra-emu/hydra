@@ -15,6 +15,7 @@ namespace TKPEmu::Gameboy::Devices {
 	private:
 		Bus* bus_;
 		bool ime_ = false;
+		bool ime_scheduled_ = false;
 		int tTemp = 0;
 		int div_reset_index_ = -1;
 		int old_tac_ = 0;

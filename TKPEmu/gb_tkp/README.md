@@ -24,6 +24,9 @@ Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
 |Test| GameboyTKP |
 |--|--|
 | acceptance/div_timing | ✅ |
+| acceptance/ei_timing | ✅ |
+| acceptance/ei_sequence | ✅ |
+| acceptance/halt_ime0_ei | ✅ |
 | acceptance/if_ie_registers | ✅ |
 | acceptance/boot_regs-dmgABC | ✅ |
 | acceptance/bits/mem_oam | ✅ |
