@@ -50,7 +50,7 @@ namespace TKPEmu::Graphics {
         using DisInstr = TKPEmu::Tools::DisInstr;
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
         using GameboyKeys = std::array<SDL_Keycode, 4>;
-        const std::string GLSLVersion = "#version 430";
+        const std::string GLSLVersion = "#version 130";
         const std::string BackgroundImageFile = "background.jpg";
         const std::string ResourcesDataDir = "/Resources/Data/";
         const std::string ResourcesRomsDir = "/Resources/ROMs";
