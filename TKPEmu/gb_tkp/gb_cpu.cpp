@@ -14,32 +14,28 @@ namespace TKPEmu::Gameboy::Devices {
 		halt_ = false; stop_ = false;
 		bus_->Write(0xFF00, 0b11011111);
 	}
-	inline void CPU::reg_dec(RegisterType& reg) {
+	void CPU::reg_dec(RegisterType& reg) {
 		auto temp = reg - 1;
 		auto flag = FLAG_NEG_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
 		flag |= (((reg & 0xF) - (1 & 0xF)) < 0) << FLAG_HCARRY_SHIFT;
-		// Carry doesn't reset after DEC
 		F &= FLAG_CARRY_MASK;
 		F |= flag;
 		reg = temp & 0xFF;
 		tTemp = 4;
 	}
-
-	inline void CPU::reg_inc(RegisterType& reg) {
+	void CPU::reg_inc(RegisterType& reg) {
 		auto temp = reg + 1;
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
 		flag |= (((reg & 0xF) + (1 & 0xF)) > 0xF) << FLAG_HCARRY_SHIFT;
-		// Carry doesn't reset after INC 
 		F &= FLAG_CARRY_MASK;
 		F |= flag;
 		temp &= 0xFF;
 		reg = temp;
 		tTemp = 4;
 	}
-
-	inline void CPU::reg_sub(RegisterType& reg) {
+	void CPU::reg_sub(RegisterType& reg) {
 		auto temp = A - reg;
 		auto flag = FLAG_NEG_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -49,8 +45,7 @@ namespace TKPEmu::Gameboy::Devices {
 		A = temp & 0xFF;
 		tTemp = 4;
 	}
-
-	inline void CPU::reg_sbc(RegisterType& reg) {
+	void CPU::reg_sbc(RegisterType& reg) {
 		bool carry = F & FLAG_CARRY_MASK;
 		auto temp = A - reg - carry;
 		auto flag = FLAG_NEG_MASK;
@@ -61,8 +56,7 @@ namespace TKPEmu::Gameboy::Devices {
 		A = temp & 0xFF;
 		tTemp = 4;
 	}
-
-	inline void CPU::reg_and(RegisterType& reg) {
+	void CPU::reg_and(RegisterType& reg) {
 		auto temp = A & reg;
 		auto flag = FLAG_HCARRY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -70,8 +64,7 @@ namespace TKPEmu::Gameboy::Devices {
 		A = temp & 0xFF;
 		tTemp = 4;
 	}
-
-	inline void CPU::reg_add(RegisterType& reg) {
+	void CPU::reg_add(RegisterType& reg) {
 		auto temp = A + reg;
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -81,8 +74,7 @@ namespace TKPEmu::Gameboy::Devices {
 		A = temp & 0xFF;
 		tTemp = 4;
 	}
-
-	inline void CPU::reg_adc(RegisterType& reg) {
+	void CPU::reg_adc(RegisterType& reg) {
 		bool carry = F & FLAG_CARRY_MASK;
 		auto temp = A + reg + carry;
 		auto flag = FLAG_EMPTY_MASK;
@@ -93,8 +85,7 @@ namespace TKPEmu::Gameboy::Devices {
 		A = temp & 0xFF;
 		tTemp = 4;
 	}
-
-	inline void CPU::reg_cmp(RegisterType& reg) {
+	void CPU::reg_cmp(RegisterType& reg) {
 		auto temp = A - reg;
 		auto flag = FLAG_NEG_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -103,8 +94,7 @@ namespace TKPEmu::Gameboy::Devices {
 		F = flag;
 		tTemp = 4;
 	}
-
-	inline void CPU::reg_or(RegisterType& reg) {
+	void CPU::reg_or(RegisterType& reg) {
 		auto temp = A | reg;
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -112,8 +102,7 @@ namespace TKPEmu::Gameboy::Devices {
 		A = temp & 0xFF;
 		tTemp = 4;
 	}
-
-	inline void CPU::reg_xor(RegisterType& reg) {
+	void CPU::reg_xor(RegisterType& reg) {
 		auto temp = A ^ reg;
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -121,8 +110,21 @@ namespace TKPEmu::Gameboy::Devices {
 		A = temp & 0xFF;
 		tTemp = 4;
 	}
-
-	inline void CPU::hl_add(BigRegisterType& big_reg) {
+	void CPU::big_reg_inc(RegisterType& big_reg, RegisterType& small_reg) {
+		++small_reg;
+		if (small_reg == 0) {
+			++big_reg;
+		}
+		tTemp = 8;
+	}
+	void CPU::big_reg_dec(RegisterType& big_reg, RegisterType& small_reg) {
+		--small_reg;
+		if (small_reg == 0xFF) {
+			--big_reg;
+		}
+		tTemp = 8;
+	}
+	void CPU::hl_add(BigRegisterType& big_reg) {
 		uint16_t t = (H << 8) | L;
 		auto temp = t + big_reg;
 		auto flag = FLAG_EMPTY_MASK;
@@ -135,8 +137,7 @@ namespace TKPEmu::Gameboy::Devices {
 		L = temp & 0xFF;
 		tTemp = 8;
 	}
-
-	inline void CPU::bit_ch(RegisterType reg, unsigned shift) {
+	void CPU::bit_ch(RegisterType reg, unsigned shift) {
 		auto temp = reg & (1 << shift);
 		auto flag = FLAG_HCARRY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -144,13 +145,11 @@ namespace TKPEmu::Gameboy::Devices {
 		F |= flag;
 		tTemp = 8;
 	}
-
-	inline void CPU::bit_res(RegisterType& reg, unsigned shift) {
+	void CPU::bit_res(RegisterType& reg, unsigned shift) {
 		reg &= ~(1 << shift);
 		tTemp = 8;
 	}
-
-	inline void CPU::bit_swap(RegisterType& reg) {
+	void CPU::bit_swap(RegisterType& reg) {
 		auto temp = ((reg & 0xF0) >> 4) | ((reg & 0x0F) << 4);
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -158,8 +157,7 @@ namespace TKPEmu::Gameboy::Devices {
 		reg = temp & 0xFF;
 		tTemp = 8;
 	}
-
-	inline void CPU::bit_rrc(RegisterType& reg) {
+	void CPU::bit_rrc(RegisterType& reg) {
 		auto temp = (reg >> 1) + ((reg & 0x1) << 7) + ((reg & 0x1) << 8);
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -168,8 +166,7 @@ namespace TKPEmu::Gameboy::Devices {
 		reg = temp & 0xFF;
 		tTemp = 8;
 	}
-
-	inline void CPU::bit_rl(RegisterType& reg) {
+	void CPU::bit_rl(RegisterType& reg) {
 		bool carry = F & FLAG_CARRY_MASK;
 		auto temp = (reg << 1) + carry;
 		auto flag = FLAG_EMPTY_MASK;
@@ -179,8 +176,7 @@ namespace TKPEmu::Gameboy::Devices {
 		reg = temp & 0xFF;
 		tTemp = 8;
 	}
-
-	inline void CPU::bit_rr(RegisterType& reg) {
+	void CPU::bit_rr(RegisterType& reg) {
 		bool carry = F & FLAG_CARRY_MASK;
 		auto temp = (reg >> 1) + (carry << 7) + ((reg & 0x1) << 8);
 		auto flag = FLAG_EMPTY_MASK;
@@ -190,8 +186,7 @@ namespace TKPEmu::Gameboy::Devices {
 		reg = temp & 0xFF;
 		tTemp = 8;
 	}
-
-	inline void CPU::bit_sl(RegisterType& reg) {
+	void CPU::bit_sl(RegisterType& reg) {
 		auto temp = (reg << 1);
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -200,8 +195,7 @@ namespace TKPEmu::Gameboy::Devices {
 		reg = temp & 0xFF;
 		tTemp = 8;
 	}
-
-	inline void CPU::bit_sr(RegisterType& reg) {
+	void CPU::bit_sr(RegisterType& reg) {
 		auto temp = ((reg >> 1) | (reg & 0x80)) + ((reg & 0x1) << 8);
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -210,8 +204,7 @@ namespace TKPEmu::Gameboy::Devices {
 		reg = temp & 0xFF;
 		tTemp = 8;
 	}
-
-	inline void CPU::bit_srl(RegisterType& reg) {
+	void CPU::bit_srl(RegisterType& reg) {
 		auto temp = (reg >> 1) + ((reg & 0x1) << 8);
 		auto flag = FLAG_EMPTY_MASK;
 		flag |= ((temp & 0xFF) == 0) << FLAG_ZERO_SHIFT;
@@ -220,15 +213,13 @@ namespace TKPEmu::Gameboy::Devices {
 		reg = temp & 0xFF;
 		tTemp = 8;
 	}
-
-	inline void CPU::rst(RegisterType addr) {
+	void CPU::rst(RegisterType addr) {
 		SP -= 2;
 		bus_->WriteL(SP, PC);
 		PC = addr;
 		tTemp = 16;
 	}
-
-	inline void CPU::bit_set(RegisterType& reg, unsigned shift) {
+	void CPU::bit_set(RegisterType& reg, unsigned shift) {
 		reg |= 1 << shift;
 		tTemp = 8;
 	}
@@ -852,54 +843,29 @@ namespace TKPEmu::Gameboy::Devices {
 		tTemp = 12;
 	}
 	void CPU::INCBC() {
-		// TODO: big reg inc
-		C = (C + 1) & 0xFF;
-		if (!C) {
-			B = (B + 1) & 0xFF;
-		}
-		tTemp = 8;
+		big_reg_inc(B, C);
 	}
 	void CPU::INCDE() {
-		E = (E + 1) & 0xFF;
-		if (!E) {
-			D = (D + 1) & 0xFF;
-		}
-		tTemp = 8;
+		big_reg_inc(D, E);
 	}
 	void CPU::INCHL() {
-		L = (L + 1) & 0xFF;
-		if (!L) {
-			H = (H + 1) & 0xFF;
-		}
-		tTemp = 8;
+		big_reg_inc(H, L);
 	}
 	void CPU::INCSP() {
-		SP++;
+		++SP;
 		tTemp = 8;
 	}
 	void CPU::DECBC() {
-		C = (C - 1) & 0xFF;
-		if (C == 0xFF) {
-			B = (B - 1) & 0xFF;
-		}
-		tTemp = 8;
+		big_reg_dec(B, C);
 	}
 	void CPU::DECDE() {
-		E = (E - 1) & 0xFF;
-		if (E == 0xFF) {
-			D = (D - 1) & 0xFF;
-		}
-		tTemp = 8;
+		big_reg_dec(D, E);
 	}
 	void CPU::DECHL() {
-		L = (L - 1) & 0xFF;
-		if (L == 0xFF) {
-			H = (H - 1) & 0xFF;
-		}
-		tTemp = 8;
+		big_reg_dec(H, L);
 	}
 	void CPU::DECSP() {
-		SP = (SP - 1) & 0xFFFF;
+		--SP;
 		tTemp = 8;
 	}
 	void CPU::JP16() {
@@ -1101,7 +1067,7 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::RET() {
 		PC = bus_->ReadL(SP);
 		SP += 2;
-		tTemp = 12;
+		tTemp = 16;
 	}
 	void CPU::RETI() {
 		ime_ = true;
@@ -1174,10 +1140,13 @@ namespace TKPEmu::Gameboy::Devices {
 		tTemp = 8;
 	}
 	void CPU::DI() {
-		ime_ = false; tTemp = 4;
+		ime_ = false;
+		ime_scheduled_ = false;
+		tTemp = 4;
 	}
 	void CPU::EI() {
-		ime_ = true; tTemp = 4;
+		ime_scheduled_ = true;
+		tTemp = 4;
 	}
 	void CPU::RLA() {
 		bool carry = F & FLAG_CARRY_MASK;
@@ -1396,7 +1365,10 @@ namespace TKPEmu::Gameboy::Devices {
 		tTemp = 8;
 	}
 	void CPU::HALT() {
-		halt_ = true;
+		if (ime_scheduled_)
+			ime_ = true;
+		else
+			halt_ = true;
 	}
 	void CPU::XXX() {
 		stop_ = true;
@@ -2315,6 +2287,7 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 		TClock = 0;
 		halt_ = false; stop_ = false;
+		ime_ = false;
 		JOYP = 0b1110'1111;
 	}
 	int CPU::Update() {
@@ -2323,12 +2296,17 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 		(this->*Instructions[bus_->Read(PC++)].op)();
 		handle_interrupts();
+		if (ime_scheduled_)
+			ime_ = true;
 		TClock += tTemp;
 		TotalClocks += 1;
 		return tTemp;
 	}
 	void CPU::handle_interrupts() {
 		if (auto temp = IE & IF; ime_ && IF) {
+			//if (halt_) {
+			//	PC += 1;
+			//} TODO: fix halt_ime1_timing.gb (works in other emu)
 			// Starting from the lowest bit (highest priority) and going up,
 			// we are effectively queueing interrupts in case there's multiple.
 			for (int i = 0; i < 5; i++) {
