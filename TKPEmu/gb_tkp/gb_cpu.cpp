@@ -2336,6 +2336,9 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void CPU::handle_interrupts() {
 		if (auto temp = IE & IF; ime_ && IF) {
+			//if (halt_) {
+			//	PC += 1;
+			//} TODO: fix halt_ime1_timing.gb (works in other emu)
 			// Starting from the lowest bit (highest priority) and going up,
 			// we are effectively queueing interrupts in case there's multiple.
 			for (int i = 0; i < 5; i++) {
