@@ -2287,6 +2287,7 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 		TClock = 0;
 		halt_ = false; stop_ = false;
+		ime_ = false;
 		JOYP = 0b1110'1111;
 	}
 	int CPU::Update() {
