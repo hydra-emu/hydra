@@ -23,29 +23,44 @@ Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
 
 |Test| GameboyTKP |
 |--|--|
-| bits/mem_oam | ✅ |
-| bits/reg_f | ✅ |
-| bits/unused_hwio_GS | ✅ |
-| instr/daa | ✅ |
-| interrupts/ie_push | ❌ |
-| oam_dma/basic | ❌ |
-| oam_dma/reg_read | ✅ |
-| oam_dma/sources-GS | ❌ (needs MBC5)|
-| ppu/... | ❌ (untested)|
-| serial/... | ❌ (untested)|
-| timer/div_write | ✅ |
-| timer/rapid_toggle | ❌ |
-| timer/tim00 | ✅ |
-| timer/tim00_div_trigger | ✅ |
-| timer/tim01 | ❌ (Issue [#4](https://github.com/OFFTKP/TKPEmu/issues/4))|
-| timer/tim01_div_trigger | ✅ |
-| timer/tim10 | ✅ |
-| timer/tim10_div_trigger | ✅ |
-| timer/tim11 | ✅ |
-| timer/tim11_div_trigger | ✅ |
-| timer/tima_reload | ❌ |
-| timer/tima_write_reloading | ❌ |
-| timer/tma_write_reloading | ❌ |
+| acceptance/div_timing | ✅ |
+| acceptance/if_ie_registers | ✅ |
+| acceptance/boot_regs-dmgABC | ✅ |
+| acceptance/bits/mem_oam | ✅ |
+| acceptance/bits/reg_f | ✅ |
+| acceptance/bits/unused_hwio_GS | ✅ |
+| acceptance/instr/daa | ✅ |
+| acceptance/interrupts/ie_push | ❌ |
+| acceptance/oam_dma/basic | ❌ |
+| acceptance/oam_dma/reg_read | ✅ |
+| acceptance/ppu/... | ❌ (untested)|
+| acceptance/serial/... | ❌ (untested)|
+| acceptance/timer/div_write | ✅ |
+| acceptance/timer/rapid_toggle | ❌ |
+| acceptance/timer/tim00 | ✅ |
+| acceptance/timer/tim00_div_trigger | ❌ |
+| acceptance/timer/tim01 | ✅ |
+| acceptance/timer/tim01_div_trigger | ❌ |
+| acceptance/timer/tim10 | ✅ |
+| acceptance/timer/tim10_div_trigger | ❌ |
+| acceptance/timer/tim11 | ✅ |
+| acceptance/timer/tim11_div_trigger | ❌ |
+| acceptance/timer/tima_reload | ✅ |
+| acceptance/timer/tima_write_reloading | ❌ |
+| acceptance/timer/tma_write_reloading | ❌ |
+| emulator-only/mbc1/bits_bank1 | ✅ | 
+| emulator-only/mbc1/bits_bank2 | ✅ | 
+| emulator-only/mbc1/bits_mode | ✅ | 
+| emulator-only/mbc1/bits_ramg | ❌ | 
+| emulator-only/mbc1/multicart_rom_8Mb | ❌ | 
+| emulator-only/mbc1/ram_256kb | ❌ | 
+| emulator-only/mbc1/ram_64kb | ❌ | 
+| emulator-only/mbc1/rom_16Mb | ✅ | 
+| emulator-only/mbc1/rom_1Mb | ❌ (multicart) | 
+| emulator-only/mbc1/rom_2Mb | ❌ (multicart) | 
+| emulator-only/mbc1/rom_4Mb | ✅ | 
+| emulator-only/mbc1/rom_512kb | ❌ |
+| emulator-only/mbc1/rom_8Mb | ✅ | 
 
 **[mattcurie](https://github.com/mattcurrie)'s tests:**
 |Test|GameboyTKP  |

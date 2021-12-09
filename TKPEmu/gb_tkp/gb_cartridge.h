@@ -1,6 +1,7 @@
 #pragma once
 #ifndef TKP_GB_CARTRIDGE_H
 #define TKP_GB_CARTRIDGE_H
+// TODO: fix crashes when loading bad roms (utils)
 #include <string>
 #include <vector>
 #include <array>
