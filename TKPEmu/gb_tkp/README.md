@@ -1,13 +1,17 @@
 # GameboyTKP
 Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
 ## Features
-
+ - Customizable palette
  - Disassembler/Debugger with step/reset/pause functionality
  - Advanced breakpoints. You can create a breakpoint for a specific instruction with specific register values
  - Real time register values shown on disassembler
  - Trace logger
  - Save states (WIP)
  - Rewind functionality (WIP)
+## Images
+![Super Mario Land](./Images/sml.bmp)
+![Tetris](./Images/tet.bmp)
+
 ## Tests
 
 **[Blargg](https://github.com/gblargg)'s tests:**
