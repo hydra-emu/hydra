@@ -2294,7 +2294,6 @@ namespace TKPEmu::Gameboy::Devices {
 		bool queued = handle_interrupts();
 		if (halt_ && queued) {
 			halt_ = false; 
-			PC++;
 		}
 		if (ime_scheduled_)
 			ime_ = true;

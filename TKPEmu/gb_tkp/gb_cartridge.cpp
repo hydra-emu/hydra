@@ -16,7 +16,10 @@ namespace TKPEmu::Gameboy::Devices {
 				case CartridgeType::ROM_ONLY:
 				case CartridgeType::MBC1:
 				case CartridgeType::MBC1_RAM:
-				case CartridgeType::MBC1_RAM_BATTERY: {
+				case CartridgeType::MBC1_RAM_BATTERY:
+				case CartridgeType::MBC3:
+				case CartridgeType::MBC3_RAM:
+				case CartridgeType::MBC3_RAM_BATTERY: {
 					auto sz = GetRomSize();
 					romBanks.resize(sz);
 					for (int i = 0; i < sz; i++) {

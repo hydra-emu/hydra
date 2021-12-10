@@ -40,6 +40,37 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				break;
 			}
+			case CartridgeType::MBC3:
+			case CartridgeType::MBC3_RAM:
+			case CartridgeType::MBC3_RAM_BATTERY: {
+				if (address <= 0x1FFF) {
+					if ((data & 0b1111) == 0b1010) {
+						ram_enabled_ = true;
+						// TODO: enable writing to RTC mbc3 registers
+					}
+					else {
+						ram_enabled_ = false;
+					}
+				}
+				else if (address <= 0x3FFF) {
+					// BANK register 1 (TODO: this doesnt happen on mbc0?)
+					selected_rom_bank_ &= 0b1100000;
+					selected_rom_bank_ |= data & 0b11111;
+					selected_rom_bank_ %= rom_banks_size_;
+				}
+				else if (address <= 0x5FFF) {
+					// BANK register 2
+					selected_rom_bank_ &= 0b11111;
+					selected_rom_bank_ |= ((data & 0b11) << 5);
+					selected_rom_bank_ %= rom_banks_size_;
+					selected_ram_bank_ = data & 0b11;
+				}
+				else {
+					// MODE register
+					banking_mode_ = data & 0b1;
+				}
+				break;
+			}
 			default: {
 				return;
 			}
@@ -98,6 +129,23 @@ namespace TKPEmu::Gameboy::Devices {
 							if ((sel & 0b11111) == 0) {
 								// In 4000-7FFF, automatically maps to next addr if addr chosen is 00/20/40/60
 								// TODO: fix multicart roms
+								sel += 1;
+							}
+							return (rom_banks_[sel])[address % 0x4000];
+						}
+						break;
+					}
+					case CartridgeType::MBC3:
+					case CartridgeType::MBC3_RAM:
+					case CartridgeType::MBC3_RAM_BATTERY: {
+						if (address <= 0x3FFF) {
+							auto sel = (banking_mode_ ? selected_rom_bank_ & 0b1100000 : 0) % cartridge_->GetRomSize();
+							return (rom_banks_[sel])[address % 0x4000];
+						}
+						else {
+							auto sel = selected_rom_bank_ % cartridge_->GetRomSize();
+							if (sel == 0) {
+								// Accessing 20/40/60 is supported in mbc3
 								sel += 1;
 							}
 							return (rom_banks_[sel])[address % 0x4000];
