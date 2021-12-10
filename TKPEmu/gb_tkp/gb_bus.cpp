@@ -14,7 +14,7 @@ namespace TKPEmu::Gameboy::Devices {
 			case CartridgeType::MBC1_RAM:
 			case CartridgeType::MBC1_RAM_BATTERY: {
 				if (address <= 0x1FFF) {
-					if (data == 0xA) {
+					if ((data & 0b1111) == 0b1010) {
 						ram_enabled_ = true;
 					}
 					else {
@@ -122,6 +122,7 @@ namespace TKPEmu::Gameboy::Devices {
 					auto sel = (banking_mode_ ? selected_ram_bank_ : 0) % cartridge_->GetRamSize();
 					return (ram_banks_[sel])[address % 0x2000];
 				} else {
+					unused_mem_area_ = 0xFF;
 					return unused_mem_area_;
 				}
 			}
