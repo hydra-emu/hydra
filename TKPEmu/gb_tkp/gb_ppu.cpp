@@ -67,7 +67,7 @@ namespace TKPEmu::Gameboy::Devices {
 		LY = 0x90;
 		LCDC = 0b1001'0001;
 		STAT = 0b1000'0000;
-		next_stat_mode = 2;
+		next_stat_mode = 3;
 		clock_ = 0;
 		clock_target_ = 0;
 	}
