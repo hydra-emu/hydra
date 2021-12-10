@@ -41,17 +41,11 @@ namespace TKPEmu::Gameboy::Devices {
 		if (loaded) {
 			return (CartridgeType)header_.cartridgeType;
 		}
+		return CartridgeType::ERROR;
 	}
 	// Returns the number of 8KB RAM banks
-	// TODO: constexpr, return from constexpr array
 	int Cartridge::GetRamSize() {
-		switch (header_.ramSize) {
-			case 0: return 0;
-			case 2: return 1;
-			case 3: return 4;
-			case 4: return 16;
-			case 5: return 8;
-		}
+		return ram_sizes_[header_.ramSize];
 	}
 	// Returns the number of 16kb ROM banks
 	int Cartridge::GetRomSize() {

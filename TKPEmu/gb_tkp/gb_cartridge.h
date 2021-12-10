@@ -8,6 +8,7 @@
 #define ENTRY_POINT 0x100
 namespace TKPEmu::Gameboy::Devices {
 	enum class CartridgeType {
+		ERROR = 0x4,
 		ROM_ONLY = 0x0,
 		MBC1 = 0x1,
 		MBC1_RAM = 0x2,
@@ -49,6 +50,7 @@ namespace TKPEmu::Gameboy::Devices {
 			char ramSize;
 			char unusedData3[6];
 		} header_;
+		static constexpr std::array<int, 6> ram_sizes_ { 0, 0, 1, 4, 16, 8 };
 		bool loaded;
 	public:
 		void Load(const std::string& fileName, std::vector<std::array<uint8_t, 0x4000>>& romBanks, std::vector<std::array<uint8_t, 0x2000>>& ramBanks);

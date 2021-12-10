@@ -152,6 +152,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 			}
 		}
+		return unused_mem_area_;
 	}
 
 	uint8_t Bus::Read(uint16_t address) {

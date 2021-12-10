@@ -180,12 +180,12 @@ namespace TKPEmu::Gameboy {
 		static const uint8_t joy_action = 0b1101'1111;
 		if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key); it_dir != direction_keys_.end()) {
 			int index = it_dir - direction_keys_.begin();
-			bus_.DirectionKeys = (~(1UL << index)) & joy_direction;
+			bus_.DirectionKeys &= (~(1UL << index));// & joy_direction;
 			interrupt_flag_ |= IFInterrupt::JOYPAD;
 		}
 		if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key); it_dir != action_keys_.end()) {
 			int index = it_dir - action_keys_.begin();
-			bus_.ActionKeys = (~(1UL << index)) & joy_action;
+			bus_.ActionKeys &= (~(1UL << index));// & joy_action;
 			interrupt_flag_ |= IFInterrupt::JOYPAD;
 		}
 	}
@@ -194,11 +194,11 @@ namespace TKPEmu::Gameboy {
 		static const uint8_t joy_action = 0b1101'1111;
 		if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key); it_dir != direction_keys_.end()) {
 			int index = it_dir - direction_keys_.begin();
-			bus_.DirectionKeys = (1UL << index) | joy_direction;
+			bus_.DirectionKeys |= (1UL << index);// | joy_direction;
 		}
 		if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key); it_dir != action_keys_.end()) {
 			int index = it_dir - action_keys_.begin();
-			bus_.ActionKeys = (1UL << index) | joy_action;
+			bus_.ActionKeys |= (1UL << index);// | joy_action;
 		}
 	}
 	void Gameboy::load_file(std::string path) {
