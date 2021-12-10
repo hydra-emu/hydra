@@ -2291,31 +2291,37 @@ namespace TKPEmu::Gameboy::Devices {
 		JOYP = 0b1110'1111;
 	}
 	int CPU::Update() {
-		if (halt_) {
-			PC--;
+		bool queued = handle_interrupts();
+		if (halt_ && queued) {
+			halt_ = false; 
+			PC++;
 		}
-		(this->*Instructions[bus_->Read(PC++)].op)();
-		handle_interrupts();
 		if (ime_scheduled_)
 			ime_ = true;
+		if (halt_) {
+			return 4;
+		}
+		(this->*Instructions[bus_->Read(PC++)].op)();
+
 		TClock += tTemp;
 		TotalClocks += 1;
 		return tTemp;
 	}
-	void CPU::handle_interrupts() {
+	bool CPU::handle_interrupts() {
 		if (auto temp = IE & IF; ime_ && IF) {
-			//if (halt_) {
-			//	PC += 1;
-			//} TODO: fix halt_ime1_timing.gb (works in other emu)
 			// Starting from the lowest bit (highest priority) and going up,
 			// we are effectively queueing interrupts in case there's multiple.
 			for (int i = 0; i < 5; i++) {
 				if (auto bit = (temp >> i) & 0x1; bit) {
 					execute_interrupt(i);
-					return;
+					return true;
 				}
 			}
 		}
+		if (IF & IE) 
+			return true;
+		else 
+			return false;
 	}
 	void CPU::execute_interrupt(int bit) {
 		ime_ = false;

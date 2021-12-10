@@ -87,7 +87,7 @@ namespace TKPEmu::Gameboy::Devices {
 		void bit_sr(RegisterType& reg);
 		void bit_srl(RegisterType& reg);
 		void rst(RegisterType addr);
-		void handle_interrupts();
+		bool handle_interrupts();
 		void execute_interrupt(int bit);
 		void update_timers(int cycles);
 		int get_clk_freq();
