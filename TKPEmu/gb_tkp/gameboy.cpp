@@ -187,7 +187,9 @@ namespace TKPEmu::Gameboy {
 			uint8_t old_if = interrupt_flag_;
 			int clk = cpu_.Update();
 			if (timer_.Update(clk, old_if)) {
-				cpu_.halt_ = false;
+				if (cpu_.halt_) {
+					cpu_.halt_ = false;
+				}
 			}
 			ppu_.Update(clk);
 			log_state();

@@ -1366,6 +1366,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void CPU::HALT() {
 		halt_ = true;
+		tTemp = 4;
 	}
 	void CPU::XXX() {
 		stop_ = true;
@@ -2289,16 +2290,14 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	int CPU::Update() {
 		bool queued = handle_interrupts();
-		if (halt_ && queued) {
-			halt_ = false; 
-		}
 		if (ime_scheduled_)
 			ime_ = true;
-		if (halt_) {
+		if (halt_ && queued) {
+			halt_ = false; 
+		} else if (halt_) {
 			return 4;
 		}
 		(this->*Instructions[bus_->Read(PC++)].op)();
-
 		TClock += tTemp;
 		TotalClocks += 1;
 		return tTemp;
