@@ -577,6 +577,7 @@ namespace TKPEmu::Graphics {
         if (!load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_)){
             std::cerr << "Background image seems to be missing. Default background is going to be empty." << std::endl;
         }
+        // TODO: design better icon
         SDL_Surface* icon = SDL_LoadBMP(std::string(std::filesystem::current_path().string() + "/Resources/Images/icon.bmp").c_str());
         SDL_SetWindowIcon(window_ptr_.get(), icon);
         SDL_FreeSurface(icon);
