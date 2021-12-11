@@ -56,6 +56,7 @@ namespace TKPEmu::Gameboy::Devices {
         };
         Bus(std::vector<DisInstr>& instrs);
         uint8_t Read(uint16_t address);
+        uint8_t ReadSafe(uint16_t address);
         uint16_t ReadL(uint16_t address);
         uint8_t& GetReference(uint16_t address);
         void Write(uint16_t address, uint8_t data);

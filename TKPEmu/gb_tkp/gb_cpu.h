@@ -14,7 +14,6 @@ namespace TKPEmu::Gameboy::Devices {
 	class CPU {
 	private:
 		Bus* bus_;
-		bool ime_ = false;
 		bool ime_scheduled_ = false;
 		int tTemp = 0;
 		int div_reset_index_ = -1;
@@ -95,12 +94,13 @@ namespace TKPEmu::Gameboy::Devices {
 	public:
 		CPU(Bus* bus);
 		bool halt_ = false;
+		bool ime_ = false;
 		struct Instruction {
 			std::string name;
 			void(CPU::* op)() = nullptr;
+			// TODO: remove instr times, use the ones in gb_addresses instead
 			int skip = 0;
 		};
-		// TODO: remove instr times, use the ones in gb_addresses instead
 		std::array<Instruction, 0x100> Instructions = { {
 			{ "NOP" , &CPU::NOP }, { "LDBC16" , &CPU::LDBC16 , 2}, { "LDBCA" , &CPU::LDBCA }, { "INCBC" , &CPU::INCBC }, { "INCB" , &CPU::INCB }, { "DECB" , &CPU::DECB }, { "LDB8" , &CPU::LDB8 , 1}, { "RLCA" , &CPU::RLCA }, { "LD16SP" , &CPU::LD16SP }, { "ADDHLBC" , &CPU::ADDHLBC }, { "LDABC" , &CPU::LDABC }, { "DECBC" , &CPU::DECBC }, { "INCC" , &CPU::INCC }, { "DECC" , &CPU::DECC }, { "LDC8" , &CPU::LDC8 , 1}, { "RRCA" , &CPU::RRCA },
 			{ "STOP" , &CPU::STOP }, { "LDDE16" , &CPU::LDDE16 , 2}, { "LDDEA" , &CPU::LDDEA }, { "INCDE" , &CPU::INCDE }, { "INCD" , &CPU::INCD }, { "DECD" , &CPU::DECD }, { "LDD8" , &CPU::LDD8 , 1}, { "RLA" , &CPU::RLA }, { "JR8" , &CPU::JR8 , 1}, { "ADDHLDE" , &CPU::ADDHLDE }, { "LDADE" , &CPU::LDADE }, { "DECDE" , &CPU::DECDE }, { "INCE" , &CPU::INCE }, { "DECE" , &CPU::DECE }, { "LDE8" , &CPU::LDE8 , 1}, { "RRA" , &CPU::RRA },
