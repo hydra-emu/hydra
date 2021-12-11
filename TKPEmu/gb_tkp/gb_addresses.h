@@ -8,11 +8,13 @@ using RegisterType = uint8_t;
 using BigRegisterType = uint16_t;
 using DisInstr = TKPEmu::Tools::DisInstr;
 using GBBPArguments = TKPEmu::Gameboy::Utils::GBBPArguments;
-constexpr size_t LogTypeSize = 10;
+constexpr size_t LogTypeSize = 17;
 enum class LogType {
+    InstrName, InstrNum,
     A, B, C, D, 
     E, F, H, L,
-    PC, SP,
+    PC, SP, LY,
+    IF, IE, IME, HALT
 };
 enum LCDCFlag {
     BG_ENABLE = 1 << 0,
@@ -64,14 +66,18 @@ const static std::unordered_map<Hash, ExpectedResult> PassedTestMap {
     { "c57eada752f746347951f79c828391b9", { 0, "f0553923b341e4e57f091f1ce8cc8cf0" } },
 };
 constexpr static std::array<LogType, LogTypeSize> LogTypeMap {
+    LogType::InstrName, LogType::InstrNum,
     LogType::A, LogType::B, LogType::C, LogType::D,
     LogType::E, LogType::F, LogType::H, LogType::L,
-    LogType::PC, LogType::SP
+    LogType::PC, LogType::SP, LogType::LY, LogType::IF,
+    LogType::IE, LogType::IME, LogType::HALT
 };
 const static std::array<std::string, LogTypeSize> LogTypeNames {
-    "A   ", "B   ", "C   ", "D   ",
-    "E   ", "F   ", "H   ", "L   ",
-    "PC  ", "SP  "
+    "Instr. ", "Opcode ",
+    "A      ", "B      ", "C      ", "D      ",
+    "E      ", "F      ", "H      ", "L      ",
+    "PC     ", "SP     ", "LY     ", "IF     ",
+    "IE     ", "IME    ", "HALT   ",
 };
 constexpr std::array<uint8_t, 0x100> InstrTimes = {
     0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,

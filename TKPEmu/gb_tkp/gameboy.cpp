@@ -34,8 +34,17 @@ namespace TKPEmu::Gameboy {
 	void Gameboy::v_log_state() {
 		*ofstream_ptr_ << std::setfill('0');
 		bool first_type = true;
+		int inst = bus_.ReadSafe(cpu_.PC);
 		for (const auto& t : *log_types_ptr_) {
 			switch (t) {
+				case LogType::InstrName: {
+					*ofstream_ptr_ << std::setfill(' ') << std::setw(8) << cpu_.Instructions[inst].name << std::setfill('0');
+					break;
+				}
+				case LogType::InstrNum: {
+					*ofstream_ptr_ << std::setw(2) << std::hex << inst;
+					break;
+				}
 				case LogType::PC: {
 					*ofstream_ptr_ << "PC:" << std::setw(4) << std::hex <<  cpu_.PC;
 					break;
@@ -74,6 +83,26 @@ namespace TKPEmu::Gameboy {
 				}
 				case LogType::L: {
 					*ofstream_ptr_ << "L:" << std::setw(2) << std::hex << (int)cpu_.L;
+					break;
+				}
+				case LogType::LY: {
+					*ofstream_ptr_ << "LY:" << std::setw(2) << std::hex << (int)cpu_.LY;
+					break;
+				}
+				case LogType::IF: {
+					*ofstream_ptr_ << "IF:" << std::setw(2) << std::hex << (int)cpu_.IF;
+					break;
+				}
+				case LogType::IE: {
+					*ofstream_ptr_ << "IE:" << std::setw(2) << std::hex << (int)cpu_.IE;
+					break;
+				}
+				case LogType::IME: {
+					*ofstream_ptr_ << "IME:" << (int)cpu_.ime_;
+					break;
+				}
+				case LogType::HALT: {
+					*ofstream_ptr_ << "HALT:" << (int)cpu_.halt_;
 					break;
 				}
 			}
@@ -158,7 +187,9 @@ namespace TKPEmu::Gameboy {
 			uint8_t old_if = interrupt_flag_;
 			int clk = cpu_.Update();
 			if (timer_.Update(clk, old_if)) {
-				cpu_.halt_ = false;
+				if (cpu_.halt_) {
+					cpu_.halt_ = false;
+				}
 			}
 			ppu_.Update(clk);
 			log_state();

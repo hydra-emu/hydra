@@ -205,7 +205,10 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 
 	uint8_t Bus::Read(uint16_t address) {
-		// Making copy so you can't write to this
+		return ReadSafe(address);
+	}
+	uint8_t Bus::ReadSafe(uint16_t address) {
+		// ReadSafe does not alter the machine state
 		switch(address) {
 			case addr_joy: {
 				if (action_key_mode_) { 
