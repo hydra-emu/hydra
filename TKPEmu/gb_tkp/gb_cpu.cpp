@@ -1365,10 +1365,7 @@ namespace TKPEmu::Gameboy::Devices {
 		tTemp = 8;
 	}
 	void CPU::HALT() {
-		if (ime_scheduled_)
-			ime_ = true;
-		else
-			halt_ = true;
+		halt_ = true;
 	}
 	void CPU::XXX() {
 		stop_ = true;
