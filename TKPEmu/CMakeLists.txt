@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 project(TKPEmu VERSION 0.1.0)
 configure_file(main.cpp main.cpp)
 configure_file(background.jpg ${CMAKE_CURRENT_BINARY_DIR}/Resources/Images/background.jpg COPYONLY)
+configure_file(icon.bmp ${CMAKE_CURRENT_BINARY_DIR}/Resources/Images/icon.bmp COPYONLY)
 # TKPEmu uses several C++20 features
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
