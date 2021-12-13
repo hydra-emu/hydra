@@ -69,6 +69,7 @@ namespace TKPEmu {
 		}
     }
 	void Emulator::LoadFromFile(std::string path) {
+		CurrentFilename = std::filesystem::path(path).filename();
 		std::ifstream t(path);
 		std::stringstream buffer;
 		buffer << t.rdbuf();

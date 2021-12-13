@@ -52,6 +52,7 @@ namespace TKPEmu {
 		TKPImage EmulatorImage{};
 		std::string RomHash;
 		std::string ScreenshotHash;
+		std::string CurrentFilename;
 	protected:
 		// To be placed at the end of your update function
 		// Override v_log_state() to change what it does, log_state() will do the right

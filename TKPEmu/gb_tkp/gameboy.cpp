@@ -141,9 +141,10 @@ namespace TKPEmu::Gameboy {
 				update();
 				if (cpu_.TotalClocks == ScreenshotClocks) {
 					if (ScreenshotHash == GetScreenshotHash()) {
-						std::cout << "[" << color_success << RomHash << color_reset "]: Passed" << std::endl;
+						// TODO: Print success protected function
+						std::cout << "[" << color_success << CurrentFilename << color_reset "]: Passed" << std::endl;
 					} else {
-						std::cout << "[" << color_error << RomHash << color_reset "]: Failed" << std::endl;
+						std::cout << "[" << color_error << CurrentFilename << color_reset "]: Failed" << std::endl;
 					}
 					Stopped = true;
 				}

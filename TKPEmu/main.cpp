@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
 			emu->FastMode = true;
 			emu->LoadFromFile(parameters.RomFile);
 			if (!PassedTestMap.contains(emu->RomHash)) {
-				std::cerr << color_error "Error: " color_reset "This rom does not have a hash in emulator_results" << std::endl;
+				std::cerr << "[" color_error << emu->CurrentFilename << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
 				return 1;
 			}
 			auto result = PassedTestMap.at(emu->RomHash);
