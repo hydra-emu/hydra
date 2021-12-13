@@ -58,6 +58,7 @@ namespace TKPEmu::Gameboy {
 		void v_log_state() override;
 		void start_normal() override;
 		void start_debug() override;
+		void start_console() override;
 		void reset_normal() override;
 		void reset_skip() override;
 		void load_file(std::string path) override;

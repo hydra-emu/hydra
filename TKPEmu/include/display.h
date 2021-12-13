@@ -14,6 +14,7 @@
 #include "TKPImage.h"
 #include "settings_manager.h"
 #include "base_application.h"
+#include "emulator_factory.h"   
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__MINGW32__) && !defined(__clang__)
 #define IM_FMTARGS(FMT)             __attribute__((format(gnu_printf, FMT, FMT+1)))
@@ -117,6 +118,7 @@ namespace TKPEmu::Graphics {
         TKPImage background_image_;
         GLuint frame_buffer_;
         ImGui::FileBrowser file_browser_;
+        EmuType emulator_type_ = EmuType::None;
         std::unique_ptr<Emulator> emulator_;
         // Applications loaded according to the emulator (such as disassembler, tracelogger, other plugins etc)
         std::vector<std::unique_ptr<IMApplication>> emulator_tools_;
@@ -165,6 +167,7 @@ namespace TKPEmu::Graphics {
         void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
 
         void load_rom(std::filesystem::path path);
+        void setup_emulator_specific();
         void setup_gameboy_palette();
         void load_loop();
         void load_theme();

@@ -50,16 +50,20 @@ namespace TKPEmu {
 		std::mutex DebugUpdateMutex;
 		std::thread UpdateThread;
 		TKPImage EmulatorImage{};
+		std::string RomHash;
+		std::string ScreenshotHash;
 	protected:
 		// To be placed at the end of your update function
 		// Override v_log_state() to change what it does, log_state() will do the right
 		// checks for you
 		void log_state();
 		std::unique_ptr<std::ofstream> ofstream_ptr_;
+		EmuStartOptions start_options = EmuStartOptions::Console;
 	private:
 		virtual void v_log_state();
 		virtual void start_normal();
 		virtual void start_debug();
+		virtual void start_console();
 		virtual void reset_normal();
 		virtual void reset_skip();
 		virtual void update();
@@ -70,7 +74,6 @@ namespace TKPEmu {
 		bool logging_ = false;
 		bool log_changed_ = false;
 		std::string log_filename_;
-		std::string rom_hash_;
 	};
 }
 #endif

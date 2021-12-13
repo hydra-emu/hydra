@@ -4,6 +4,7 @@
 #include "../glad/glad/glad.h"
 #include "gameboy.h"
 #include "../lib/md5.h"
+#include "../include/console_colors.h"
 namespace TKPEmu::Gameboy {
 	Gameboy::Gameboy() : 
 		bus_(Instructions),
@@ -12,18 +13,18 @@ namespace TKPEmu::Gameboy {
 		timer_(&bus_),
 		joypad_(bus_.GetReference(addr_joy)),
 		interrupt_flag_(bus_.GetReference(addr_if))
-	{
-		init_image();
-	}
+	{}
 	Gameboy::Gameboy(GameboyKeys dirkeys, GameboyKeys actionkeys) :
 		Gameboy()
 	{
 		direction_keys_ = std::move(dirkeys);
 		action_keys_ = std::move(actionkeys);
+		init_image();
 	}
 	Gameboy::~Gameboy() {
 		Stopped.store(true);
-		glDeleteTextures(1, &EmulatorImage.texture);
+		if (start_options != EmuStartOptions::Console)
+			glDeleteTextures(1, &EmulatorImage.texture);
 	}
 	void Gameboy::SetLogTypes(std::unique_ptr<std::vector<LogType>> types_ptr) {
 		log_types_ptr_ = std::move(types_ptr);
@@ -126,6 +127,28 @@ namespace TKPEmu::Gameboy {
 		};
 		UpdateThread = std::thread(func);
 		UpdateThread.detach();
+	}
+	void Gameboy::start_console() {
+		if (ScreenshotClocks == 0) {
+			std::cerr << color_error "Error: " color_reset "ScreenshotClocks not specified in emulator_results for this rom" << std::endl;
+			return;
+		}
+		Paused = false;
+		Stopped = false;
+		Reset();
+		while (!Stopped.load()) {
+			if (!Paused.load()) {
+				update();
+				if (cpu_.TotalClocks == ScreenshotClocks) {
+					if (ScreenshotHash == GetScreenshotHash()) {
+						std::cout << "[" << color_success << RomHash << color_reset "]: Passed" << std::endl;
+					} else {
+						std::cout << "[" << color_error << RomHash << color_reset "]: Failed" << std::endl;
+					}
+					Stopped = true;
+				}
+			}
+		}
 	}
 	void Gameboy::start_debug() {
 		auto func = [this]() {

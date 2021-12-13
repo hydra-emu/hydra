@@ -52,14 +52,15 @@ namespace TKPEmu {
 		exit(1);
     }
     void Emulator::Start(EmuStartOptions start_mode) { 
+		start_options = start_mode;
         switch (start_mode) {
 			case EmuStartOptions::Normal: {
 				start_normal();
 				break;
 			}
 			case EmuStartOptions::Console: {
-				FastMode = true;
-				[[fallthrough]];
+				start_console();
+				break;
 			}
 			case EmuStartOptions::Debug: {
 				start_debug();
@@ -71,8 +72,8 @@ namespace TKPEmu {
 		std::ifstream t(path);
 		std::stringstream buffer;
 		buffer << t.rdbuf();
-		rom_hash_ = md5(buffer.str());
-		std::cout << "Loading " << path << " with hash " << rom_hash_ << std::endl;
+		RomHash = md5(buffer.str());
+		std::cout << "Loading " << path << " with hash " << RomHash << std::endl;
 		load_file(path);
 	}
     void Emulator::Reset() {
@@ -122,6 +123,10 @@ namespace TKPEmu {
         std::cerr << "start_debug was not implemented for this emulator" << std::endl;
 		exit(1);
     }
+	void Emulator::start_console() {
+		std::cerr << "start_console was not implemented for this emulator" << std::endl;
+		exit(1);
+	}
 	void Emulator::reset_normal() {
 		std::cerr << "reset_normal was not implemented for this emulator" << std::endl;
 		exit(1);
