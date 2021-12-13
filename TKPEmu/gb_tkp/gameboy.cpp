@@ -4,6 +4,7 @@
 #include "../glad/glad/glad.h"
 #include "gameboy.h"
 #include "../lib/md5.h"
+#include "../include/console_colors.h"
 namespace TKPEmu::Gameboy {
 	Gameboy::Gameboy() : 
 		bus_(Instructions),
@@ -12,18 +13,18 @@ namespace TKPEmu::Gameboy {
 		timer_(&bus_),
 		joypad_(bus_.GetReference(addr_joy)),
 		interrupt_flag_(bus_.GetReference(addr_if))
-	{
-		init_image();
-	}
+	{}
 	Gameboy::Gameboy(GameboyKeys dirkeys, GameboyKeys actionkeys) :
 		Gameboy()
 	{
 		direction_keys_ = std::move(dirkeys);
 		action_keys_ = std::move(actionkeys);
+		init_image();
 	}
 	Gameboy::~Gameboy() {
 		Stopped.store(true);
-		glDeleteTextures(1, &EmulatorImage.texture);
+		if (start_options != EmuStartOptions::Console)
+			glDeleteTextures(1, &EmulatorImage.texture);
 	}
 	void Gameboy::SetLogTypes(std::unique_ptr<std::vector<LogType>> types_ptr) {
 		log_types_ptr_ = std::move(types_ptr);
@@ -127,6 +128,28 @@ namespace TKPEmu::Gameboy {
 		UpdateThread = std::thread(func);
 		UpdateThread.detach();
 	}
+	void Gameboy::start_console() {
+		if (ScreenshotClocks == 0) {
+			std::cerr << color_error "Error: " color_reset "ScreenshotClocks not specified in emulator_results for this rom" << std::endl;
+			return;
+		}
+		Paused = false;
+		Stopped = false;
+		Reset();
+		while (!Stopped.load()) {
+			if (!Paused.load()) {
+				update();
+				if (cpu_.TotalClocks == ScreenshotClocks) {
+					if (ScreenshotHash == GetScreenshotHash()) {
+						std::cout << "[" << color_success << RomHash << color_reset "]: Passed" << std::endl;
+					} else {
+						std::cout << "[" << color_error << RomHash << color_reset "]: Failed" << std::endl;
+					}
+					Stopped = true;
+				}
+			}
+		}
+	}
 	void Gameboy::start_debug() {
 		auto func = [this]() {
 			std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
@@ -180,15 +203,20 @@ namespace TKPEmu::Gameboy {
 		ppu_.Reset();
 	}
 	void Gameboy::update() {
+		static bool skip_next = false;
 		if ((cpu_.TClock / 2) < cpu_.MaxCycles || FastMode) {
 			if (cpu_.PC == 0x100) {
 				bus_.BiosEnabled = false;
 			}
 			uint8_t old_if = interrupt_flag_;
-			int clk = cpu_.Update();
+			int clk = 0;
+			if (!skip_next)
+				clk = cpu_.Update();	
+			skip_next = false;
 			if (timer_.Update(clk, old_if)) {
 				if (cpu_.halt_) {
 					cpu_.halt_ = false;
+					skip_next = true;
 				}
 			}
 			ppu_.Update(clk);
@@ -274,7 +302,8 @@ namespace TKPEmu::Gameboy {
 		if (bp.PC_using) { register_checks.push_back([this, gbbp = bp.PC_value]() { return cpu_.PC == gbbp; }); }
 		if (bp.SP_using) { register_checks.push_back([this, gbbp = bp.SP_value]() { return cpu_.SP == gbbp; }); }
 		if (bp.SP_using) { register_checks.push_back([this, gbbp = bp.SP_value]() { return cpu_.SP == gbbp; }); }
-		if (bp.Ins_using) { register_checks.push_back([this, gbbp = bp.Ins_value]() { return (bus_.Read(cpu_.PC)) == gbbp; }); }
+		if (bp.Ins_using) { register_checks.push_back([this, gbbp = bp.Ins_value]() { return (bus_.ReadSafe(cpu_.PC)) == gbbp; }); }
+		if (bp.Clocks_using) { register_checks.push_back([this, gbbp = bp.Clocks_value]() { return cpu_.TotalClocks == gbbp; }); }
 		auto lamb = [rc = std::move(register_checks)]() {
 			for (auto& check : rc) {
 				if (!check()) {

@@ -7,7 +7,6 @@
 #include "../lib/stb_image.h"
 #include "../include/display.h"
 #include "../include/disassembly_instr.h"
-#include "../include/emulator_factory.h"
 #include "../gb_tkp/gb_disassembler.h"
 #include "../gb_tkp/gb_tracelogger.h"
 
@@ -150,6 +149,7 @@ namespace TKPEmu::Graphics {
                         << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[0][1] * 255.0f) & 0xFF)
                         << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[0][2] * 255.0f) & 0xFF);
                     settings_.at("Gameboy.color0") = color_stream.str();
+                    setup_emulator_specific();
                 }
                 ImGui::SameLine();
                 if (ImGui::ColorEdit3("Color 2", gb_palettes_[1].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
@@ -159,6 +159,7 @@ namespace TKPEmu::Graphics {
                         << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[1][1] * 255.0f) & 0xFF)
                         << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[1][2] * 255.0f) & 0xFF);
                     settings_.at("Gameboy.color1") = color_stream.str();
+                    setup_emulator_specific();
                 }
                 ImGui::SameLine();
                 if (ImGui::ColorEdit3("Color 3", gb_palettes_[2].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
@@ -168,6 +169,7 @@ namespace TKPEmu::Graphics {
                         << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[2][1] * 255.0f) & 0xFF)
                         << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[2][2] * 255.0f) & 0xFF);
                     settings_.at("Gameboy.color2") = color_stream.str();
+                    setup_emulator_specific();
                 }
                 ImGui::SameLine();
                 if (ImGui::ColorEdit3("Color 4", gb_palettes_[3].data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel)) {
@@ -177,6 +179,7 @@ namespace TKPEmu::Graphics {
                         << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[3][1] * 255.0f) & 0xFF)
                         << std::hex << std::setw(2) << (static_cast<int>(gb_palettes_[3][2] * 255.0f) & 0xFF);
                     settings_.at("Gameboy.color3") = color_stream.str();
+                    setup_emulator_specific();
                 }
                 ImGui::SameLine();
                 ImGui::TextDisabled("(?)");
@@ -485,16 +488,14 @@ namespace TKPEmu::Graphics {
             emulator_->CloseAndWait();
             emulator_.reset();
         }
-        auto type = EmulatorFactory::GetEmulatorType(path);
-        emulator_ = TKPEmu::EmulatorFactory::Create(type, gb_keys_directional_, gb_keys_action_);
-        TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), type);
-        // TODO: move setup_gameboy_palette elsewhere
-        setup_gameboy_palette();
+        emulator_type_ = EmulatorFactory::GetEmulatorType(path);
+        emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, gb_keys_directional_, gb_keys_action_);
+        TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), emulator_type_);
+        setup_emulator_specific();
         rom_loaded_ = true;
         rom_paused_ = debug_mode_;
         emulator_->SkipBoot = skip_boot_;
         emulator_->FastMode = fast_mode_;
-        emulator_->Paused.store(rom_paused_);
         emulator_->LoadFromFile(path.string());
         EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
@@ -549,7 +550,15 @@ namespace TKPEmu::Graphics {
     bool Display::is_rom_loaded_and_debugmode() {
         return rom_loaded_ && debug_mode_;
     }
-
+    void Display::setup_emulator_specific() {
+        // Emulator specific options that are display related
+        switch (emulator_type_) {
+            case EmuType::Gameboy: {
+                setup_gameboy_palette();
+                break;
+            }
+        }
+    }
     void Display::setup_gameboy_palette() {
         if (emulator_ != nullptr) {
             using Gameboy = TKPEmu::Gameboy::Gameboy;
@@ -577,6 +586,10 @@ namespace TKPEmu::Graphics {
         if (!load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_)){
             std::cerr << "Background image seems to be missing. Default background is going to be empty." << std::endl;
         }
+        // TODO: design better icon
+        SDL_Surface* icon = SDL_LoadBMP(std::string(std::filesystem::current_path().string() + "/Resources/Images/icon.bmp").c_str());
+        SDL_SetWindowIcon(window_ptr_.get(), icon);
+        SDL_FreeSurface(icon);
         file_browser_.SetWindowSize(300, 300);
     }
     void Display::load_theme() {

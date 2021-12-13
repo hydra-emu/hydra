@@ -15,6 +15,7 @@ namespace TKPEmu::Gameboy::Utils {
 		bool PC_using = false; uint16_t PC_value = 0;
 		bool SP_using = false; uint16_t SP_value = 0;
 		bool Ins_using = false; uint16_t Ins_value = 0;
+		bool Clocks_using = false; unsigned long long Clocks_value;
 	};
 	struct GameboyBreakpoint {
 	public:
@@ -48,6 +49,7 @@ namespace TKPEmu::Gameboy::Utils {
 				if (Args.PC_using) { ss << "PC=" << std::hex << std::setw(4) << Args.PC_value << "&&"; }
 				if (Args.SP_using) { ss << "SP=" << std::hex << std::setw(4) << Args.SP_value << "&&"; BPFromTable = false; }
 				if (Args.Ins_using) { ss << "Ins=" << std::hex << std::setw(2) << Args.Ins_value << "&&"; BPFromTable = false; }
+				if (Args.Clocks_using) { ss << "Clocks=" << Args.Clocks_value << "&&"; BPFromTable = false; }
 				ss.seekp(-2, ss.cur);
 				ss << "  ";
 				name = ss.str();
