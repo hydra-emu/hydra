@@ -31,17 +31,12 @@ namespace TKPEmu::Applications {
         void focus(int item);
 
         template<typename T>
-        void breakpoint_register_checkbox(const char* checkbox_l, T& value, bool& is_used, ImGuiDataType type = ImGuiDataType_U8) {
+        void breakpoint_register_checkbox(const char* checkbox_l, const char* label, const char* input_format, T& value, bool& is_used, int width = 20, ImGuiDataType type = ImGuiDataType_U8) {
             ImGui::Checkbox(checkbox_l, &is_used);
             if (is_used) {
                 ImGui::SameLine();
-                int w = 20;
-                if (type == ImGuiDataType_U16)
-                    w = 40;
-                ImGui::PushItemWidth(w);
-                char id[6] = "##IDt";
-                id[4] = checkbox_l[0];
-                ImGui::InputScalar(id, type, &value, 0, 0, w == 20 ? "%02X" : "%04X",
+                ImGui::PushItemWidth(width);
+                ImGui::InputScalar(label, type, &value, 0, 0, input_format,
                     ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CharsHexadecimal);
                 ImGui::PopItemWidth();
             }

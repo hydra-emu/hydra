@@ -2284,6 +2284,7 @@ namespace TKPEmu::Gameboy::Devices {
 			LY = 0x91;
 		}
 		TClock = 0;
+		TotalClocks = 0;
 		halt_ = false; stop_ = false;
 		ime_ = false;
 		JOYP = 0b1110'1111;
@@ -2294,7 +2295,9 @@ namespace TKPEmu::Gameboy::Devices {
 			ime_ = true;
 		if (halt_ && queued) {
 			halt_ = false; 
-		} else if (halt_) {
+			//PC++;
+		} else 
+		if (halt_) {
 			return 4;
 		}
 		(this->*Instructions[bus_->Read(PC++)].op)();
@@ -2303,7 +2306,7 @@ namespace TKPEmu::Gameboy::Devices {
 		return tTemp;
 	}
 	bool CPU::handle_interrupts() {
-		if (auto temp = IE & IF; ime_ && IF) {
+		if (auto temp = IE & IF & 0x1F; ime_ && IF) {
 			// Starting from the lowest bit (highest priority) and going up,
 			// we are effectively queueing interrupts in case there's multiple.
 			for (int i = 0; i < 5; i++) {

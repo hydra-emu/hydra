@@ -180,15 +180,20 @@ namespace TKPEmu::Gameboy {
 		ppu_.Reset();
 	}
 	void Gameboy::update() {
+		static bool skip_next = false;
 		if ((cpu_.TClock / 2) < cpu_.MaxCycles || FastMode) {
 			if (cpu_.PC == 0x100) {
 				bus_.BiosEnabled = false;
 			}
 			uint8_t old_if = interrupt_flag_;
-			int clk = cpu_.Update();
+			int clk = 0;
+			if (!skip_next)
+				clk = cpu_.Update();	
+			skip_next = false;
 			if (timer_.Update(clk, old_if)) {
 				if (cpu_.halt_) {
 					cpu_.halt_ = false;
+					skip_next = true;
 				}
 			}
 			ppu_.Update(clk);
@@ -274,7 +279,8 @@ namespace TKPEmu::Gameboy {
 		if (bp.PC_using) { register_checks.push_back([this, gbbp = bp.PC_value]() { return cpu_.PC == gbbp; }); }
 		if (bp.SP_using) { register_checks.push_back([this, gbbp = bp.SP_value]() { return cpu_.SP == gbbp; }); }
 		if (bp.SP_using) { register_checks.push_back([this, gbbp = bp.SP_value]() { return cpu_.SP == gbbp; }); }
-		if (bp.Ins_using) { register_checks.push_back([this, gbbp = bp.Ins_value]() { return (bus_.Read(cpu_.PC)) == gbbp; }); }
+		if (bp.Ins_using) { register_checks.push_back([this, gbbp = bp.Ins_value]() { return (bus_.ReadSafe(cpu_.PC)) == gbbp; }); }
+		if (bp.Clocks_using) { register_checks.push_back([this, gbbp = bp.Clocks_value]() { return cpu_.TotalClocks == gbbp; }); }
 		auto lamb = [rc = std::move(register_checks)]() {
 			for (auto& check : rc) {
 				if (!check()) {

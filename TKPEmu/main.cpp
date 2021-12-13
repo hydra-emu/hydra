@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 					std::cout << "TKPEmu by OFFTKP. Version: " << TKPEmu_VERSION_MAJOR << "." << TKPEmu_VERSION_MINOR << "." << TKPEmu_VERSION_PATCH <<std::endl;
 					return 0;
 				}
-				case str_hash("-o"): {
+				case str_hash("-t"): {
 					expects_parameter = true;
 					next_parameter_type = ParameterType::RomFile;
 					break;
@@ -119,7 +119,6 @@ int main(int argc, char *argv[]) {
 	} else {
 		// TODO: implement console mode. Both display and console (make console class) should take a RunParameters class
 		// that explains fast_mode, log_mode and other settings. Display constructor takes this as param.
-		// TODO: console mode must use -o, std::cerr otherwise /////////////////////////////////////////////////////////////////
 		if (!parameters.RomFile.empty()) {
 			//auto type = TKPEmu::EmulatorFactory::GetEmulatorType(parameters.RomFile);
 			//auto emu_ptr = TKPEmu::EmulatorFactory::Create(type);
@@ -135,7 +134,8 @@ void print_help() noexcept {
 		"--help: Shows this dialog\n"
 		"--display: Starts in GUI mode\n"
 		"--version: Print version\n"
-		"-o (filename): Open and start a rom\n"
+		"-t (filename): Test a rom and print the result\n"
+		"-tm (filename) (filename): Test multiple roms\n"
 		"-s (time): Take a screenshot of the screen after (time) in clocks\n"
 		"-sd (path): Set the screenshot directory for this screenshot (cwd by default)\n"
 	<< std::endl;

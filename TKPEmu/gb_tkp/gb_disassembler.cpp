@@ -277,6 +277,7 @@ namespace TKPEmu::Applications {
                 ImGui::Text("DE: %d,%d", t.D, t.E); ImGui::SameLine(); ImGui::Text("IE: %d", t.IE);
                 ImGui::Text("HL: %d,%d", t.H, t.L); ImGui::SameLine(); ImGui::Text("IF: %d", t.IF);
             }
+            ImGui::Text("Clocks: %d", t.TotalClocks);
             ImGui::Checkbox("Hex", &use_hex);
             ImGui::EndChild();
             // TODO: add switch from hex to binary on every textbox here
@@ -284,32 +285,33 @@ namespace TKPEmu::Applications {
                 ImGui::OpenPopup("Add breakpoint");
                 bp_add_popup = false;
             }
-            ImGui::SetNextWindowSize(ImVec2(250, 250));
+            ImGui::SetNextWindowSize(ImVec2(250, 350));
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
             if (ImGui::BeginPopupModal("Add breakpoint", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
                 ImGui::Text("Configure the breakpoint:");
                 ImGui::Separator();
                 static GBBPArguments bp_arg;
                 {
-                    ImGui::BeginChild("bpChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.9f));
-                    breakpoint_register_checkbox("A:", bp_arg.A_value, bp_arg.A_using);
-                    breakpoint_register_checkbox("B:", bp_arg.B_value, bp_arg.B_using);
-                    breakpoint_register_checkbox("D:", bp_arg.D_value, bp_arg.D_using);
-                    breakpoint_register_checkbox("H:", bp_arg.H_value, bp_arg.H_using);
-                    breakpoint_register_checkbox("PC:", bp_arg.PC_value, bp_arg.PC_using, ImGuiDataType_U16);
-                    breakpoint_register_checkbox("Instr:", bp_arg.Ins_value, bp_arg.Ins_using);
+                    ImGui::BeginChild("bpChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y * 0.85f));
+                    breakpoint_register_checkbox("A:", "##A_reg", "%02x", bp_arg.A_value, bp_arg.A_using);
+                    breakpoint_register_checkbox("B:", "##B_reg", "%02x", bp_arg.B_value, bp_arg.B_using);
+                    breakpoint_register_checkbox("D:", "##D_reg", "%02x", bp_arg.D_value, bp_arg.D_using);
+                    breakpoint_register_checkbox("H:", "##H_reg", "%02x", bp_arg.H_value, bp_arg.H_using);
+                    breakpoint_register_checkbox("PC:", "##PC_reg", "%04x", bp_arg.PC_value, bp_arg.PC_using, 40, ImGuiDataType_U16);
+                    breakpoint_register_checkbox("Instr:", "##Instr", "%02x", bp_arg.Ins_value, bp_arg.Ins_using);
                     ImGui::EndChild();
                 }
                 ImGui::SameLine();
                 {
-                    ImGui::BeginChild("bpChildR", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.9f));
-                    breakpoint_register_checkbox("F:", bp_arg.F_value, bp_arg.F_using);
-                    breakpoint_register_checkbox("C:", bp_arg.C_value, bp_arg.C_using);
-                    breakpoint_register_checkbox("E:", bp_arg.E_value, bp_arg.E_using);
-                    breakpoint_register_checkbox("L:", bp_arg.L_value, bp_arg.L_using);
-                    breakpoint_register_checkbox("SP:", bp_arg.SP_value, bp_arg.SP_using, ImGuiDataType_U16);
+                    ImGui::BeginChild("bpChildR", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.85f));
+                    breakpoint_register_checkbox("F:", "##F_reg", "%02x", bp_arg.F_value, bp_arg.F_using);
+                    breakpoint_register_checkbox("C:", "##C_reg", "%02x", bp_arg.C_value, bp_arg.C_using);
+                    breakpoint_register_checkbox("E:", "##E_reg", "%02x", bp_arg.E_value, bp_arg.E_using);
+                    breakpoint_register_checkbox("L:", "##L_reg", "%02x", bp_arg.L_value, bp_arg.L_using);
+                    breakpoint_register_checkbox("SP:", "##SP_reg", "%04x", bp_arg.SP_value, bp_arg.SP_using, 40, ImGuiDataType_U16);
                     ImGui::EndChild();
                 }
+                breakpoint_register_checkbox("Clocks:", "##Clocks", "%d", bp_arg.Clocks_value, bp_arg.Clocks_using, 200, ImGuiDataType_U64);
                 if (ImGui::Button("Add", ImVec2(120, 0))) {
                     bool pc_only = gameboy->AddBreakpoint(bp_arg);
                     if (pc_only) {
