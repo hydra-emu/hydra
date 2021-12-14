@@ -11,7 +11,7 @@ namespace TKPEmu::Applications {
     void IMApplication::HandleShortcut(TKPShortcut& shortcut) {}
     void IMApplication::Draw() {
         if (drawing_) {
-            SetupWindow();
+            SetupWindow(min_size, max_size);
             if (!ImGui::Begin(window_title_.c_str(), &drawing_, window_flags_)) {
                 ImGui::End();
                 return;
@@ -32,9 +32,9 @@ namespace TKPEmu::Applications {
     void IMApplication::Reset() {
         v_reset();
     }
-    void IMApplication::SetupWindow() {
+    void IMApplication::SetupWindow(const ImVec2& min_size, const ImVec2& max_size) {
         ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSizeConstraints(ImVec2(300, 300), ImVec2(550, 550));
+        ImGui::SetNextWindowSizeConstraints(min_size, max_size);
     }
     void IMApplication::DrawMenuEmulation(Emulator* emulator) {
         bool rom_loaded = (emulator != nullptr);

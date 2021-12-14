@@ -40,18 +40,18 @@ namespace TKPEmu::Gameboy::Devices {
 			std::cerr << "Error: Could not open file" << std::endl;
 		}
 	}
-	CartridgeType Cartridge::GetCartridgeType() {
+	CartridgeType Cartridge::GetCartridgeType() const {
 		if (loaded) {
 			return (CartridgeType)header_.cartridgeType;
 		}
 		return CartridgeType::ERROR;
 	}
-	// Returns the number of 8KB RAM banks
-	int Cartridge::GetRamSize() {
+	int Cartridge::GetRamSize() const {
+		// Returns the number of 8KB RAM banks
 		return ram_sizes_[header_.ramSize];
 	}
-	// Returns the number of 16kb ROM banks
-	int Cartridge::GetRomSize() {
+	int Cartridge::GetRomSize() const {
+		// Returns the number of 16kb ROM banks
 		switch (header_.romSize) {
 		// Likely inaccurate according to pandocs, no roms using these are known
 		[[unlikely]] case 0x52: return 72;
@@ -59,6 +59,44 @@ namespace TKPEmu::Gameboy::Devices {
 		[[unlikely]] case 0x54: return 96;
 		[[likely]] default:
 			return std::pow(2, (header_.romSize + 1));
+		}
+	}
+	bool Cartridge::IsGameboyColor() const {
+		return header_.gameboyColor;
+	}
+	const char* Cartridge::GetCartridgeName() const {
+		return header_.name;
+	}
+	const char* Cartridge::GetCartridgeTypeName() const {
+		auto ct = GetCartridgeType();
+		switch (ct) {
+			case CartridgeType::ROM_ONLY: {
+				return "None (32Kb rom)";
+			}
+			case CartridgeType::MBC1: {
+				return "MBC1";
+			}
+			case CartridgeType::MBC1_RAM: {
+				return "MBC1 w/ RAM";
+			}
+			case CartridgeType::MBC1_RAM_BATTERY: {
+				return "MBC1 w/ RAM, BATTERY";
+			}
+			case CartridgeType::MBC3: {
+				return "MBC3";
+			}
+			case CartridgeType::MBC3_RAM: {
+				return "MBC3 w/ RAM";
+			}
+			case CartridgeType::MBC3_RAM_BATTERY: {
+				return "MBC3 w/ RAM, BATTERY";
+			}
+			case CartridgeType::MBC3_TIMER_RAM_BATTERY: {
+				return "MBC3 w/ RAM, BATTERY, TIMER";
+			}
+			default: {
+				return  std::to_string(static_cast<int>(ct)).c_str();
+			}
 		}
 	}
 }
