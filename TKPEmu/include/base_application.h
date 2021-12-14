@@ -28,12 +28,14 @@ namespace TKPEmu::Applications {
 		bool* IsOpen();
 		void SetEmulator(Emulator* emulator);
 		virtual void HandleShortcut(TKPShortcut& shortcut);
-		static void SetupWindow();
+		static void SetupWindow(const ImVec2& min_size, const ImVec2& max_size);
 		static void DrawMenuEmulation(Emulator* emulator);
         static void ResetEmulatorState(Emulator* emulator);
 	protected:
 		Emulator* emulator_ = nullptr;
 		unsigned window_flags_ = 0;
+		ImVec2 min_size = { 400, 400 };
+		ImVec2 max_size = { 750, 750 };
 	private:
 		bool drawing_ = false;
 		const std::string menu_title_;

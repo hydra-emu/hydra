@@ -164,7 +164,6 @@ namespace TKPEmu::Gameboy::Devices {
 					if (cartridge_->GetRamSize() == 0)
 						return eram_default_[address % 0x2000];
 					auto sel = (banking_mode_ ? selected_ram_bank_ : 0);
-					std::cout << cartridge_->GetRamSize() << std::endl;
 					return (ram_banks_[sel])[address % 0x2000];
 				} else {
 					unused_mem_area_ = 0xFF;
@@ -389,9 +388,12 @@ namespace TKPEmu::Gameboy::Devices {
 		selected_ram_bank_ = 0;
 		BiosEnabled = true;
 	}
+	const Cartridge* const Bus::GetCartridge() const {
+		return cartridge_.get();
+	}
 	void Bus::LoadCartridge(std::string fileName) {
 		Reset();
-		cartridge_ = std::unique_ptr<Cartridge>(new Cartridge());
+		cartridge_ = std::make_unique<Cartridge>();
 		cartridge_->Load(fileName, rom_banks_, ram_banks_);
 		rom_banks_size_ = cartridge_->GetRomSize();
 	}

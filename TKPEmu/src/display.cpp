@@ -87,7 +87,7 @@ namespace TKPEmu::Graphics {
         static KeySelector   key_sel("Action Select:  ", "Gameboy.key_select", gb_keys_action_[2]);
         static KeySelector key_start("Action Start:   ", "Gameboy.key_start", gb_keys_action_[3]);
         if (*draw) {
-            TKPEmu::Applications::IMApplication::SetupWindow();
+            TKPEmu::Applications::IMApplication::SetupWindow(ImVec2(400, 400), ImVec2(700, 700));
             if (!ImGui::Begin("Settings", draw)) {
                 ImGui::End();
                 return;

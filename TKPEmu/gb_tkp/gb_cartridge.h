@@ -33,6 +33,8 @@ namespace TKPEmu::Gameboy::Devices {
 		MBC5_RUMBLE = 0x1C,
 		MBC5_RUMBLE_RAM = 0x1D,
 		MBC5_RUMBLE_RAM_BATTERY = 0x1E,
+		MBC6_RAM_BATTERY = 0x20,
+		MBC7_RAM_BATTERY_ACCELEROMETER = 0x22,
 		POCKET_CAMERA = 0xFC,
 		BANDAITAMA5 = 0xFD,
 		HuC3 = 0xFE,
@@ -54,9 +56,12 @@ namespace TKPEmu::Gameboy::Devices {
 		bool loaded;
 	public:
 		void Load(const std::string& fileName, std::vector<std::array<uint8_t, 0x4000>>& romBanks, std::vector<std::array<uint8_t, 0x2000>>& ramBanks);
-		CartridgeType GetCartridgeType();
-		int GetRamSize();
-		int GetRomSize();
+		CartridgeType GetCartridgeType() const;
+		int GetRamSize() const;
+		int GetRomSize() const;
+		bool IsGameboyColor() const;
+		const char* GetCartridgeTypeName() const;
+		const char* GetCartridgeName() const;
 	};
 }
 #endif
