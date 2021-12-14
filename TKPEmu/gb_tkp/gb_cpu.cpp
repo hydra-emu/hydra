@@ -2294,16 +2294,6 @@ namespace TKPEmu::Gameboy::Devices {
 		JOYP = 0b1110'1111;
 	}
 	int CPU::Update() {
-		/*bool queued = handle_interrupts();
-		if (ime_scheduled_)
-			ime_ = true;
-		if (halt_ && queued) {
-			halt_ = false; 
-			//PC++;
-		} else 
-		if (halt_) {
-			return 4;
-		}*/
 		handle_interrupts();
 		if (ime_scheduled_) {
 			ime_ = true;
@@ -2336,23 +2326,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 			}
 		}
-		halt_ = false; // maybe remove?
-		/*
-		if (auto temp = IE & IF & 0x1F; ime_ && IF) {
-			// Starting from the lowest bit (highest priority) and going up,
-			// we are effectively queueing interrupts in case there's multiple.
-			for (int i = 0; i < 5; i++) {
-				if (auto bit = (temp >> i) & 0x1; bit) {
-					execute_interrupt(i);
-					return true;
-				}
-			}
-		}
-		if (IF & IE) 
-			return true;
-		else 
-			return false;
-			*/
+		halt_ = false;
 	}
 	void CPU::execute_interrupt(int bit) {
 		ime_ = false;
