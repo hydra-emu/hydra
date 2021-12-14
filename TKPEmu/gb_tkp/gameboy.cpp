@@ -47,7 +47,7 @@ namespace TKPEmu::Gameboy {
 					break;
 				}
 				case LogType::PC: {
-					*ofstream_ptr_ << "PC:" << std::setw(4) << std::hex <<  cpu_.PC;
+					*ofstream_ptr_ << std::setw(4) << std::hex << cpu_.PC << ":";
 					break;
 				}
 				case LogType::SP: {

@@ -10,10 +10,10 @@ using DisInstr = TKPEmu::Tools::DisInstr;
 using GBBPArguments = TKPEmu::Gameboy::Utils::GBBPArguments;
 constexpr size_t LogTypeSize = 17;
 enum class LogType {
-    InstrName, InstrNum,
+    PC, InstrName, InstrNum,
     A, B, C, D, 
     E, F, H, L,
-    PC, SP, LY,
+    LY, SP, 
     IF, IE, IME, HALT
 };
 enum LCDCFlag {
@@ -50,17 +50,17 @@ struct ExpectedResult {
     Hash ExpectedHash;
 };
 constexpr static std::array<LogType, LogTypeSize> LogTypeMap {
-    LogType::InstrName, LogType::InstrNum,
+    LogType::PC, LogType::InstrName, LogType::InstrNum,
     LogType::A, LogType::B, LogType::C, LogType::D,
     LogType::E, LogType::F, LogType::H, LogType::L,
-    LogType::PC, LogType::SP, LogType::LY, LogType::IF,
+    LogType::LY, LogType::SP, LogType::IF,
     LogType::IE, LogType::IME, LogType::HALT
 };
 const static std::array<std::string, LogTypeSize> LogTypeNames {
-    "Instr. ", "Opcode ",
+    "PC     ", "Instr. ", "Opcode ",
     "A      ", "B      ", "C      ", "D      ",
     "E      ", "F      ", "H      ", "L      ",
-    "PC     ", "SP     ", "LY     ", "IF     ",
+    "LY     ", "SP     ", "IF     ",
     "IE     ", "IME    ", "HALT   ",
 };
 constexpr std::array<uint8_t, 0x100> InstrTimes = {

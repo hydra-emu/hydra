@@ -2290,13 +2290,14 @@ namespace TKPEmu::Gameboy::Devices {
 		TClock = 0;
 		TotalClocks = 0;
 		halt_ = false; stop_ = false;
-		ime_ = false;
+		ime_ = false; ime_scheduled_ = false;
 		JOYP = 0b1110'1111;
 	}
 	int CPU::Update() {
 		handle_interrupts();
 		if (ime_scheduled_) {
 			ime_ = true;
+			ime_scheduled_ = false;
 		}
 		if (halt_) {
 			return 4;
@@ -2330,6 +2331,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void CPU::execute_interrupt(int bit) {
 		ime_ = false;
+		ime_scheduled_ = false;
 		IF &= ~(1U << bit);
 		SP -= 2;
 		bus_->WriteL(SP, PC);
