@@ -53,17 +53,14 @@ namespace TKPEmu::Gameboy::Devices {
 					}
 				}
 				else if (address <= 0x3FFF) {
-					selected_rom_bank_ &= 0b1100000;
-					selected_rom_bank_ |= data & 0b11111;
-					selected_rom_bank_ %= rom_banks_size_;
-					//redirect_address(address) = selected_ram_bank_ & 0b1111111;
+					selected_rom_bank_ = data & 0b0111'1111;
+					if (selected_rom_bank_ == 0) {
+						selected_rom_bank_ = 1;
+					}
 				}
 				else if (address <= 0x5FFF) {
 					if (data <= 0b11) {
-						selected_rom_bank_ &= 0b11111;
-						selected_rom_bank_ |= ((data & 0b11) << 5);
-						selected_rom_bank_ %= rom_banks_size_;
-						selected_ram_bank_ = data & 0b11; 
+						selected_ram_bank_ = data & (cartridge_->GetRamSize() - 1); 
 					} else {
 						// TODO: mbc3 rtc
 					}
@@ -147,10 +144,6 @@ namespace TKPEmu::Gameboy::Devices {
 						}
 						else {
 							auto sel = selected_rom_bank_ % cartridge_->GetRomSize();
-							if (sel == 0) {
-								// Accessing 20/40/60 is supported in mbc3
-								sel += 1;
-							}
 							return (rom_banks_[sel])[address % 0x4000];
 						}
 						break;
@@ -170,7 +163,8 @@ namespace TKPEmu::Gameboy::Devices {
 				if (ram_enabled_) {
 					if (cartridge_->GetRamSize() == 0)
 						return eram_default_[address % 0x2000];
-					auto sel = (banking_mode_ ? selected_ram_bank_ : 0) % cartridge_->GetRamSize();
+					auto sel = (banking_mode_ ? selected_ram_bank_ : 0);
+					std::cout << cartridge_->GetRamSize() << std::endl;
 					return (ram_banks_[sel])[address % 0x2000];
 				} else {
 					unused_mem_area_ = 0xFF;
