@@ -53,17 +53,20 @@ namespace TKPEmu::Gameboy::Devices {
 					}
 				}
 				else if (address <= 0x3FFF) {
-					// BANK register 1 (TODO: this doesnt happen on mbc0?)
 					selected_rom_bank_ &= 0b1100000;
 					selected_rom_bank_ |= data & 0b11111;
 					selected_rom_bank_ %= rom_banks_size_;
+					//redirect_address(address) = selected_ram_bank_ & 0b1111111;
 				}
 				else if (address <= 0x5FFF) {
-					// BANK register 2
-					selected_rom_bank_ &= 0b11111;
-					selected_rom_bank_ |= ((data & 0b11) << 5);
-					selected_rom_bank_ %= rom_banks_size_;
-					selected_ram_bank_ = data & 0b11;
+					if (data <= 0b11) {
+						selected_rom_bank_ &= 0b11111;
+						selected_rom_bank_ |= ((data & 0b11) << 5);
+						selected_rom_bank_ %= rom_banks_size_;
+						selected_ram_bank_ = data & 0b11; 
+					} else {
+						// TODO: mbc3 rtc
+					}
 				}
 				else {
 					// MODE register

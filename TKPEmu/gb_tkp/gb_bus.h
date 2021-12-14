@@ -78,6 +78,7 @@ namespace TKPEmu::Gameboy::Devices {
         uint8_t ActionKeys = 0b1101'1111;
     private:
         bool ram_enabled_ = false;
+        bool rtc_enabled_ = false;
         uint8_t selected_ram_bank_ = 0;
         uint8_t selected_rom_bank_ = 1;
         uint8_t rom_banks_size_ = 2;

@@ -1366,6 +1366,10 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void CPU::HALT() {
 		halt_ = true;
+		if ((IE & IF & 0x1F) && ime_ == 0) {
+			std::cout << "halt bug" << std::endl;
+			halt_ = false;
+		}
 		tTemp = 4;
 	}
 	void CPU::XXX() {
@@ -2290,7 +2294,7 @@ namespace TKPEmu::Gameboy::Devices {
 		JOYP = 0b1110'1111;
 	}
 	int CPU::Update() {
-		bool queued = handle_interrupts();
+		/*bool queued = handle_interrupts();
 		if (ime_scheduled_)
 			ime_ = true;
 		if (halt_ && queued) {
@@ -2299,13 +2303,41 @@ namespace TKPEmu::Gameboy::Devices {
 		} else 
 		if (halt_) {
 			return 4;
+		}*/
+		handle_interrupts();
+		if (ime_scheduled_) {
+			ime_ = true;
+		}
+		if (halt_) {
+			return 4;
 		}
 		(this->*Instructions[bus_->Read(PC++)].op)();
 		TClock += tTemp;
 		TotalClocks += 1;
 		return tTemp;
 	}
-	bool CPU::handle_interrupts() {
+	void CPU::handle_interrupts() {
+		uint8_t interr_bits = IF & IE & 0x1F;
+		if (interr_bits != 0) {
+			if (ime_) {
+				for (int i = 0; i < 5; i++) {
+					auto bit = (interr_bits >> i) & 0x1;
+					if (bit) {
+						execute_interrupt(i);
+						halt_ = false;
+						return;
+					}
+				}	
+			} else {
+				if (halt_) {
+					halt_ = false;
+					tTemp = 4;
+					return;
+				}
+			}
+		}
+		halt_ = false; // maybe remove?
+		/*
 		if (auto temp = IE & IF & 0x1F; ime_ && IF) {
 			// Starting from the lowest bit (highest priority) and going up,
 			// we are effectively queueing interrupts in case there's multiple.
@@ -2320,6 +2352,7 @@ namespace TKPEmu::Gameboy::Devices {
 			return true;
 		else 
 			return false;
+			*/
 	}
 	void CPU::execute_interrupt(int bit) {
 		ime_ = false;
@@ -2327,5 +2360,9 @@ namespace TKPEmu::Gameboy::Devices {
 		SP -= 2;
 		bus_->WriteL(SP, PC);
 		PC = 0x40 + bit * 0x8;
+		tTemp = 20;
+		if (halt_) {
+			tTemp = 24;
+		}
 	}
 }
