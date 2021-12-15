@@ -1,4 +1,5 @@
 #define SDL_MAIN_HANDLED
+#include <execution>
 #include <iostream>
 #include "include/version.h"
 #include "include/display.h"
@@ -8,29 +9,32 @@
 #include "include/emulator_results.h"
 #include "lib/str_hash.h"
 // TODO: implement online version checking and updating
-// TODO: last open files folder becomes the browser default folder
 void print_help() noexcept;
 void test_rom(std::string path);
-
-template<typename It>
-void test_dir(It dir_it) {
-	for (const auto& file : dir_it) {
+template <typename It, typename ExecPolicy>
+void test_dir_exec(It dir_it, ExecPolicy exec_pol) {
+	// TODO: parallel does not work because directory iterator cant be used in parallel, find workaround
+	auto begin = std::filesystem::begin(dir_it);
+	auto end = std::filesystem::end(dir_it);
+	std::for_each(std::execution::par_unseq, begin, end, [](const auto& file) {
 		if (!file.is_directory()) {
 			test_rom(file.path().string());
 		}
-	}
+	});
 }
-
-template<>
-void test_dir(std::filesystem::recursive_directory_iterator dir_it) {
-	
+template<typename It>
+void test_dir_exec(It dir_it, bool parallel) {
+	if (parallel) {
+		test_dire(dir_it, std::execution::par_unseq);
+	} else {
+		test_dire(dir_it, std::execution::seq);
+	}
 }
 
 enum class ParameterType {
 	RomFile,
 	RomDir,
 };
-
 int main(int argc, char *argv[]) {
 	// Whenever we get an argument that needs parameters, this bool is set to true
 	bool expects_parameter = false;
@@ -74,6 +78,11 @@ int main(int argc, char *argv[]) {
 				case str_hash("-r"):
 				case str_hash("--recursive"): {
 					parameters.Recursive = true;
+					break;
+				}
+				case str_hash("-p"):
+				case str_hash("--parallel"): {
+					parameters.Parallel = true;
 					break;
 				}
 				default: {
@@ -131,9 +140,9 @@ int main(int argc, char *argv[]) {
 			test_rom(parameters.RomFile);			
 		} else if (!parameters.RomDir.empty()) {
 			if (parameters.Recursive) {
-				test_dir(std::filesystem::recursive_directory_iterator(parameters.RomDir));
+				test_dir(std::filesystem::recursive_directory_iterator(parameters.RomDir), parameters.Parallel);
 			} else {
-				test_dir(std::filesystem::directory_iterator(parameters.RomDir));
+				test_dir(std::filesystem::directory_iterator(parameters.RomDir), parameters.Parallel);
 			}
 		} else {
 			std::cerr << color_error "Error: " color_reset "No rom file specified. Use -h or --help for more help on the commands" << std::endl;

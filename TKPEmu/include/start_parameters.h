@@ -5,6 +5,7 @@ namespace TKPEmu {
        std::string RomDir;
        std::string RomFile;
        bool Recursive = false;
+       bool Parallel = false;
     };
 }
 #endif
