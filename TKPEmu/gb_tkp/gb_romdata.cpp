@@ -6,7 +6,7 @@ namespace TKPEmu::Applications {
         max_size = ImVec2(400, 400);
     }
     void GameboyRomData::v_draw() {
-        static Gameboy* gb_ptr = static_cast<Gameboy*>(emulator_);
+        Gameboy* gb_ptr = static_cast<Gameboy*>(emulator_);
         ImGui::Text(gb_ptr->GetCartridge()->GetCartridgeTypeName());
     }
 }

@@ -23,11 +23,11 @@ void test_dir_exec(It dir_it, ExecPolicy exec_pol) {
 	});
 }
 template<typename It>
-void test_dir_exec(It dir_it, bool parallel) {
+void test_dir(It dir_it, bool parallel) {
 	if (parallel) {
-		test_dire(dir_it, std::execution::par_unseq);
+		test_dir_exec(dir_it, std::execution::par_unseq);
 	} else {
-		test_dire(dir_it, std::execution::seq);
+		test_dir_exec(dir_it, std::execution::seq);
 	}
 }
 
