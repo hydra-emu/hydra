@@ -70,6 +70,7 @@ namespace TKPEmu::Gameboy::Devices {
         std::array<uint8_t, 4> BGPalette{};const Cartridge* const GetCartridge();
         std::array<uint8_t, 4> OBJ0Palette{};
         std::array<uint8_t, 4> OBJ1Palette{};
+        // TODO: remove big OAM
         std::array<Sprite, 40> OAM;
         bool DIVReset = false;
         bool TACChanged = false;

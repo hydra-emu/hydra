@@ -270,10 +270,14 @@ namespace TKPEmu::Gameboy::Devices {
 					for (int i = 0; i <= (0x9F - 4); i += 4) {
 						uint16_t source = dma_addr | i;
 						// Each sprite is 4 bytes, so the array has size of 160/4 = 40 
-						OAM[i / 4].y_pos      = Read(source);
-						OAM[i / 4].x_pos      = Read(source + 1);
-						OAM[i / 4].tile_index = Read(source + 2);
-						OAM[i / 4].flags      = Read(source + 3);
+						oam_[i]         = ReadSafe(source);
+						oam_[i + 1]     = ReadSafe(source + 1);
+						oam_[i + 2]     = ReadSafe(source + 2);
+						oam_[i + 3]     = ReadSafe(source + 3);
+						OAM[i / 4].y_pos      = oam_[i];
+						OAM[i / 4].x_pos      = oam_[i + 1];
+						OAM[i / 4].tile_index = oam_[i + 2];
+						OAM[i / 4].flags      = oam_[i + 3];
 					}
 					break;
 				}

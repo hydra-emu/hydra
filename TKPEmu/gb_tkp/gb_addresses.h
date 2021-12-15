@@ -51,15 +51,15 @@ struct ExpectedResult {
 };
 constexpr static std::array<LogType, LogTypeSize> LogTypeMap {
     LogType::PC, LogType::InstrName, LogType::InstrNum,
-    LogType::A, LogType::B, LogType::C, LogType::D,
-    LogType::E, LogType::F, LogType::H, LogType::L,
+    LogType::A, LogType::F, LogType::B, LogType::C,
+    LogType::D, LogType::E,  LogType::H, LogType::L,
     LogType::LY, LogType::SP, LogType::IF,
     LogType::IE, LogType::IME, LogType::HALT
 };
 const static std::array<std::string, LogTypeSize> LogTypeNames {
     "PC     ", "Instr. ", "Opcode ",
-    "A      ", "B      ", "C      ", "D      ",
-    "E      ", "F      ", "H      ", "L      ",
+    "A      ", "F      ", "B      ", "C      ",
+    "D      ", "E      ", "H      ", "L      ",
     "LY     ", "SP     ", "IF     ",
     "IE     ", "IME    ", "HALT   ",
 };

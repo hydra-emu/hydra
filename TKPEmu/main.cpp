@@ -9,6 +9,7 @@
 #include "include/emulator_results.h"
 #include "lib/str_hash.h"
 // TODO: implement online version checking and updating
+TKPEmu::StartParameters parameters;
 void print_help() noexcept;
 void test_rom(std::string path);
 template <typename It, typename ExecPolicy>
@@ -40,7 +41,6 @@ int main(int argc, char *argv[]) {
 	bool expects_parameter = false;
 	bool display_mode = false;
 	ParameterType next_parameter_type;
-	TKPEmu::StartParameters parameters;
 	if (argc == 1) {
 		std::cout << color_warning "Warning: " color_reset "No parameters specified. Try -h or --help.\nRunning gui as a default..." << std::endl;
 		display_mode = true;
@@ -62,6 +62,11 @@ int main(int argc, char *argv[]) {
 				case str_hash("--version"): {	
 					std::cout << "TKPEmu by OFFTKP. Version: " color_success << TKPEmu_VERSION_MAJOR << "." << TKPEmu_VERSION_MINOR << "." << TKPEmu_VERSION_PATCH << color_reset << std::endl;
 					return 0;
+				}
+				case str_hash("-V"):
+				case str_hash("--verbose"): {
+					parameters.Verbose = true;
+					break;
 				}
 				case str_hash("-t"):
 				case str_hash("--test"): {
@@ -160,7 +165,9 @@ void print_help() noexcept {
 void test_rom(std::string path) {
 	auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path); 
 	if (type == TKPEmu::EmuType::None) {
-		std::cerr << "[" color_warning << std::filesystem::path(path).filename() << color_reset "]: No available emulator found for this file" << std::endl;
+		if (parameters.Verbose) {
+			std::cerr << "[" color_warning << std::filesystem::path(path).filename() << color_reset "]: No available emulator found for this file" << std::endl;
+		}
 		return;
 	}
 	std::unique_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
@@ -168,7 +175,9 @@ void test_rom(std::string path) {
 	emu->FastMode = true;
 	emu->LoadFromFile(path);
 	if (!PassedTestMap.contains(emu->RomHash)) {
-		std::cerr << "[" color_error << std::filesystem::path(path).filename() << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
+		if (parameters.Verbose) {
+			std::cerr << "[" color_error << std::filesystem::path(path).filename() << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
+		}
 		return;
 	}
 	auto result = PassedTestMap.at(emu->RomHash);
