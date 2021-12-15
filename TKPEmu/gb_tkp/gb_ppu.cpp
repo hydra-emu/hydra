@@ -14,9 +14,8 @@ namespace TKPEmu::Gameboy::Devices {
 		IF(bus->GetReference(0xFF0F))
 	{}
 	void PPU::Update(uint8_t cycles) {
-		IF &= 0b11111110;
-		clock_ += cycles;
 		if (LCDC & LCDCFlag::LCD_ENABLE) {
+			clock_ += cycles;
 			if (clock_ >= clock_target_) {
 				if (LY == 153) {
 					next_stat_mode = 2;
@@ -25,7 +24,8 @@ namespace TKPEmu::Gameboy::Devices {
 					clock_target_ = FRAME_CYCLES;
 				}
 				IF |= set_mode(next_stat_mode);
-				if (int mode = get_mode(); mode == 2) {
+				int mode = get_mode(); 
+				if (mode == 2) {
 					clock_target_ += 80;
 					next_stat_mode = 3;
 					LY += 1;
@@ -58,6 +58,7 @@ namespace TKPEmu::Gameboy::Devices {
 			}
 		}
 		else {
+			LY = 0;
 			if (clock_ >= FRAME_CYCLES) {
 				clock_ %= FRAME_CYCLES;
 			}

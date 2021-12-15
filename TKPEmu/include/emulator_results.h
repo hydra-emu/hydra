@@ -8,7 +8,7 @@ const static std::unordered_map<Hash, ExpectedResult> PassedTestMap {
     // 01-special
     { "7d95af543a521ed036dc85f6f232d103", { 1'300'000, "42d5abde92c2678617996dd8f782989c" } },
     // 02-interrupts
-    { "d36a85bb94d4c1b373c0e7be0f6f0971", { 200'000, "0f384cd6115fd9b2c33f7d9fc42200b5" } },
+    { "d36a85bb94d4c1b373c0e7be0f6f0971", { 300'000, "0f384cd6115fd9b2c33f7d9fc42200b5" } },
     // 03-op sp,hl
     { "5bccf6b03f661d92b2903694d458510c", { 1'150'000, "3caaa1d70619add931ecfa9e88e3a7ff" } },
     // 04-op r,imm
@@ -27,5 +27,7 @@ const static std::unordered_map<Hash, ExpectedResult> PassedTestMap {
     { "64632849778ee83ae85db8bf68c84ebc", { 7'000'000, "56d069d71d8b2114149a6a605df2ef28" } },
     // 11-op a,(hl)
     { "6e64346be4d7ccf26f53de105d6cb5f6", { 7'500'000, "3215a908fc7e7aac137f20b9dec08e9e" } },
+    // instr_timing
+    { "b417d5d06c3382ab5836b5d365184f36", { 350'000, "89c5c02898f9299e22457dc47cab40a0" } },
 };
 #endif

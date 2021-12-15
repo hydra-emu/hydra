@@ -24,7 +24,6 @@ namespace TKPEmu::Gameboy {
 		using DisInstr = TKPEmu::Tools::DisInstr;
 		using GameboyBreakpoint = TKPEmu::Gameboy::Utils::GameboyBreakpoint;
 	public:
-		// TODO: use unordered_map or map (key = sdl_key value = 1<<i <SDL_Keycode, int>)
 		Gameboy();
 		Gameboy(GameboyKeys dirkeys, GameboyKeys actionkeys);
 		~Gameboy();

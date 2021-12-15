@@ -74,7 +74,6 @@ namespace TKPEmu {
 		std::stringstream buffer;
 		buffer << t.rdbuf();
 		RomHash = md5(buffer.str());
-		std::cout << "Loading " << path << " with hash " << RomHash << std::endl;
 		load_file(path);
 	}
     void Emulator::Reset() {

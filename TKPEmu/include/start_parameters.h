@@ -2,9 +2,9 @@
 #define TKPEMU_STARTPARAMETERS_H
 namespace TKPEmu {
     struct StartParameters {
-       unsigned long long ScreenshotTime = 0;
-       std::string ScreenshotDir;
+       std::string RomDir;
        std::string RomFile;
+       bool Recursive = false;
     };
 }
 #endif
