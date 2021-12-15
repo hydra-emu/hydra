@@ -1370,6 +1370,10 @@ namespace TKPEmu::Gameboy::Devices {
 			std::cout << "halt bug" << std::endl;
 			halt_ = false;
 		}
+		if (ime_scheduled_) {
+			ime_ = true;
+			ime_scheduled_ = false;
+		}
 		tTemp = 4;
 	}
 	void CPU::XXX() {
@@ -2327,7 +2331,6 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 			}
 		}
-		halt_ = false;
 	}
 	void CPU::execute_interrupt(int bit) {
 		ime_ = false;
