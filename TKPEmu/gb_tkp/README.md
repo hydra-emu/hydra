@@ -18,7 +18,7 @@ Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
 | Test | GameboyTKP  |
 |--|--|
 | cpu_instrs | ✅ |
-| instr_timing | ❌ (Issue [#3](https://github.com/OFFTKP/TKPEmu/issues/3))|
+| instr_timing | ✅ |
 | mem_timing | ❌ |
 | dmg_sound | ❌ |
 | oam_bug | ❌ |
@@ -58,15 +58,15 @@ Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
 | emulator-only/mbc1/bits_bank1 | ✅ | 
 | emulator-only/mbc1/bits_bank2 | ✅ | 
 | emulator-only/mbc1/bits_mode | ✅ | 
-| emulator-only/mbc1/bits_ramg | ❌ | 
+| emulator-only/mbc1/bits_ramg | ✅ | 
 | emulator-only/mbc1/multicart_rom_8Mb | ❌ | 
-| emulator-only/mbc1/ram_256kb | ❌ | 
-| emulator-only/mbc1/ram_64kb | ❌ | 
+| emulator-only/mbc1/ram_256kb | ✅ | 
+| emulator-only/mbc1/ram_64kb | ✅ | 
 | emulator-only/mbc1/rom_16Mb | ✅ | 
 | emulator-only/mbc1/rom_1Mb | ❌ (multicart) | 
 | emulator-only/mbc1/rom_2Mb | ❌ (multicart) | 
 | emulator-only/mbc1/rom_4Mb | ✅ | 
-| emulator-only/mbc1/rom_512kb | ❌ |
+| emulator-only/mbc1/rom_512kb | ❌ (multicart) |
 | emulator-only/mbc1/rom_8Mb | ✅ | 
 
 **[mattcurie](https://github.com/mattcurrie)'s tests:**
