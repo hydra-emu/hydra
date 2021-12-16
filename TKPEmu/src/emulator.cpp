@@ -111,6 +111,9 @@ namespace TKPEmu {
 				ofstream_ptr_.reset(nullptr);
 		}
 	}
+	std::string Emulator::GetEmulatorName() {
+		return "Unknown emulator";
+	}
 	void Emulator::v_log_state() {
 		std::cerr << "log_state was not implemented for this emulator" << std::endl;
 		exit(1);

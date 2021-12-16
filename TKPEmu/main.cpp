@@ -13,11 +13,18 @@
 using TestResult = TKPEmu::Testing::TestResult;
 using TestData = TKPEmu::Testing::TestData;
 using TestDataVec = std::vector<TestData>;
+enum class ParameterType {
+	RomFile,
+	RomDir,
+	TestResultsPath,
+};
 // TODO: implement online version checking and updating
 TKPEmu::StartParameters parameters;
+// TODO: remove last_emulator_name -> add in TestData
+std::string last_emulator_name = "Unknown emulator";
 void print_help() noexcept;
 TestResult test_rom(std::string path);
-void generate_results(const TestDataVec& results);
+void generate_results(TestDataVec& results);
 template <typename It, typename ExecPolicy>
 TestDataVec test_dir_exec(It begin, It end, ExecPolicy exec_pol) {
 	std::mutex push_mutex;
@@ -54,10 +61,6 @@ void test_dir(It dir_it, bool parallel) {
 		generate_results(results);
 	}
 }
-enum class ParameterType {
-	RomFile,
-	RomDir,
-};
 int main(int argc, char *argv[]) {
 	// Whenever we get an argument that needs parameters, this bool is set to true
 	bool expects_parameter = false;
@@ -76,7 +79,7 @@ int main(int argc, char *argv[]) {
 					goto after_args;
 				}
 				case str_hash("-g"):
-				case str_hash("--generate-results"): {
+				case str_hash("--generate-markdown"): {
 					// Enables generating test results as a markdown file
 					parameters.GenerateTestResults = true;
 					break;
@@ -118,8 +121,14 @@ int main(int argc, char *argv[]) {
 					parameters.Parallel = true;
 					break;
 				}
+				case str_hash("-G"):
+				case str_hash("--generation-path"): {
+					next_parameter_type = ParameterType::TestResultsPath;
+					expects_parameter = true;
+					break;
+				}
 				default: {
-					std::cerr << color_error "Error: " color_reset "Invalid parameter.\nUse -h or --help to get the parameter list." << std::endl;
+					std::cerr << color_error "Error: " color_reset "Invalid parameter: " << argv[i] << ".\nUse -h or --help to get the parameter list." << std::endl;
 					return 1;
 				}
 			}
@@ -151,6 +160,15 @@ int main(int argc, char *argv[]) {
 						parameters.RomDir = argv[i];
 					} else {
 						std::cerr << color_error "Error: " color_reset "Specified directory does not exist " << argv[i] << std::endl;
+						return 1;
+					}
+					break;
+				}
+				case ParameterType::TestResultsPath: {
+					if (!std::filesystem::is_directory(argv[i])) {
+						parameters.GenerationPath = argv[i];
+					} else {
+						std::cerr << color_error "Error: " color_reset "Specified path is a directory, expected file " << argv[i] << std::endl;
 						return 1;
 					}
 					break;
@@ -213,14 +231,41 @@ TestResult test_rom(std::string path) {
 	auto options = TKPEmu::EmuStartOptions::Console;
 	emu->ScreenshotClocks = result.Clocks;
 	emu->ScreenshotHash = result.ExpectedHash;
+	last_emulator_name = emu->GetEmulatorName();
 	emu->Start(options);
 	// Console mode does not run on a seperate thread so we don't need to wait
 	return emu->Result;
 }
 
-void generate_results(const TestDataVec& results) {
+void generate_results(TestDataVec& results) {
 	// TODO: sort results
+	std::sort(results.begin(), results.end(),
+		[](auto& lres, auto& rres) -> bool {
+			return lres.RomName < rres.RomName; 
+		}
+	);
+	if (parameters.GenerationPath.empty()) {
+		parameters.GenerationPath = std::filesystem::current_path().string() + "/results.md";
+	}
+	std::ofstream file(parameters.GenerationPath, std::ios::app);
+	file << "| Test | " << last_emulator_name << " |\n";
+	file << "| -- | -- |\n";
 	for (const auto& r : results) {
-		std::cout << r.RomName << " " << (int)(r.Result == TestResult::Passed) << std::endl;
+		std::string emoji;
+		switch (r.Result) {
+			case TestResult::Passed: {
+				emoji = ":+1:";
+				break;
+			}
+			case TestResult::Failed: {
+				emoji = ":x:";
+				break;
+			}
+			case TestResult::Unknown: {
+				emoji = ":?:";
+				break;
+			}
+		}
+		file << "| " << r.RomName << " | " << emoji << " |\n";
 	}
 }

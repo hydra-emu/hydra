@@ -4,6 +4,7 @@ namespace TKPEmu {
     struct StartParameters {
        std::string RomDir;
        std::string RomFile;
+       std::string GenerationPath;
        bool Recursive = false;
        bool Parallel = false;
        bool Verbose = false;
