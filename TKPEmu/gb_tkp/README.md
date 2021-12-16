@@ -16,6 +16,7 @@ Gameboy emulator written in C++ for [TKPEmu](https://github.com/OFFTKP/TKPEmu).
 
 See generated test results [here](./TEST_RESULTS.md).    
 Always generate new test results before pushing a commit when changing the code.
+
 -----
 **[mattcurie](https://github.com/mattcurrie)'s tests:**
 |Test|GameboyTKP  |
