@@ -1,6 +1,8 @@
 #define SDL_MAIN_HANDLED
 #include <execution>
 #include <iostream>
+#include <syncstream>
+#include <mutex>
 #include "include/version.h"
 #include "include/display.h"
 #include "include/console_colors.h"
@@ -8,30 +10,50 @@
 #include "include/emulator_factory.h"
 #include "include/emulator_results.h"
 #include "lib/str_hash.h"
+using TestResult = TKPEmu::Testing::TestResult;
+using TestData = TKPEmu::Testing::TestData;
+using TestDataVec = std::vector<TestData>;
 // TODO: implement online version checking and updating
 TKPEmu::StartParameters parameters;
 void print_help() noexcept;
-void test_rom(std::string path);
+TestResult test_rom(std::string path);
+void generate_results(const TestDataVec& results);
 template <typename It, typename ExecPolicy>
-void test_dir_exec(It dir_it, ExecPolicy exec_pol) {
-	// TODO: parallel does not work because directory iterator cant be used in parallel, find workaround
-	auto begin = std::filesystem::begin(dir_it);
-	auto end = std::filesystem::end(dir_it);
-	std::for_each(std::execution::par_unseq, begin, end, [](const auto& file) {
+TestDataVec test_dir_exec(It begin, It end, ExecPolicy exec_pol) {
+	std::mutex push_mutex;
+	TestDataVec results;
+	std::for_each(std::execution::par_unseq, begin, end, [&](const auto& file) {
+		auto res = TestResult::Unknown;
 		if (!file.is_directory()) {
-			test_rom(file.path().string());
+			res = test_rom(file.path().string());
 		}
+		TestData tr = {
+			.RomName = file.path().filename(),
+			.Result = res
+		};
+		std::lock_guard<std::mutex> lg(push_mutex);
+		results.push_back(tr);
 	});
+	return std::move(results);
 }
 template<typename It>
 void test_dir(It dir_it, bool parallel) {
+	std::vector<typename It::value_type> file_vec;
+	for (auto& f : dir_it) {
+		file_vec.push_back(f);		
+	}
+	auto begin = file_vec.begin();
+	auto end = file_vec.end();
+	TestDataVec results;
 	if (parallel) {
-		test_dir_exec(dir_it, std::execution::par_unseq);
+		results = test_dir_exec(begin, end, std::execution::par_unseq);
 	} else {
-		test_dir_exec(dir_it, std::execution::seq);
+		results = test_dir_exec(begin, end, std::execution::seq);
+	}
+	if (parameters.GenerateTestResults) {
+		generate_results(results);
 	}
 }
-
 enum class ParameterType {
 	RomFile,
 	RomDir,
@@ -52,6 +74,12 @@ int main(int argc, char *argv[]) {
 				case str_hash("--display"): {
 					display_mode = true;
 					goto after_args;
+				}
+				case str_hash("-g"):
+				case str_hash("--generate-results"): {
+					// Enables generating test results as a markdown file
+					parameters.GenerateTestResults = true;
+					break;
 				}
 				case str_hash("-h"):
 				case str_hash("--help"): {
@@ -162,27 +190,37 @@ void print_help() noexcept {
 	<< std::endl;
 }
 
-void test_rom(std::string path) {
+TestResult test_rom(std::string path) {
+	std::osyncstream scout(std::cout);
 	auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path); 
 	if (type == TKPEmu::EmuType::None) {
 		if (parameters.Verbose) {
-			std::cerr << "[" color_warning << std::filesystem::path(path).filename() << color_reset "]: No available emulator found for this file" << std::endl;
+			scout << "[" color_warning << std::filesystem::path(path).filename() << color_reset "]: No available emulator found for this file" << std::endl;
 		}
-		return;
+		return TestResult::None;
 	}
 	std::unique_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
 	emu->SkipBoot = true;
 	emu->FastMode = true;
 	emu->LoadFromFile(path);
-	if (!PassedTestMap.contains(emu->RomHash)) {
+	if (!TKPEmu::Testing::PassedTestMap.contains(emu->RomHash)) {
 		if (parameters.Verbose) {
-			std::cerr << "[" color_error << std::filesystem::path(path).filename() << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
+			scout << "[" color_error << std::filesystem::path(path).filename() << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
 		}
-		return;
+		return TestResult::Unknown;
 	}
-	auto result = PassedTestMap.at(emu->RomHash);
+	auto result = TKPEmu::Testing::PassedTestMap.at(emu->RomHash);
 	auto options = TKPEmu::EmuStartOptions::Console;
 	emu->ScreenshotClocks = result.Clocks;
 	emu->ScreenshotHash = result.ExpectedHash;
 	emu->Start(options);
+	// Console mode does not run on a seperate thread so we don't need to wait
+	return emu->Result;
+}
+
+void generate_results(const TestDataVec& results) {
+	// TODO: sort results
+	for (const auto& r : results) {
+		std::cout << r.RomName << " " << (int)(r.Result == TestResult::Passed) << std::endl;
+	}
 }

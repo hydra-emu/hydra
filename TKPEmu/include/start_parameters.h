@@ -7,6 +7,7 @@ namespace TKPEmu {
        bool Recursive = false;
        bool Parallel = false;
        bool Verbose = false;
+       bool GenerateTestResults = false;
     };
 }
 #endif

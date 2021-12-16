@@ -41,14 +41,6 @@ enum IFInterrupt {
     SERIAL = 1 << 3,
     JOYPAD = 1 << 4
 };
-// Used in the map below, to compare rom hashes with expected results after
-// a hardcoded number of clocks
-using Hash = std::string;
-struct ExpectedResult {
-    unsigned long long Clocks;
-    // Represents the hash of the screenshot taken after Clocks
-    Hash ExpectedHash;
-};
 constexpr static std::array<LogType, LogTypeSize> LogTypeMap {
     LogType::PC, LogType::InstrName, LogType::InstrNum,
     LogType::A, LogType::F, LogType::B, LogType::C,

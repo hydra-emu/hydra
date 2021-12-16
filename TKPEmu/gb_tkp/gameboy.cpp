@@ -1,6 +1,7 @@
 #include <iostream>
 #include <atomic>
 #include <chrono>
+#include <syncstream>
 #include "../glad/glad/glad.h"
 #include "gameboy.h"
 #include "../lib/md5.h"
@@ -130,7 +131,7 @@ namespace TKPEmu::Gameboy {
 	}
 	void Gameboy::start_console() {
 		if (ScreenshotClocks == 0) {
-			std::cerr << color_error "Error: " color_reset "ScreenshotClocks not specified in emulator_results for this rom" << std::endl;
+			// Unknown rom
 			return;
 		}
 		Paused = false;
@@ -140,11 +141,13 @@ namespace TKPEmu::Gameboy {
 			if (!Paused.load()) {
 				update();
 				if (cpu_.TotalClocks == ScreenshotClocks) {
+					std::osyncstream scout(std::cout);
 					if (ScreenshotHash == GetScreenshotHash()) {
-						// TODO: Print success protected function
-						std::cout << "[" << color_success << CurrentFilename << color_reset "]: Passed" << std::endl;
+						scout << "[" << color_success << CurrentFilename << color_reset "]: Passed" << std::endl;
+						Result = TKPEmu::Testing::TestResult::Passed;
 					} else {
-						std::cout << "[" << color_error << CurrentFilename << color_reset "]: Failed" << std::endl;
+						scout << "[" << color_error << CurrentFilename << color_reset "]: Failed" << std::endl;
+						Result = TKPEmu::Testing::TestResult::Failed;
 					}
 					Stopped = true;
 				}

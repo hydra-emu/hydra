@@ -9,6 +9,7 @@
 #include <functional>
 #include <thread>
 #include "TKPImage.h"
+#include "emulator_results.h"
 #include "disassembly_instr.h"
 namespace TKPEmu {
 	enum class EmuStartOptions {
@@ -53,6 +54,7 @@ namespace TKPEmu {
 		std::string RomHash;
 		std::string ScreenshotHash;
 		std::string CurrentFilename;
+		TKPEmu::Testing::TestResult Result = TKPEmu::Testing::TestResult::Unknown; 
 	protected:
 		// To be placed at the end of your update function
 		// Override v_log_state() to change what it does, log_state() will do the right
