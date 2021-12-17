@@ -35,7 +35,6 @@ namespace TKPEmu::Gameboy {
 	}
 	void Gameboy::v_log_state() {
 		*ofstream_ptr_ << std::setfill('0');
-		bool first_type = true;
 		int inst = bus_.ReadSafe(cpu_.PC);
 		for (const auto& t : *log_types_ptr_) {
 			switch (t) {
@@ -333,7 +332,7 @@ namespace TKPEmu::Gameboy {
 	std::string Gameboy::GetEmulatorName() {
 		return "GameboyTKP";
 	}
-	const Devices::Cartridge* const Gameboy::GetCartridge() const {
+	Devices::Cartridge* Gameboy::GetCartridge() {
 		return bus_.GetCartridge();
 	}
 	const auto& Gameboy::GetOpcodeDescription(uint8_t opc) {

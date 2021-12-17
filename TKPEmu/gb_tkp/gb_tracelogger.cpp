@@ -44,6 +44,7 @@ namespace TKPEmu::Applications {
                 std::cerr << "Error: Path is directory" << std::endl;
             } else if (!overwrite && std::filesystem::exists(path_buf_)) {
                 file_exists = true;
+                // TODO: get result of "Overwrite" and act accordingly
                 ImGui::OpenPopup("Overwrite?");
             } else {
                 std::filesystem::create_directories(std::filesystem::path(path_buf_).parent_path());
@@ -82,7 +83,7 @@ namespace TKPEmu::Applications {
 		ImGui::NewLine();
 		ImGui::TextUnformatted("Memory to log:");
 		ImGui::Separator();
-		for (int i = 0; i < LogTypeSize; i++) {
+		for (size_t i = 0; i < LogTypeSize; i++) {
 			ImGui::Checkbox(LogTypeNames[i].c_str(), &available_types_[i]);
 			if ((i + 1) % 5 != 0) {
 				ImGui::SameLine();
@@ -107,7 +108,7 @@ namespace TKPEmu::Applications {
 	}
 	void GameboyTracelogger::set_logtypes() {
 		std::unique_ptr<std::vector<LogType>> ptr = std::make_unique<std::vector<LogType>>();
-		for (int i = 0; i < LogTypeSize; i++) {
+		for (size_t i = 0; i < LogTypeSize; i++) {
 			if (available_types_[i]) {
 				ptr->push_back(LogTypeMap[i]);
 			}

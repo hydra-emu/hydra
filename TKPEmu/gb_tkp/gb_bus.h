@@ -63,11 +63,11 @@ namespace TKPEmu::Gameboy::Devices {
         void WriteL(uint16_t address, uint16_t data);
         void Reset();
         void SoftReset();
-        const Cartridge* const GetCartridge() const;
+        Cartridge* GetCartridge() ;
         void LoadCartridge(std::string fileName);
         std::string GetVramDump();
         std::array<std::array<float, 3>, 4> Palette;
-        std::array<uint8_t, 4> BGPalette{};const Cartridge* const GetCartridge();
+        std::array<uint8_t, 4> BGPalette{};
         std::array<uint8_t, 4> OBJ0Palette{};
         std::array<uint8_t, 4> OBJ1Palette{};
         // TODO: remove big OAM

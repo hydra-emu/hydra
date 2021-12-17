@@ -27,7 +27,7 @@ namespace TKPEmu::Applications {
 		void Reset();
 		bool* IsOpen();
 		void SetEmulator(Emulator* emulator);
-		virtual void HandleShortcut(TKPShortcut& shortcut);
+		virtual void HandleShortcut(TKPShortcut&);
 		static void SetupWindow(const ImVec2& min_size, const ImVec2& max_size);
 		static void DrawMenuEmulation(Emulator* emulator);
         static void ResetEmulatorState(Emulator* emulator);

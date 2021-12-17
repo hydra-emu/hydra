@@ -71,7 +71,7 @@ namespace TKPEmu {
 		virtual void reset_normal();
 		virtual void reset_skip();
 		virtual void update();
-		virtual void load_file(std::string path);
+		virtual void load_file(std::string);
 		virtual std::string print() const;
 		friend std::ostream& operator<<(std::ostream& os, const Emulator& obj);
 		// TODO: move all this to gameboy class only - clean up emulator

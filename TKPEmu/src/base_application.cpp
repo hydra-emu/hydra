@@ -8,7 +8,7 @@ namespace TKPEmu::Applications {
     void IMApplication::SetEmulator(Emulator* emulator) {
         emulator_ = emulator;
     }
-    void IMApplication::HandleShortcut(TKPShortcut& shortcut) {}
+    void IMApplication::HandleShortcut(TKPShortcut&) {}
     void IMApplication::Draw() {
         if (drawing_) {
             SetupWindow(min_size, max_size);

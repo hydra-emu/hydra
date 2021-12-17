@@ -148,9 +148,12 @@ namespace TKPEmu::Gameboy::Devices {
 						}
 						break;
 					}
+					default: {
+						// Unhandled cartridge type.
+						// TODO: stop emulator instead
+						return unused_mem_area_;
+					}
 				}
-				std::cerr << "Error: Cartridge type not implemented - " << (int)ct << std::endl;
-				exit(1);
 				break;
 			}
 			case 0x8000:
@@ -189,11 +192,8 @@ namespace TKPEmu::Gameboy::Devices {
 					// TODO: check if this is actually unused area
 					return unused_mem_area_;
 				}
-				else if (address <= 0xFFFF) {
-					return hram_[address % 0xFF00];
-				}
 				else {
-					std::cerr << "Error: Tried to access address " << address << std::endl;
+					return hram_[address % 0xFF00];
 				}
 			}
 		}
@@ -393,7 +393,7 @@ namespace TKPEmu::Gameboy::Devices {
 		selected_ram_bank_ = 0;
 		BiosEnabled = true;
 	}
-	const Cartridge* const Bus::GetCartridge() const {
+	Cartridge* Bus::GetCartridge() {
 		return cartridge_.get();
 	}
 	void Bus::LoadCartridge(std::string fileName) {
