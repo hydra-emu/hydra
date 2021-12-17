@@ -30,12 +30,12 @@ TestDataVec test_dir_exec(It begin, It end, ExecPolicy exec_pol) {
 	std::mutex push_mutex;
 	TestDataVec results;
 	std::for_each(exec_pol, begin, end, [&](const auto& file) {
-		auto res = TestResult::Unknown;
+		auto res = TestResult::None;
 		if (!file.is_directory()) {
 			res = test_rom(file.path().string());
 		}
 		TestData tr = {
-			.RomName = file.path().filename(),
+			.RomName = file.path().string(),
 			.Result = res
 		};
 		std::lock_guard<std::mutex> lg(push_mutex);
@@ -260,10 +260,12 @@ void generate_results(TestDataVec& results) {
 				emoji = ":x:";
 				break;
 			}
-			case TestResult::None:
 			case TestResult::Unknown: {
 				emoji = ":?:";
 				break;
+			}
+			case TestResult::None: {
+				continue;
 			}
 		}
 		file << "| " << r.RomName << " | " << emoji << " |\n";
