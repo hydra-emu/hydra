@@ -201,13 +201,11 @@ int main(int argc, char *argv[]) {
 	}
 	return 0;
 }
-
 void print_help() noexcept {
 	std::cout << "For debugging/testing check the manual:\n"
 		"man tkpemu\n" 
 	<< std::endl;
 }
-
 TestResult test_rom(std::string path) {
 	std::osyncstream scout(std::cout);
 	auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path); 
@@ -236,7 +234,6 @@ TestResult test_rom(std::string path) {
 	// Console mode does not run on a seperate thread so we don't need to wait
 	return emu->Result;
 }
-
 void generate_results(TestDataVec& results) {
 	std::sort(results.begin(), results.end(),
 		[](auto& lres, auto& rres) -> bool {
@@ -261,7 +258,7 @@ void generate_results(TestDataVec& results) {
 				break;
 			}
 			case TestResult::Unknown: {
-				emoji = ":?:";
+				emoji = ":question:";
 				break;
 			}
 			case TestResult::None: {

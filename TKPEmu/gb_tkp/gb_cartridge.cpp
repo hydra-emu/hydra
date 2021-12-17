@@ -28,7 +28,7 @@ namespace TKPEmu::Gameboy::Devices {
 					break;
 				}
 				default: {
-					// TODO: better error or implement all cartridge types
+					// TODO: better error or implement all cartridge types, quit emulator instead of exiting
 					std::cerr << "Error: Cartridge type not implemented - " << (int)ct << std::endl;
 					//exit(1);
 				}
