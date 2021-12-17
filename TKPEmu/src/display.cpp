@@ -488,9 +488,17 @@ namespace TKPEmu::Graphics {
             emulator_->CloseAndWait();
             emulator_.reset();
         }
+        auto old_emulator_type_ = EmuType::None;
         emulator_type_ = EmulatorFactory::GetEmulatorType(path);
         emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, gb_keys_directional_, gb_keys_action_);
-        TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), emulator_type_);
+        if (emulator_type_ != old_emulator_type_) {
+            emulator_tools_.clear();
+            TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), emulator_type_);
+        } else {
+            for (auto& t : emulator_tools_) {
+                t->Reset();
+            }
+        }
         setup_emulator_specific();
         rom_loaded_ = true;
         rom_paused_ = debug_mode_;

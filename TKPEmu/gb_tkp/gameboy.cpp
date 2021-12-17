@@ -239,29 +239,25 @@ namespace TKPEmu::Gameboy {
 		       "Read more: https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp";
 	}
 	void Gameboy::HandleKeyDown(SDL_Keycode key) {
-		static const uint8_t joy_direction = 0b1110'1111;
-		static const uint8_t joy_action = 0b1101'1111;
 		if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key); it_dir != direction_keys_.end()) {
 			int index = it_dir - direction_keys_.begin();
-			bus_.DirectionKeys &= (~(1UL << index));// & joy_direction;
+			bus_.DirectionKeys &= (~(1UL << index));
 			interrupt_flag_ |= IFInterrupt::JOYPAD;
 		}
 		if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key); it_dir != action_keys_.end()) {
 			int index = it_dir - action_keys_.begin();
-			bus_.ActionKeys &= (~(1UL << index));// & joy_action;
+			bus_.ActionKeys &= (~(1UL << index));
 			interrupt_flag_ |= IFInterrupt::JOYPAD;
 		}
 	}
 	void Gameboy::HandleKeyUp(SDL_Keycode key) {
-		static const uint8_t joy_direction = 0b1110'1111;
-		static const uint8_t joy_action = 0b1101'1111;
 		if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key); it_dir != direction_keys_.end()) {
 			int index = it_dir - direction_keys_.begin();
-			bus_.DirectionKeys |= (1UL << index);// | joy_direction;
+			bus_.DirectionKeys |= (1UL << index);
 		}
 		if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key); it_dir != action_keys_.end()) {
 			int index = it_dir - action_keys_.begin();
-			bus_.ActionKeys |= (1UL << index);// | joy_action;
+			bus_.ActionKeys |= (1UL << index);
 		}
 	}
 	void Gameboy::load_file(std::string path) {

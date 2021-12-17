@@ -32,7 +32,7 @@ namespace TKPEmu::Gameboy::Devices {
 					selected_rom_bank_ &= 0b11111;
 					selected_rom_bank_ |= ((data & 0b11) << 5);
 					selected_rom_bank_ %= rom_banks_size_;
-					selected_ram_bank_ = data & 0b11;
+					selected_ram_bank_ = (data & 0b11) % cartridge_->GetRamSize();
 				}
 				else {
 					// MODE register
@@ -388,6 +388,7 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 		hram_.fill(0);
 		oam_.fill(0);
+		vram_.fill(0);
 		selected_rom_bank_ = 1;
 		selected_ram_bank_ = 0;
 		BiosEnabled = true;
