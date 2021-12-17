@@ -438,6 +438,9 @@ namespace TKPEmu::Graphics {
                 last_shortcut_ = TKPShortcut::NONE;
                 break;
             }
+            default: {
+                break;
+            }
         }
         // Shortcut was not handled by display, pass to applications
         if (last_shortcut_ != TKPShortcut::NONE) {

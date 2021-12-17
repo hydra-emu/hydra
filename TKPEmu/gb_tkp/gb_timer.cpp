@@ -4,8 +4,8 @@ namespace TKPEmu::Gameboy::Devices {
         bus_(bus), 
         DIV(bus->GetReference(addr_div)),
         TIMA(bus_->GetReference(addr_tim)),
-        TMA(bus_->GetReference(addr_tma)),
         TAC(bus_->GetReference(addr_tac)),
+        TMA(bus_->GetReference(addr_tma)),
         IF(bus_->GetReference(addr_ifl))
     {}
     void Timer::Reset() {

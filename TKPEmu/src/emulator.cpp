@@ -142,7 +142,7 @@ namespace TKPEmu {
         std::cerr << "update was not implemented for this emulator" << std::endl;
 		exit(1);
     }
-	void Emulator::load_file(std::string path) {
+	void Emulator::load_file(std::string) {
 		std::cerr << "load_file was not implemented for this emulator" << std::endl;
 		exit(1);
 	}

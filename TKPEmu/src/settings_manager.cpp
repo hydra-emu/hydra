@@ -2,7 +2,10 @@
 #include <filesystem>
 #include <iostream>
 namespace TKPEmu::Tools {
-	SettingsManager::SettingsManager(SettingsMap& settings_, std::string config_file) : settings_(settings_), config_file_(config_file) {
+	SettingsManager::SettingsManager(SettingsMap& settings_, std::string config_file) :
+		config_file_(config_file),
+		settings_(settings_)
+	{
 		try {
 			// ini_parser::read_ini throws if file doesn't exist, so we create it
 			std::string directory;

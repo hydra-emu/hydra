@@ -5,13 +5,13 @@ namespace TKPEmu::Gameboy::Devices {
 	PPU::PPU(Bus* bus, std::mutex* draw_mutex) : bus_(bus), draw_mutex_(draw_mutex), next_stat_mode(bus->NextMode),
 		LCDC(bus->GetReference(0xFF40)),
 		STAT(bus->GetReference(0xFF41)),
+		LYC(bus->GetReference(0xFF45)),
+		LY(bus->GetReference(0xFF44)),
+		IF(bus->GetReference(0xFF0F)),
 		SCY(bus->GetReference(0xFF42)),
 		SCX(bus->GetReference(0xFF43)),
-		LY(bus->GetReference(0xFF44)),
-		LYC(bus->GetReference(0xFF45)),
 		WY(bus->GetReference(0xFF4A)),
-		WX(bus->GetReference(0xFF4B)),
-		IF(bus->GetReference(0xFF0F))
+		WX(bus->GetReference(0xFF4B))
 	{}
 	void PPU::Update(uint8_t cycles) {
 		if (LCDC & LCDCFlag::LCD_ENABLE) {

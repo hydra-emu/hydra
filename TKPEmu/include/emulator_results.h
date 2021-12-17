@@ -57,7 +57,7 @@ namespace TKPEmu::Testing {
         // halt_ime0_ei
         { "8ae8e8bfc9985cae9836a76dd4ff41d4", { 175908, "f0553923b341e4e57f091f1ce8cc8cf0" } },
         // halt_ime1_timing
-        { "603ec0145d94806c5ac2e0e150d0f8a7", { 158432, "1975dc57ea974f8b92d14b07f1a9a584" } },
+        { "603ec0145d94806c5ac2e0e150d0f8a7", { 193386, "1975dc57ea974f8b92d14b07f1a9a584" } },
         // rapid_di_ei
         { "612dff157f718c752aee5fe4d89f806c", { 175867, "6991e00223ecbd57308a7a7116c328f4" } },
         // reti_intr_timing
@@ -100,8 +100,8 @@ namespace TKPEmu::Testing {
         { "37666e894123e433ad28039992a0dc39", { 3379433, "f0553923b341e4e57f091f1ce8cc8cf0" } },
         // ram_256kb
         { "20bb5cd9b26696955e2304c721d658b9", { 752664, "f0553923b341e4e57f091f1ce8cc8cf0" } },
-        // ram_64kb error
-        { "cc197e887003211e175ba5c2fa1bf0bd", { 1'000'000, "e06da7d7c4e68d9423a480bb338bb05e" } },
+        // ram_64kb
+        { "cc197e887003211e175ba5c2fa1bf0bd", { 557442, "f0553923b341e4e57f091f1ce8cc8cf0" } },
 
     };
 }

@@ -26,6 +26,9 @@ namespace TKPEmu::Applications {
                 shortcut = TKPShortcut::NONE;
                 break;
             }
+            default: {
+                break;
+            }
         }
     }
     void GameboyDisassembler::v_draw() {
@@ -277,7 +280,7 @@ namespace TKPEmu::Applications {
                 ImGui::Text("DE: %d,%d", t.D, t.E); ImGui::SameLine(); ImGui::Text("IE: %d", t.IE);
                 ImGui::Text("HL: %d,%d", t.H, t.L); ImGui::SameLine(); ImGui::Text("IF: %d", t.IF);
             }
-            ImGui::Text("Clocks: %d", t.TotalClocks);
+            ImGui::Text("Clocks: %lu", t.TotalClocks);
             ImGui::Checkbox("Hex", &use_hex);
             ImGui::EndChild();
             // TODO: add switch from hex to binary on every textbox here

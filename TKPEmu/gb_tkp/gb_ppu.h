@@ -19,15 +19,14 @@ namespace TKPEmu::Gameboy::Devices {
 		float* GetScreenData();
 	private:
 		Bus* bus_;
+		std::mutex* draw_mutex_;
+		uint8_t& next_stat_mode;
 		std::array<float, 4 * 160 * 144> screen_color_data_{};
-
-		// PPU register pointers
+		// PPU memory mapped registers
 		uint8_t& LCDC, &STAT, &LYC, &LY, &IF, &SCY, &SCX, &WY, &WX;
 
 		int clock_ = 0;
 		int clock_target_ = 0;
-		uint8_t& next_stat_mode;
-		std::mutex* draw_mutex_ = nullptr;
 		int set_mode(int mode);
 		int get_mode();
 		int update_lyc();
