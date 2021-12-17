@@ -32,7 +32,7 @@ namespace TKPEmu::Gameboy::Devices {
 					selected_rom_bank_ &= 0b11111;
 					selected_rom_bank_ |= ((data & 0b11) << 5);
 					selected_rom_bank_ %= rom_banks_size_;
-					selected_ram_bank_ = (data & 0b11) % cartridge_->GetRamSize();
+					selected_ram_bank_ = data & 0b11;
 				}
 				else {
 					// MODE register
@@ -60,7 +60,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				else if (address <= 0x5FFF) {
 					if (data <= 0b11) {
-						selected_ram_bank_ = data & (cartridge_->GetRamSize() - 1); 
+						selected_ram_bank_ = data; 
 					} else {
 						// TODO: mbc3 rtc
 					}
@@ -163,7 +163,7 @@ namespace TKPEmu::Gameboy::Devices {
 				if (ram_enabled_) {
 					if (cartridge_->GetRamSize() == 0)
 						return eram_default_[address % 0x2000];
-					auto sel = (banking_mode_ ? selected_ram_bank_ : 0);
+					auto sel = (banking_mode_ ? selected_ram_bank_ : 0) % cartridge_->GetRamSize();
 					return (ram_banks_[sel])[address % 0x2000];
 				} else {
 					unused_mem_area_ = 0xFF;
