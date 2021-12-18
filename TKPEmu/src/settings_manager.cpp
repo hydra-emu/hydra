@@ -7,15 +7,20 @@ namespace TKPEmu::Tools {
 		settings_(settings)
 	{
 		try {
-			// ini_parser::read_ini throws if file doesn't exist, so we create it
-			std::string directory;
-			directory = std::filesystem::current_path();
-			directory += "/Resources/Data/";
-			if (!std::filesystem::exists(directory)) {
-				std::cout << "Creating " << directory << " directories..." << std::endl;
-				std::filesystem::create_directories(directory);
+			#if defined(__linux__)
+			SaveDataDir = getenv("HOME") + std::string("/.config/tkpemu/");
+			#elif defined(_WIN32)
+			SaveDataDir = getenv("APPDATA") + std::string("/TKPEmu/");
+			#endif
+			if (SaveDataDir.empty()) {
+				std::cerr << "SaveDataDir was not defined for this environment - settings_manager.cpp" << std::endl;
+				exit(1);
 			}
-			config_file_ = directory + config_file_;
+			if (!std::filesystem::exists(SaveDataDir)) {
+				std::cout << "Creating " << SaveDataDir << " directories..." << std::endl;
+				std::filesystem::create_directories(SaveDataDir);
+			}
+			config_file_ = SaveDataDir + config_file_;
 			if (!std::filesystem::exists(config_file_)) {
 				std::cout << "User settings not found. Loading default settings..." << std::endl;
 				std::fstream temp;
@@ -27,8 +32,8 @@ namespace TKPEmu::Tools {
 		}
 		catch (std::exception& ex) {
 			// Ini file doesn't exist or is inaccessible
-			std::cout << "Error opening user .ini file" << std::endl;
-			throw ex;
+			std::cout << "Error opening user .ini file\n" << ex.what() << std::endl;
+			return;
 		}
 		for (auto& item : settings_) {
 			item.second = ptree_.get(item.first, item.second);

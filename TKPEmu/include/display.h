@@ -52,16 +52,11 @@ namespace TKPEmu::Graphics {
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
         using GameboyKeys = std::array<SDL_Keycode, 4>;
         const std::string GLSLVersion = "#version 130";
-        const std::string BackgroundImageFile = "background.jpg";
-        const std::string ResourcesDataDir = "/Resources/Data/";
-        const std::string ResourcesRomsDir = "/Resources/ROMs";
-        const std::string ResourcesImagesDir = "/Resources/Images/";
         std::vector<std::string> SupportedRoms = { ".gb" };
         #ifdef _WIN32
         wchar_t exe_dir[MAX_PATH];
         #endif
         std::string ImGuiSettingsFile = "imgui.ini";
-        std::string ExecutableDirectory;
     private:
         // RAII class for the initialization functions
         class DisplayInitializer {

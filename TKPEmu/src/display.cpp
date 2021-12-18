@@ -36,8 +36,7 @@ namespace TKPEmu::Graphics {
         gl_context_ptr_(nullptr, SDL_GL_DeleteContext)
     {
         std::ios_base::sync_with_stdio(false);
-        ExecutableDirectory = std::filesystem::current_path();
-        ImGuiSettingsFile = ExecutableDirectory + ResourcesDataDir + ImGuiSettingsFile;
+        ImGuiSettingsFile = settings_manager_.SaveDataDir + ImGuiSettingsFile;
         // TODO: get rid of this enum warning
         SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(
             SDL_WINDOW_OPENGL
@@ -55,9 +54,6 @@ namespace TKPEmu::Graphics {
         gl_context_ptr_.reset(SDL_GL_CreateContext(window_ptr_.get()));
         SDL_SetWindowMinimumSize(window_ptr_.get(), window_settings_.minimum_width, window_settings_.minimum_height);
         SDL_SetWindowMaximumSize(window_ptr_.get(), window_settings_.maximum_width, window_settings_.maximum_height);
-        std::filesystem::create_directories(ExecutableDirectory + ResourcesDataDir);
-        std::filesystem::create_directories(ExecutableDirectory + ResourcesImagesDir);
-        std::filesystem::create_directories(ExecutableDirectory + ResourcesRomsDir);
         SDL_GL_MakeCurrent(window_ptr_.get(), gl_context_ptr_.get());
         if (!gladLoadGLLoader(static_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
             throw("Error: coudl not initialize glad");
@@ -619,7 +615,7 @@ namespace TKPEmu::Graphics {
     void Display::open_file_browser() {
         file_browser_.SetTitle("Select a ROM...");
         file_browser_.SetTypeFilters(SupportedRoms);
-        std::filesystem::path path = ExecutableDirectory + ResourcesRomsDir;
+        std::filesystem::path path = settings_manager_.SaveDataDir.substr(0, settings_manager_.SaveDataDir.length() - 1);
         if (!(settings_.at("General.last_dir").empty())) {
             path = settings_.at("General.last_dir");
         }
