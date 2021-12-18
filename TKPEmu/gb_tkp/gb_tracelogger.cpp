@@ -19,7 +19,6 @@ namespace TKPEmu::Applications {
     }
 	void GameboyTracelogger::v_draw() {
         static bool path_changed = false;
-        static bool file_exists = false;
         static bool overwrite = false;
         if (is_logging_) {
             push_disabled();
@@ -43,7 +42,6 @@ namespace TKPEmu::Applications {
             if (std::filesystem::is_directory(path_buf_)) {
                 std::cerr << "Error: Path is directory" << std::endl;
             } else if (!overwrite && std::filesystem::exists(path_buf_)) {
-                file_exists = true;
                 // TODO: get result of "Overwrite" and act accordingly
                 ImGui::OpenPopup("Overwrite?");
             } else {

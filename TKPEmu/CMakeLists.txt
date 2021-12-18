@@ -5,16 +5,16 @@ configure_file(background.jpg ${CMAKE_CURRENT_BINARY_DIR}/Resources/Images/backg
 configure_file(icon.bmp ${CMAKE_CURRENT_BINARY_DIR}/Resources/Images/icon.bmp COPYONLY)
 # Debug mode, comment out if not needed
 # set(CMAKE_BUILD_TYPE, Debug)
-set(CMAKE_BUILD_TYPE, Release)
+# set(CMAKE_BUILD_TYPE, Release)
 # TKPEmu uses several C++20 features
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Enable maximum warning levels
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option")
 # Enable maximum optimization, comment out if you need to debug or 
 # see https://stackoverflow.com/questions/41361631/optimize-in-cmake-by-default
- set(CMAKE_CXX_FLAGS "-O2")
+set(CMAKE_CXX_FLAGS "-O2")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 add_subdirectory("src/")
 add_subdirectory("lib/")

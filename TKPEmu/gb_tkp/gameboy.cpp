@@ -55,55 +55,55 @@ namespace TKPEmu::Gameboy {
 					break;
 				}
 				case LogType::A: {
-					*ofstream_ptr_ << "A:" << std::setw(2) << std::hex << (int)cpu_.A;
+					*ofstream_ptr_ << "A:" << std::setw(2) << std::hex << static_cast<int>(cpu_.A);
 					break;
 				}
 				case LogType::B: {
-					*ofstream_ptr_ << "B:" << std::setw(2) << std::hex << (int)cpu_.B;
+					*ofstream_ptr_ << "B:" << std::setw(2) << std::hex << static_cast<int>(cpu_.B);
 					break;
 				}
 				case LogType::C: {
-					*ofstream_ptr_ << "C:" << std::setw(2) <<  std::hex << (int)cpu_.C;
+					*ofstream_ptr_ << "C:" << std::setw(2) <<  std::hex << static_cast<int>(cpu_.C);
 					break;
 				}
 				case LogType::D: {
-					*ofstream_ptr_ << "D:" << std::setw(2) << std::hex << (int)cpu_.D;
+					*ofstream_ptr_ << "D:" << std::setw(2) << std::hex << static_cast<int>(cpu_.D);
 					break;
 				}
 				case LogType::E: {
-					*ofstream_ptr_ << "E:" << std::setw(2) << std::hex << (int)cpu_.A;
+					*ofstream_ptr_ << "E:" << std::setw(2) << std::hex << static_cast<int>(cpu_.A);
 					break;
 				}
 				case LogType::F: {
-					*ofstream_ptr_ << "F:" <<  std::setw(2) << std::hex << (int)cpu_.F;
+					*ofstream_ptr_ << "F:" <<  std::setw(2) << std::hex << static_cast<int>(cpu_.F);
 					break;
 				}
 				case LogType::H: {
-					*ofstream_ptr_ << "H:" << std::setw(2) << std::hex << (int)cpu_.H;
+					*ofstream_ptr_ << "H:" << std::setw(2) << std::hex << static_cast<int>(cpu_.H);
 					break;
 				}
 				case LogType::L: {
-					*ofstream_ptr_ << "L:" << std::setw(2) << std::hex << (int)cpu_.L;
+					*ofstream_ptr_ << "L:" << std::setw(2) << std::hex << static_cast<int>(cpu_.L);
 					break;
 				}
 				case LogType::LY: {
-					*ofstream_ptr_ << "LY:" << std::setw(2) << std::hex << (int)cpu_.LY;
+					*ofstream_ptr_ << "LY:" << std::setw(2) << std::hex << static_cast<int>(cpu_.LY);
 					break;
 				}
 				case LogType::IF: {
-					*ofstream_ptr_ << "IF:" << std::setw(2) << std::hex << (int)cpu_.IF;
+					*ofstream_ptr_ << "IF:" << std::setw(2) << std::hex << static_cast<int>(cpu_.IF);
 					break;
 				}
 				case LogType::IE: {
-					*ofstream_ptr_ << "IE:" << std::setw(2) << std::hex << (int)cpu_.IE;
+					*ofstream_ptr_ << "IE:" << std::setw(2) << std::hex << static_cast<int>(cpu_.IE);
 					break;
 				}
 				case LogType::IME: {
-					*ofstream_ptr_ << "IME:" << (int)cpu_.ime_;
+					*ofstream_ptr_ << "IME:" << static_cast<int>(cpu_.ime_);
 					break;
 				}
 				case LogType::HALT: {
-					*ofstream_ptr_ << "HALT:" << (int)cpu_.halt_;
+					*ofstream_ptr_ << "HALT:" << static_cast<int>(cpu_.halt_);
 					break;
 				}
 			}

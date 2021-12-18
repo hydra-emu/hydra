@@ -15,7 +15,7 @@ namespace TKPEmu::Tools {
 		// Declared noexcept to terminate the program if this throws
 		void save_settings() noexcept;
 	public:
-		SettingsManager(SettingsMap& settings_, std::string config_file);
+		SettingsManager(SettingsMap& settings, std::string config_file);
 		~SettingsManager();
 	};
 }

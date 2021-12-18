@@ -8,7 +8,7 @@ namespace TKPEmu::Gameboy::Devices {
 		is.open(fileName, std::ios::binary);
 		if (is.is_open()) {
 			is.seekg(ENTRY_POINT, std::ios_base::beg);
-			is.read((char*)&header_, sizeof(Header));
+			is.read(reinterpret_cast<char*>(&header_), sizeof(Header));
 			loaded = true;
 			is.seekg(0, std::ios_base::beg);
 			auto ct = GetCartridgeType();
@@ -23,13 +23,13 @@ namespace TKPEmu::Gameboy::Devices {
 					auto sz = GetRomSize();
 					romBanks.resize(sz);
 					for (int i = 0; i < sz; i++) {
-						is.read((char*)(&romBanks[i]), sizeof(uint8_t) * 0x4000);
+						is.read(reinterpret_cast<char*>(&romBanks[i]), sizeof(uint8_t) * 0x4000);
 					}
 					break;
 				}
 				default: {
 					// TODO: better error or implement all cartridge types, quit emulator instead of exiting
-					std::cerr << "Error: Cartridge type not implemented - " << (int)ct << std::endl;
+					std::cerr << "Error: Cartridge type not implemented - " << static_cast<int>(ct) << std::endl;
 					//exit(1);
 				}
 			}
@@ -42,7 +42,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	CartridgeType Cartridge::GetCartridgeType() const {
 		if (loaded) {
-			return (CartridgeType)header_.cartridgeType;
+			return static_cast<CartridgeType>(header_.cartridgeType);
 		}
 		return CartridgeType::ERROR;
 	}

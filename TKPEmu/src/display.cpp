@@ -40,7 +40,7 @@ namespace TKPEmu::Graphics {
         ExecutableDirectory = std::filesystem::current_path();
         ImGuiSettingsFile = ExecutableDirectory + ResourcesDataDir + ImGuiSettingsFile;
         // TODO: get rid of this enum warning
-        SDL_WindowFlags window_flags = (SDL_WindowFlags)(
+        SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(
             SDL_WINDOW_OPENGL
             | SDL_WINDOW_RESIZABLE
             | SDL_WINDOW_ALLOW_HIGHDPI
@@ -60,7 +60,7 @@ namespace TKPEmu::Graphics {
         std::filesystem::create_directories(ExecutableDirectory + ResourcesImagesDir);
         std::filesystem::create_directories(ExecutableDirectory + ResourcesRomsDir);
         SDL_GL_MakeCurrent(window_ptr_.get(), gl_context_ptr_.get());
-        if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+        if (!gladLoadGLLoader(static_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
             throw("Error: coudl not initialize glad");
         }
         else {
@@ -565,6 +565,9 @@ namespace TKPEmu::Graphics {
         switch (emulator_type_) {
             case EmuType::Gameboy: {
                 setup_gameboy_palette();
+                break;
+            }
+            default: {
                 break;
             }
         }
