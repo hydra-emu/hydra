@@ -217,14 +217,14 @@ TestData test_rom(std::string path) {
 	emu->SkipBoot = true;
 	emu->FastMode = true;
 	emu->LoadFromFile(path);
-	if (!TKPEmu::Testing::PassedTestMap.contains(emu->RomHash)) {
+	if (!TKPEmu::Testing::QA::PassedTestMap.contains(emu->RomHash)) {
 		if (parameters.Verbose) {
 			scout << "[" color_error << std::filesystem::path(path).filename() << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
 		}
 		ret.Result = TestResult::None;
 		return ret;
 	}
-	auto result = TKPEmu::Testing::PassedTestMap.at(emu->RomHash);
+	auto result = TKPEmu::Testing::QA::PassedTestMap.at(emu->RomHash);
 	auto options = TKPEmu::EmuStartOptions::Console;
 	emu->ScreenshotClocks = result.Clocks;
 	emu->ScreenshotHash = result.ExpectedHash;
@@ -232,7 +232,7 @@ TestData test_rom(std::string path) {
 	emu->Start(options);
 	// Console mode does not run on a seperate thread so we don't need to wait
 	ret.Result = emu->Result;
-	ret.RomName = TKPEmu::Testing::PassedTestMap.at(emu->RomHash).TestName;
+	ret.RomName = TKPEmu::Testing::QA::PassedTestMap.at(emu->RomHash).TestName;
 	return ret;
 }
 void generate_results(TestDataVec& results) {
