@@ -9,7 +9,9 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 
 ## Getting started
 ### Archlinux
-- yay -S tkpemu
+```
+yay -S tkpemu
+```
 
 ## License
 TKPEmu is licensed under the MIT license. Copyright (C) 2021-2021 Paris Oplopoios
