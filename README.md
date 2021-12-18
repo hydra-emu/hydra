@@ -7,11 +7,14 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 ## Current emulators
 - [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp)
 
-## Getting started
-### Archlinux
-```
-yay -S tkpemu
-```
+## Installation
+### Archlinux, [AUR](https://aur.archlinux.org/packages/tkpemu/):
+`yay -S tkpemu`
+
+### Windows:
+Has not been tested.    
+ - Download CMake for Windows and try to build.    
+ - Create an issue if there's an error.
 
 ## License
 TKPEmu is licensed under the MIT license. Copyright (C) 2021-2021 Paris Oplopoios
