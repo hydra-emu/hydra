@@ -353,3 +353,15 @@ cmake_install.cmake
 Makefile
 CMakeCache.txt
 background.jpg
+
+# imgui specific files, we download these with cmake
+imconfig.h 
+imgui.cpp 
+imgui.h 
+imgui_draw.cpp 
+imgui_internal.h 
+imgui_tables.cpp 
+imgui_widgets.cpp 
+imstb_rectpack.h 
+imstb_textedit.h 
+imstb_truetype.h
