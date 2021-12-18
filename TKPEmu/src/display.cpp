@@ -4,7 +4,6 @@
 #include <thread>
 #include <iostream>
 #include <algorithm>
-#include "../lib/stb_image.h"
 #include "../include/display.h"
 #include "../include/disassembly_instr.h"
 #include "../gb_tkp/gb_disassembler.h"
@@ -71,7 +70,6 @@ namespace TKPEmu::Graphics {
     Display::~Display() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteFramebuffers(1, &frame_buffer_);
-        glDeleteTextures(1, &background_image_.texture);
     }
     void Display::EnterMainLoop() {
         main_loop();
@@ -298,10 +296,8 @@ namespace TKPEmu::Graphics {
             ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
         }
         else {
-            if (background_image_.texture != 0)
-                ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)background_image_.texture, background_image_.topleft, background_image_.botright);
             // TODO: allow for undocked window, disable above line when that happens
-            //ImGui::Image((void*)(intptr_t)background_image_.texture, ImVec2(512,512));
+            //ImGui::Image((void*)(intptr_t)_image_.texture, ImVec2(512,512));
         }
     }
 
@@ -374,41 +370,6 @@ namespace TKPEmu::Graphics {
     void Display::draw_menu_bar_view() {
         if (ImGui::MenuItem("FPS Counter", NULL, window_fpscounter_open_, true)) {  window_fpscounter_open_ ^= true; }
         ImGui::EndMenu();
-    }
-
-    bool Display::load_image_from_file(const char* filename, TKPImage& out) {
-        // Load from file
-        if (!std::filesystem::exists(filename)){
-            std::cout << "ERROR: " << filename << " not found!" << std::endl;
-            return false;
-        }
-        unsigned char* image_data = stbi_load(filename, &out.width, &out.height, NULL, 4);
-        if (image_data == NULL) {
-            std::cout << "ERROR: " << filename << " was found, but could not be loaded." << std::endl;
-            return false;
-        }
-
-        // Create a OpenGL texture identifier
-        GLuint image_texture;
-        glGenTextures(1, &image_texture);
-        glBindTexture(GL_TEXTURE_2D, image_texture);
-
-        // Setup filtering parameters for display
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        // Upload pixels into texture
-        #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        #endif
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, out.width, out.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-        stbi_image_free(image_data);
-        out.texture = image_texture;
-        image_scale(out.topleft, out.botright, out.width, out.height);
-        std::cout << "Background loaded successfully" << std::endl;
-        return true;
     }
     void Display::handle_shortcuts() {
         switch(last_shortcut_) {
@@ -596,9 +557,6 @@ namespace TKPEmu::Graphics {
         init_settings_values();
         ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
         ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB | ImGuiColorEditFlags_PickerHueWheel);
-        if (!load_image_from_file((ExecutableDirectory + ResourcesImagesDir + BackgroundImageFile).c_str(), background_image_)){
-            std::cerr << "Background image seems to be missing. Default background is going to be empty." << std::endl;
-        }
         // TODO: design better icon
         SDL_Surface* icon = SDL_LoadBMP(std::string(std::filesystem::current_path().string() + "/Resources/Images/icon.bmp").c_str());
         SDL_SetWindowIcon(window_ptr_.get(), icon);
@@ -691,7 +649,6 @@ namespace TKPEmu::Graphics {
                             case SDL_WINDOWEVENT_RESIZED:
                             window_settings_.window_width = event.window.data1;
                             window_settings_.window_height = event.window.data2;
-                            image_scale(background_image_.topleft, background_image_.botright, background_image_.width, background_image_.height);
                             if (emulator_ != nullptr)
                                 image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
                             glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
