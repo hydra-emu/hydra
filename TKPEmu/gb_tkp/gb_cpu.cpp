@@ -946,6 +946,7 @@ namespace TKPEmu::Gameboy::Devices {
 			PC += ((temp ^ 0x80) - 0x80);
 			tTemp = 12;
 		} else {
+			PC += 1;
 			tTemp = 8;
 		}
 	}
