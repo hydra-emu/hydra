@@ -5,6 +5,7 @@ configure_file(background.jpg ${CMAKE_CURRENT_BINARY_DIR}/Resources/Images/backg
 configure_file(icon.bmp ${CMAKE_CURRENT_BINARY_DIR}/Resources/Images/icon.bmp COPYONLY)
 # Debug mode, comment out if not needed
 # set(CMAKE_BUILD_TYPE, Debug)
+set(CMAKE_BUILD_TYPE, Release)
 # TKPEmu uses several C++20 features
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)

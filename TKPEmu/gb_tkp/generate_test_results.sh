@@ -1,6 +1,6 @@
 #!/bin/sh
 if (( $# != 3 )); then
-    >&2 echo "Correct syntax: generate_test_results (TKPEmu path) (blargg individual roms directory) (mooneye-gb tests directory)"
+    >&2 echo "Correct syntax: generate_test_results (TKPEmu path) (blargg tests directory) (mooneye-gb tests directory)"
     exit
 fi
 
@@ -17,7 +17,7 @@ echo "-----" >> $outf
 echo "**[Blargg](https://github.com/gblargg)'s tests:**    " >> $outf
 echo "Testing blargg directory $blargg"
 # Generate blargg tests
-$emu -T $blargg -p -g -G $outf
+$emu -T $blargg -r -p -g -G $outf
 echo "-----" >> $outf
 echo "**[Gekkio](https://github.com/Gekkio)'s tests:**    " >> $outf
 echo "Testing mooneye directory $mooneye"

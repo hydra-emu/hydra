@@ -14,7 +14,7 @@ namespace TKPEmu::Applications {
         static bool hashed = false;
         static std::string hash = "?";
         static std::string result = "?";
-        if (!hashed && gb_ptr->Paused) {
+        if (gb_ptr->Paused) {
             hashed = true;
             hash = gb_ptr->GetScreenshotHash();
             result = "{ \"" + gb_ptr->RomHash + "\", { " + std::to_string(gb_ptr->GetCPU().TotalClocks) + ", \"" + hash + "\" } },";
