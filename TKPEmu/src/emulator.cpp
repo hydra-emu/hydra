@@ -17,7 +17,7 @@ namespace TKPEmu {
     }
     void Emulator::Screenshot(std::string filename) { 
 		std::lock_guard<std::mutex> lg(DrawMutex);
-		static const std::string scrnshot_dir = std::string(std::filesystem::current_path()) + "/Resources/Screenshots/";
+		static const std::string scrnshot_dir = std::string(std::filesystem::current_path()) + "/";
 		if (!std::filesystem::is_directory(scrnshot_dir)) {
 			std::filesystem::create_directories(scrnshot_dir);
 		}
