@@ -213,6 +213,26 @@ namespace TKPEmu::Gameboy::Devices {
 		reg = temp & 0xFF;
 		tTemp = 8;
 	}
+	void CPU::conditional_jump_rel(bool condition) {
+		if (condition) {
+			auto temp = bus_->Read(PC);
+			PC += 1;
+			PC += ((temp ^ 0x80) - 0x80);
+			tTemp = 12;
+		} else {
+			PC += 1;
+			tTemp = 8;
+		}
+	}
+	void CPU::conditional_jump(bool condition) {
+		tTemp = 12;
+		if (condition) {
+			PC = bus_->ReadL(PC);
+			tTemp = 16;
+		} else {
+			PC += 2;
+		}
+	}
 	void CPU::rst(RegisterType addr) {
 		SP -= 2;
 		bus_->WriteL(SP, PC);
@@ -868,102 +888,39 @@ namespace TKPEmu::Gameboy::Devices {
 		--SP;
 		tTemp = 8;
 	}
-	void CPU::JP16() {
-		PC = bus_->ReadL(PC);
-		tTemp = 16;
-	}
 	void CPU::JPHL() {
 		PC = (H << 8) | L;
 		tTemp = 4;
 	}
+	void CPU::JP16() {
+		conditional_jump(true);
+	}
 	void CPU::JPNZ16() {
-		tTemp = 12;
-		if ((F & 0x80) == 0x00) {
-			PC = bus_->ReadL(PC);
-			tTemp += 4;
-		}
-		else
-			PC += 2;
+		conditional_jump(!(F & FLAG_ZERO_MASK));
 	}
 	void CPU::JPZ16() {
-		tTemp = 12;
-		if ((F & 0x80) == 0x80) {
-			PC = bus_->ReadL(PC);
-			tTemp += 4;
-		}
-		else
-			PC += 2;
+		conditional_jump(F & FLAG_ZERO_MASK);
 	}
 	void CPU::JPNC16() {
-		tTemp = 12;
-		if ((F & 0x10) == 0x00) {
-			PC = bus_->ReadL(PC);
-			tTemp += 4;
-		}
-		else
-			PC += 2;
+		conditional_jump(!(F & FLAG_CARRY_MASK));
 	}
 	void CPU::JPC16() {
-		tTemp = 12;
-		if ((F & 0x10) == 0x10) {
-			PC = bus_->ReadL(PC);
-			tTemp += 4;
-		}
-		else
-			PC += 2;
+		conditional_jump(F & FLAG_CARRY_MASK);
 	}
 	void CPU::JR8() {
-		int i = bus_->Read(PC);
-		if (i >= 0x80)
-			i = -((~i + 1) & 255);
-		PC++;
-		tTemp = 8;
-		PC += i;
-		tTemp += 4;
+		conditional_jump_rel(true);
 	}
 	void CPU::JRNZ8() {
-		int i = bus_->Read(PC);
-		PC++;
-		if ((F & (FLAG_ZERO_MASK)) == 0) {
-			PC += ((i ^ 0x80) - 0x80);
-			tTemp = 12;
-		}
-		else {
-			tTemp = 8;
-		}
+		conditional_jump_rel(!(F & FLAG_ZERO_MASK));
 	}
 	void CPU::JRZ8() {
-		int i = bus_->Read(PC);
-		if (i >= 0x80)
-			i = -((~i + 1) & 255);
-		PC++;
-		tTemp = 8;
-		if ((F & 0x80) == 0x80) {
-			PC += i;
-			tTemp += 4;
-		}
+		conditional_jump_rel(F & FLAG_ZERO_MASK);
 	}
 	void CPU::JRNC8() {
-		int i = bus_->Read(PC);
-		if (i >= 0x80)
-			i = -((~i + 1) & 255);
-		PC++;
-		tTemp = 8;
-		if ((F & 0x10) == 0x00) {
-			PC += i;
-			tTemp += 4;
-		}
+		conditional_jump_rel(!(F & FLAG_CARRY_MASK));
 	}
 	void CPU::JRC8() {
-		int i = bus_->Read(PC);
-		if (i >= 0x80)
-			i = -((~i + 1) & 255);
-		PC++;
-		tTemp = 8;
-		if ((F & 0x10) == 0x10) {
-			PC += i;
-			tTemp += 4;
-		}
+		conditional_jump_rel(F & FLAG_CARRY_MASK);
 	}
 	void CPU::ANDA() {
 		reg_and(A);

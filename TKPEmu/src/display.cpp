@@ -487,11 +487,10 @@ namespace TKPEmu::Graphics {
                 // Impossibly rare, but would avoid a program hang
                 return;
             }
-            emulator_tools_.clear();
             emulator_->CloseAndWait();
             emulator_.reset();
         }
-        auto old_emulator_type_ = EmuType::None;
+        auto old_emulator_type_ = emulator_type_;
         emulator_type_ = EmulatorFactory::GetEmulatorType(path);
         emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, gb_keys_directional_, gb_keys_action_);
         if (emulator_type_ != old_emulator_type_) {

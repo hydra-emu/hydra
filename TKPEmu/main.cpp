@@ -23,23 +23,20 @@ TKPEmu::StartParameters parameters;
 // TODO: remove last_emulator_name -> add in TestData
 std::string last_emulator_name = "Unknown emulator";
 void print_help() noexcept;
-TestResult test_rom(std::string path);
+TestData test_rom(std::string path);
 void generate_results(TestDataVec& results);
 template <typename It, typename ExecPolicy>
 TestDataVec test_dir_exec(It begin, It end, ExecPolicy exec_pol) {
 	std::mutex push_mutex;
 	TestDataVec results;
 	std::for_each(exec_pol, begin, end, [&](const auto& file) {
-		auto res = TestResult::None;
 		if (!file.is_directory()) {
-			res = test_rom(file.path().string());
+			TestData res = test_rom(file.path().string());
+			if (res.Result != TestResult::None) {
+				std::lock_guard<std::mutex> lg(push_mutex);
+				results.push_back(res);
+			}
 		}
-		TestData tr = {
-			.RomName = file.path().string(),
-			.Result = res
-		};
-		std::lock_guard<std::mutex> lg(push_mutex);
-		results.push_back(tr);
 	});
 	return results;
 }
@@ -80,7 +77,6 @@ int main(int argc, char *argv[]) {
 				}
 				case str_hash("-g"):
 				case str_hash("--generate-markdown"): {
-					// Enables generating test results as a markdown file
 					parameters.GenerateTestResults = true;
 					break;
 				}
@@ -206,14 +202,16 @@ void print_help() noexcept {
 		"man tkpemu\n" 
 	<< std::endl;
 }
-TestResult test_rom(std::string path) {
+TestData test_rom(std::string path) {
+	TestData ret;
 	std::osyncstream scout(std::cout);
 	auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path); 
 	if (type == TKPEmu::EmuType::None) {
 		if (parameters.Verbose) {
 			scout << "[" color_warning << std::filesystem::path(path).filename() << color_reset "]: No available emulator found for this file" << std::endl;
 		}
-		return TestResult::None;
+		ret.Result = TestResult::None;
+		return ret;
 	}
 	std::unique_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
 	emu->SkipBoot = true;
@@ -223,7 +221,8 @@ TestResult test_rom(std::string path) {
 		if (parameters.Verbose) {
 			scout << "[" color_error << std::filesystem::path(path).filename() << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
 		}
-		return TestResult::Unknown;
+		ret.Result = TestResult::None;
+		return ret;
 	}
 	auto result = TKPEmu::Testing::PassedTestMap.at(emu->RomHash);
 	auto options = TKPEmu::EmuStartOptions::Console;
@@ -232,7 +231,9 @@ TestResult test_rom(std::string path) {
 	last_emulator_name = emu->GetEmulatorName();
 	emu->Start(options);
 	// Console mode does not run on a seperate thread so we don't need to wait
-	return emu->Result;
+	ret.Result = emu->Result;
+	ret.RomName = TKPEmu::Testing::PassedTestMap.at(emu->RomHash).TestName;
+	return ret;
 }
 void generate_results(TestDataVec& results) {
 	std::sort(results.begin(), results.end(),

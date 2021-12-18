@@ -85,6 +85,8 @@ namespace TKPEmu::Gameboy::Devices {
 		void bit_sl(RegisterType& reg);
 		void bit_sr(RegisterType& reg);
 		void bit_srl(RegisterType& reg);
+		void conditional_jump_rel(bool condition);
+		void conditional_jump(bool condition);
 		void rst(RegisterType addr);
 		void handle_interrupts();
 		void execute_interrupt(int bit);
