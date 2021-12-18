@@ -913,13 +913,9 @@ namespace TKPEmu::Gameboy::Devices {
 			PC += 2;
 	}
 	void CPU::JR8() {
-		int i = bus_->Read(PC);
-		if (i >= 0x80)
-			i = -((~i + 1) & 255);
-		PC++;
-		tTemp = 8;
-		PC += i;
-		tTemp += 4;
+		auto temp = bus_->Read(PC);
+		PC += 1 + ((temp ^ 0x80) - 0x80);
+		tTemp = 12;
 	}
 	void CPU::JRNZ8() {
 		int i = bus_->Read(PC);
@@ -933,25 +929,24 @@ namespace TKPEmu::Gameboy::Devices {
 		}
 	}
 	void CPU::JRZ8() {
-		int i = bus_->Read(PC);
-		if (i >= 0x80)
-			i = -((~i + 1) & 255);
-		PC++;
-		tTemp = 8;
-		if ((F & 0x80) == 0x80) {
-			PC += i;
-			tTemp += 4;
+		if (F & FLAG_ZERO_MASK) {
+			auto temp = bus_->Read(PC);
+			PC += 1;
+			PC += (temp ^ 0x80) - 0x80;
+			tTemp = 12;
+		} else {
+			PC += 1;
+			tTemp = 8;
 		}
 	}
 	void CPU::JRNC8() {
-		int i = bus_->Read(PC);
-		if (i >= 0x80)
-			i = -((~i + 1) & 255);
-		PC++;
-		tTemp = 8;
-		if ((F & 0x10) == 0x00) {
-			PC += i;
-			tTemp += 4;
+		if (!(F & FLAG_CARRY_MASK)) {
+			auto temp = bus_->Read(PC);
+			PC += 1;
+			PC += ((temp ^ 0x80) - 0x80);
+			tTemp = 12;
+		} else {
+			tTemp = 8;
 		}
 	}
 	void CPU::JRC8() {
