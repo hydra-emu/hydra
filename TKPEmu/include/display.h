@@ -115,7 +115,6 @@ namespace TKPEmu::Graphics {
         bool skip_boot_ = false;
         bool fast_mode_ = false;
         WindowSettings window_settings_;
-        TKPImage background_image_;
         GLuint frame_buffer_;
         ImGui::FileBrowser file_browser_;
         EmuType emulator_type_ = EmuType::None;
