@@ -8,13 +8,8 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 - [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp)
 
 ## Getting started
-### Archlinux, using gcc, temporary solution before adding to AUR
-- Clone the project
-- `pacman -S boost sdl2`
-- Run `cmake -S . -B ./bin`
-- `cd bin`
-- `make`
-- `./TKPEmu -h` to list commands
+### Archlinux
+- yay -S tkpemu
 
 ## License
 TKPEmu is licensed under the MIT license. Copyright (C) 2021-2021 Paris Oplopoios
