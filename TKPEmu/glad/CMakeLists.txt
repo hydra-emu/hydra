@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(glad)
-
+include(../TKPDownload.cmake)
+set(GLAD_ROOT https://raw.githubusercontent.com/OFFTKP/glad-stable/master/)
+set(GLAD_FILES glad/glad.h glad.c)
+DOWNLOAD_FILES(${GLAD_ROOT} ${GLAD_FILES})
 add_library(glad glad/glad.h glad.c)
 target_include_directories(glad PUBLIC include/)
