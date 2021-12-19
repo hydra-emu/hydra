@@ -16,11 +16,11 @@ jobs:
     - name: update-apt-get
       run: sudo apt-get update
     - name: install-deps
-      run: sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential g++12
+      run: sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential gcc-11 g++-11
     - name: configure-first
       run: |
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12
-        sudo update-alternatives --set gcc /usr/bin/gcc-12
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
+        sudo update-alternatives --set gcc /usr/bin/gcc-11
     - name: configure
       run: cmake -S TKPEmu -B TKPEmu/build
     - name: make
