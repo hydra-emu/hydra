@@ -1,3 +1,6 @@
+[![tkpemu](https://img.shields.io/aur/version/tkpemu?color=1793d1&label=yay&logo=arch-linux&style=for-the-badge)](https://aur.archlinux.org/packages/tkpemu)
+[![tkpemu-votes](https://img.shields.io/aur/votes/tkpemu?color=333333&style=for-the-badge)](https://aur.archlinux.org/packages/tkpemu)
+[![GitHub license](https://img.shields.io/github/license/offtkp/tkpemu?color=333333&style=for-the-badge)](https://github.com/offtkp/tkpemu/blob/master/LICENSE)
 # TKPEmu
 A multi-purpose emulator    
 Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.githubusercontent.com/ocornut/imgui/master/LICENSE.txt))
