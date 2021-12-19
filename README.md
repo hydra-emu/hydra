@@ -9,15 +9,17 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 
 ## Installation
 ### Archlinux, [AUR](https://aur.archlinux.org/packages/tkpemu/):
-Installation for Archlinux is very easy, just run the following command:
-`yay -S tkpemu`
-Make sure you have [yay](https://github.com/Jguer/yay) installed.
-Otherwise run the following:
+Installation for Archlinux is very easy, just run the following command:    
+```
+yay -S tkpemu
+```   
+Make sure you have [yay](https://github.com/Jguer/yay) installed.    
+Otherwise run the following:    
 ```
 pacman -S --needed git base-devel
 git clone https://aur.archlinux.org/tkpemu.git
 cd tkpemu
-makepkg
+makepkg -si
 ```
 
 ### Windows:
