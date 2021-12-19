@@ -2317,14 +2317,19 @@ namespace TKPEmu::Gameboy::Devices {
 			tTemp = 24;
 		}
 	}
+	// Delayed read function
 	uint8_t CPU::read(uint16_t addr) {
 		delay();
 		return bus_->Read(addr);
 	}
+	// Delayed write function
 	void CPU::write(uint16_t addr, uint8_t val) {
 		delay();
 		bus_->Write(addr, val);
 	}
+	/// Function that updates the dma/timer/ppu mid instruction
+	/// Tests like mem_timing and gekkio acceptance tests check dma/timer values mid instruction
+	/// The first read/write function of each instruction does not seem to need to be delayed
 	void CPU::delay() {
 		tRemove += 4;
 		bus_->TransferDMA(4);
