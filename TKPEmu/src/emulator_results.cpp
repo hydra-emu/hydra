@@ -35,7 +35,7 @@ const std::unordered_map<Hash, ExpectedResult> QA::PassedTestMap =
     { "04abf53326dec066aad078f4da4ccc33", { 228312, "c1c98a124d8bc1988d22265f64a6209d", "acceptance/bits/reg_f" } },
     { "e905eb9e6e55a5624a915c9a1e81b5a1", { 208289, "f0553923b341e4e57f091f1ce8cc8cf0", "acceptance/bits/unused_hwio-GS" } },
     { "8fa02c48b75200ff96d445ea3bd5f3c3", { 325050, "f0553923b341e4e57f091f1ce8cc8cf0", "acceptance/instrs/daa" } },
-    { "a8a77e3238b319ea9ae09d43eb15f759", { 182991, "49a0ad9cb2a5d507e9207a12dccbf9be", "acceptance/omad_dma/basic" } },
+    { "a8a77e3238b319ea9ae09d43eb15f759", { 182991, "49a0ad9cb2a5d507e9207a12dccbf9be", "acceptance/oam_dma/basic" } },
     { "ecb8b4e807ee00e8d7d4affbec330845", { 165264, "1f60b822d2ec4b612fe7f252ff83bd8e", "acceptance/oam_dma/reg_read"} },
     { "c57eada752f746347951f79c828391b9", { 508381, "f0553923b341e4e57f091f1ce8cc8cf0", "acceptance/timer/div_write" } },
     { "d73c739b0950f1720799098c21e8dafd", { 228639, "90472bf97c60517ccae5b2fe2c5c205a", "acceptance/timer/tim_00" } },
