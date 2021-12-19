@@ -13,8 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: update-apt-get
+      run: sudo apt-get update
     - name: install-deps
-      run: sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev
+      run: sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential
     - name: configure
       run: cmake -S TKPEmu -B TKPEmu/build
     - name: make
