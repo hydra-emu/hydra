@@ -16,7 +16,7 @@ jobs:
     - name: update-apt-get
       run: sudo apt-get update
     - name: install-deps
-      run: sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential
+      run: sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential g++12
     - name: configure
       run: cmake -S TKPEmu -B TKPEmu/build
     - name: make
