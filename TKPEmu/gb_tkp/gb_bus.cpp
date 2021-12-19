@@ -269,8 +269,6 @@ namespace TKPEmu::Gameboy::Devices {
 					break;
 				}
 				case addr_dma: {
-					// DMA transfer, load oam up.
-					std::cout << "dma transfer:" << std::hex << (int)data << std::endl;
 					dma_transfer_ = true;
 					dma_setup_ = true;
 					dma_index_ = 0;
@@ -373,11 +371,11 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void Bus::SoftReset() {
 		for (auto& ram : ram_banks_) {
-			ram.fill(0xFF);
+			ram.fill(0);
 		}
-		hram_.fill(0xFF);
-		oam_.fill(0xFF);
-		vram_.fill(0xFF);
+		hram_.fill(0);
+		oam_.fill(0);
+		vram_.fill(0);
 		selected_rom_bank_ = 1;
 		selected_ram_bank_ = 0;
 		BiosEnabled = true;
