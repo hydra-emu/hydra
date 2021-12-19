@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: enter folder
+      run: cd TKPEmu
     - name: configure
       run: cmake -B build
     - name: build
