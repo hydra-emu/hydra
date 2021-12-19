@@ -22,6 +22,15 @@ git clone https://aur.archlinux.org/tkpemu.git
 cd tkpemu
 makepkg -si
 ```
+### Other linux distros
+```
+git clone https://github.com/OFFTKP/TKPEmu.git
+cd TKPEmu
+cd TKPEmu
+cmake -B build
+cmake --build build
+sudo mv ./build/TKPEmu /usr/bin/TKPEmu
+```
 
 ### Windows:
 Has not been tested.    
