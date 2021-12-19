@@ -20,7 +20,7 @@ namespace TKPEmu::Gameboy::Devices {
 				if (LY == 153) {
 					next_stat_mode = 2;
 					LY = -1;
-					clock_ %= FRAME_CYCLES;
+					clock_ = FRAME_CYCLES;
 					clock_target_ = FRAME_CYCLES;
 				}
 				IF |= set_mode(next_stat_mode);
@@ -29,6 +29,7 @@ namespace TKPEmu::Gameboy::Devices {
 					clock_target_ += 80;
 					next_stat_mode = 3;
 					LY += 1;
+					// possible bug
 					IF |= update_lyc();
 				}
 				else if (mode == 3) {
