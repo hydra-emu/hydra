@@ -270,7 +270,6 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				case addr_dma: {
 					dma_transfer_ = true;
-					dma_setup_ = true;
 					dma_index_ = 0;
 					dma_offset_ = data << 8;
 					break;
@@ -392,18 +391,11 @@ namespace TKPEmu::Gameboy::Devices {
 	void Bus::TransferDMA(uint8_t clk) {
 		if (dma_transfer_) {
 			int times = clk / 4;
-			if (dma_setup_) {
-				// We need 1 clock to setup dma
-				times -= 1;
-				dma_setup_ = false;
-			}
 			for (int i = 0; i < times; ++i) {
 				auto index = dma_index_ + i;
 				if (index < oam_.size() + 1) {
-					if (index < oam_.size()) {
-						uint16_t source = dma_offset_ | index;
-						oam_[index] = ReadSafe(source);	
-					}
+					uint16_t source = dma_offset_ | index;
+					oam_[index] = ReadSafe(source);	
 				} else {
 					dma_transfer_ = false;
 					return;

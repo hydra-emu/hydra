@@ -418,8 +418,6 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::CPAL() {
 		reg_cmp(L);
 	}
-
-
 	void CPU::PUSHBC() {
 		SP -= 2;
 		bus_->WriteL(SP, (B << 8) | C);
@@ -2269,13 +2267,13 @@ namespace TKPEmu::Gameboy::Devices {
 			return 4;
 		}
 		(this->*Instructions[bus_->Read(PC++)].op)();
-		bus_->TransferDMA(tTemp);
 		TClock += tTemp;
 		if (tTemp >= tRemove) {
 			tTemp -= tRemove;
 		} else {
 			tTemp = 0;
 		}
+		bus_->TransferDMA(tTemp);
 		TotalClocks += 1;
 		return tTemp;
 	}
@@ -2318,6 +2316,7 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void CPU::delay() {
 		tRemove += 4;
+		bus_->TransferDMA(4);
 		if (timer_->Update(4, IF)) {
 			if (halt_) {
 				halt_ = false;
