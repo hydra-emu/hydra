@@ -266,6 +266,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				case addr_dma: {
 					// DMA transfer, load oam up.
+					std::cout << "dma transfer" << std::endl;
 					uint16_t dma_addr = data << 8;
 					for (int i = 0; i < oam_.size(); i++) {
 						uint16_t source = dma_addr | i;

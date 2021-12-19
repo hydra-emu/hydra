@@ -441,8 +441,9 @@ namespace TKPEmu::Gameboy::Devices {
 		tTemp = 16;
 	}
 	void CPU::POPBC() {
-		B = bus_->Read(SP + 1);
 		C = bus_->Read(SP);
+		B = read(SP + 1);
+		delay();
 		SP += 2;
 		tTemp = 12;
 	}
