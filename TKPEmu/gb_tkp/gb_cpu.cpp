@@ -230,6 +230,7 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::conditional_jump(bool condition) {
 		tTemp = 12;
 		if (condition) {
+			delay();
 			PC = bus_->ReadL(PC);
 			tTemp = 16;
 		} else {
@@ -430,6 +431,8 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void CPU::PUSHDE() {
 		SP -= 2;
+		//write(SP + 1, D);
+		//write(SP, E);
 		bus_->WriteL(SP, (D << 8) | E);
 		tTemp = 16;
 	}
@@ -836,7 +839,7 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::INCHLR() {
 		uint8_t t = bus_->Read((H << 8) | L);
 		reg_inc(t);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp = 12;
 	}
 	void CPU::DECA() {
@@ -863,7 +866,7 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::DECHLR() {
 		uint8_t t = bus_->Read((H << 8) | L);
 		reg_dec(t);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp = 12;
 	}
 	void CPU::INCBC() {
@@ -1026,12 +1029,14 @@ namespace TKPEmu::Gameboy::Devices {
 		PC++;
 	}
 	void CPU::RET() {
+		delay();
 		PC = bus_->ReadL(SP);
 		SP += 2;
 		tTemp = 16;
 	}
 	void CPU::RETI() {
 		ime_ = true;
+		delay();
 		PC = bus_->ReadL(SP);
 		SP += 2;
 		tTemp = 16;
@@ -1039,6 +1044,8 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::RETNZ() {
 		tTemp = 8;
 		if ((F & 0x80) == 0x00) {
+			delay();
+			delay();
 			PC = bus_->ReadL(SP);
 			SP += 2;
 			tTemp += 12;
@@ -1047,6 +1054,8 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::RETZ() {
 		tTemp = 8;
 		if ((F & 0x80) == 0x80) {
+			delay();
+			delay();
 			PC = bus_->ReadL(SP);
 			SP += 2;
 			tTemp += 12;
@@ -1055,6 +1064,8 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::RETNC() {
 		tTemp = 8;
 		if ((F & 0x10) == 0x00) {
+			delay();
+			delay();
 			PC = bus_->ReadL(SP);
 			SP += 2;
 			tTemp += 12;
@@ -1063,6 +1074,8 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::RETC() {
 		tTemp = 8;
 		if ((F & 0x10) == 0x10) {
+			delay();
+			delay();
 			PC = bus_->ReadL(SP);
 			SP += 2;
 			tTemp += 12;
@@ -1400,13 +1413,13 @@ namespace TKPEmu::Gameboy::Devices {
 		tTemp = 8;
 	}
 	void CPU::RLCHL() {
-		int i = bus_->Read((H << 8) | L);
+		int i = read((H << 8) | L);
 		int ci = (i & 0x80) ? 1 : 0;
 		int co = (i & 0x80) ? 0x10 : 0;
 		i = (i << 1) + ci;
 		i &= 0xFF;
 		F = (i) ? 0 : 0x80;
-		bus_->Write((H << 8) | L, i);
+		write((H << 8) | L, i);
 		F = (F & 0xEF) + co;
 		tTemp = 16;
 	}
@@ -1432,9 +1445,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_rrc(A);
 	}
 	void CPU::RRCHL() {
-		uint8_t t = bus_->Read((H << 8) | L);
+		uint8_t t = read((H << 8) | L);
 		bit_rrc(t);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp = 16;
 	}
 	void CPU::RLB() {
@@ -1459,9 +1472,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_rl(A);
 	}
 	void CPU::RLHL() {
-		uint8_t t = bus_->Read((H << 8) | L);
+		uint8_t t = read((H << 8) | L);
 		bit_rl(t);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp = 16;
 	}
 	void CPU::RRB() {
@@ -1486,9 +1499,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_rr(A);
 	}
 	void CPU::RRHL() {
-		uint8_t t = bus_->Read((H << 8) | L);
+		uint8_t t = read((H << 8) | L);
 		bit_rr(t);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp = 16;
 	}
 	void CPU::SLAB() {
@@ -1510,9 +1523,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_sl(L);
 	}
 	void CPU::SLAHL() {
-		uint8_t t = bus_->Read((H << 8) | L);
+		uint8_t t = read((H << 8) | L);
 		bit_sl(t);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp = 16;
 	}
 	void CPU::SLAA() {
@@ -1537,9 +1550,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_sr(L);
 	}
 	void CPU::SRAHL() {
-		uint8_t t = bus_->Read((H << 8) | L);
+		uint8_t t = read((H << 8) | L);
 		bit_sr(t);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp = 16;
 	}
 	void CPU::SRAA() {
@@ -1564,9 +1577,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_swap(L);
 	}
 	void CPU::SWAPHL() {
-		uint8_t t = bus_->Read((H << 8) | L);
+		uint8_t t = read((H << 8) | L);
 		bit_swap(t);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp = 16;
 	}
 	void CPU::SWAPA() {
@@ -1591,9 +1604,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_srl(L);
 	}
 	void CPU::SRLHL() {
-		uint8_t t = bus_->Read((H << 8) | L);
+		uint8_t t = read((H << 8) | L);
 		bit_srl(t);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp = 16;
 	}
 	void CPU::SRLA() {
@@ -1818,9 +1831,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_res(L, 0);
 	}
 	void CPU::RES0HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_res(t, 0);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::RES0A() {
@@ -1845,9 +1858,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_res(L, 1);
 	}
 	void CPU::RES1HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_res(t, 1);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::RES1A() {
@@ -1872,9 +1885,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_res(L, 2);
 	}
 	void CPU::RES2HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_res(t, 2);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::RES2A() {
@@ -1899,9 +1912,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_res(L, 3);
 	}
 	void CPU::RES3HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_res(t, 3);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::RES3A() {
@@ -1926,9 +1939,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_res(L, 4);
 	}
 	void CPU::RES4HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_res(t, 4);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::RES4A() {
@@ -1953,9 +1966,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_res(L, 5);
 	}
 	void CPU::RES5HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_res(t, 5);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::RES5A() {
@@ -1980,9 +1993,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_res(L, 6);
 	}
 	void CPU::RES6HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_res(t, 6);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::RES6A() {
@@ -2007,9 +2020,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_res(L, 7);
 	}
 	void CPU::RES7HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_res(t, 7);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::RES7A() {
@@ -2034,9 +2047,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_set(L, 0);
 	}
 	void CPU::SET0HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_set(t, 0);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::SET0A() {
@@ -2061,9 +2074,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_set(L, 1);
 	}
 	void CPU::SET1HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_set(t, 1);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::SET1A() {
@@ -2088,9 +2101,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_set(L, 2);
 	}
 	void CPU::SET2HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_set(t, 2);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::SET2A() {
@@ -2115,9 +2128,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_set(L, 3);
 	}
 	void CPU::SET3HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_set(t, 3);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::SET3A() {
@@ -2142,9 +2155,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_set(L, 4);
 	}
 	void CPU::SET4HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_set(t, 4);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::SET4A() {
@@ -2169,9 +2182,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_set(L, 5);
 	}
 	void CPU::SET5HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_set(t, 5);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::SET5A() {
@@ -2196,9 +2209,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_set(L, 6);
 	}
 	void CPU::SET6HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_set(t, 6);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::SET6A() {
@@ -2223,9 +2236,9 @@ namespace TKPEmu::Gameboy::Devices {
 		bit_set(L, 7);
 	}
 	void CPU::SET7HL() {
-		auto t = bus_->Read((H << 8) | L);
+		auto t = read((H << 8) | L);
 		bit_set(t, 7);
-		bus_->Write((H << 8) | L, t);
+		write((H << 8) | L, t);
 		tTemp += 8;
 	}
 	void CPU::SET7A() {
@@ -2298,9 +2311,7 @@ namespace TKPEmu::Gameboy::Devices {
 		ime_ = false;
 		ime_scheduled_ = false;
 		IF &= ~(1U << bit);
-		SP -= 2;
-		bus_->WriteL(SP, PC);
-		PC = 0x40 + bit * 0x8;
+		rst(0x40 + bit * 0x8);
 		tTemp = 20;
 		if (halt_) {
 			tTemp = 24;
