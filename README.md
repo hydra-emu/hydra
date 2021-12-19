@@ -7,6 +7,9 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 
 ## Current emulators
 - [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp)
+## Dependencies 
+Compiler: The `c++20` features used need at least `gcc-11` and `g++11` or latest `msvc`.    
+Libraries: `sdl2 tbb boost`. See `Installation` for an easy installation guide
 
 ## Installation
 CMake is going to download source files from [imgui](https://github.com/ocornut/imgui) and [glad-stable](https://github.com/OFFTKP/glad-stable)    
@@ -24,14 +27,17 @@ git clone https://aur.archlinux.org/tkpemu.git
 cd tkpemu
 makepkg -si
 ```
-### Other linux distros
+### Ubuntu
 ```
+sudo apt-get update
+sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential gcc-11 g++-11
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
+sudo update-alternatives --set gcc /usr/bin/gcc-11
 git clone https://github.com/OFFTKP/TKPEmu.git
 cd TKPEmu
-cd TKPEmu
-cmake -B build
-cmake --build build
-sudo mv ./build/TKPEmu /usr/bin/TKPEmu
+cmake -S TKPEmu -B TKPEmu/build
+cmake --build TKPEmu/build
+sudo mv ./TKPEmu/build/TKPEmu /usr/bin/TKPEmu
 ```
 
 ### Windows:
