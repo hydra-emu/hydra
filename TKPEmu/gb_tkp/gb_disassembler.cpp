@@ -1,4 +1,5 @@
 #include "gb_disassembler.h"
+#include <iostream>
 namespace TKPEmu::Applications {
     GameboyDisassembler::GameboyDisassembler(std::string menu_title, std::string window_title) : IMApplication(menu_title, window_title) {
         sel_map_.resize(0x10000);
@@ -280,6 +281,7 @@ namespace TKPEmu::Applications {
                 ImGui::Text("DE: %d,%d", t.D, t.E); ImGui::SameLine(); ImGui::Text("IE: %d", t.IE);
                 ImGui::Text("HL: %d,%d", t.H, t.L); ImGui::SameLine(); ImGui::Text("IF: %d", t.IF);
             }
+            ImGui::Text("HALT: %lu", t.halt_); ImGui::SameLine(); ImGui::Text("IME: %lu", t.ime_);
             ImGui::Text("Clocks: %lu", t.TotalClocks);
             ImGui::Checkbox("Hex", &use_hex);
             ImGui::EndChild();

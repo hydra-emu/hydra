@@ -36,6 +36,7 @@ namespace TKPEmu::Gameboy {
 	void Gameboy::v_log_state() {
 		*ofstream_ptr_ << std::setfill('0');
 		int inst = bus_.ReadSafe(cpu_.PC);
+		std::cout << std::hex << (int)cpu_.PC << " " << std::hex << inst << std::endl;
 		for (const auto& t : *log_types_ptr_) {
 			switch (t) {
 				case LogType::InstrName: {
@@ -223,7 +224,8 @@ namespace TKPEmu::Gameboy {
 				}
 			}
 			ppu_.Update(clk);
-			log_state();
+			if (!cpu_.halt_)
+				log_state();
 		} else {
 			auto end = std::chrono::system_clock::now();
 			auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(end - frame_start).count();
