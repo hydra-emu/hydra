@@ -124,7 +124,10 @@ namespace TKPEmu::Applications {
                     }
                     for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++) {
                         bool is_skipped = false;
-                        DisInstr ins = gameboy->GetInstruction(row_n);
+                        DisInstr ins(0, 0, 0);
+                        if (gameboy) {
+                            ins = gameboy->GetInstruction(row_n);
+                        }
                         if (skip == 0) {
                             skip += ins.ParamSize;
                             if (row_n == 0) 
