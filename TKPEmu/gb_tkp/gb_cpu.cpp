@@ -456,18 +456,18 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void CPU::POPDE() {
 		E = bus_->Read(SP);
-		D = bus_->Read(SP + 1);
+		D = read(SP + 1);
+		delay();
 		SP += 2;
 		tTemp = 12;
 	}
 	void CPU::POPHL() {
 		L = bus_->Read(SP);
-		H = bus_->Read(SP + 1);
+		H = read(SP + 1);
+		delay();
 		SP += 2;
 		tTemp = 12;
 	}
-
-
 	void CPU::LDABC() {
 		int addr = C | (B << 8);
 		A = bus_->Read(addr);
@@ -2269,6 +2269,7 @@ namespace TKPEmu::Gameboy::Devices {
 			return 4;
 		}
 		(this->*Instructions[bus_->Read(PC++)].op)();
+		bus_->TransferDMA(tTemp);
 		TClock += tTemp;
 		if (tTemp >= tRemove) {
 			tTemp -= tRemove;

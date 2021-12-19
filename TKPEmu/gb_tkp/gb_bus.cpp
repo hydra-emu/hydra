@@ -186,6 +186,10 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				else if (address <= 0xFE9F) {
 					// OAM
+					if (dma_transfer_) {
+						unused_mem_area_ = 0xFF;
+						return unused_mem_area_;
+					}
 					return oam_[address & 0xFF];
 				}
 				else if (address <= 0xFEFF) {
@@ -266,13 +270,11 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				case addr_dma: {
 					// DMA transfer, load oam up.
-					std::cout << "dma transfer" << std::endl;
-					uint16_t dma_addr = data << 8;
-					for (int i = 0; i < oam_.size(); i++) {
-						uint16_t source = dma_addr | i;
-						// Each sprite is 4 bytes, so the array has size of 160/4 = 40 
-						oam_[i] = ReadSafe(source);	
-					}
+					std::cout << "dma transfer:" << std::hex << (int)data << std::endl;
+					dma_transfer_ = true;
+					dma_setup_ = true;
+					dma_index_ = 0;
+					dma_offset_ = data << 8;
 					break;
 				}
 				case addr_lcd: {
@@ -356,8 +358,6 @@ namespace TKPEmu::Gameboy::Devices {
 			if (address >= 0xFE00 && address <= 0xFE9F) {
 				oam_[address & 0xFF] = data;
 			}
-			if (address == 0xFFFF) {
-			}
 			redirect_address(address) = data;
 		}
 	}
@@ -373,11 +373,11 @@ namespace TKPEmu::Gameboy::Devices {
 	}
 	void Bus::SoftReset() {
 		for (auto& ram : ram_banks_) {
-			ram.fill(0);
+			ram.fill(0xFF);
 		}
-		hram_.fill(0);
-		oam_.fill(0);
-		vram_.fill(0);
+		hram_.fill(0xFF);
+		oam_.fill(0xFF);
+		vram_.fill(0xFF);
 		selected_rom_bank_ = 1;
 		selected_ram_bank_ = 0;
 		BiosEnabled = true;
@@ -390,5 +390,28 @@ namespace TKPEmu::Gameboy::Devices {
 		cartridge_ = std::make_unique<Cartridge>();
 		cartridge_->Load(fileName, rom_banks_, ram_banks_);
 		rom_banks_size_ = cartridge_->GetRomSize();
+	}
+	void Bus::TransferDMA(uint8_t clk) {
+		if (dma_transfer_) {
+			int times = clk / 4;
+			if (dma_setup_) {
+				// We need 1 clock to setup dma
+				times -= 1;
+				dma_setup_ = false;
+			}
+			for (int i = 0; i < times; ++i) {
+				auto index = dma_index_ + i;
+				if (index < oam_.size() + 1) {
+					if (index < oam_.size()) {
+						uint16_t source = dma_offset_ | index;
+						oam_[index] = ReadSafe(source);	
+					}
+				} else {
+					dma_transfer_ = false;
+					return;
+				}
+			}
+			dma_index_ += times;
+		}
 	}
 }

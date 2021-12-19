@@ -55,6 +55,7 @@ namespace TKPEmu::Gameboy::Devices {
         uint8_t& GetReference(uint16_t address);
         void Write(uint16_t address, uint8_t data);
         void WriteL(uint16_t address, uint16_t data);
+        void TransferDMA(uint8_t clk);
         void Reset();
         void SoftReset();
         Cartridge* GetCartridge() ;
@@ -79,6 +80,10 @@ namespace TKPEmu::Gameboy::Devices {
         uint8_t rom_banks_size_ = 2;
         bool banking_mode_ = false;
         bool action_key_mode_ = false;
+        bool dma_transfer_ = false;
+        bool dma_setup_ = false;
+        size_t dma_index_ = 0;
+        uint16_t dma_offset_ = 0;
         uint8_t unused_mem_area_ = 0;
         std::vector<RamBank> ram_banks_;
         std::vector<RomBank> rom_banks_;
