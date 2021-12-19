@@ -9,6 +9,8 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 - [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp)
 
 ## Installation
+CMake is going to download source files from [imgui](https://github.com/ocornut/imgui) and [glad-stable](https://github.com/OFFTKP/glad-stable)    
+If you get an error during these files are being downloaded, check if the links work and open an issue
 ### Archlinux, [AUR](https://aur.archlinux.org/packages/tkpemu/):
 Installation for Archlinux is very easy, just run the following command:    
 ```
