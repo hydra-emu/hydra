@@ -1327,10 +1327,10 @@ namespace TKPEmu::Gameboy::Devices {
 			std::cout << "halt bug" << std::endl;
 			halt_ = false;
 		}
-		if (ime_scheduled_) {
-			ime_ = true;
-			ime_scheduled_ = false;
-		}
+		// if (ime_scheduled_) {
+		// 	ime_ = true;
+		// 	ime_scheduled_ = false;
+		// }
 		tTemp = 4;
 	}
 	void CPU::XXX() {
@@ -2261,6 +2261,7 @@ namespace TKPEmu::Gameboy::Devices {
 			ime_scheduled_ = false;
 		}
 		if (halt_) {
+			TClock += 4;
 			return 4;
 		}
 		(this->*Instructions[bus_->Read(PC++)].op)();
@@ -2282,7 +2283,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}	
 			} else {
 				if (halt_) {
-					halt_ = false;
+					//halt_ = false;
 					tTemp = 4;
 					return;
 				}
