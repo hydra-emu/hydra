@@ -29,4 +29,5 @@ Has not been tested.
  - Create an issue if there's an error.
 
 ## License
-TKPEmu is licensed under the MIT license. Copyright (C) 2021-2021 Paris Oplopoios
+TKPEmu is licensed under the MIT license    
+Copyright (C) 2021-2021 Paris Oplopoios
