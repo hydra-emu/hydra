@@ -27,7 +27,7 @@ git clone https://aur.archlinux.org/tkpemu.git
 cd tkpemu
 makepkg -si
 ```
-### Ubuntu
+### Ubuntu:
 ```
 sudo apt-get update
 sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential gcc-11 g++-11
