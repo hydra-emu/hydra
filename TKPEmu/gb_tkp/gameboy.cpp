@@ -9,9 +9,9 @@
 namespace TKPEmu::Gameboy {
 	Gameboy::Gameboy() : 
 		bus_(Instructions),
-		cpu_(&bus_),
 		ppu_(&bus_, &DrawMutex),
 		timer_(&bus_),
+		cpu_(&bus_, &ppu_, &timer_),
 		joypad_(bus_.GetReference(addr_joy)),
 		interrupt_flag_(bus_.GetReference(addr_if))
 	{}
@@ -187,7 +187,7 @@ namespace TKPEmu::Gameboy {
 					Step.wait(false);
 					Step.store(false);
 					update();
-					InstructionBreak.store(cpu_.PC);
+					//InstructionBreak.store(cpu_.PC);
 				}
 			}
 		};
@@ -207,20 +207,19 @@ namespace TKPEmu::Gameboy {
 		ppu_.Reset();
 	}
 	void Gameboy::update() {
-		static bool skip_next = false;
 		if ((cpu_.TClock / 2) < cpu_.MaxCycles || FastMode) {
 			if (cpu_.PC == 0x100) {
 				bus_.BiosEnabled = false;
 			}
 			uint8_t old_if = interrupt_flag_;
 			int clk = 0;
-			if (!skip_next)
+			if (!cpu_.skip_next_)
 				clk = cpu_.Update();	
-			skip_next = false;
+			cpu_.skip_next_ = false;
 			if (timer_.Update(clk, old_if)) {
 				if (cpu_.halt_) {
 					cpu_.halt_ = false;
-					skip_next = true;
+					cpu_.skip_next_ = true;
 				}
 			}
 			ppu_.Update(clk);

@@ -44,9 +44,9 @@ namespace TKPEmu::Gameboy {
 		std::vector<DisInstr> Instructions{};
 	private:
 		Bus bus_;
-		CPU cpu_;
 		PPU ppu_;
 		Timer timer_;
+		CPU cpu_;
 		GameboyKeys direction_keys_;
 		GameboyKeys action_keys_;
 		uint8_t& joypad_, &interrupt_flag_;

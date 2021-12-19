@@ -8,14 +8,18 @@
 #include <fstream>
 #include "gb_bus.h"
 #include "gb_ppu.h"
+#include "gb_timer.h"
 #include "gb_addresses.h"
 #include "../include/disassembly_instr.h"
 namespace TKPEmu::Gameboy::Devices {
 	class CPU {
 	private:
 		Bus* bus_;
+		PPU* ppu_;
+		Timer* timer_;
 		bool ime_scheduled_ = false;
 		int tTemp = 0;
+		int tRemove = 0;
 		int div_reset_index_ = -1;
 		int old_tac_ = 0;
 		int tac_index_ = 0x1000;
@@ -85,6 +89,9 @@ namespace TKPEmu::Gameboy::Devices {
 		void bit_sl(RegisterType& reg);
 		void bit_sr(RegisterType& reg);
 		void bit_srl(RegisterType& reg);
+		uint8_t read(uint16_t addr);
+		void write(uint16_t addr, uint8_t val);
+		void delay();
 		void conditional_jump_rel(bool condition);
 		void conditional_jump(bool condition);
 		void rst(RegisterType addr);
@@ -94,9 +101,10 @@ namespace TKPEmu::Gameboy::Devices {
 		int get_clk_freq();
 
 	public:
-		CPU(Bus* bus);
+		CPU(Bus* bus, PPU* ppu, Timer* timer);
 		bool halt_ = false;
 		bool ime_ = false;
+		bool skip_next_ = false;
 		struct Instruction {
 			std::string name;
 			void(CPU::* op)() = nullptr;
