@@ -187,7 +187,7 @@ namespace TKPEmu::Gameboy {
 					Step.wait(false);
 					Step.store(false);
 					update();
-					InstructionBreak.store(cpu_.PC);
+					//InstructionBreak.store(cpu_.PC);
 				}
 			}
 		};

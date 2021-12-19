@@ -186,7 +186,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 				else if (address <= 0xFE9F) {
 					// OAM
-					return oam_[address & 0x9F];
+					return oam_[address & 0xFF];
 				}
 				else if (address <= 0xFEFF) {
 					// TODO: check if this is actually unused area
@@ -228,11 +228,11 @@ namespace TKPEmu::Gameboy::Devices {
 		for (const auto& m : vram_) {
 			s << std::hex << std::setfill('0') << std::setw(2) << m;
 		}
-		for (const auto& m : OAM) {
-			s << std::hex << std::setfill('0') << std::setw(2) << m.flags;
-			s << std::hex << std::setfill('0') << std::setw(2) << m.tile_index;
-			s << std::hex << std::setfill('0') << std::setw(2) << m.x_pos;
-			s << std::hex << std::setfill('0') << std::setw(2) << m.y_pos;
+		for (int i = 0; i < oam_.size(); i += 4) {
+			s << std::hex << std::setfill('0') << std::setw(2) << oam_[i + 3];
+			s << std::hex << std::setfill('0') << std::setw(2) << oam_[i + 2];
+			s << std::hex << std::setfill('0') << std::setw(2) << oam_[i + 1];
+			s << std::hex << std::setfill('0') << std::setw(2) << oam_[i];
 		}
 		return std::move(s.str());
 	}
@@ -267,17 +267,10 @@ namespace TKPEmu::Gameboy::Devices {
 				case addr_dma: {
 					// DMA transfer, load oam up.
 					uint16_t dma_addr = data << 8;
-					for (int i = 0; i <= (0x9F - 4); i += 4) {
+					for (int i = 0; i < oam_.size(); i++) {
 						uint16_t source = dma_addr | i;
 						// Each sprite is 4 bytes, so the array has size of 160/4 = 40 
-						oam_[i]         = ReadSafe(source);
-						oam_[i + 1]     = ReadSafe(source + 1);
-						oam_[i + 2]     = ReadSafe(source + 2);
-						oam_[i + 3]     = ReadSafe(source + 3);
-						OAM[i / 4].y_pos      = oam_[i];
-						OAM[i / 4].x_pos      = oam_[i + 1];
-						OAM[i / 4].tile_index = oam_[i + 2];
-						OAM[i / 4].flags      = oam_[i + 3];
+						oam_[i] = ReadSafe(source);	
 					}
 					break;
 				}
@@ -360,12 +353,7 @@ namespace TKPEmu::Gameboy::Devices {
 				}
 			}
 			if (address >= 0xFE00 && address <= 0xFE9F) {
-				switch (address % 4) { 
-					case 0: OAM[(address & 0xFF) / 4].y_pos      = data; break;
-					case 1: OAM[(address & 0xFF) / 4].x_pos      = data; break;
-					case 2: OAM[(address & 0xFF) / 4].tile_index = data; break;
-					case 3: OAM[(address & 0xFF) / 4].flags      = data; break;
-				}
+				oam_[address & 0xFF] = data;
 			}
 			if (address == 0xFFFF) {
 			}

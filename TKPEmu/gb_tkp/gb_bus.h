@@ -17,12 +17,6 @@ namespace TKPEmu::Gameboy::Devices {
         using RomBank = std::array<uint8_t, 0x4000>;
         using CartridgeType = TKPEmu::Gameboy::Devices::CartridgeType;
     public:
-        struct Sprite {
-            uint8_t y_pos = 0;
-            uint8_t x_pos = 0;
-            uint8_t tile_index = 0;
-            uint8_t flags = 0;
-        };
         bool BiosEnabled = true;
         uint8_t logo[0x30] = {
             // Every 2 bytes is an 8x8 tile. If you convert the hex to binary, each bit is a 2x2 pixel
@@ -70,14 +64,13 @@ namespace TKPEmu::Gameboy::Devices {
         std::array<uint8_t, 4> BGPalette{};
         std::array<uint8_t, 4> OBJ0Palette{};
         std::array<uint8_t, 4> OBJ1Palette{};
-        // TODO: remove big OAM
-        std::array<Sprite, 40> OAM;
         bool DIVReset = false;
         bool TACChanged = false;
         bool WriteToVram = false;
         uint8_t NextMode = 0;
         uint8_t DirectionKeys = 0b1110'1111;
         uint8_t ActionKeys = 0b1101'1111;
+        std::array<uint8_t, 0xA0> oam_{};
     private:
         bool ram_enabled_ = false;
         bool rtc_enabled_ = false;
@@ -90,7 +83,6 @@ namespace TKPEmu::Gameboy::Devices {
         std::vector<RamBank> ram_banks_;
         std::vector<RomBank> rom_banks_;
         std::unique_ptr<Cartridge> cartridge_;
-        std::array<uint8_t, 0xA0> oam_{};
         std::array<uint8_t, 0x100> hram_{};
         std::array<uint8_t, 0x2000> eram_default_{};
         std::array<uint8_t, 0x2000> wram_{};
