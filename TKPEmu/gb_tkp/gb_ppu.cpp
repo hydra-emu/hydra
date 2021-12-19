@@ -221,10 +221,10 @@ namespace TKPEmu::Gameboy::Devices {
 			use8x16 = true;
 
 		for (int sprite = 0; sprite < 40; sprite++) {
-			uint8_t positionY = bus_->oam_[sprite] - 16;
-			uint8_t positionX = bus_->oam_[sprite + 1] - 8;
-			uint8_t tileLoc = bus_->oam_[sprite + 2];
-			uint8_t attributes = bus_->oam_[sprite + 3];
+			uint8_t positionY = bus_->oam_[sprite * 4] - 16;
+			uint8_t positionX = bus_->oam_[sprite * 4 + 1] - 8;
+			uint8_t tileLoc = bus_->oam_[sprite * 4 + 2];
+			uint8_t attributes = bus_->oam_[sprite * 4 + 3];
 
 			bool yFlip = attributes & 0b1000000;
 			bool xFlip = attributes & 0b100000;
