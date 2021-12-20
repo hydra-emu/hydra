@@ -8,7 +8,8 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 ## Current emulators
 - [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp)
 ## Dependencies 
-Compiler: The `c++20` features used need at least `gcc-11` and `g++11` or latest `msvc`.    
+Compiler: The `c++20` features used need at least `gcc-11` and `g++11` or latest `msvc`.   
+Dependencies: `cmake git `    
 Libraries: `sdl2 tbb boost`. See `Installation` for an easy installation guide
 
 ## Installation
