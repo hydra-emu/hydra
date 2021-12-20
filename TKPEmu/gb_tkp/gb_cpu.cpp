@@ -1341,7 +1341,7 @@ namespace TKPEmu::Gameboy::Devices {
 	void CPU::HALT() {
 		halt_ = true;
 		if ((IE & IF & 0x1F) && ime_ == 0) {
-			std::cout << "halt bug" << std::endl;
+			halt_bug_ = true;
 			halt_ = false;
 		}
 		tTemp = 4;
@@ -2279,7 +2279,10 @@ namespace TKPEmu::Gameboy::Devices {
 			TClock += 4;
 			return 4;
 		}
-		(this->*Instructions[bus_->Read(PC++)].op)();
+		auto old_pc = PC++;
+		PC -= halt_bug_;
+		halt_bug_ = false;
+		(this->*Instructions[bus_->Read(old_pc)].op)();
 		TClock += tTemp;
 		if (tTemp >= tRemove) {
 			tTemp -= tRemove;
