@@ -369,5 +369,4 @@ glad.h
 glad.c
 
 # gb_tkp files
-gb_tkp/*.h
-gb_tkp/*.cpp
+gb_*.h
