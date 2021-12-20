@@ -12,6 +12,7 @@ namespace TKPEmu::Applications {
         GameboyRomData(std::string menu_title, std::string window_title);
     private:
         void v_draw() override;
+        void draw_info();
     };
 }
 #endif
