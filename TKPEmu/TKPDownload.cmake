@@ -1,5 +1,5 @@
 # DOWNLOAD_FILE function - OFFTKP
-# Downloads a file from ROOT_FILE and stores it in LOCAL_FILE
+# Downloads a file from ROOT_DIR and stores it in LOCAL_FILE
 # without checking if it exists already
 function(DOWNLOAD_FILE ROOT_FILE LOCAL_FILE)
     file(DOWNLOAD
@@ -16,12 +16,31 @@ function(DOWNLOAD_FILE ROOT_FILE LOCAL_FILE)
         message(FATAL_ERROR "Error occured while downloading: ${FILE}")
     endif()
 endfunction()
-# Downloads multiple files after checking if they exist already
-function(DOWNLOAD_FILES ROOT_URL DFILES)
-    set(_DFILES ${DFILES} ${ARGN})
-    foreach(FILE ${_DFILES})
-        if (NOT EXISTS ${PROJECT_SOURCE_DIR}/${FILE})
+# Downloads multiple files after checking if there has been any changes
+# If you need to force redownload, remove previous_version.cache from the respective folder
+function(DOWNLOAD_FILES ROOT_GIT ROOT_URL DFILES)
+    find_package(Git)
+    if (NOT GIT_FOUND)
+        message("ERROR: Git not found!")
+    endif()
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} ls-remote
+        ${ROOT_GIT} HEAD
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE output)
+    set(old_cache)
+    if (EXISTS "${PROJECT_SOURCE_DIR}/previous_version.cache")
+        file(READ "${PROJECT_SOURCE_DIR}/previous_version.cache" old_cache)
+    else()
+        set(old_cache "")
+    endif()
+    file(WRITE "${PROJECT_SOURCE_DIR}/previous_version.cache" "${output}")
+    if (NOT "${old_cache}" STREQUAL "${output}")
+        message("New commits found, redownloading...")
+        message("${old_cache} ${output}")
+        set(_DFILES ${DFILES} ${ARGN})
+        foreach(FILE ${_DFILES})
             DOWNLOAD_FILE(${ROOT_URL}/${FILE} ${PROJECT_SOURCE_DIR}/${FILE})
-        endif()
-    endforeach()
+        endforeach()
+    endif()
 endfunction()
