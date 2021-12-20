@@ -18,6 +18,7 @@ namespace TKPEmu::Gameboy::Devices {
 		PPU* ppu_;
 		Timer* timer_;
 		bool ime_scheduled_ = false;
+		bool halt_bug_ = false;
 		int tTemp = 0;
 		int tRemove = 0;
 		int div_reset_index_ = -1;
