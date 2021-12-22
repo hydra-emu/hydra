@@ -3,9 +3,8 @@ project(gb_tkp)
 set(GB_TKP_REMOTE_ROOT https://github.com/OFFTKP/TKPEmu.git)
 set(GB_TKP_REMOTE_DIR https://raw.githubusercontent.com/OFFTKP/GameboyTKP/master)
 set(GB_TKP_FILES gameboy.h gameboy.cpp gb_cpu.h gb_cpu.cpp gb_ppu.h gb_ppu.cpp 
-gb_addresses.h gb_breakpoint.h gb_bus.h gb_bus.cpp gb_timer.h gb_timer.cpp
-gb_cartridge.h gb_cartridge.cpp gb_disassembler.h gb_disassembler.cpp gb_romdata.h
-gb_romdata.cpp gb_tracelogger.h gb_tracelogger.cpp)
+gb_addresses.h gb_bus.h gb_bus.cpp gb_timer.h gb_timer.cpp
+gb_cartridge.h gb_cartridge.cpp)
 DOWNLOAD_FILES(${GB_TKP_REMOTE_ROOT} ${GB_TKP_REMOTE_DIR} ${GB_TKP_FILES})
 file(GLOB SRC_FILES "*.cpp")
 file(GLOB HDR_FILES "*.h")

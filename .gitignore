@@ -369,5 +369,19 @@ glad.h
 glad.c
 
 # gb_tkp files
-TKPEmu/gb_tkp/*.h
-TKPEmu/gb_tkp/*.cpp
+TKPEmu/gb_tkp/gameboy.h
+TKPEmu/gb_tkp/gameboy.cpp
+TKPEmu/gb_tkp/gb_cpu.h
+TKPEmu/gb_tkp/gb_cpu.cpp
+TKPEmu/gb_tkp/gb_ppu.h
+TKPEmu/gb_tkp/gb_ppu.cpp
+TKPEmu/gb_tkp/gb_bus.h
+TKPEmu/gb_tkp/gb_bus.cpp
+TKPEmu/gb_tkp/gb_cartridge.h
+TKPEmu/gb_tkp/gb_cartridge.cpp
+TKPEmu/gb_tkp/gb_timer.h
+TKPEmu/gb_tkp/gb_timer.cpp
+TKPEmu/gb_tkp/gb_addresses.h
+TKPEmu/gb_tkp/LICENSE
+TKPEmu/gb_tkp/TEST_RESULTS.md
+TKPEmu/gb_tkp/generate_test_results.sh
