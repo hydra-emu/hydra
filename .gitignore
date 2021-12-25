@@ -385,3 +385,8 @@ TKPEmu/gb_tkp/gb_addresses.h
 TKPEmu/gb_tkp/LICENSE
 TKPEmu/gb_tkp/TEST_RESULTS.md
 TKPEmu/gb_tkp/generate_test_results.sh
+# NES files
+TKPEmu/nes_tkp/.gitignore
+TKPEmu/nes_tkp/LICENSE
+TKPEmu/nes_tkp/nes_cpu.h
+TKPEmu/nes_tkp/nes_cpu.cpp
