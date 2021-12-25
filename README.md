@@ -2,8 +2,9 @@
 [![tkpemu-votes](https://img.shields.io/aur/votes/tkpemu?color=333333&style=for-the-badge)](https://aur.archlinux.org/packages/tkpemu)
 [![GitHub license](https://img.shields.io/github/license/offtkp/tkpemu?color=333333&style=for-the-badge)](https://github.com/offtkp/tkpemu/blob/master/LICENSE)
 # TKPEmu
-A multi-purpose emulator    
-Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.githubusercontent.com/ocornut/imgui/master/LICENSE.txt))
+A multi-purpose, multi-platform emulator    
+Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.githubusercontent.com/ocornut/imgui/master/LICENSE.txt))    
+![Image](./TKPEmu/screen.png)
 
 ## Current emulators
 - [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp)
@@ -13,7 +14,7 @@ Dependencies: `cmake git `
 Libraries: `sdl2 tbb boost`. See `Installation` for an easy installation guide
 
 ## Installation
-CMake is going to download source files from [imgui](https://github.com/ocornut/imgui) and [glad-stable](https://github.com/OFFTKP/glad-stable)    
+CMake is going to download source files from [imgui](https://github.com/ocornut/imgui), [GameboyTKP](https://github.com/OFFTKP/GameboyTKP) and [glad-stable](https://github.com/OFFTKP/glad-stable)    
 If you get an error while these files are being downloaded, check if the links above work, and open an issue
 ### Archlinux, [AUR](https://aur.archlinux.org/packages/tkpemu/):
 Installation for Archlinux is very easy, just run the following command:    
