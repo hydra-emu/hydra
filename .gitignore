@@ -367,26 +367,3 @@ imstb_textedit.h
 imstb_truetype.h
 glad.h
 glad.c
-
-# gb_tkp files
-TKPEmu/gb_tkp/gameboy.h
-TKPEmu/gb_tkp/gameboy.cpp
-TKPEmu/gb_tkp/gb_cpu.h
-TKPEmu/gb_tkp/gb_cpu.cpp
-TKPEmu/gb_tkp/gb_ppu.h
-TKPEmu/gb_tkp/gb_ppu.cpp
-TKPEmu/gb_tkp/gb_bus.h
-TKPEmu/gb_tkp/gb_bus.cpp
-TKPEmu/gb_tkp/gb_cartridge.h
-TKPEmu/gb_tkp/gb_cartridge.cpp
-TKPEmu/gb_tkp/gb_timer.h
-TKPEmu/gb_tkp/gb_timer.cpp
-TKPEmu/gb_tkp/gb_addresses.h
-TKPEmu/gb_tkp/LICENSE
-TKPEmu/gb_tkp/TEST_RESULTS.md
-TKPEmu/gb_tkp/generate_test_results.sh
-# NES files
-TKPEmu/nes_tkp/.gitignore
-TKPEmu/nes_tkp/LICENSE
-TKPEmu/nes_tkp/nes_cpu.h
-TKPEmu/nes_tkp/nes_cpu.cpp
