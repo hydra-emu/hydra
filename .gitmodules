@@ -1,3 +1,6 @@
 [submodule "TKPEmu/GameboyTKP"]
 	path = TKPEmu/GameboyTKP
 	url = https://github.com/OFFTKP/GameboyTKP
+[submodule "TKPEmu/NESTKP"]
+	path = TKPEmu/NESTKP
+	url = http://github.com/offtkp/NESTKP
