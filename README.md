@@ -50,3 +50,6 @@ Has not been tested.
 ## License
 TKPEmu is licensed under the MIT license    
 Copyright (C) 2021-2021 Paris Oplopoios
+
+## Contributors
+[![GitHub contributors](https://contrib.rocks/image?repo=OFFTKP/TKPEmu)](https://github.com/OFFTKP/TKPEmu/graphs/contributors)
