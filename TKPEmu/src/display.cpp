@@ -6,8 +6,8 @@
 #include <algorithm>
 #include "../include/display.h"
 #include "../include/disassembly_instr.h"
-#include "../gb_tkp/gb_disassembler.h"
-#include "../gb_tkp/gb_tracelogger.h"
+#include "../GameboyTKP/gb_disassembler.h"
+#include "../GameboyTKP/gb_tracelogger.h"
 
 namespace TKPEmu::Graphics {
 	Display::DisplayInitializer::DisplayInitializer() {

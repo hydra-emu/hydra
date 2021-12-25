@@ -4,7 +4,7 @@
 #include <filesystem>
 #include "emulator.h"
 #include "base_application.h"
-#include "../gb_tkp/gameboy.h"
+#include "../GameboyTKP/gameboy.h"
 namespace TKPEmu {
     enum class EmuType {
         None,
