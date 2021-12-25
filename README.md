@@ -2,8 +2,9 @@
 [![tkpemu-votes](https://img.shields.io/aur/votes/tkpemu?color=333333&style=for-the-badge)](https://aur.archlinux.org/packages/tkpemu)
 [![GitHub license](https://img.shields.io/github/license/offtkp/tkpemu?color=333333&style=for-the-badge)](https://github.com/offtkp/tkpemu/blob/master/LICENSE)
 # TKPEmu
-A multi-purpose emulator    
-Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.githubusercontent.com/ocornut/imgui/master/LICENSE.txt))
+A multi-purpose, multi-platform emulator    
+Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.githubusercontent.com/ocornut/imgui/master/LICENSE.txt))    
+![Image](./TKPEmu/screen.png)
 
 ## Current emulators
 - [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp)
