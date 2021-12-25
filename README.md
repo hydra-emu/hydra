@@ -25,7 +25,7 @@ Make sure you have [yay](https://github.com/Jguer/yay) installed.
 Otherwise run the following:    
 ```
 pacman -S --needed git base-devel
-git clone https://aur.archlinux.org/tkpemu.git
+git clone --recurse-submodules -j8 https://aur.archlinux.org/tkpemu.git
 cd tkpemu
 makepkg -si
 ```
@@ -35,7 +35,7 @@ sudo apt-get update
 sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential gcc-11 g++-11
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
 sudo update-alternatives --set gcc /usr/bin/gcc-11
-git clone https://github.com/OFFTKP/TKPEmu.git
+git clone --recurse-submodules -j8 https://github.com/OFFTKP/TKPEmu.git
 cd TKPEmu
 cmake -S TKPEmu -B TKPEmu/build
 cmake --build TKPEmu/build
