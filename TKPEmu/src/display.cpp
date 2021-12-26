@@ -313,6 +313,11 @@ namespace TKPEmu::Graphics {
                 if (ImGui::BeginMenu("Tools")) {
                     draw_menu_bar_tools();
                 }
+                if (ImGui::BeginMenu("Help")) {
+                    // TODO: implement help menu
+                    // imgui_markdown?
+                    ImGui::EndMenu();
+                }
                 ImGui::EndMainMenuBar();
             }
         }
