@@ -34,6 +34,7 @@ const std::unordered_map<Hash, ExpectedResult> QA::PassedTestMap =
     { "8ae8e8bfc9985cae9836a76dd4ff41d4", { 175908, "f0553923b341e4e57f091f1ce8cc8cf0", "acceptance/halt_ime0_ei" } },
     { "603ec0145d94806c5ac2e0e150d0f8a7", { 193386, "1975dc57ea974f8b92d14b07f1a9a584", "acceptance/halt_ime1_timing" } },
     { "cd20692d8453b777bb2918bef8431117", { 180487, "f2ead6ee6dc0a2f45504a43ad6536ba6", "acceptance/if_ie_registers" } },
+    { "4633fb333f8a9ddf2529ec51887a7f79", { 100000, "bd3e0a29d4ebf43cff3be190bc3f15d7", "acceptance/intr_timing" } },
     { "de63b8399797ed6756f96483190f8711", { 178242, "cad628ffff413571fc8e13b88f084dcf", "acceptance/pop_timing" } },
     { "612dff157f718c752aee5fe4d89f806c", { 175867, "6991e00223ecbd57308a7a7116c328f4", "acceptance/rapid_di_ei" } },
     { "1697d9aa59deb514b71a4a75fe3504ce", { 177314, "747dad4070fe5698071d4b256cb736ce", "acceptance/ret_timing" } },
