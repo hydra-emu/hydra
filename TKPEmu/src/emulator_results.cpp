@@ -28,6 +28,8 @@ const std::unordered_map<Hash, ExpectedResult> QA::PassedTestMap =
     // Gekkio
     { "e459f412e5459636b0ff736787774239", { 206743, "deb3479d8347148912a2018b3f94da93", "acceptance/add_sp_e_timing" } },
     { "f9bf05a2048eb83ce2d25eaa15e59b36", { 193265, "fa43d52c2e302bfff8c0c55c50e9401b", "acceptance/boot_regs-dmgABC" } },
+    { "f90d8ad35e5d172845e725996ada8908", { 186898, "25ff67b94ee3da658eafb86457cd34a8", "acceptance/call_timing" } },
+    { "1bf603a22a9c5c4d1a54e42550babe34", { 150000, "f0553923b341e4e57f091f1ce8cc8cf0", "acceptance/di_timing-GS" } },
     { "6bf0f67b415799534dc64e9c60521401", { 176006, "8c77db0a6370393f573540736131d2ef", "acceptance/div_timing" } },
     { "e5a7c1bb00c125db63974ec05b23de33", { 298225, "2eee4e1b02e5aeb4c4c6ae686c8ea07e", "acceptance/ei_sequence" } },
     { "82f55f1beaca6b7efc744b70f36de94e", { 175889, "12da5b255c481dba0f086a2b20001ae1", "acceptance/ei_timing" } },
