@@ -33,12 +33,13 @@ const std::unordered_map<Hash, ExpectedResult> QA::PassedTestMap =
     { "82f55f1beaca6b7efc744b70f36de94e", { 175889, "12da5b255c481dba0f086a2b20001ae1", "acceptance/ei_timing" } },
     { "8ae8e8bfc9985cae9836a76dd4ff41d4", { 175908, "f0553923b341e4e57f091f1ce8cc8cf0", "acceptance/halt_ime0_ei" } },
     { "603ec0145d94806c5ac2e0e150d0f8a7", { 193386, "1975dc57ea974f8b92d14b07f1a9a584", "acceptance/halt_ime1_timing" } },
+    { "cd20692d8453b777bb2918bef8431117", { 180487, "f2ead6ee6dc0a2f45504a43ad6536ba6", "acceptance/if_ie_registers" } },
+    { "de63b8399797ed6756f96483190f8711", { 178242, "cad628ffff413571fc8e13b88f084dcf", "acceptance/pop_timing" } },
     { "612dff157f718c752aee5fe4d89f806c", { 175867, "6991e00223ecbd57308a7a7116c328f4", "acceptance/rapid_di_ei" } },
     { "1697d9aa59deb514b71a4a75fe3504ce", { 177314, "747dad4070fe5698071d4b256cb736ce", "acceptance/ret_timing" } },
     { "611bfe319e33dbac599d0b856795de77", { 191003, "747dad4070fe5698071d4b256cb736ce", "acceptance/ret_cc_timing" } },
     { "9afa0b63379028273b06247c0695ee10", { 181851, "747dad4070fe5698071d4b256cb736ce", "acceptance/reti_timing" } },
     { "14e4eed76f51691e27279b74c8254a29", { 175872, "6090b1beba327d9d1934088dc548de60", "acceptance/reti_intr_timing" } },
-    { "de63b8399797ed6756f96483190f8711", { 178242, "cad628ffff413571fc8e13b88f084dcf", "acceptance/pop_timing" } },
     { "4cdcd4babcfcf781f4af2f0bb0c18f31", { 179795, "25ff67b94ee3da658eafb86457cd34a8", "acceptance/jp_timing" } },
     { "f685b7467b919943bc72ca3ab8282a41", { 206780, "bd64a7d89b3f0c6adaf5796839cef0ae", "acceptance/ld_hl_sp_e_timing" } },
     { "0462263e88a2eb9b701b2d63bd004690", { 206737, "2944f2e753972f06e3d958e179fa1284", "acceptance/oam_dma_timing" } },
@@ -63,6 +64,6 @@ const std::unordered_map<Hash, ExpectedResult> QA::PassedTestMap =
     { "cc197e887003211e175ba5c2fa1bf0bd", { 557442, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/ram_64kb" } },
     { "c4dc3398b815a34591fed91a1d5329b1", { 207111, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/rom_16MB" } },
     { "c4620fa2f6a36b8264fb7c876a627fd6", { 172157, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/rom_4MB" } },
-    { "2435d3266665065e6b2a5047d1fad186", { 172157, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/rom_8MB" } }
+    { "2435d3266665065e6b2a5047d1fad186", { 172157, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/rom_8MB" } },
 };
 }
