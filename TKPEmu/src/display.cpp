@@ -199,6 +199,7 @@ namespace TKPEmu::Graphics {
                     gb_palettes_[3][0] = 0x40 / 255.0f;
                     gb_palettes_[3][1] = 0x50 / 255.0f;
                     gb_palettes_[3][2] = 0x10 / 255.0f;
+                    setup_emulator_specific();
                 }
                 ImGui::Spacing();
                 ImGui::TextUnformatted("Controls:");
