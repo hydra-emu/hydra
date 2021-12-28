@@ -133,18 +133,21 @@ namespace TKPEmu::Graphics {
         bool window_fpscounter_open_ = false;
         bool window_settings_open_ = false;
         bool window_file_browser_open_ = false;
+        bool window_about_open_ = false;
         TKPShortcut last_shortcut_ = TKPShortcut::NONE;
 
         // Window drawing functions for ImGui
         void draw_settings(bool* draw);
         void draw_fps_counter(bool* draw);
         void draw_file_browser(bool* draw);
+        void draw_about(bool* draw);
         void draw_game_background(bool* draw);
         void draw_menu_bar(bool* draw);
         void draw_menu_bar_file();
         void draw_menu_bar_file_recent();
         void draw_menu_bar_tools();
         void draw_menu_bar_view();
+        void draw_menu_bar_help();
         void draw_tools();
         void open_file_browser();
         void handle_shortcuts();

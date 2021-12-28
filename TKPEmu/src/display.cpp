@@ -70,7 +70,6 @@ namespace TKPEmu::Graphics {
     void Display::EnterMainLoop() {
         main_loop();
     }
-
     void Display::draw_settings(bool* draw) {
         static KeySelector key_right("Direction Right:", "Gameboy.key_right", gb_keys_directional_[0]);
         static KeySelector  key_left("Direction Left: ", "Gameboy.key_left", gb_keys_directional_[1]);
@@ -239,9 +238,8 @@ namespace TKPEmu::Graphics {
                 ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
                 window_flags |= ImGuiWindowFlags_NoMove;
             }
-            ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-            if (ImGui::Begin("Overlay", draw, window_flags))
-            {
+            ImGui::SetNextWindowBgAlpha(0.35f);
+            if (ImGui::Begin("Overlay", draw, window_flags)) {
                 ImGui::Text("FPS: %.2f", ImGui::GetIO().Framerate);
                 if (ImGui::BeginPopupContextWindow())
                 {
@@ -257,7 +255,15 @@ namespace TKPEmu::Graphics {
             ImGui::End();
         }
     }
-
+    void Display::draw_about(bool* draw) {
+        if (*draw) {
+            ImGui::SetNextWindowSize(ImVec2(350, 200));
+            if (ImGui::Begin("About", draw, ImGuiWindowFlags_NoResize)) {
+                
+            }
+            ImGui::End();
+        }
+    }
     void Display::draw_file_browser(bool* draw) {
         if (*draw) {
             file_browser_.Display();
@@ -271,8 +277,8 @@ namespace TKPEmu::Graphics {
             }
         }
     }
-
     void Display::draw_game_background(bool* draw) {
+        ImGui::GetBackgroundDrawList()->AddRectFilledMultiColor(ImVec2(0, 0), ImVec2(window_settings_.window_width, window_settings_.window_height), 0xFF0000FF, 0xFFFFFF00, 0xFF00FFFF, 0xFF00FF00);
         if (*draw) {
             std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
             glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
@@ -291,13 +297,16 @@ namespace TKPEmu::Graphics {
             glBindTexture(GL_TEXTURE_2D, 0);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
-        }
-        else {
+            if (emulator_->Paused) {
+                ImGui::GetBackgroundDrawList()->AddText(nullptr, 40.0f, emulator_->EmulatorImage.topleft, 0xFF000000, "Paused");
+            }
+        } else {
             // TODO: allow for undocked window, disable above line when that happens
             //ImGui::Image((void*)(intptr_t)_image_.texture, ImVec2(512,512));
+            ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(window_settings_.window_width / 2 - 5, (MenuBarHeight + window_settings_.window_height) / 2 - 5), 64, 0xFF000000);
+            ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(window_settings_.window_width / 2, (MenuBarHeight + window_settings_.window_height) / 2), 64, 0xFF00FFFF);
         }
     }
-
     void Display::draw_menu_bar(bool* draw) {
         if (*draw) {
             if (ImGui::BeginMainMenuBar())
@@ -315,15 +324,12 @@ namespace TKPEmu::Graphics {
                     draw_menu_bar_tools();
                 }
                 if (ImGui::BeginMenu("Help")) {
-                    // TODO: implement help menu
-                    // imgui_markdown?
-                    ImGui::EndMenu();
+                    draw_menu_bar_help();
                 }
                 ImGui::EndMainMenuBar();
             }
         }
     }
-
     void Display::draw_menu_bar_file() {
         if (ImGui::MenuItem("Open ROM", "Ctrl+O")) {
             if (!window_file_browser_open_) {
@@ -349,7 +355,6 @@ namespace TKPEmu::Graphics {
         }
         ImGui::EndMenu();
     }
-
     void Display::draw_menu_bar_file_recent() {
         // TODO: implement open recent (menu->file)
         ImGui::MenuItem("fish_hat.c");
@@ -357,7 +362,6 @@ namespace TKPEmu::Graphics {
         ImGui::MenuItem("fish_hat.h");
         ImGui::EndMenu();
     }
-
     void Display::draw_menu_bar_tools() {
         if (rom_loaded_) {
             for (const auto& app : emulator_tools_) {
@@ -368,9 +372,16 @@ namespace TKPEmu::Graphics {
         }
         ImGui::EndMenu();
     }
-
     void Display::draw_menu_bar_view() {
-        if (ImGui::MenuItem("FPS Counter", NULL, window_fpscounter_open_, true)) {  window_fpscounter_open_ ^= true; }
+        if (ImGui::MenuItem("FPS Counter", nullptr, window_fpscounter_open_, true)) {
+              window_fpscounter_open_ ^= true; 
+        }
+        ImGui::EndMenu();
+    }
+    void Display::draw_menu_bar_help() {
+        if (ImGui::MenuItem("About", nullptr, window_about_open_, true)) {
+            window_about_open_ ^= true;
+        }
         ImGui::EndMenu();
     }
     void Display::handle_shortcuts() {
@@ -436,7 +447,6 @@ namespace TKPEmu::Graphics {
         bottomright.x = new_w + topleft.x;
         bottomright.y = new_h + topleft.y - MenuBarHeight;
     }
-
     void Display::load_rom(std::filesystem::path path) {
         if (path.has_parent_path()) {
             settings_.at("General.last_dir") = path.parent_path();
@@ -708,6 +718,7 @@ namespace TKPEmu::Graphics {
             draw_game_background(&rom_loaded_);
             draw_menu_bar(&menu_bar_open_);
             draw_fps_counter(&window_fpscounter_open_);
+            draw_about(&window_about_open_);
             draw_tools();
             draw_settings(&window_settings_open_);
             draw_file_browser(&window_file_browser_open_);
