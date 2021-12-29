@@ -6,6 +6,7 @@
 #include "../lib/stb_image_write.h"
 #include "../lib/md5.h"
 #include "../glad/glad/glad.h"
+#include "../include/settings_manager.h"
 namespace TKPEmu {
     void Emulator::HandleKeyDown(SDL_Keycode keycode) { 
         std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was pressed but\n"
@@ -17,7 +18,7 @@ namespace TKPEmu {
     }
     void Emulator::Screenshot(std::string filename) { 
 		std::lock_guard<std::mutex> lg(DrawMutex);
-		static const std::string scrnshot_dir = std::string(std::filesystem::current_path()) + "/";
+		std::string scrnshot_dir = TKPEmu::Tools::SettingsManager::GetSavePath() + "/screenshots/";
 		if (!std::filesystem::is_directory(scrnshot_dir)) {
 			std::filesystem::create_directories(scrnshot_dir);
 		}
@@ -29,8 +30,8 @@ namespace TKPEmu {
 			if (!std::filesystem::exists(filename_final)) {
 				break;
 			}
-			if (index > 200){
-				std::cerr << "Failed to take screenshot: more than 200 screenshots detected. Delete or move some from " << scrnshot_dir << std::endl;
+			if (index > 1000){
+				std::cerr << "Failed to take screenshot: more than 1000 screenshots detected. Delete or move some from " << scrnshot_dir << std::endl;
 				return;
 			}
 		} while (true);

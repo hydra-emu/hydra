@@ -7,15 +7,7 @@ namespace TKPEmu::Tools {
 		settings_(settings)
 	{
 		try {
-			#if defined(__linux__)
-			SaveDataDir = getenv("HOME") + std::string("/.config/tkpemu/");
-			#elif defined(_WIN32)
-			SaveDataDir = getenv("APPDATA") + std::string("/TKPEmu/");
-			#endif
-			if (SaveDataDir.empty()) {
-				std::cerr << "SaveDataDir was not defined for this environment - settings_manager.cpp" << std::endl;
-				exit(1);
-			}
+			std::string SaveDataDir = GetSavePath();
 			if (!std::filesystem::exists(SaveDataDir)) {
 				std::cout << "Creating " << SaveDataDir << " directories..." << std::endl;
 				std::filesystem::create_directories(SaveDataDir);
@@ -39,11 +31,24 @@ namespace TKPEmu::Tools {
 			item.second = ptree_.get(item.first, item.second);
 		}
 	}
-
 	SettingsManager::~SettingsManager() {
 		save_settings();
 	}
-
+	std::string SettingsManager::GetSavePath() {
+		static std::string dir;
+		if (dir.empty()) {
+			#if defined(__linux__)
+			dir = getenv("HOME") + std::string("/.config/tkpemu");
+			#elif defined(_WIN32)
+			dir = getenv("APPDATA") + std::string("/tkpemu");
+			#endif
+			if (dir.empty()) {
+				std::cerr << "GetSavePath dir was not defined for this environment - settings_manager.cpp" << std::endl;
+				exit(1);
+			}
+		}
+		return dir;
+	}
 	void SettingsManager::save_settings() noexcept {
 		for (auto& item : settings_) {
 			ptree_.put(item.first, item.second);

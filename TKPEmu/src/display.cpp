@@ -31,12 +31,12 @@ namespace TKPEmu::Graphics {
     }
     Display::Display() :
         display_initializer_(),
-        settings_manager_(settings_, "tkp_user.ini"),
+        settings_manager_(settings_, "/tkp_user.ini"),
         window_ptr_(nullptr, SDL_DestroyWindow),
         gl_context_ptr_(nullptr, SDL_GL_DeleteContext)
     {
         std::ios_base::sync_with_stdio(false);
-        ImGuiSettingsFile = settings_manager_.SaveDataDir + ImGuiSettingsFile;
+        ImGuiSettingsFile = settings_manager_.GetSavePath() + ImGuiSettingsFile;
         // TODO: get rid of this enum warning
         SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(
             SDL_WINDOW_OPENGL
@@ -631,7 +631,7 @@ namespace TKPEmu::Graphics {
     void Display::open_file_browser() {
         file_browser_.SetTitle("Select a ROM...");
         file_browser_.SetTypeFilters(SupportedRoms);
-        std::filesystem::path path = settings_manager_.SaveDataDir.substr(0, settings_manager_.SaveDataDir.length() - 1);
+        std::filesystem::path path = settings_manager_.GetSavePath();
         if (!(settings_.at("General.last_dir").empty())) {
             path = settings_.at("General.last_dir");
         }
