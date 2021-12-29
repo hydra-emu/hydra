@@ -69,6 +69,8 @@ const std::unordered_map<Hash, ExpectedResult> QA::PassedTestMap =
     { "bb631cacc570e0a9b53ff3dc348d43f5", { 100000, "258db64e2110857d17a8b249a301020b", "acceptance/timer/tim01_div_trigger" } },
     { "ccf7d984070e06fd70fab5982df85fb8", { 100000, "c0246c8e3bd539356fa7761ee8de5a9b", "acceptance/timer/tim10_div_trigger" } },
     { "fcccd66a3972183a8e9ca18f0fef6192", { 100000, "90472bf97c60517ccae5b2fe2c5c205a", "acceptance/timer/tim11_div_trigger" } },
+    { "1f733875abf08a1d05b8a6ad1fda9454", { 159443, "551999ba57fc569e90a725f0d6dafb2d", "acceptance/ppu/intr_2_mode0_timing" } },
+    { "5ecc8a6aca4f3fe01f1381d53093850b", { 173814, "b28e4192f094951889b60e243ced36e6", "acceptance/ppu/intr_2_mode3_timing" } },
     { "31d2ad77d05566b1dcb92d7ff7232767", { 1614439, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/bits_bank1" } },
     { "d7c8eb26b8c276f0d13e2a272a17c308", { 1677811, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/bits_bank2" } },
     { "d807288f6cfe34225989dd0d9293043e", { 1614699, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/bits_mode" } },
