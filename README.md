@@ -9,7 +9,7 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 ![Image](./TKPEmu/screen.png)
 
 ## Current emulators
-- [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/gb_tkp)
+- [Gameboy](https://github.com/OFFTKP/TKPEmu/tree/master/TKPEmu/GameboyTKP)
 ## Dependencies 
 Compiler: The `c++20` features used need at least `gcc-11` and `g++11` or latest `msvc`.   
 Dependencies: `cmake git `    
