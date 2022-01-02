@@ -47,6 +47,7 @@ namespace TKPEmu {
 		virtual float* GetScreenData();
 		virtual std::string GetScreenshotHash();
 		virtual std::string GetEmulatorName();
+		virtual bool IsReadyToDraw() { return false; };
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
 		std::mutex DebugUpdateMutex;

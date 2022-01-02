@@ -280,22 +280,24 @@ namespace TKPEmu::Graphics {
     void Display::draw_game_background(bool* draw) {
         ImGui::GetBackgroundDrawList()->AddRectFilledMultiColor(ImVec2(0, 0), ImVec2(window_settings_.window_width, window_settings_.window_height), 0xFF0000FF, 0xFFFFFF00, 0xFF00FFFF, 0xFF00FF00);
         if (*draw) {
-            std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
-            glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
-            glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
-            glTexSubImage2D(
-                GL_TEXTURE_2D,
-                0,
-                0,
-                0,
-                emulator_->EmulatorImage.width,
-                emulator_->EmulatorImage.height,
-                GL_RGBA,
-                GL_FLOAT,
-                emulator_->GetScreenData()
-            );
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            if (emulator_->IsReadyToDraw()) {
+                std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
+                glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
+                glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
+                glTexSubImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    0,
+                    0,
+                    emulator_->EmulatorImage.width,
+                    emulator_->EmulatorImage.height,
+                    GL_RGBA,
+                    GL_FLOAT,
+                    emulator_->GetScreenData()
+                );
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            }
             ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
             if (emulator_->Paused) {
                 ImGui::GetBackgroundDrawList()->AddText(nullptr, 40.0f, emulator_->EmulatorImage.topleft, 0xFF000000, "Paused");
