@@ -12,6 +12,8 @@ namespace TKPEmu::Applications {
         CTRL_P,
         CTRL_F,
 		CTRL_O,
+		CTRL_S,
+		CTRL_L,
         F7,
     };
 	class IMApplication {

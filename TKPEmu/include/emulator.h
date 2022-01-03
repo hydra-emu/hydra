@@ -39,6 +39,8 @@ namespace TKPEmu {
 		void Reset();
 		virtual void HandleKeyDown(SDL_Keycode keycode);
 		virtual void HandleKeyUp(SDL_Keycode keycode);
+		virtual void SaveState(std::string filename);
+		virtual void LoadState(std::string filename);
 		void LoadFromFile(std::string path);
 		void StartLogging(std::string filename);
 		void StopLogging();
@@ -65,6 +67,8 @@ namespace TKPEmu {
 		std::unique_ptr<std::ofstream> ofstream_ptr_;
 		EmuStartOptions start_options = EmuStartOptions::Console;
 	private:
+		virtual void save_state(std::ofstream& ofstream);
+		virtual void load_state(std::ifstream& ifstream);
 		virtual void v_log_state();
 		virtual void start_normal();
 		virtual void start_debug();

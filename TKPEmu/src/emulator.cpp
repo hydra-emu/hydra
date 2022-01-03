@@ -16,6 +16,16 @@ namespace TKPEmu {
         std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was released but\n"
         	"emulator.HandleKeyUp was not implemented" << std::endl;
     }
+	void Emulator::SaveState(std::string filename) {
+		std::ofstream of(filename, std::ios::binary);
+		save_state(of);
+	}
+	void Emulator::LoadState(std::string filename) {
+		if (std::filesystem::exists(filename)) {
+			std::ifstream ifs(filename, std::ios::in | std::ios::binary);
+			load_state(ifs);
+		}
+	}
     void Emulator::Screenshot(std::string filename) { 
 		std::lock_guard<std::mutex> lg(DrawMutex);
 		std::string scrnshot_dir = TKPEmu::Tools::SettingsManager::GetSavePath() + "/screenshots/";
@@ -145,6 +155,14 @@ namespace TKPEmu {
     }
 	void Emulator::load_file(std::string) {
 		std::cerr << "load_file was not implemented for this emulator" << std::endl;
+		exit(1);
+	}
+	void Emulator::save_state(std::ofstream&) {
+		std::cerr << "save_state was not implemented for this emulator" << std::endl;
+		exit(1);
+	}
+	void Emulator::load_state(std::ifstream&) {
+		std::cerr << "load_state was not implemented for this emulator" << std::endl;
 		exit(1);
 	}
     std::string Emulator::print() const { 

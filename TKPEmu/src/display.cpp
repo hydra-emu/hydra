@@ -343,9 +343,16 @@ namespace TKPEmu::Graphics {
             draw_menu_bar_file_recent();
         }
         ImGui::Separator();
+        if (ImGui::MenuItem("Save State", "Ctrl+S", false, is_rom_loaded())) {
+            last_shortcut_ = TKPShortcut::CTRL_S;
+        }
+        if (ImGui::MenuItem("Load State", "Ctrl+L", false, is_rom_loaded())) {
+            last_shortcut_ = TKPShortcut::CTRL_L;
+        }
+        ImGui::Separator();
         // TODO: implement save and load state, disable these buttons if no rom loaded
-        if (ImGui::MenuItem("Save State", "Ctrl+S", false, is_rom_loaded())) {}
-        if (ImGui::MenuItem("Load State", "Ctrl+L", false, is_rom_loaded())) {}
+        if (ImGui::MenuItem("Save State File", nullptr, false, is_rom_loaded())) {}
+        if (ImGui::MenuItem("Load State File", nullptr, false, is_rom_loaded())) {}
         ImGui::Separator();
         if (ImGui::MenuItem("Screenshot", NULL, false, is_rom_loaded())) {
             emulator_->Screenshot("Screenshot");
@@ -393,6 +400,18 @@ namespace TKPEmu::Graphics {
                     window_file_browser_open_ = true;
                     open_file_browser();
                 }
+                last_shortcut_ = TKPShortcut::NONE;
+                break;
+            }
+            case TKPShortcut::CTRL_L: {
+                if (emulator_)
+                    emulator_->LoadState(settings_manager_.GetSavePath() + "/save_states/" + emulator_->RomHash + ".state");
+                last_shortcut_ = TKPShortcut::NONE;
+                break;
+            }
+            case TKPShortcut::CTRL_S: {
+                if (emulator_)
+                    emulator_->SaveState(settings_manager_.GetSavePath() + "/save_states/" + emulator_->RomHash + ".state");
                 last_shortcut_ = TKPShortcut::NONE;
                 break;
             }
@@ -673,6 +692,7 @@ namespace TKPEmu::Graphics {
                     case SDL_KEYDOWN: {
                         auto key = event.key.keysym.sym;
                         // Handle the shortcuts
+                        // TODO: replace code dupe with function
                         const auto k = SDL_GetKeyboardState(NULL);
                         if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_P]) {
                             last_shortcut_ = TKPShortcut::CTRL_P;
@@ -688,6 +708,14 @@ namespace TKPEmu::Graphics {
                         }
                         if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_O]) {
                             last_shortcut_ = TKPShortcut::CTRL_O;
+                            break;
+                        }
+                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_S]) {
+                            last_shortcut_ = TKPShortcut::CTRL_S;
+                            break;
+                        }
+                        if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_L]) {
+                            last_shortcut_ = TKPShortcut::CTRL_L;
                             break;
                         }
                         if (k[SDL_SCANCODE_F7]) {
