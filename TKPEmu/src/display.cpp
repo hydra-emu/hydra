@@ -37,6 +37,13 @@ namespace TKPEmu::Graphics {
     {
         std::ios_base::sync_with_stdio(false);
         ImGuiSettingsFile = settings_manager_.GetSavePath() + ImGuiSettingsFile;
+        for (int i = 0; i < RecentRomsMaxSize; ++i) {
+            std::string loc = settings_.at("General.recent" + std::to_string(i));
+            std::filesystem::path path = loc;
+            if (!loc.empty() && path.has_filename()) {
+                recent_paths_.push_back(path);
+            }
+        }
         // TODO: get rid of this enum warning
         SDL_WindowFlags window_flags = static_cast<SDL_WindowFlags>(
             SDL_WINDOW_OPENGL
@@ -248,7 +255,7 @@ namespace TKPEmu::Graphics {
                     if (ImGui::MenuItem("Top-right", NULL, corner == 1)) corner = 1;
                     if (ImGui::MenuItem("Bottom-left", NULL, corner == 2)) corner = 2;
                     if (ImGui::MenuItem("Bottom-right", NULL, corner == 3)) corner = 3;
-                    if (draw && ImGui::MenuItem("Close")) *draw = false;
+                    if (ImGui::MenuItem("Close")) *draw = false;
                     ImGui::EndPopup();
                 }
             }
@@ -268,7 +275,13 @@ namespace TKPEmu::Graphics {
         if (*draw) {
             file_browser_.Display();
             if (file_browser_.HasSelected()) {
-                load_rom(std::move(file_browser_.GetSelected()));
+                auto path = file_browser_.GetSelected();
+                load_rom(path);
+                if (recent_paths_.size() == RecentRomsMaxSize) {
+                    recent_paths_.pop_back();
+                }
+                recent_paths_.push_front(path);
+                save_recent_files();
                 file_browser_.ClearSelected();
                 window_file_browser_open_ = false;
             }
@@ -365,11 +378,37 @@ namespace TKPEmu::Graphics {
         ImGui::EndMenu();
     }
     void Display::draw_menu_bar_file_recent() {
-        // TODO: implement open recent (menu->file)
-        ImGui::MenuItem("fish_hat.c");
-        ImGui::MenuItem("fish_hat.inl");
-        ImGui::MenuItem("fish_hat.h");
+        if (recent_paths_.empty()) {
+
+        } else {
+            for (int i = 0; i < recent_paths_.size(); ++i) {
+                std::string menu_name = recent_paths_[i].filename().string();
+                if (ImGui::MenuItem(menu_name.c_str())) {
+                    auto temp = recent_paths_[i];
+                    recent_paths_.erase(recent_paths_.begin() + i);
+                    if (std::filesystem::exists(temp)) {
+                        // Place at the front of recent paths list
+                        recent_paths_.push_front(temp);
+                        load_rom(temp);
+                    } else {
+                        messagebox_body_ = "File not found: ";
+                        messagebox_body_ += temp.c_str();
+                        window_messagebox_open_ = true;
+                    }
+                    save_recent_files();
+                }
+            }
+        }
         ImGui::EndMenu();
+    }
+    void Display::save_recent_files() {
+        for (int i = 0; i < RecentRomsMaxSize; i++) {
+            std::string new_val = "";
+            if (i < recent_paths_.size()) {
+                new_val = recent_paths_[i];
+            }
+            settings_.at("General.recent" + std::to_string(i)) = new_val;
+        }
     }
     void Display::draw_menu_bar_tools() {
         if (rom_loaded_) {
@@ -445,6 +484,23 @@ namespace TKPEmu::Graphics {
                     // Shortcut was handled by this app
                     return;
                 }
+            }
+        }
+    }
+    void Display::draw_messagebox(bool* draw) {
+        if (*draw) {
+            if (!ImGui::IsPopupOpen("Message")) {
+                ImGui::OpenPopup("Message");
+            }
+            ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+            ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+            if (ImGui::BeginPopupModal("Message", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text(messagebox_body_.c_str());
+                if (ImGui::Button("Ok", ImVec2(120, 0))) {
+                    window_messagebox_open_ = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
             }
         }
     }
@@ -589,7 +645,7 @@ namespace TKPEmu::Graphics {
         SDL_GL_SetSwapInterval(0);
         init_settings_values();
         ImGui::LoadIniSettingsFromDisk(ImGuiSettingsFile.c_str());
-        ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_RGB | ImGuiColorEditFlags_PickerHueWheel);
+        ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_PickerHueWheel);
         // TODO: design better icon
         // SDL_Surface* icon = SDL_LoadBMP(std::string(std::filesystem::current_path().string() + "/Resources/Images/icon.bmp").c_str());
         // SDL_SetWindowIcon(window_ptr_.get(), icon);
@@ -752,6 +808,7 @@ namespace TKPEmu::Graphics {
             draw_tools();
             draw_settings(&window_settings_open_);
             draw_file_browser(&window_file_browser_open_);
+            draw_messagebox(&window_messagebox_open_);
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window_ptr_.get());

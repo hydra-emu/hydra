@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <string>
 #include <mutex>
+#include <deque>
 #include <atomic>
 #include "../glad/glad/glad.h"
 #include "../lib/imgui_impl_sdl.h"
@@ -30,6 +31,7 @@ namespace TKPEmu::Graphics {
     constexpr auto GameboyWidth = 160;
     constexpr auto GameboyHeight = 144;
     constexpr auto MenuBarHeight = 19;
+    constexpr auto RecentRomsMaxSize = 5;
     struct WindowSettings {
         int window_width = 640;
         int window_height = 480;
@@ -74,6 +76,7 @@ namespace TKPEmu::Graphics {
         // This member being first means that it gets constructed first and gets destructed last
         // which is what we want to happen with the SDL_Init and the destroy functions
         DisplayInitializer display_initializer_;
+        std::deque<std::filesystem::path> recent_paths_;
 
         // To be used with settings_manager, these are the settings keys with their default values
         TKPEmu::Tools::SettingsMap settings_ =
@@ -82,6 +85,11 @@ namespace TKPEmu::Graphics {
             {"General.skip_boot", "0"},
             {"General.fast_mode", "0"},
             {"General.last_dir", ""},
+            {"General.recent0", ""},
+            {"General.recent1", ""},
+            {"General.recent2", ""},
+            {"General.recent3", ""},
+            {"General.recent4", ""},
             {"Video.limit_fps", "1"},
             {"Video.max_fps", "60"},
             {"Gameboy.color0", "d0d058"},
@@ -134,6 +142,8 @@ namespace TKPEmu::Graphics {
         bool window_settings_open_ = false;
         bool window_file_browser_open_ = false;
         bool window_about_open_ = false;
+        bool window_messagebox_open_ = false;
+        std::string messagebox_body_;
         TKPShortcut last_shortcut_ = TKPShortcut::NONE;
 
         // Window drawing functions for ImGui
@@ -143,6 +153,7 @@ namespace TKPEmu::Graphics {
         void draw_about(bool* draw);
         void draw_game_background(bool* draw);
         void draw_menu_bar(bool* draw);
+        void draw_messagebox(bool* draw);
         void draw_menu_bar_file();
         void draw_menu_bar_file_recent();
         void draw_menu_bar_tools();
@@ -151,6 +162,7 @@ namespace TKPEmu::Graphics {
         void draw_tools();
         void open_file_browser();
         void handle_shortcuts();
+        void save_recent_files();
         
         // Helper functions
         bool load_image_from_file(const char* filename, TKPImage& out);
