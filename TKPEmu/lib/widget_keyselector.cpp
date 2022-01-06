@@ -6,7 +6,7 @@ namespace TKPEmu::Tools {
         settings_map_ = settings_map;
     }
     void KeySelector::Draw(SDL_Keycode& new_key_press) {
-        ImGui::TextUnformatted(button_name_.c_str());
+        ImGui::Text(button_name_.c_str());
         ImGui::SameLine();
         if (ImGui::Button(button_text_.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
             if (!select_key_mode) {

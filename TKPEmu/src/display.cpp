@@ -208,7 +208,7 @@ namespace TKPEmu::Graphics {
                     setup_emulator_specific();
                 }
                 ImGui::Spacing();
-                ImGui::TextUnformatted("Controls:");
+                ImGui::Text("Controls:");
                 ImGui::Separator();
                 key_right.Draw(last_key_pressed_);
                 key_left.Draw(last_key_pressed_);
