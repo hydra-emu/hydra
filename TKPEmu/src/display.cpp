@@ -291,7 +291,7 @@ namespace TKPEmu::Graphics {
         }
     }
     void Display::draw_game_background(bool* draw) {
-        ImGui::GetBackgroundDrawList()->AddRectFilledMultiColor(ImVec2(0, 0), ImVec2(window_settings_.window_width, window_settings_.window_height), 0xFF0000FF, 0xFFFFFF00, 0xFF00FFFF, 0xFF00FF00);
+        ImGui::GetBackgroundDrawList()->AddRectFilledMultiColor(ImVec2(0, 0), ImVec2(window_settings_.window_width, window_settings_.window_height), 0x80000080, 0x80800000,  0x80008000, 0x80008080);
         if (*draw) {
             if (emulator_->IsReadyToDraw()) {
                 std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
@@ -316,10 +316,7 @@ namespace TKPEmu::Graphics {
                 ImGui::GetBackgroundDrawList()->AddText(nullptr, 40.0f, emulator_->EmulatorImage.topleft, 0xFF000000, "Paused");
             }
         } else {
-            // TODO: allow for undocked window, disable above line when that happens
-            //ImGui::Image((void*)(intptr_t)_image_.texture, ImVec2(512,512));
-            ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(window_settings_.window_width / 2 - 5, (MenuBarHeight + window_settings_.window_height) / 2 - 5), 64, 0xFF000000);
-            ImGui::GetBackgroundDrawList()->AddCircleFilled(ImVec2(window_settings_.window_width / 2, (MenuBarHeight + window_settings_.window_height) / 2), 64, 0xFF00FFFF);
+            // Any logo goes here
         }
     }
     void Display::draw_menu_bar(bool* draw) {
@@ -379,7 +376,7 @@ namespace TKPEmu::Graphics {
     }
     void Display::draw_menu_bar_file_recent() {
         if (recent_paths_.empty()) {
-
+            ImGui::MenuItem("No recent roms", NULL, false, false);
         } else {
             for (int i = 0; i < recent_paths_.size(); ++i) {
                 std::string menu_name = recent_paths_[i].filename().string();
@@ -387,7 +384,6 @@ namespace TKPEmu::Graphics {
                     auto temp = recent_paths_[i];
                     recent_paths_.erase(recent_paths_.begin() + i);
                     if (std::filesystem::exists(temp)) {
-                        // Place at the front of recent paths list
                         recent_paths_.push_front(temp);
                         load_rom(temp);
                     } else {
@@ -748,7 +744,6 @@ namespace TKPEmu::Graphics {
                     case SDL_KEYDOWN: {
                         auto key = event.key.keysym.sym;
                         // Handle the shortcuts
-                        // TODO: replace code dupe with function
                         const auto k = SDL_GetKeyboardState(NULL);
                         if ((k[SDL_SCANCODE_RCTRL] || k[SDL_SCANCODE_LCTRL]) && k[SDL_SCANCODE_P]) {
                             last_shortcut_ = TKPShortcut::CTRL_P;
@@ -816,7 +811,6 @@ namespace TKPEmu::Graphics {
         ImGui::SaveIniSettingsToDisk(ImGuiSettingsFile.c_str());
         // Locking this mutex ensures that the other thread gets
         // enough time to exit before we close the main application.
-        // TODO: code smell. find a different way to do this.
         if (emulator_) {
             emulator_->CloseAndWait();
         }

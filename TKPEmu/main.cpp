@@ -21,7 +21,7 @@ enum class ParameterType {
 // TODO: implement online version checking and updating
 TKPEmu::StartParameters parameters;
 // TODO: remove last_emulator_name -> add in TestData
-std::string last_emulator_name = "Unknown emulator";
+std::string last_emulator_name = "Unknown";
 void print_help() noexcept;
 TestData test_rom(std::string path);
 void generate_results(TestDataVec& results);
