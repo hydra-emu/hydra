@@ -86,7 +86,15 @@ const std::unordered_map<Hash, ExpectedResult> QA::PassedTestMap =
     { "20bb5cd9b26696955e2304c721d658b9", { 752664, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/ram_256kb" } },
     { "cc197e887003211e175ba5c2fa1bf0bd", { 557442, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/ram_64kb" } },
     { "c4dc3398b815a34591fed91a1d5329b1", { 207111, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/rom_16MB" } },
-    { "c4620fa2f6a36b8264fb7c876a627fd6", { 172157, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/rom_4MB" } },
-    { "2435d3266665065e6b2a5047d1fad186", { 172157, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/rom_8MB" } },
+    { "c4620fa2f6a36b8264fb7c876a627fd6", { 172157, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/rom_4Mb" } },
+    { "2435d3266665065e6b2a5047d1fad186", { 172157, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc1/rom_8Mb" } },
+    { "e2e847c8b704de9b111e29cbc4c555a8", { 177514, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc5/rom_16Mb" } },
+    { "a4f3be6f01f793b3a54b1769a5b6ad86", { 177514, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc5/rom_1Mb" } },
+    { "053f47c6224e00dd6b2ffab705b23d91", { 144543, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc5/rom_2Mb" } },
+    { "91714e36c77d453489619949651dde05", { 194991, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc5/rom_32Mb" } },
+    { "10fb4cacb112fa9789d2b1a2f26f0104", { 177514, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc5/rom_4Mb" } },
+    { "11cc5a856ae0d1a2d2912ae3f7ab8609", { 177514, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc5/rom_512kb" } },
+    { "ad8340088e6d48fa747644ff0fed8586", { 177514, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc5/rom_64Mb" } },
+    { "33a8606348d323b669f9582575e33d50", { 143752, "f0553923b341e4e57f091f1ce8cc8cf0", "emulator-only/mbc5/rom_8Mb" } },
 };
 }
