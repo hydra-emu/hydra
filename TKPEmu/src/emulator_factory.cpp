@@ -25,6 +25,7 @@ namespace TKPEmu {
     EmuType EmulatorFactory::GetEmulatorType(std::filesystem::path path) {
         auto ext = str_hash(path.extension().c_str());
         switch (ext) {
+            case str_hash(".gbc"):
             case str_hash(".gb"): {
                 return EmuType::Gameboy;
             }
