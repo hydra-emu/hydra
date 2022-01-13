@@ -189,22 +189,22 @@ namespace TKPEmu::Graphics {
                 }
                 if (ImGui::Button("Reset")) {
                     // TODO: Cleanup code duplication
-                    settings_.at("Gameboy.color0") = "d0d058";
-                    settings_.at("Gameboy.color1") = "a0a840";
-                    settings_.at("Gameboy.color2") = "708028";
-                    settings_.at("Gameboy.color3") = "405010";
-                    gb_palettes_[0][0] = 0xd0 / 255.0f;
-                    gb_palettes_[0][1] = 0xd0 / 255.0f;
-                    gb_palettes_[0][2] = 0x58 / 255.0f;
-                    gb_palettes_[1][0] = 0xa0 / 255.0f;
-                    gb_palettes_[1][1] = 0xa8 / 255.0f;
-                    gb_palettes_[1][2] = 0x40 / 255.0f;
-                    gb_palettes_[2][0] = 0x70 / 255.0f;
-                    gb_palettes_[2][1] = 0x80 / 255.0f;
-                    gb_palettes_[2][2] = 0x28 / 255.0f;
-                    gb_palettes_[3][0] = 0x40 / 255.0f;
-                    gb_palettes_[3][1] = 0x50 / 255.0f;
-                    gb_palettes_[3][2] = 0x10 / 255.0f;
+                    settings_.at("Gameboy.color0") = "ffffff";
+                    settings_.at("Gameboy.color1") = "aaaaaa";
+                    settings_.at("Gameboy.color2") = "555555";
+                    settings_.at("Gameboy.color3") = "000000";
+                    gb_palettes_[0][0] = 0xff / 255.0f;
+                    gb_palettes_[0][1] = 0xff / 255.0f;
+                    gb_palettes_[0][2] = 0xff / 255.0f;
+                    gb_palettes_[1][0] = 0xaa / 255.0f;
+                    gb_palettes_[1][1] = 0xaa / 255.0f;
+                    gb_palettes_[1][2] = 0xaa / 255.0f;
+                    gb_palettes_[2][0] = 0x55 / 255.0f;
+                    gb_palettes_[2][1] = 0x55 / 255.0f;
+                    gb_palettes_[2][2] = 0x55 / 255.0f;
+                    gb_palettes_[3][0] = 0x00 / 255.0f;
+                    gb_palettes_[3][1] = 0x00 / 255.0f;
+                    gb_palettes_[3][2] = 0x00 / 255.0f;
                     setup_emulator_specific();
                 }
                 ImGui::Spacing();
