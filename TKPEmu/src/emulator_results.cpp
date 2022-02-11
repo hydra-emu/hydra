@@ -10,7 +10,7 @@ const std::unordered_map<Hash, ExpectedResult> QA::PassedTestMap =
     /// Gameboy
     // blargg
     { "7d95af543a521ed036dc85f6f232d103", { 1'300'000, "42d5abde92c2678617996dd8f782989c", "cpu_instrs/01-special" } },
-    { "d36a85bb94d4c1b373c0e7be0f6f0971", { 300'000, "0f384cd6115fd9b2c33f7d9fc42200b5", "cpu_instrs02-interrupts" } },
+    { "d36a85bb94d4c1b373c0e7be0f6f0971", { 300'000, "0f384cd6115fd9b2c33f7d9fc42200b5", "cpu_instrs/02-interrupts" } },
     { "5bccf6b03f661d92b2903694d458510c", { 1'150'000, "3caaa1d70619add931ecfa9e88e3a7ff", "cpu_instrs/03-op sp,hl" } },
     { "e97a5202d7725a3caaf3495e559f2e98", { 1'400'000, "cccde7fb4b57b51d73147233e2789d0e", "cpu_instrs/04-op r,imm" } },
     { "43fc8bfc94938b42d8ecc9ea8b6b811a", { 1'900'000, "2d0258217d9411ae7dc9390b4022e7fa", "cpu_instrs/05-op rp" } },
