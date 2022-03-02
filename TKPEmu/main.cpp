@@ -178,7 +178,6 @@ int main(int argc, char *argv[]) {
 	}
 	after_args:
 	if (display_mode) {
-		// TODO: remake display constructor, takes runparameters class
 		std::cout << "Opening GUI..." << std::endl;
 		TKPEmu::Graphics::Display dis;
 		dis.EnterMainLoop();
