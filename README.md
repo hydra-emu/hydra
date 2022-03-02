@@ -34,6 +34,7 @@ makepkg -si</code></pre>
 
 <details>
 <summary>Ubuntu</summary><br>
+These commands are used to install on a fresh ubuntu environment and some can be omitted.
 <pre><code>sudo apt-get update
 sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential gcc-11 g++-11
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
