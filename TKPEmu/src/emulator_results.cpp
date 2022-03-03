@@ -25,6 +25,7 @@ const std::unordered_map<Hash, ExpectedResult> QA::PassedTestMap =
     { "d5cf8017991700f267b7b753579cc773", { 222'676, "bc9ff8c11b34a1c09800f79349ede2bf", "mem_timing/02-write_timing" } },
     { "fd3516dca15be20bc124ce4523ae5ad3", { 295'354, "41ad39c61bad61f0e474216d9cfa4c9d", "mem_timing/03-modify_timing" } },
     { "c89dcc0761693f0a42baf6c6a560222f", { 478'725, "3f58de72430b4efd5918282df6ef3d87", "dmg_sound/01-registers" } },
+    { "6473a525d5ac88166abf834d83a87aef", { 3'997'269, "592a99aa2644e34259435729c9696e34", "dmg_sound/02-len ctr" } },
     { "93bdd72292b1f1c25290c7a3ae8b37b3", { 750'364, "266f90572b534e845275df094f1121c3", "halt_bug" } },
     // Gekkio
     { "e459f412e5459636b0ff736787774239", { 206743, "deb3479d8347148912a2018b3f94da93", "acceptance/add_sp_e_timing" } },
