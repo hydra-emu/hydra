@@ -54,7 +54,7 @@ Has not been tested. Follow similar procedure, clone with submodules, build with
 
 ## License
 TKPEmu is licensed under the MIT license    
-Copyright (C) 2021-2021 Paris Oplopoios
+Copyright (C) 2021-2022 Paris Oplopoios
 
 ## Contributors
 [![GitHub contributors](https://contrib.rocks/image?repo=OFFTKP/TKPEmu)](https://github.com/OFFTKP/TKPEmu/graphs/contributors)
