@@ -8,7 +8,7 @@ namespace TKPEmu::Testing {
     // a hardcoded number of clocks
     using Hash = std::string;
     struct ExpectedResult {
-        unsigned Clocks;
+        int Clocks;
         // Represents the hash of the screenshot taken after Clocks
         Hash ExpectedHash;
         std::string TestName;

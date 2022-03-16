@@ -59,8 +59,6 @@ void test_dir(It dir_it, bool parallel) {
 	}
 }
 int main(int argc, char *argv[]) {
-	std::string rpath = std::string(getenv("HOME")) + std::string("/.config/tkpemu/expected_results.csv");
-	TKPEmu::Testing::QA::Load(rpath);
 	// Whenever we get an argument that needs parameters, this bool is set to true
 	bool expects_parameter = false;
 	bool display_mode = false;
@@ -184,6 +182,8 @@ int main(int argc, char *argv[]) {
 		TKPEmu::Graphics::Display dis;
 		dis.EnterMainLoop();
 	} else {
+		std::string rpath = std::string(getenv("HOME")) + std::string("/.config/tkpemu/expected_results.csv");
+		TKPEmu::Testing::QA::Load(rpath);
 		if (!parameters.RomFile.empty()) {
 			test_rom(parameters.RomFile);			
 		} else if (!parameters.RomDir.empty()) {

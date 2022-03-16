@@ -10,11 +10,14 @@ namespace TKPEmu::Testing {
         while (std::getline(ifs, line)) {
             Hash rom_hash;
             ExpectedResult res;
-            rom_hash.resize(32);
-            res.ExpectedHash.resize(32);
-            res.TestName.resize(100);
-            sscanf(line.c_str(), "%s,%u,%s,%s", rom_hash.data(), &res.Clocks, res.ExpectedHash.data(), res.TestName.data());
-            std::cout << rom_hash << " " << res.Clocks << " " << res.ExpectedHash << " " << res.TestName << std::endl;
+            rom_hash = line.substr(0, 32);
+            auto temp = line.substr(32 + 1);
+            size_t next_comma = temp.find(',');
+            auto num = temp.substr(0, next_comma);
+            res.Clocks = std::stoi(num);
+            auto rest = temp.substr(next_comma + 1);
+            res.ExpectedHash = rest.substr(0, 32);
+            res.TestName = rest.substr(32 + 1); 
             PassedTestMap.emplace(rom_hash, res);
         }
     }
