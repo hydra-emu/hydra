@@ -4,3 +4,6 @@
 [submodule "TKPEmu/NESTKP"]
 	path = TKPEmu/NESTKP
 	url = http://github.com/offtkp/NESTKP
+[submodule "TKPEmu/imgui"]
+	path = TKPEmu/imgui
+	url = https://github.com/ocornut/imgui
