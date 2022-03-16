@@ -8,7 +8,7 @@ namespace TKPEmu::Testing {
     // a hardcoded number of clocks
     using Hash = std::string;
     struct ExpectedResult {
-        unsigned long long Clocks;
+        unsigned Clocks;
         // Represents the hash of the screenshot taken after Clocks
         Hash ExpectedHash;
         std::string TestName;
@@ -20,7 +20,8 @@ namespace TKPEmu::Testing {
     // This map helps with quality assurance, we can check multiple test roms
     // at once and compare their finished hashes with these known good results
     struct QA {
-        const static std::unordered_map<Hash, ExpectedResult> PassedTestMap;
+        static std::unordered_map<Hash, ExpectedResult> PassedTestMap;
+        static void Load(std::string path);
     };
 }
 #endif
