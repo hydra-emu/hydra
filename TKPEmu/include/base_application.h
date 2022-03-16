@@ -3,7 +3,7 @@
 #define TKP_BASE_APPLICATION_H
 #include <memory>
 #include "emulator.h"
-#include "../lib/imgui_internal.h"
+#include "../imgui/imgui_internal.h"
 #include "disassembly_instr.h"
 namespace TKPEmu::Applications {
     enum class TKPShortcut {

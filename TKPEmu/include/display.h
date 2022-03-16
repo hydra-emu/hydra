@@ -9,7 +9,7 @@
 #include "../glad/glad/glad.h"
 #include "../lib/imgui_impl_sdl.h"
 #include "../lib/imgui_impl_opengl3.h"
-#include "../lib/imgui_internal.h"
+#include "../imgui/imgui_internal.h"
 #include "../lib/widget_keyselector.h"
 #include "../lib/imfilebrowser.h"
 #include "TKPImage.h"

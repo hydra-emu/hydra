@@ -1,7 +1,7 @@
 #pragma once
 #ifndef TKP_TOOLS_IMAGE_H
 #define TKP_TOOLS_IMAGE_H
-#include "../lib/imgui.h"
+#include "../imgui/imgui.h"
 namespace TKPEmu::Tools {
     struct TKPImage {
         unsigned int texture = 0;
