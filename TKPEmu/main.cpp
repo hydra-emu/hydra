@@ -3,6 +3,7 @@
 #include <iostream>
 #include <syncstream>
 #include <mutex>
+#include <SDL2/SDL.h>
 #include "include/version.h"
 #include "include/display.h"
 #include "include/console_colors.h"
@@ -10,6 +11,7 @@
 #include "include/emulator_factory.h"
 #include "include/emulator_results.h"
 #include "lib/str_hash.h"
+#include "httplib.h"
 using TestResult = TKPEmu::Testing::TestResult;
 using TestData = TKPEmu::Testing::TestData;
 using TestDataVec = std::vector<TestData>;
@@ -22,7 +24,9 @@ enum class ParameterType {
 TKPEmu::StartParameters parameters;
 // TODO: remove last_emulator_name -> add in TestData
 std::string last_emulator_name = "Unknown";
+int action = 0;
 void print_help() noexcept;
+void start_server() noexcept;
 TestData test_rom(std::string path);
 void generate_results(TestDataVec& results);
 template <typename It, typename ExecPolicy>
@@ -73,7 +77,7 @@ int main(int argc, char *argv[]) {
 				case str_hash("-d"):
 				case str_hash("--display"): {
 					display_mode = true;
-					goto after_args;
+					break;
 				}
 				case str_hash("-g"):
 				case str_hash("--generate-markdown"): {
@@ -84,6 +88,11 @@ int main(int argc, char *argv[]) {
 				case str_hash("--help"): {
 					print_help();
 					return 0;
+				}
+				case str_hash("-ss"):
+				case str_hash("--start-server"): {
+					parameters.Webserver = true;
+					break;
 				}
 				case str_hash("-v"):
 				case str_hash("--version"): {	
@@ -180,6 +189,12 @@ int main(int argc, char *argv[]) {
 	if (display_mode) {
 		std::cout << "Opening GUI..." << std::endl;
 		TKPEmu::Graphics::Display dis;
+		if (parameters.Webserver) {
+			dis.WS_SetActionFlag(&action);
+			dis.WS_LoadRom(std::filesystem::current_path().string() + "/red.gb"); // TODO: load any rom
+			auto ths = std::thread(start_server);
+			ths.detach();
+		}
 		dis.EnterMainLoop();
 	} else {
 		std::string rpath = std::string(getenv("HOME")) + std::string("/.config/tkpemu/expected_results.csv");
@@ -268,5 +283,45 @@ void generate_results(TestDataVec& results) {
 			}
 		}
 		file << "| " << r.RomName << " | " << emoji << " |\n";
+	}
+}
+
+void start_server() noexcept {
+	std::cout << "Looking for tkp_server.config file..." << std::endl;
+	if (std::filesystem::exists(std::filesystem::current_path().string() + "/tkp_server.config")) {
+		std::cout << "Found config file. Starting..." << std::endl;
+		// Load config file
+		std::vector<std::string> out;
+		std::ifstream fs(std::filesystem::current_path().string() + "/tkp_server.config");
+		std::copy(
+			std::istream_iterator<std::string>(fs), 
+			std::istream_iterator<std::string>(), 
+			std::back_inserter(out)
+		);
+		httplib::Server svr;
+		svr.Get("/p", [](const httplib::Request& req, httplib::Response& res) {
+			if (req.has_param("action")) {
+				try {
+					action = std::stoi(req.get_param_value("action"));
+				} catch (std::exception e) {
+					action = 0;
+				};
+			}
+			std::cout << "Screenshot requested!" << action << std::endl;
+		});
+		svr.Get("/i", [](const httplib::Request& req, httplib::Response& res) {
+			std::ifstream in(std::filesystem::current_path().string() + "/image.bmp", std::ios::in | std::ios::binary);
+			if(in){
+				std::ostringstream contents;
+				contents << in.rdbuf();
+				in.close();
+				res.set_content(contents.str(), "image/bmp");
+			}else{
+				res.status = 404;
+			}
+		});
+		svr.listen(out[0].c_str(), 8080);
+	} else {
+		std::cout << "Could not find config file." << std::endl;
 	}
 }

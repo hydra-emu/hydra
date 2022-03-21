@@ -542,7 +542,6 @@ namespace TKPEmu::Graphics {
         TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), emulator_type_);
         setup_emulator_specific();
         rom_loaded_ = true;
-        rom_paused_ = debug_mode_;
         emulator_->SkipBoot = skip_boot_;
         emulator_->FastMode = fast_mode_;
         emulator_->LoadFromFile(path.string());
@@ -707,6 +706,12 @@ namespace TKPEmu::Graphics {
     void Display::main_loop() {
         load_loop();
         bool loop = true;
+        if (!WS_path_.empty()) {
+            bool b = false;
+            draw_settings(&b); // TODO: ugly, get rid of this. (initializes settings)
+            fast_mode_ = false;
+            load_rom(WS_path_);
+        }
         while (loop)
         {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -785,6 +790,52 @@ namespace TKPEmu::Graphics {
             if (limit_fps_) {
                 limit_fps();
             }
+            if (emulator_) {
+                if (action_ptr_ && *action_ptr_ != 0) {
+                    SDL_Keycode key = SDLK_UNKNOWN;
+                    switch (*action_ptr_) {
+                        case 1: {
+                            key = SDLK_UP;
+                            break;
+                        }
+                        case 2: {
+                            key = SDLK_RIGHT;
+                            break;
+                        }
+                        case 3: {
+                            key = SDLK_DOWN;
+                            break;
+                        }
+                        case 4: {
+                            key = SDLK_LEFT;
+                            break;
+                        }
+                        case 5: {
+                            key = SDLK_z;
+                            break;
+                        }
+                        case 6: {
+                            key = SDLK_x;
+                            break;
+                        }
+                        case 7: {
+                            key = SDLK_RETURN;
+                            break;
+                        }
+                    }
+                    if (key != SDLK_UNKNOWN) {
+                        emulator_->HandleKeyDown(key);
+                        std::thread th([this, &key]() {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                            emulator_->HandleKeyUp(key);
+                            emulator_->Screenshot("image.bmp");
+                        });
+                        th.detach();
+                    }
+                    *action_ptr_ = 0;
+
+                }
+            }
             handle_shortcuts();
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window_ptr_.get());
@@ -807,5 +858,12 @@ namespace TKPEmu::Graphics {
         if (emulator_) {
             emulator_->CloseAndWait();
         }
+    }
+    void Display::WS_SetActionFlag(int* action_ptr) {
+        action_ptr_ = action_ptr;
+    }
+    void Display::WS_LoadRom(std::string path) {
+        std::cout << "Loading rom for web server:" << path << std::endl;
+        WS_path_ = path;
     }
 }

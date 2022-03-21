@@ -72,6 +72,8 @@ namespace TKPEmu::Graphics {
         Display(const Display&) = delete;
         Display& operator=(const Display&) = delete;
         void EnterMainLoop();
+        void WS_SetActionFlag(int* action_ptr);
+        void WS_LoadRom(std::string path);
     private:
         // This member being first means that it gets constructed first and gets destructed last
         // which is what we want to happen with the SDL_Init and the destroy functions
@@ -114,6 +116,7 @@ namespace TKPEmu::Graphics {
 
         bool limit_fps_ = true;
         int max_fps_ = 60;
+        int* action_ptr_ = nullptr;
         bool debug_mode_ = true;
         bool skip_boot_ = false;
         bool fast_mode_ = false;
@@ -144,6 +147,7 @@ namespace TKPEmu::Graphics {
         bool window_about_open_ = false;
         bool window_messagebox_open_ = false;
         std::string messagebox_body_;
+        std::string WS_path_;
         TKPShortcut last_shortcut_ = TKPShortcut::NONE;
 
         // Window drawing functions for ImGui

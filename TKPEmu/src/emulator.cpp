@@ -28,23 +28,13 @@ namespace TKPEmu {
 	}
     void Emulator::Screenshot(std::string filename) { 
 		std::lock_guard<std::mutex> lg(DrawMutex);
-		std::string scrnshot_dir = TKPEmu::Tools::SettingsManager::GetSavePath() + "/screenshots/";
+		// std::string scrnshot_dir = TKPEmu::Tools::SettingsManager::GetSavePath() + "/screenshots/";
+		std::string scrnshot_dir = std::filesystem::current_path().string();
 		if (!std::filesystem::is_directory(scrnshot_dir)) {
 			std::filesystem::create_directories(scrnshot_dir);
 		}
 		int index = 0;
-		std::string filename_final;
-		do {
-			// Find available screenshot name
-			filename_final = scrnshot_dir + filename + "_" + std::to_string(++index) + ".bmp";
-			if (!std::filesystem::exists(filename_final)) {
-				break;
-			}
-			if (index > 1000){
-				std::cerr << "Failed to take screenshot: more than 1000 screenshots detected. Delete or move some from " << scrnshot_dir << std::endl;
-				return;
-			}
-		} while (true);
+		std::string filename_final = scrnshot_dir + "/" + filename;
 		auto pixels = std::make_unique<uint8_t[]>(EmulatorImage.width * EmulatorImage.height * 4);
 		glBindTexture(GL_TEXTURE_2D, EmulatorImage.texture);
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.get());
