@@ -339,7 +339,10 @@ void start_server() noexcept {
 			if (req.has_param("action")) {
 				try {
 					action = std::stoi(req.get_param_value("action"));
-					res.set_content("<meta http-equiv=\"refresh\" content=\"0 URL=https://github.com/OFFTKP/\" />" ,"text/html");
+					res.set_content("<meta http-equiv=\"refresh\" content=\"0 URL=https://github.com/OFFTKP/\" />\n \
+								<meta http-equiv=\"Cache-Control\" content=\"no-cache, no-store, must-revalidate\" />\n \
+								<meta http-equiv=\"Pragma\" content=\"no-cache\" />\n \
+								<meta http-equiv=\"Expires\" content=\"0\" />" ,"text/html");
 				} catch (std::exception e) {
 					action = 0;
 				};
