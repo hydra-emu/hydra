@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(TKPEmu VERSION 0.1.2)
+project(TKPEmu VERSION 0.1.5)
 configure_file(main.cpp main.cpp)
 
 # Debug mode, comment out if not needed
