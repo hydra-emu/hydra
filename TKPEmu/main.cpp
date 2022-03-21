@@ -346,7 +346,6 @@ void start_server() noexcept {
 					action = 0;
 				};
 			}
-			std::cout << "Screenshot requested!" << action << std::endl;
 		});
 		svr.Get("/i", [](const httplib::Request& req, httplib::Response& res) {
 			std::ifstream in(std::filesystem::current_path().string() + "/image.bmp", std::ios::in | std::ios::binary);
