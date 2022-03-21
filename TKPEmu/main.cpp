@@ -339,10 +339,7 @@ void start_server() noexcept {
 			if (req.has_param("action")) {
 				try {
 					action = std::stoi(req.get_param_value("action"));
-					res.set_content("<meta http-equiv=\"refresh\" content=\"0 URL=https://github.com/OFFTKP/\" />\n \
-								<meta http-equiv=\"Cache-Control\" content=\"no-cache, max-age=0, no-store, must-revalidate\" />\n \
-								<meta http-equiv=\"Pragma\" content=\"no-cache\" />\n \
-								<meta http-equiv=\"Expires\" content=\"0\" />" ,"text/html");
+					res.set_content("<meta http-equiv=\"refresh\" content=\"0 URL=https://github.com/OFFTKP/\" />", "text/html");
 				} catch (std::exception e) {
 					action = 0;
 				};
@@ -355,6 +352,8 @@ void start_server() noexcept {
 				std::ostringstream contents;
 				contents << in.rdbuf();
 				in.close();
+				res.set_header("Cache-control", "no-cache,max-age=0");
+				res.set_header("Expires", "0");
 				res.set_content(contents.str(), "image/bmp");
 			}else{
 				res.status = 404;
