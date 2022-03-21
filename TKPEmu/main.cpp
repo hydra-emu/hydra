@@ -339,7 +339,9 @@ void start_server() noexcept {
 			if (req.has_param("action")) {
 				try {
 					action = std::stoi(req.get_param_value("action"));
-					res.set_content("<meta http-equiv=\"refresh\" content=\"0 URL=https://github.com/OFFTKP/\" />", "text/html");
+					std::string callback = req.get_param_value("callback");
+					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+					res.set_redirect(callback);
 				} catch (std::exception e) {
 					action = 0;
 				};
