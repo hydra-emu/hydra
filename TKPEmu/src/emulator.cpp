@@ -35,12 +35,9 @@ namespace TKPEmu {
 		}
 		int index = 0;
 		std::string filename_final = scrnshot_dir + "/" + filename;
-		auto pixels = std::make_unique<uint8_t[]>(EmulatorImage.width * EmulatorImage.height * 4);
-		glBindTexture(GL_TEXTURE_2D, EmulatorImage.texture);
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.get());
-		glBindTexture(GL_TEXTURE_2D, 0);
+		std::vector<uint8_t> data(GetScreenData(), GetScreenData() + EmulatorImage.width * EmulatorImage.height * 4);
 		try {
-			stbi_write_bmp(filename_final.c_str(), EmulatorImage.width, EmulatorImage.height, 3, pixels.get());
+			stbi_write_bmp(filename_final.c_str(), EmulatorImage.width, EmulatorImage.height, 4, data.data());
 		} catch (const std::exception& e) {
 			std::cerr << "Error writing screenshot: " << e.what() << std::endl;
 		}
@@ -158,6 +155,9 @@ namespace TKPEmu {
     std::string Emulator::print() const { 
         return "Error: Override print function for this emulator";
     }
+	void Emulator::WS_SetActionPtr(int* action_ptr) {
+		action_ptr_ = action_ptr;
+	}
     std::ostream& operator<<(std::ostream& os, const Emulator& obj) {
     	return os << obj.print();
 	}

@@ -91,8 +91,8 @@ int main(int argc, char *argv[]) {
 				}
 				case str_hash("-ss"):
 				case str_hash("--start-server"): {
-					parameters.Webserver = true;
-					break;
+					start_server();
+					return 0;
 				}
 				case str_hash("-v"):
 				case str_hash("--version"): {	
@@ -298,6 +298,42 @@ void start_server() noexcept {
 			std::istream_iterator<std::string>(), 
 			std::back_inserter(out)
 		);
+		std::thread ths([&](){
+			using GameboyKeys = std::array<SDL_Keycode, 4>;
+			auto path = std::filesystem::current_path().string() + "/red.gb";
+			auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path); 
+			GameboyKeys dirkeys, actionkeys;
+			dirkeys[0] = SDLK_RIGHT;
+			dirkeys[1] = SDLK_LEFT;
+			dirkeys[2] = SDLK_UP;
+			dirkeys[3] = SDLK_DOWN;
+			actionkeys[0] = SDLK_z;
+			actionkeys[1] = SDLK_x;
+			actionkeys[2] = SDLK_SPACE;
+			actionkeys[3] = SDLK_RETURN;
+			std::unique_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
+			emu->SkipBoot = true;
+			emu->FastMode = false;
+			emu->LoadFromFile(path);
+			emu->Paused = false;
+			auto options = TKPEmu::EmuStartOptions::Console;
+			emu->WS_SetActionPtr(&action);
+			emu->Screenshot("image.bmp");
+			auto* gb_ptr = static_cast<TKPEmu::Gameboy::Gameboy*>(emu.get());
+			gb_ptr->SetKeysLate(dirkeys, actionkeys);
+			auto& pal = gb_ptr->GetPalette();
+			for (int i = 0; i < 3; i++) {
+                pal[0][i] = 0xFF;
+            }
+			for (int i = 0; i < 3; i++) {
+                pal[1][i] = 0xA9;
+            }
+			for (int i = 0; i < 3; i++) {
+                pal[2][i] = 0x54;
+            }
+			emu->Start(options);
+		});
+		ths.detach();
 		httplib::Server svr;
 		svr.Get("/p", [](const httplib::Request& req, httplib::Response& res) {
 			if (req.has_param("action")) {

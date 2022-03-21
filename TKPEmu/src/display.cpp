@@ -616,6 +616,12 @@ namespace TKPEmu::Graphics {
             Gameboy* temp = static_cast<Gameboy*>(emulator_.get());
             auto& pal = temp->GetPalette();
             pal = gb_palettes_;
+            for (int i = 0; i < 3; i++) {
+                pal[0][i] = 0xFF;
+            }
+            for (int i = 0; i < 3; i++) {
+                pal[0][i] = 0xFF;
+            }
         }
     }
     void Display::load_loop(){
@@ -789,52 +795,6 @@ namespace TKPEmu::Graphics {
 
             if (limit_fps_) {
                 limit_fps();
-            }
-            if (emulator_) {
-                if (action_ptr_ && *action_ptr_ != 0) {
-                    SDL_Keycode key = SDLK_UNKNOWN;
-                    switch (*action_ptr_) {
-                        case 1: {
-                            key = SDLK_UP;
-                            break;
-                        }
-                        case 2: {
-                            key = SDLK_RIGHT;
-                            break;
-                        }
-                        case 3: {
-                            key = SDLK_DOWN;
-                            break;
-                        }
-                        case 4: {
-                            key = SDLK_LEFT;
-                            break;
-                        }
-                        case 5: {
-                            key = SDLK_z;
-                            break;
-                        }
-                        case 6: {
-                            key = SDLK_x;
-                            break;
-                        }
-                        case 7: {
-                            key = SDLK_RETURN;
-                            break;
-                        }
-                    }
-                    if (key != SDLK_UNKNOWN) {
-                        emulator_->HandleKeyDown(key);
-                        std::thread th([this, &key]() {
-                            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                            emulator_->HandleKeyUp(key);
-                            emulator_->Screenshot("image.bmp");
-                        });
-                        th.detach();
-                    }
-                    *action_ptr_ = 0;
-
-                }
             }
             handle_shortcuts();
             ImGui_ImplOpenGL3_NewFrame();

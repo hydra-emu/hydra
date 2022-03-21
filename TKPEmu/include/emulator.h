@@ -49,6 +49,7 @@ namespace TKPEmu {
 		virtual float* GetScreenData();
 		virtual std::string GetScreenshotHash();
 		virtual std::string GetEmulatorName();
+		void WS_SetActionPtr(int* action_ptr);
 		virtual bool IsReadyToDraw() { return false; };
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
@@ -66,6 +67,7 @@ namespace TKPEmu {
 		void log_state();
 		std::unique_ptr<std::ofstream> ofstream_ptr_;
 		EmuStartOptions start_options = EmuStartOptions::Console;
+		int* action_ptr_ = nullptr;
 	private:
 		virtual void save_state(std::ofstream& ofstream);
 		virtual void load_state(std::ifstream& ifstream);
