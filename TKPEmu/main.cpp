@@ -340,7 +340,7 @@ void start_server() noexcept {
 				try {
 					action = std::stoi(req.get_param_value("action"));
 					std::string callback = req.get_param_value("callback");
-					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+					std::this_thread::sleep_for(std::chrono::milliseconds(650));
 					res.set_redirect(callback);
 				} catch (std::exception e) {
 					action = 0;
