@@ -7,3 +7,6 @@
 [submodule "TKPEmu/imgui"]
 	path = TKPEmu/imgui
 	url = https://github.com/ocornut/imgui
+[submodule "TKPEmu/N64TKP"]
+	path = TKPEmu/N64TKP
+	url = https://github.com/OFFTKP/N64TKP
