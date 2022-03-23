@@ -62,12 +62,13 @@ namespace TKPEmu::Graphics {
         SDL_SetWindowMinimumSize(window_ptr_.get(), window_settings_.minimum_width, window_settings_.minimum_height);
         SDL_SetWindowMaximumSize(window_ptr_.get(), window_settings_.maximum_width, window_settings_.maximum_height);
         SDL_GL_MakeCurrent(window_ptr_.get(), gl_context_ptr_.get());
-        if (!gladLoadGLLoader(static_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
-            throw("Error: coudl not initialize glad");
-        }
-        else {
-            std::cout << "Glad initialized successfully" << std::endl;
-        }
+        glewInit();
+        // if (!gladLoadGLLoader(static_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
+        //     throw("Error: coudl not initialize glad");
+        // }
+        // else {
+        //     std::cout << "Glad initialized successfully" << std::endl;
+        // }
         glGenFramebuffers(1, &frame_buffer_);
     }
     Display::~Display() {
@@ -625,7 +626,7 @@ namespace TKPEmu::Graphics {
         }
     }
     void Display::load_loop(){
-        gladLoadGL();
+        //gladLoadGL();
         glViewport(0, 0, window_settings_.window_width, window_settings_.window_height);
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();

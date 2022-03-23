@@ -5,7 +5,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../lib/stb_image_write.h"
 #include "../lib/md5.h"
-#include "../glad/glad/glad.h"
+#include <GL/glew.h>
 #include "../include/settings_manager.h"
 namespace TKPEmu {
     void Emulator::HandleKeyDown(SDL_Keycode keycode) { 

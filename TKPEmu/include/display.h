@@ -6,7 +6,7 @@
 #include <mutex>
 #include <deque>
 #include <atomic>
-#include "../glad/glad/glad.h"
+#include <GL/glew.h>
 #include "../lib/imgui_impl_sdl.h"
 #include "../lib/imgui_impl_opengl3.h"
 #include "../imgui/imgui_internal.h"
