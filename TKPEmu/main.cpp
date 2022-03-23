@@ -12,6 +12,10 @@
 #include "include/emulator_results.h"
 #include "lib/str_hash.h"
 #include "httplib.h"
+#define TKP_DEBUG_MAIN
+#ifdef TKP_DEBUG_MAIN
+#include "N64TKP/Devices/n64_cpu.h"
+#endif
 using TestResult = TKPEmu::Testing::TestResult;
 using TestData = TKPEmu::Testing::TestData;
 using TestDataVec = std::vector<TestData>;
@@ -27,6 +31,7 @@ std::string last_emulator_name = "Unknown";
 int action = 0;
 void print_help() noexcept;
 void start_server() noexcept;
+void debug_main();
 TestData test_rom(std::string path);
 void generate_results(TestDataVec& results);
 template <typename It, typename ExecPolicy>
@@ -63,6 +68,10 @@ void test_dir(It dir_it, bool parallel) {
 	}
 }
 int main(int argc, char *argv[]) {
+	#ifdef TKP_DEBUG_MAIN
+	debug_main();
+	return 0;
+	#endif
 	// Whenever we get an argument that needs parameters, this bool is set to true
 	bool expects_parameter = false;
 	bool display_mode = false;
@@ -364,4 +373,14 @@ void start_server() noexcept {
 	} else {
 		std::cout << "Could not find config file." << std::endl;
 	}
+}
+
+void debug_main() {
+	TKPEmu::N64::Devices::CPU cpu_;
+	TKPEmu::N64::Devices::Instruction test;
+	cpu_.gpr_regs_[31].DW = 0xAFAFAFAFABCDEFAB;
+	test.IType.immediate = 1;
+	test.IType.rt = 31;
+	cpu_.LWL();
+	std::cout << cpu_.gpr_regs_[31].DW << std::endl;
 }
