@@ -61,6 +61,9 @@ cmake --build TKPEmu/build
 Has not been tested. Follow similar procedure, clone with submodules, build with cmake.
 </details>
 
+## Contributing
+Any contribution is welcome. Fork, open an issue or work on existing ones, or work on improving the documentation
+
 ## License
 TKPEmu is licensed under the MIT license    
 Copyright (C) 2021-2022 Paris Oplopoios
