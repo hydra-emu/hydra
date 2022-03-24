@@ -311,7 +311,7 @@ namespace TKPEmu::Graphics {
                 glBindTexture(GL_TEXTURE_2D, 0);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
-            ImGui::GetBackgroundDrawList()->AddImage((void*)(intptr_t)(emulator_->EmulatorImage.texture), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
+            ImGui::GetBackgroundDrawList()->AddImage(reinterpret_cast<void*>(static_cast<intptr_t>(emulator_->EmulatorImage.texture)), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
             if (emulator_->Paused) {
                 ImGui::GetBackgroundDrawList()->AddText(nullptr, 40.0f, emulator_->EmulatorImage.topleft, 0xFF000000, "Paused");
             }
@@ -378,7 +378,7 @@ namespace TKPEmu::Graphics {
         if (recent_paths_.empty()) {
             ImGui::MenuItem("No recent roms", NULL, false, false);
         } else {
-            for (int i = 0; i < recent_paths_.size(); ++i) {
+            for (size_t i = 0; i < recent_paths_.size(); ++i) {
                 std::string menu_name = recent_paths_[i].filename().string();
                 if (ImGui::MenuItem(menu_name.c_str())) {
                     auto temp = recent_paths_[i];
@@ -398,7 +398,7 @@ namespace TKPEmu::Graphics {
         ImGui::EndMenu();
     }
     void Display::save_recent_files() {
-        for (int i = 0; i < RecentRomsMaxSize; i++) {
+        for (size_t i = 0; i < RecentRomsMaxSize; i++) {
             std::string new_val = "";
             if (i < recent_paths_.size()) {
                 new_val = recent_paths_[i];
@@ -491,7 +491,7 @@ namespace TKPEmu::Graphics {
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
             if (ImGui::BeginPopupModal("Message", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-                ImGui::Text(messagebox_body_.c_str());
+                ImGui::TextUnformatted(messagebox_body_.c_str());
                 if (ImGui::Button("Ok", ImVec2(120, 0))) {
                     window_messagebox_open_ = false;
                     ImGui::CloseCurrentPopup();
@@ -708,8 +708,8 @@ namespace TKPEmu::Graphics {
         load_loop();
         bool loop = true;
         if (!WS_path_.empty()) {
-            bool b = false;
-            draw_settings(&b); // TODO: ugly, get rid of this. (initializes settings)
+            bool temp_bool = false;
+            draw_settings(&temp_bool); // TODO: ugly, get rid of this. (initializes settings)
             fast_mode_ = false;
             load_rom(WS_path_);
         }

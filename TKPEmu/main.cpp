@@ -344,7 +344,7 @@ void start_server() noexcept {
 					std::string callback = req.get_param_value("callback");
 					std::this_thread::sleep_for(std::chrono::milliseconds(650));
 					res.set_redirect(callback);
-				} catch (std::exception e) {
+				} catch (const std::exception& e) {
 					action = 0;
 				};
 			}
