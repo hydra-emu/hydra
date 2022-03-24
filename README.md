@@ -22,7 +22,7 @@ If you get an error while these files are being downloaded, check if the links a
 <details>
  <summary>Archlinux, <a href="https://aur.archlinux.org/packages/tkpemu/">AUR</a></summary>
 <br>
-Installation for Archlinux is very easy, just run the following command:    
+Installation for Archlinux is very easy, however you get the stable build, not the latest.  
 <pre><code>yay -S tkpemu</code></pre><br>
  Make sure you have <a href="https://github.com/Jguer/yay">yay</a> installed.    
 Otherwise run the following:    
@@ -31,7 +31,17 @@ git clone --recurse-submodules -j8 https://aur.archlinux.org/tkpemu.git
 cd tkpemu
 makepkg -si</code></pre>
 </details>
-
+<details>
+ <summary>Archlinux</summary>
+<br>   
+<pre><code>
+pacman -S --needed git cmake sdl2 glew glfw-x11 
+git clone --recurse-submodules -j8 https://github.com/OFFTKP/TKPEmu.git
+cd TKPEmu
+cmake -S TKPEmu -B TKPEmu/build
+cmake --build TKPEmu/build
+</code></pre>
+</details>
 <details>
 <summary>Ubuntu</summary><br>
 These commands are used to install on a fresh ubuntu environment and some can be omitted.
@@ -43,7 +53,6 @@ git clone --recurse-submodules -j8 https://github.com/OFFTKP/TKPEmu.git
 cd TKPEmu
 cmake -S TKPEmu -B TKPEmu/build
 cmake --build TKPEmu/build
-sudo mv ./TKPEmu/build/TKPEmu /usr/bin/TKPEmu
 </code></pre>
 </details>
 
