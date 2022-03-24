@@ -365,7 +365,7 @@ namespace TKPEmu::Graphics {
         if (ImGui::MenuItem("Load State File", nullptr, false, is_rom_loaded())) {}
         ImGui::Separator();
         if (ImGui::MenuItem("Screenshot", NULL, false, is_rom_loaded())) {
-            emulator_->Screenshot("Screenshot");
+            emulator_->Screenshot("Screenshot.bmp");
             std::cout << emulator_->GetScreenshotHash() << std::endl;
         }
         ImGui::Separator();
@@ -614,15 +614,9 @@ namespace TKPEmu::Graphics {
     void Display::setup_gameboy_palette() {
         if (emulator_ != nullptr) {
             using Gameboy = TKPEmu::Gameboy::Gameboy;
-            Gameboy* temp = static_cast<Gameboy*>(emulator_.get());
+            Gameboy* temp = dynamic_cast<Gameboy*>(emulator_.get());
             auto& pal = temp->GetPalette();
             pal = gb_palettes_;
-            for (int i = 0; i < 3; i++) {
-                pal[0][i] = 0xFF;
-            }
-            for (int i = 0; i < 3; i++) {
-                pal[0][i] = 0xFF;
-            }
         }
     }
     void Display::load_loop(){
