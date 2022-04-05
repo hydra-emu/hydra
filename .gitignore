@@ -347,7 +347,6 @@ build/
 CMakeFiles/
 
 # Other
-*.gb
 Deprecated/
 cmake_install.cmake
 Makefile
