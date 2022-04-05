@@ -10,6 +10,7 @@ namespace TKPEmu {
        bool Verbose = false;
        bool GenerateTestResults = false;
        bool Webserver = false;
+       bool Screenshot = false;
     };
 }
 #endif

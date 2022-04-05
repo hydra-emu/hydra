@@ -76,6 +76,11 @@ int main(int argc, char *argv[]) {
 	for (int i = 1; i < argc; i++) {
 		if (!expects_parameter) {
 			switch (str_hash(argv[i])) {
+				case str_hash("-s"):
+				case str_hash("--screenshot:"): {
+					parameters.Screenshot = true;
+					break;
+				}
 				case str_hash("-d"):
 				case str_hash("--display"): {
 					display_mode = true;
@@ -235,22 +240,29 @@ TestData test_rom(std::string path) {
 	emu->SkipBoot = true;
 	emu->FastMode = true;
 	emu->LoadFromFile(path);
+	bool should_compare = false;
+	decltype(TKPEmu::Testing::QA::PassedTestMap)::mapped_type result;
+	auto options = TKPEmu::EmuStartOptions::Console;
 	if (!TKPEmu::Testing::QA::PassedTestMap.contains(emu->RomHash)) {
 		if (parameters.Verbose) {
 			scout << "[" color_error << std::filesystem::path(path).filename() << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
 		}
-		ret.Result = TestResult::None;
-		return ret;
+		result.Clocks = 1'000'000;
+		//ret.Result = TestResult::None;
+		//return ret;
+	} else {
+		result = TKPEmu::Testing::QA::PassedTestMap.at(emu->RomHash);
+		should_compare = true;
 	}
-	auto result = TKPEmu::Testing::QA::PassedTestMap.at(emu->RomHash);
-	auto options = TKPEmu::EmuStartOptions::Console;
 	emu->ScreenshotClocks = result.Clocks;
 	emu->ScreenshotHash = result.ExpectedHash;
 	last_emulator_name = emu->GetEmulatorName();
+	emu->TakeScreenshot = parameters.Screenshot;
 	emu->Start(options);
 	// Console mode does not run on a seperate thread so we don't need to wait
 	ret.Result = emu->Result;
-	ret.RomName = TKPEmu::Testing::QA::PassedTestMap.at(emu->RomHash).TestName;
+	if (should_compare)
+		ret.RomName = TKPEmu::Testing::QA::PassedTestMap.at(emu->RomHash).TestName;
 	return ret;
 }
 void generate_results(TestDataVec& results) {
@@ -324,15 +336,6 @@ void start_server() noexcept {
 			auto* gb_ptr = static_cast<TKPEmu::Gameboy::Gameboy*>(emu.get());
 			gb_ptr->SetKeysLate(dirkeys, actionkeys);
 			auto& pal = gb_ptr->GetPalette();
-			for (int i = 0; i < 3; i++) {
-                pal[0][i] = 0xFF;
-            }
-			for (int i = 0; i < 3; i++) {
-                pal[1][i] = 0xA9;
-            }
-			for (int i = 0; i < 3; i++) {
-                pal[2][i] = 0x54;
-            }
 			emu->Start(options);
 		});
 		ths.detach();

@@ -33,6 +33,7 @@ namespace TKPEmu {
 		std::atomic_int InstructionBreak = -1;
 		bool SkipBoot = false;
 		bool FastMode = false;
+		bool TakeScreenshot = false;
 		unsigned long long TotalClocks = 0;
 		unsigned long long ScreenshotClocks = 0;
 		void Start(EmuStartOptions start_mode);
@@ -44,7 +45,7 @@ namespace TKPEmu {
 		void LoadFromFile(std::string path);
 		void StartLogging(std::string filename);
 		void StopLogging();
-		void Screenshot(std::string filename);
+		void Screenshot(std::string filename, std::string directory = {});
 		void CloseAndWait();
 		virtual float* GetScreenData();
 		virtual std::string GetScreenshotHash();
@@ -59,6 +60,7 @@ namespace TKPEmu {
 		std::string RomHash;
 		std::string ScreenshotHash;
 		std::string CurrentFilename;
+		std::string CurrentDirectory;
 		TKPEmu::Testing::TestResult Result = TKPEmu::Testing::TestResult::Unknown; 
 	protected:
 		// To be placed at the end of your update function

@@ -26,26 +26,21 @@ namespace TKPEmu {
 			load_state(ifs);
 		}
 	}
-    void Emulator::Screenshot(std::string filename) { 
+    void Emulator::Screenshot(std::string filename, std::string directory) { 
 		std::lock_guard<std::mutex> lg(DrawMutex);
 		// std::string scrnshot_dir = TKPEmu::Tools::SettingsManager::GetSavePath() + "/screenshots/";
-		std::string scrnshot_dir = std::filesystem::current_path().string();
+		std::string scrnshot_dir;
+		if (directory.empty()) {
+			scrnshot_dir = std::filesystem::current_path().string();
+		} else {
+			scrnshot_dir = directory;
+		}
 		if (!std::filesystem::is_directory(scrnshot_dir)) {
 			std::filesystem::create_directories(scrnshot_dir);
 		}
 		int index = 0;
 		std::string filename_final = scrnshot_dir + "/" + filename;
-		std::vector<uint8_t> data;
-		data.reserve(EmulatorImage.width * EmulatorImage.height * 4);
-		auto fl_ptr = GetScreenData();
-		for (size_t i = 0; i < EmulatorImage.width * EmulatorImage.height * 4; i++) {
-			if ((i & 0b11) != 0b11)
-				data[i] = static_cast<uint8_t>(fl_ptr[i] * 255.0f);
-			else
-				data[i] = 0xFF; // stbi doesnt take float as input so we have to multiply with 255 to convert back to
-				// uint8_t. But alpha needs no conversion because its already 255 and if its multiplied by 255 again
-				// we get 0 cus of overflow
-		}
+		std::vector<uint8_t> data(GetScreenData(), GetScreenData() + EmulatorImage.width * EmulatorImage.height * 4);
 		try {
 			stbi_write_bmp(filename_final.c_str(), EmulatorImage.width, EmulatorImage.height, 4, data.data());
 		} catch (const std::exception& e) {
@@ -77,7 +72,8 @@ namespace TKPEmu {
 		}
     }
 	void Emulator::LoadFromFile(std::string path) {
-		CurrentFilename = std::filesystem::path(path).filename();
+		CurrentFilename = std::filesystem::path(path).filename().stem();
+		CurrentDirectory = std::filesystem::path(path).parent_path();
 		std::ifstream t(path);
 		std::stringstream buffer;
 		buffer << t.rdbuf();
