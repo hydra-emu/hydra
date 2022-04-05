@@ -34,11 +34,10 @@ makepkg -si</code></pre>
 <details>
  <summary>Archlinux</summary>
 <br>   
-<pre><code>
-pacman -S --needed git cmake sdl2 glew glfw-x11 
+<pre><code>pacman -S --needed git cmake sdl2 glew glfw-x11 ninja
 git clone --recurse-submodules -j8 https://github.com/OFFTKP/TKPEmu.git
 cd TKPEmu
-cmake -S TKPEmu -B TKPEmu/build
+cmake -S TKPEmu -B TKPEmu/build -G Ninja
 cmake --build TKPEmu/build
 </code></pre>
 </details>
@@ -46,7 +45,7 @@ cmake --build TKPEmu/build
 <summary>Ubuntu</summary><br>
 These commands are used to install on a fresh ubuntu environment and some can be omitted.
 <pre><code>sudo apt-get update
-sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential gcc-11 g++-11
+sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential gcc-11 g++-11 ninja-build
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
 sudo update-alternatives --set gcc /usr/bin/gcc-11
 git clone --recurse-submodules -j8 https://github.com/OFFTKP/TKPEmu.git
