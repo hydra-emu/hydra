@@ -71,14 +71,14 @@ namespace TKPEmu {
 			}
 		}
     }
-	void Emulator::LoadFromFile(std::string path) {
+	bool Emulator::LoadFromFile(std::string path) {
 		CurrentFilename = std::filesystem::path(path).filename().stem();
 		CurrentDirectory = std::filesystem::path(path).parent_path();
 		std::ifstream t(path);
 		std::stringstream buffer;
 		buffer << t.rdbuf();
 		RomHash = md5(buffer.str());
-		load_file(path);
+		return load_file(path);
 	}
     void Emulator::Reset() {
         if (SkipBoot) {
@@ -146,7 +146,7 @@ namespace TKPEmu {
         std::cerr << "update was not implemented for this emulator" << std::endl;
 		exit(1);
     }
-	void Emulator::load_file(std::string) {
+	bool Emulator::load_file(std::string) {
 		std::cerr << "load_file was not implemented for this emulator" << std::endl;
 		exit(1);
 	}

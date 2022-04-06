@@ -239,7 +239,10 @@ TestData test_rom(std::string path) {
 	std::unique_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
 	emu->SkipBoot = true;
 	emu->FastMode = true;
-	emu->LoadFromFile(path);
+	if (!emu->LoadFromFile(path)) {
+		ret.Result = TestResult::Failed;
+		return ret;
+	}
 	bool should_compare = false;
 	decltype(TKPEmu::Testing::QA::PassedTestMap)::mapped_type result;
 	auto options = TKPEmu::EmuStartOptions::Console;
@@ -328,7 +331,9 @@ void start_server() noexcept {
 			std::unique_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
 			emu->SkipBoot = true;
 			emu->FastMode = false;
-			emu->LoadFromFile(path);
+			if (!emu->LoadFromFile(path)) {
+				return;
+			}
 			emu->Paused = false;
 			auto options = TKPEmu::EmuStartOptions::Console;
 			emu->WS_SetActionPtr(&action);

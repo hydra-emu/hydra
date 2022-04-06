@@ -545,7 +545,9 @@ namespace TKPEmu::Graphics {
         rom_loaded_ = true;
         emulator_->SkipBoot = skip_boot_;
         emulator_->FastMode = fast_mode_;
-        emulator_->LoadFromFile(path.string());
+        if (!emulator_->LoadFromFile(path.string())) {
+            return;
+        }
         EmuStartOptions options = debug_mode_ ? EmuStartOptions::Debug : EmuStartOptions::Normal;
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, emulator_->EmulatorImage.texture, 0);
