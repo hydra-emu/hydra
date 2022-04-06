@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 project(TKPEmu VERSION 0.1.5)
 # Debug mode, comment out if not needed
 # set(CMAKE_BUILD_TYPE, Debug)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(CMAKE_BUILD_TYPE, Release)
 # TKPEmu uses several C++20 features
 set(CMAKE_CXX_STANDARD 20)
