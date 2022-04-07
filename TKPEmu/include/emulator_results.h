@@ -1,5 +1,5 @@
-#ifndef TKPEMU_RESULTS_H
-#define TKPEMU_RESULTS_H
+#ifndef TKP_RESULTS_H
+#define TKP_RESULTS_H
 #include <unordered_map>
 #include <string>
 namespace TKPEmu::Testing {

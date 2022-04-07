@@ -1,5 +1,5 @@
-#ifndef TKPEMU_STARTPARAMETERS_H
-#define TKPEMU_STARTPARAMETERS_H
+#ifndef TKP_STARTPARAMETERS_H
+#define TKP_STARTPARAMETERS_H
 namespace TKPEmu {
     struct StartParameters {
        std::string RomDir;
