@@ -1,5 +1,5 @@
 #ifndef TKP_EMUFACTORY_H
-#define TKPEMU_EMUFACTORY_H
+#define TKP_EMUFACTORY_H
 #include <type_traits>
 #include <filesystem>
 #include "emulator.h"
