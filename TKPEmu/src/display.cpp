@@ -11,13 +11,15 @@
 
 namespace TKPEmu::Graphics {
 	Display::DisplayInitializer::DisplayInitializer() {
-        if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-            std::cout << SDL_GetError() << std::endl;
-            throw("SDL could not be initialized");
+        if (SDL_Init(SDL_INIT_VIDEO) != 0) [[unlikely]] {
+            SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
+            exit(1);
         }
-        else {
-            std::cout << "SDL initialized successfully" << std::endl;
+        if(SDL_Init(SDL_INIT_AUDIO) != 0) [[unlikely]] {
+            SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
+            exit(1);
         }
+        std::cout << "SDL initialized successfully" << std::endl;
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
