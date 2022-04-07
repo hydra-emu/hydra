@@ -16,8 +16,6 @@ Dependencies: `cmake git `
 Libraries: `sdl2 tbb boost`. See `Installation` for an easy installation guide
 
 ## Installation
-CMake is going to download source files from [imgui](https://github.com/ocornut/imgui), [GameboyTKP](https://github.com/OFFTKP/GameboyTKP) and [glad-stable](https://github.com/OFFTKP/glad-stable)    
-If you get an error while these files are being downloaded, check if the links above work, and open an issue
 
 <details>
  <summary>Archlinux, <a href="https://aur.archlinux.org/packages/tkpemu/">AUR</a></summary>
