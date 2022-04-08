@@ -40,7 +40,21 @@ namespace TKPEmu {
 		}
 		int index = 0;
 		std::string filename_final = scrnshot_dir + "/" + filename;
-		std::vector<uint8_t> data(GetScreenData(), GetScreenData() + EmulatorImage.width * EmulatorImage.height * 4);
+		std::vector<uint8_t> data;
+		if (start_options == EmuStartOptions::Console) {
+			data = std::vector<uint8_t>(GetScreenData(), GetScreenData() + EmulatorImage.width * EmulatorImage.height * 4);
+		} else {
+			data.resize(EmulatorImage.width * EmulatorImage.height * 4);
+			auto fl_ptr = GetScreenData();
+			for (int i = 0; i < (EmulatorImage.width * EmulatorImage.height * 4); i++) {
+				if ((i & 0b11) != 0b11)
+					data[i] = static_cast<uint8_t>(fl_ptr[i] * 255.0f);
+				else
+					data[i] = 0xFF; // stbi doesnt take float as input so we have to multiply with 255 to convert back to
+					// uint8_t. But alpha needs no conversion because its already 255 and if its multiplied by 255 again
+					// we get 0 cus of overflow
+			}
+		}
 		try {
 			stbi_write_bmp(filename_final.c_str(), EmulatorImage.width, EmulatorImage.height, 4, data.data());
 		} catch (const std::exception& e) {

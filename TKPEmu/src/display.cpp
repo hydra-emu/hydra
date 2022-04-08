@@ -295,10 +295,10 @@ namespace TKPEmu::Graphics {
     void Display::draw_game_background(bool* draw) {
         ImGui::GetBackgroundDrawList()->AddRectFilledMultiColor(ImVec2(0, 0), ImVec2(window_settings_.window_width, window_settings_.window_height), 0x80000080, 0x80800000,  0x80008000, 0x80008080);
         if (*draw) {
+            glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
+            glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
             {
                 std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
-                glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
-                glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
                 glTexSubImage2D(
                     GL_TEXTURE_2D,
                     0,
