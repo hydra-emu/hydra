@@ -295,7 +295,7 @@ namespace TKPEmu::Graphics {
     void Display::draw_game_background(bool* draw) {
         ImGui::GetBackgroundDrawList()->AddRectFilledMultiColor(ImVec2(0, 0), ImVec2(window_settings_.window_width, window_settings_.window_height), 0x80000080, 0x80800000,  0x80008000, 0x80008080);
         if (*draw) {
-            if (emulator_->IsReadyToDraw()) {
+            {
                 std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
                 glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
                 glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
@@ -310,9 +310,9 @@ namespace TKPEmu::Graphics {
                     GL_FLOAT,
                     emulator_->GetScreenData()
                 );
-                glBindTexture(GL_TEXTURE_2D, 0);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             ImGui::GetBackgroundDrawList()->AddImage(reinterpret_cast<void*>(static_cast<intptr_t>(emulator_->EmulatorImage.texture)), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
             if (emulator_->Paused) {
                 ImGui::GetBackgroundDrawList()->AddText(nullptr, 40.0f, emulator_->EmulatorImage.topleft, 0xFF000000, "Paused");
