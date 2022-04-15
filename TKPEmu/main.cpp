@@ -33,13 +33,11 @@ TestData test_rom(std::string path);
 void generate_results(TestDataVec& results);
 template <typename It, typename ExecPolicy>
 TestDataVec test_dir_exec(It begin, It end, ExecPolicy exec_pol) {
-	std::mutex push_mutex;
 	TestDataVec results;
 	std::for_each(exec_pol, begin, end, [&](const auto& file) {
 		if (!file.is_directory()) {
 			TestData res = test_rom(file.path().string());
 			if (res.Result != TestResult::None) {
-				std::lock_guard<std::mutex> lg(push_mutex);
 				results.push_back(res);
 			}
 		}
@@ -228,10 +226,11 @@ void print_help() noexcept {
 TestData test_rom(std::string path) {
 	TestData ret;
 	std::osyncstream scout(std::cout);
+	auto filename = std::filesystem::path(path).filename().string();
 	auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path); 
 	if (type == TKPEmu::EmuType::None) {
 		if (parameters.Verbose) {
-			scout << "[" color_warning << std::filesystem::path(path).filename() << color_reset "]: No available emulator found for this file" << std::endl;
+			scout << "[" color_warning << filename << color_reset "]: No available emulator found for this file" << std::endl;
 		}
 		ret.Result = TestResult::None;
 		return ret;
@@ -248,7 +247,7 @@ TestData test_rom(std::string path) {
 	auto options = TKPEmu::EmuStartOptions::Console;
 	if (!TKPEmu::Testing::QA::PassedTestMap.contains(emu->RomHash)) {
 		if (parameters.Verbose) {
-			scout << "[" color_error << std::filesystem::path(path).filename() << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
+			scout << "[" color_error << filename << color_reset "]: This rom does not have a hash in emulator_results" << std::endl;
 		}
 		result.Clocks = 1'000'000;
 		//ret.Result = TestResult::None;
@@ -264,8 +263,7 @@ TestData test_rom(std::string path) {
 	emu->Start(options);
 	// Console mode does not run on a seperate thread so we don't need to wait
 	ret.Result = emu->Result;
-	if (should_compare)
-		ret.RomName = TKPEmu::Testing::QA::PassedTestMap.at(emu->RomHash).TestName;
+	ret.RomName = emu->CurrentFilename;
 	return ret;
 }
 void generate_results(TestDataVec& results) {

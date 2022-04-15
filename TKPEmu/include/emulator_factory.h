@@ -17,7 +17,7 @@ namespace TKPEmu {
     private:
         using IMApplication = TKPEmu::Applications::IMApplication;
     public:
-        static std::shared_ptr<Emulator> Create(EmuType type, std::any args = nullptr) { 
+        static std::shared_ptr<Emulator> Create(EmuType type, std::any args = {}) { 
             switch (type) {
                 case EmuType::Gameboy: {
                     return std::make_shared<Gameboy::Gameboy>(args);
