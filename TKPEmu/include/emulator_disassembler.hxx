@@ -9,7 +9,32 @@
 
 namespace TKPEmu {
     struct GeneralDisassembler {
-        static std::string Disassemble(EmuType type, std::any instruction) {
+        static std::string GetOpcodeName(EmuType type, std::any instruction) {
+            std::string ret;
+            switch (type) {
+                case EmuType::N64: {
+                    uint32_t instr_inner = std::any_cast<uint32_t>(instruction);
+                    TKPEmu::N64::Instruction instr;
+                    instr.Full = instr_inner;
+                    switch(instr.IType.op) {
+                        case 0: {
+                            ret = TKPEmu::N64::SpecialCodes[instr.RType.func];
+                            break;
+                        }
+                        default: {
+                            ret = TKPEmu::N64::OperationCodes[instr.IType.op];
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    ret = "Unknown emulator type - GetOpcodeName";
+                    break;
+                }
+            }
+            return ret;
+        }
+        static std::string GetDisassembledString(EmuType type, std::any instruction) {
             std::string ret;
             switch (type) {
                 case EmuType::N64: {
@@ -17,13 +42,12 @@ namespace TKPEmu {
                     TKPEmu::N64::Instruction instr;
                     instr.Full = instr_inner;
                     std::stringstream ss;
+                    ss << GetOpcodeName(type, instr.Full);
                     if (instr.IType.op != 0) {
-                        ss << TKPEmu::N64::OperationCodes[instr.IType.op];
                         ss << " " << std::hex << instr.IType.rs;
                         ss << " " << std::hex << instr.IType.rt;
                         ss << " " << std::hex << instr.IType.immediate;
                     } else {
-                        ss << TKPEmu::N64::SpecialCodes[instr.RType.func];
                         ss << " " << std::hex << instr.RType.rs;
                         ss << " " << std::hex << instr.RType.rt;
                         ss << " " << std::hex << instr.RType.rd;

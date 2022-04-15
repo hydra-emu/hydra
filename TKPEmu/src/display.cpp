@@ -276,7 +276,7 @@ namespace TKPEmu::Graphics {
                     std::stringstream ss;
                     ss << std::hex << buf;
                     ss >> instr;
-                    instr_string = TKPEmu::GeneralDisassembler::Disassemble(EmuType::N64, instr);
+                    instr_string = TKPEmu::GeneralDisassembler::GetDisassembledString(EmuType::N64, instr);
                 }
                 ImGui::TextUnformatted(instr_string.c_str());
             }
