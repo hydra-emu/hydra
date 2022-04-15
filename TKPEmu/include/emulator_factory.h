@@ -2,23 +2,28 @@
 #define TKP_EMUFACTORY_H
 #include <type_traits>
 #include <filesystem>
+#include <any>
 #include "emulator.h"
 #include "base_application.h"
 #include "../GameboyTKP/gameboy.h"
+#include "../N64TKP/n64_tkpwrapper.hxx"
 namespace TKPEmu {
     enum class EmuType {
         None,
         Gameboy,
+        N64
     };
     class EmulatorFactory {
     private:
         using IMApplication = TKPEmu::Applications::IMApplication;
     public:
-        template<class... Args>
-        static std::shared_ptr<Emulator> Create(EmuType type, Args&... args) { 
+        static std::shared_ptr<Emulator> Create(EmuType type, std::any args = nullptr) { 
             switch (type) {
                 case EmuType::Gameboy: {
-                    return std::make_shared<Gameboy::Gameboy>(args...);
+                    return std::make_shared<Gameboy::Gameboy>(args);
+                }
+                case EmuType::N64: {
+                    return std::make_shared<N64::N64_TKPWrapper>(args);
                 }
                 case EmuType::None:
                 default: {

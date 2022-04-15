@@ -8,9 +8,12 @@
 #include <atomic>
 #include <functional>
 #include <thread>
+#include <fstream>
 #include "TKPImage.h"
 #include "emulator_results.h"
 #include "disassembly_instr.h"
+#include <any>
+
 namespace TKPEmu {
 	enum class EmuStartOptions {
 		Normal,
@@ -22,7 +25,8 @@ namespace TKPEmu {
 		using TKPImage = TKPEmu::Tools::TKPImage;
 		using DisInstr = TKPEmu::Tools::DisInstr;
 	public:
-		Emulator() = default;
+		Emulator() {};
+		Emulator(std::any args) {};
 		virtual ~Emulator() = default;
 		Emulator(const Emulator&) = delete;
 		Emulator& operator=(const Emulator&) = delete;

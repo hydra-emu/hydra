@@ -4,6 +4,7 @@
 #include "../GameboyTKP/gb_disassembler.h"
 #include "../GameboyTKP/gb_tracelogger.h"
 #include "../GameboyTKP/gb_romdata.h"
+#include "../N64TKP/n64_tkpromdisassembly.hxx"
 namespace TKPEmu {
     void EmulatorFactory::LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, std::shared_ptr<Emulator> emulator, EmuType emu_type) {
         switch (emu_type) {
@@ -11,6 +12,10 @@ namespace TKPEmu {
                 tools.push_back(std::make_unique<Applications::GameboyRomData>("Rom data", "Gameboy rom data"));
                 tools.push_back(std::make_unique<Applications::GameboyDisassembler>("Disassembler", "Gameboy disassembler"));
                 tools.push_back(std::make_unique<Applications::GameboyTracelogger>("Tracelogger", "Gameboy tracelogger"));
+                break;
+            }
+            case EmuType::N64: {
+                tools.push_back(std::make_unique<Applications::N64_RomDisassembly>("Rom disassembly", "N64 rom disassembly"));
                 break;
             }
             default: {
@@ -28,6 +33,10 @@ namespace TKPEmu {
             case str_hash(".gbc"):
             case str_hash(".gb"): {
                 return EmuType::Gameboy;
+            }
+            case str_hash(".n64"):
+            case str_hash(".z64"): {
+                return EmuType::N64;
             }
         }
         return EmuType::None;

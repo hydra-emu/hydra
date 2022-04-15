@@ -111,7 +111,7 @@ namespace TKPEmu::Graphics {
 
         // Emulation specific settings
         GameboyPalettes gb_palettes_{};
-        GameboyKeys gb_keys_directional_{};
+        GameboyKeys gb_keys_direction_{};
         GameboyKeys gb_keys_action_{};
 
         bool limit_fps_ = true;
@@ -180,6 +180,7 @@ namespace TKPEmu::Graphics {
         void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
 
         void load_rom(std::filesystem::path path);
+        std::any get_emu_specific_args(EmuType type);
         void setup_emulator_specific();
         void setup_gameboy_palette();
         void load_loop();

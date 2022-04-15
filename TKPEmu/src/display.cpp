@@ -75,10 +75,10 @@ namespace TKPEmu::Graphics {
         main_loop();
     }
     void Display::draw_settings(bool* draw) {
-        static KeySelector key_right("Direction Right:", "Gameboy.key_right", gb_keys_directional_[0]);
-        static KeySelector  key_left("Direction Left: ", "Gameboy.key_left", gb_keys_directional_[1]);
-        static KeySelector    key_up("Direction Up:   ", "Gameboy.key_up", gb_keys_directional_[2]);
-        static KeySelector  key_down("Direction Down: ", "Gameboy.key_down", gb_keys_directional_[3]);
+        static KeySelector key_right("Direction Right:", "Gameboy.key_right", gb_keys_direction_[0]);
+        static KeySelector  key_left("Direction Left: ", "Gameboy.key_left", gb_keys_direction_[1]);
+        static KeySelector    key_up("Direction Up:   ", "Gameboy.key_up", gb_keys_direction_[2]);
+        static KeySelector  key_down("Direction Down: ", "Gameboy.key_down", gb_keys_direction_[3]);
         static KeySelector     key_a("Action A:       ", "Gameboy.key_a", gb_keys_action_[0]);
         static KeySelector     key_b("Action B:       ", "Gameboy.key_b", gb_keys_action_[1]);
         static KeySelector   key_sel("Action Select:  ", "Gameboy.key_select", gb_keys_action_[2]);
@@ -534,7 +534,8 @@ namespace TKPEmu::Graphics {
         }
         auto old_emulator_type_ = emulator_type_;
         emulator_type_ = EmulatorFactory::GetEmulatorType(path);
-        emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, gb_keys_directional_, gb_keys_action_);
+        std::any emu_specific_args = get_emu_specific_args(emulator_type_);
+        emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, emu_specific_args);
         emulator_tools_.clear();
         TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_, emulator_type_);
         setup_emulator_specific();
@@ -550,6 +551,26 @@ namespace TKPEmu::Graphics {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
         emulator_->Start(options);
+    }
+    std::any Display::get_emu_specific_args(EmuType type) {
+        std::any ret;
+        switch(type) {
+            case EmuType::Gameboy: {
+                ret = std::make_pair(gb_keys_direction_, gb_keys_action_);
+                break;
+            }
+            case EmuType::N64: {
+                // TODO: n64 arguments
+                break;
+            }
+            default: {
+                // TODO: better exception handling -> just dont open rom
+                // TODO: maybe a rom_open_error bool?
+                std::cerr << "Bad emulator type" << std::endl;
+                exit(1);
+            }
+        }
+        return ret;
     }
     void Display::limit_fps() {
         a = std::chrono::system_clock::now();
