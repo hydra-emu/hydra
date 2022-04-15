@@ -5,14 +5,11 @@
 #include <any>
 #include "emulator.h"
 #include "base_application.h"
+#include "emulator_types.hxx"
 #include "../GameboyTKP/gameboy.h"
 #include "../N64TKP/n64_tkpwrapper.hxx"
+
 namespace TKPEmu {
-    enum class EmuType {
-        None,
-        Gameboy,
-        N64
-    };
     class EmulatorFactory {
     private:
         using IMApplication = TKPEmu::Applications::IMApplication;

@@ -12,6 +12,7 @@
 #include "../imgui/imgui_internal.h"
 #include "../lib/widget_keyselector.h"
 #include "../lib/imfilebrowser.h"
+#include "emulator_types.hxx"
 #include "TKPImage.h"
 #include "settings_manager.h"
 #include "base_application.h"
@@ -142,6 +143,7 @@ namespace TKPEmu::Graphics {
         bool rom_paused_ = false;
         bool menu_bar_open_ = true;
         bool window_fpscounter_open_ = false;
+        bool window_disassembly_open_ = false;
         bool window_settings_open_ = false;
         bool window_file_browser_open_ = false;
         bool window_about_open_ = false;
@@ -153,6 +155,7 @@ namespace TKPEmu::Graphics {
         // Window drawing functions for ImGui
         void draw_settings(bool* draw);
         void draw_fps_counter(bool* draw);
+        void draw_disassembly(bool* draw);
         void draw_file_browser(bool* draw);
         void draw_about(bool* draw);
         void draw_game_background(bool* draw);

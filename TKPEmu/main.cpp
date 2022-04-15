@@ -11,8 +11,10 @@
 #include "include/start_parameters.h"
 #include "include/emulator_factory.h"
 #include "include/emulator_results.h"
+#include "include/emulator_types.hxx"
 #include "lib/str_hash.h"
 #include "httplib.h"
+
 using TestResult = TKPEmu::Testing::TestResult;
 using TestData = TKPEmu::Testing::TestData;
 using TestDataVec = std::vector<TestData>;

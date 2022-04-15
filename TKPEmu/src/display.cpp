@@ -8,6 +8,7 @@
 #include "../include/disassembly_instr.h"
 #include "../GameboyTKP/gb_disassembler.h"
 #include "../GameboyTKP/gb_tracelogger.h"
+#include "../include/emulator_disassembler.hxx"
 
 namespace TKPEmu::Graphics {
 	Display::DisplayInitializer::DisplayInitializer() {
@@ -258,6 +259,30 @@ namespace TKPEmu::Graphics {
             ImGui::End();
         }
     }
+    void Display::draw_disassembly(bool* draw) {
+        if (*draw) {
+            ImGui::SetNextWindowSize(ImVec2(350, 350));
+            if (ImGui::Begin("Disassembly"), draw, ImGuiWindowFlags_NoResize) {
+                constexpr size_t buf_size = 8 + 1; // null terminated
+                static char buf[buf_size] = "";
+                static std::string instr_string;
+                ImGui::InputText("Instruction##disassembly", buf, buf_size, 
+                        ImGuiInputTextFlags_CharsHexadecimal |
+                        ImGuiInputTextFlags_CharsUppercase);
+                if (ImGui::Button("Disassemble")) {
+                    // future will have selectable emulator with different
+                    // instruction types
+                    uint32_t instr;   
+                    std::stringstream ss;
+                    ss << std::hex << buf;
+                    ss >> instr;
+                    instr_string = TKPEmu::GeneralDisassembler::Disassemble(EmuType::N64, instr);
+                }
+                ImGui::TextUnformatted(instr_string.c_str());
+            }
+            ImGui::End();
+        }
+    }
     void Display::draw_about(bool* draw) {
         if (*draw) {
             ImGui::SetNextWindowSize(ImVec2(350, 200));
@@ -415,6 +440,9 @@ namespace TKPEmu::Graphics {
     void Display::draw_menu_bar_view() {
         if (ImGui::MenuItem("FPS Counter", nullptr, window_fpscounter_open_, true)) {
               window_fpscounter_open_ ^= true; 
+        }
+        if (ImGui::MenuItem("Disassembly", nullptr, window_disassembly_open_, true)) {
+              window_disassembly_open_ ^= true; 
         }
         ImGui::EndMenu();
     }
@@ -817,6 +845,7 @@ namespace TKPEmu::Graphics {
             draw_game_background(&rom_loaded_);
             draw_menu_bar(&menu_bar_open_);
             draw_fps_counter(&window_fpscounter_open_);
+            draw_disassembly(&window_disassembly_open_);
             draw_about(&window_about_open_);
             draw_tools();
             draw_settings(&window_settings_open_);
