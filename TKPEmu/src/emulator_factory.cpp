@@ -5,7 +5,7 @@
 #include "../GameboyTKP/gb_tracelogger.h"
 #include "../GameboyTKP/gb_romdata.h"
 namespace TKPEmu {
-    void EmulatorFactory::LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, Emulator* emulator, EmuType emu_type) {
+    void EmulatorFactory::LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, std::shared_ptr<Emulator> emulator, EmuType emu_type) {
         switch (emu_type) {
             case EmuType::Gameboy: {
                 tools.push_back(std::make_unique<Applications::GameboyRomData>("Rom data", "Gameboy rom data"));

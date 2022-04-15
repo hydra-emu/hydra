@@ -15,10 +15,10 @@ namespace TKPEmu {
         using IMApplication = TKPEmu::Applications::IMApplication;
     public:
         template<class... Args>
-        static std::unique_ptr<Emulator> Create(EmuType type, Args&... args) { 
+        static std::shared_ptr<Emulator> Create(EmuType type, Args&... args) { 
             switch (type) {
                 case EmuType::Gameboy: {
-                    return std::make_unique<Gameboy::Gameboy>(args...);
+                    return std::make_shared<Gameboy::Gameboy>(args...);
                 }
                 case EmuType::None:
                 default: {
@@ -26,7 +26,7 @@ namespace TKPEmu {
                 }
             }
         }
-        static void LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, Emulator* emulator, EmuType emu_type);
+        static void LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, std::shared_ptr<Emulator> emulator, EmuType emu_type);
         static EmuType GetEmulatorType(std::filesystem::path path);
     };
 }

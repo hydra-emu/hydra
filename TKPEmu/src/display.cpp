@@ -65,12 +65,6 @@ namespace TKPEmu::Graphics {
         SDL_SetWindowMaximumSize(window_ptr_.get(), window_settings_.maximum_width, window_settings_.maximum_height);
         SDL_GL_MakeCurrent(window_ptr_.get(), gl_context_ptr_.get());
         glewInit();
-        // if (!gladLoadGLLoader(static_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
-        //     throw("Error: coudl not initialize glad");
-        // }
-        // else {
-        //     std::cout << "Glad initialized successfully" << std::endl;
-        // }
         glGenFramebuffers(1, &frame_buffer_);
     }
     Display::~Display() {
@@ -542,7 +536,7 @@ namespace TKPEmu::Graphics {
         emulator_type_ = EmulatorFactory::GetEmulatorType(path);
         emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, gb_keys_directional_, gb_keys_action_);
         emulator_tools_.clear();
-        TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_.get(), emulator_type_);
+        TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_, emulator_type_);
         setup_emulator_specific();
         rom_loaded_ = true;
         emulator_->SkipBoot = skip_boot_;

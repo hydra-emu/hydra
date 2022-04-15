@@ -5,7 +5,7 @@ namespace TKPEmu::Applications {
         menu_title_(menu_title),
         window_title_(window_title)
     {}
-    void IMApplication::SetEmulator(Emulator* emulator) {
+    void IMApplication::SetEmulator(std::shared_ptr<Emulator> emulator) {
         emulator_ = emulator;
     }
     void IMApplication::HandleShortcut(TKPShortcut&) {}

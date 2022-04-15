@@ -124,7 +124,7 @@ namespace TKPEmu::Graphics {
         GLuint frame_buffer_;
         ImGui::FileBrowser file_browser_;
         EmuType emulator_type_ = EmuType::None;
-        std::unique_ptr<Emulator> emulator_;
+        std::shared_ptr<Emulator> emulator_;
         // Applications loaded according to the emulator (such as disassembler, tracelogger, other plugins etc)
         std::vector<std::unique_ptr<IMApplication>> emulator_tools_;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window_ptr_;

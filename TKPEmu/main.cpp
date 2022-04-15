@@ -236,7 +236,7 @@ TestData test_rom(std::string path) {
 		ret.Result = TestResult::None;
 		return ret;
 	}
-	std::unique_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
+	std::shared_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
 	emu->SkipBoot = true;
 	emu->FastMode = true;
 	if (!emu->LoadFromFile(path)) {
@@ -328,7 +328,7 @@ void start_server() noexcept {
 			actionkeys[1] = SDLK_x;
 			actionkeys[2] = SDLK_SPACE;
 			actionkeys[3] = SDLK_RETURN;
-			std::unique_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
+			std::shared_ptr<TKPEmu::Emulator> emu = TKPEmu::EmulatorFactory::Create(type);
 			emu->SkipBoot = true;
 			emu->FastMode = false;
 			if (!emu->LoadFromFile(path)) {
