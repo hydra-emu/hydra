@@ -55,7 +55,7 @@ namespace TKPEmu::Graphics {
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
         using GameboyKeys = std::array<SDL_Keycode, 4>;
         const std::string GLSLVersion = "#version 130";
-        std::vector<std::string> SupportedRoms = { ".gb", ".gbc" };
+        std::vector<std::string> SupportedRoms = { ".gb", ".gbc", ".n64", ".z64" };
         #ifdef _WIN32
         wchar_t exe_dir[MAX_PATH];
         #endif
