@@ -317,17 +317,20 @@ namespace TKPEmu::Graphics {
             glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
             {
                 std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
-                glTexSubImage2D(
-                    GL_TEXTURE_2D,
-                    0,
-                    0,
-                    0,
-                    emulator_->EmulatorImage.width,
-                    emulator_->EmulatorImage.height,
-                    GL_RGBA,
-                    GL_FLOAT,
-                    emulator_->GetScreenData()
-                );
+                float* data = emulator_->GetScreenData();
+                if (data){
+                    glTexSubImage2D(
+                        GL_TEXTURE_2D,
+                        0,
+                        0,
+                        0,
+                        emulator_->EmulatorImage.width,
+                        emulator_->EmulatorImage.height,
+                        GL_RGBA,
+                        GL_FLOAT,
+                        data
+                    );
+                }
             }
             glBindTexture(GL_TEXTURE_2D, 0);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
