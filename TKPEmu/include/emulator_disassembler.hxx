@@ -49,7 +49,7 @@ namespace TKPEmu {
                     instr.Full = instr_inner;
                     std::stringstream ss;
                     ss << GetOpcodeName(type, instr.Full);
-                    if (instr_inner != 0 && instr_inner != -1) {
+                    if (instr_inner != 0 && instr_inner != N64::EMPTY_INSTRUCTION) {
                         if (instr.IType.op != 0) {
                             ss << " $r" << std::hex << instr.IType.rs;
                             ss << " $r" << std::hex << instr.IType.rt;
