@@ -16,13 +16,19 @@ namespace TKPEmu {
                     uint32_t instr_inner = std::any_cast<uint32_t>(instruction);
                     TKPEmu::N64::Instruction instr;
                     instr.Full = instr_inner;
-                    switch(instr.IType.op) {
-                        case 0: {
-                            ret = TKPEmu::N64::SpecialCodes[instr.RType.func];
-                            break;
-                        }
-                        default: {
-                            ret = TKPEmu::N64::OperationCodes[instr.IType.op];
+                    if (instr.Full == 0) {
+                        ret = "nop";
+                    } else if (instr.Full == 0xFFFFFFFF) {
+                        ret = "   ";
+                    } else {
+                        switch(instr.IType.op) {
+                            case 0: {
+                                ret = TKPEmu::N64::SpecialCodes[instr.RType.func];
+                                break;
+                            }
+                            default: {
+                                ret = TKPEmu::N64::OperationCodes[instr.IType.op];
+                            }
                         }
                     }
                     break;
@@ -43,15 +49,17 @@ namespace TKPEmu {
                     instr.Full = instr_inner;
                     std::stringstream ss;
                     ss << GetOpcodeName(type, instr.Full);
-                    if (instr.IType.op != 0) {
-                        ss << " " << std::hex << instr.IType.rs;
-                        ss << " " << std::hex << instr.IType.rt;
-                        ss << " " << std::hex << instr.IType.immediate;
-                    } else {
-                        ss << " " << std::hex << instr.RType.rs;
-                        ss << " " << std::hex << instr.RType.rt;
-                        ss << " " << std::hex << instr.RType.rd;
-                        ss << " " << std::hex << instr.RType.sa;
+                    if (instr_inner != 0 && instr_inner != -1) {
+                        if (instr.IType.op != 0) {
+                            ss << " $r" << std::hex << instr.IType.rs;
+                            ss << " $r" << std::hex << instr.IType.rt;
+                            ss << " 0x" << std::hex << instr.IType.immediate;
+                        } else {
+                            ss << " $r" << std::hex << instr.RType.rs;
+                            ss << " $r" << std::hex << instr.RType.rt;
+                            ss << " $r" << std::hex << instr.RType.rd;
+                            ss << " 0x" << std::hex << instr.RType.sa;
+                        }
                     }
                     ret = ss.str();
                     break;
