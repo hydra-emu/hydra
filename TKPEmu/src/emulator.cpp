@@ -41,7 +41,7 @@ namespace TKPEmu {
 		int index = 0;
 		std::string filename_final = scrnshot_dir + "/" + filename;
 		std::vector<uint8_t> data;
-		if (start_options == EmuStartOptions::Console) {
+		if (start_options == EmuStartOptions::Console && false /* TODO: weird needed for .gb server, otherwise blank image. investigate. false for now */) {
 			data = std::vector<uint8_t>(GetScreenData(), GetScreenData() + EmulatorImage.width * EmulatorImage.height * 4);
 		} else {
 			data.resize(EmulatorImage.width * EmulatorImage.height * 4);
