@@ -20,7 +20,7 @@ Libraries: `sdl2 tbb boost`. See `Installation` for an easy installation guide
 <details>
  <summary>Archlinux, <a href="https://aur.archlinux.org/packages/tkpemu/">AUR</a></summary>
 <br>
-Installation for Archlinux is very easy, however you get the stable build, not the latest.  
+ Installation for Archlinux is very easy, <b>however you get the stable build, not the latest, which can be several commits behind!</b>.  
 <pre><code>yay -S tkpemu</code></pre><br>
  Make sure you have <a href="https://github.com/Jguer/yay">yay</a> installed.    
 Otherwise run the following:    
