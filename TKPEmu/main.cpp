@@ -357,7 +357,7 @@ void start_server() noexcept {
 				};
 			}
 		});
-		svr.Get("/image", [](const httplib::Request& req, httplib::Response& res) {
+		svr.Get("/screen.bmp", [](const httplib::Request& req, httplib::Response& res) {
 			std::ifstream in(std::filesystem::current_path().string() + "/image.bmp", std::ios::in | std::ios::binary);
 			if(in){
 				std::ostringstream contents;
