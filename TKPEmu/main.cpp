@@ -242,6 +242,9 @@ TestData test_rom(std::string path) {
 	emu->FastMode = true;
 	if (!emu->LoadFromFile(path)) {
 		ret.Result = TestResult::Failed;
+		if (parameters.Verbose) {
+			scout << "[" color_error << filename << color_reset "]: Failed to load rom" << std::endl;
+		}
 		return ret;
 	}
 	bool should_compare = false;
