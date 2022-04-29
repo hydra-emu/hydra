@@ -366,3 +366,4 @@ imstb_textedit.h
 imstb_truetype.h
 glad.h
 glad.c
+*.sav
