@@ -18,7 +18,7 @@ Libraries: `sdl2 tbb boost`. See `Installation` for an easy installation guide
 ## Installation
 
 <details>
- <summary>Archlinux, <a href="https://aur.archlinux.org/packages/tkpemu/">AUR</a></summary>
+ <summary>Archlinux</summary>
 <br>
  Installation for Archlinux is very easy, <b>however you get the stable build, not the latest, which can be several commits behind!</b>.  
 <pre><code>yay -S tkpemu</code></pre><br>
@@ -28,10 +28,8 @@ Otherwise run the following:
 git clone --recurse-submodules -j8 https://aur.archlinux.org/tkpemu.git
 cd tkpemu
 makepkg -si</code></pre>
-</details>
-<details>
- <summary>Archlinux</summary>
-<br>   
+<br>
+ You can also get the latest version like so:
 <pre><code>pacman -S --needed git cmake sdl2 glew glfw-x11 ninja
 git clone --recurse-submodules -j8 https://github.com/OFFTKP/TKPEmu.git
 cd TKPEmu
