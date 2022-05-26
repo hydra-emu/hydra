@@ -13,3 +13,6 @@
 [submodule "TKPEmu/chip8"]
 	path = TKPEmu/chip8
 	url = https://github.com/OFFTKP/chip8
+[submodule "TKPEmu/cppunit"]
+	path = TKPEmu/cppunit
+	url = git://anongit.freedesktop.org/git/libreoffice/cppunit/
