@@ -10,3 +10,6 @@
 [submodule "TKPEmu/N64TKP"]
 	path = TKPEmu/N64TKP
 	url = https://github.com/OFFTKP/N64TKP
+[submodule "TKPEmu/chip8"]
+	path = TKPEmu/chip8
+	url = https://github.com/OFFTKP/chip8
