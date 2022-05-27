@@ -1,12 +1,13 @@
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <filesystem>
 #include <iostream>
 #include <fstream>
-#include "../include/emulator.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../lib/stb_image_write.h"
-#include "../lib/md5.h"
+#include <include/emulator.h>
+#include <lib/stb_image_write.h>
+#include <lib/md5.h>
 #include <GL/glew.h>
-#include "../include/settings_manager.h"
+#include <include/settings_manager.h>
+
 namespace TKPEmu {
     void Emulator::HandleKeyDown(SDL_Keycode keycode) { 
         std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was pressed but\n"

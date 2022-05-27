@@ -1,4 +1,4 @@
-#include "../include/base_application.h"
+#include <include/base_application.h>
 
 namespace TKPEmu::Applications {
     IMApplication::IMApplication(std::string menu_title, std::string window_title) :

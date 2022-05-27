@@ -1,4 +1,4 @@
-#include "../include/emulator_results.h"
+#include <include/emulator_results.h>
 #include <fstream>
 #include <iostream>
 

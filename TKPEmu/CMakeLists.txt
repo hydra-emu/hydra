@@ -18,6 +18,7 @@ find_package(Threads REQUIRED)
 find_package(TBB REQUIRED)
 find_package(GLEW REQUIRED)
 add_executable(TKPEmu main.cpp)
+target_include_directories(TKPEmu PUBLIC ./)
 target_link_libraries(TKPEmu PRIVATE TKPSrc TKPLib NESTKP GameboyTKP Chip8
     N64TKP ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}
     ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} TBB::tbb Threads::Threads)

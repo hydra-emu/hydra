@@ -6,8 +6,8 @@
 #include "emulator.h"
 #include "base_application.h"
 #include "emulator_types.hxx"
-#include "../GameboyTKP/gameboy.h"
-#include "../N64TKP/n64_tkpwrapper.hxx"
+#include <GameboyTKP/gameboy.h>
+#include <N64TKP/n64_tkpwrapper.hxx>
 
 namespace TKPEmu {
     class EmulatorFactory {

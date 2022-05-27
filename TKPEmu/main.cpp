@@ -5,15 +5,15 @@
 #include <syncstream>
 #include <mutex>
 #include <SDL2/SDL.h>
-#include "include/version.h"
-#include "include/display.h"
-#include "include/console_colors.h"
-#include "include/start_parameters.h"
-#include "include/emulator_factory.h"
-#include "include/emulator_results.h"
-#include "include/emulator_types.hxx"
-#include "lib/str_hash.h"
-#include "httplib.h"
+#include <include/version.h>
+#include <include/display.h>
+#include <include/console_colors.h>
+#include <include/start_parameters.h>
+#include <include/emulator_factory.h>
+#include <include/emulator_results.h>
+#include <include/emulator_types.hxx>
+#include <lib/str_hash.h>
+#include <httplib.h>
 
 using TestResult = TKPEmu::Testing::TestResult;
 using TestData = TKPEmu::Testing::TestData;

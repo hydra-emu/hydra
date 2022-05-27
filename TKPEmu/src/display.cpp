@@ -4,11 +4,11 @@
 #include <thread>
 #include <iostream>
 #include <algorithm>
-#include "../include/display.h"
-#include "../include/disassembly_instr.h"
-#include "../GameboyTKP/gb_disassembler.h"
-#include "../GameboyTKP/gb_tracelogger.h"
-#include "../include/emulator_disassembler.hxx"
+#include <include/display.h>
+#include <include/disassembly_instr.h>
+#include <GameboyTKP/gb_disassembler.h>
+#include <GameboyTKP/gb_tracelogger.h>
+#include <include/emulator_disassembler.hxx>
 
 namespace TKPEmu::Graphics {
 	Display::DisplayInitializer::DisplayInitializer() {

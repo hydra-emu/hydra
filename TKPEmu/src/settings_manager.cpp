@@ -1,6 +1,7 @@
-#include "../include/settings_manager.h"
+#include <include/settings_manager.h>
 #include <filesystem>
 #include <iostream>
+
 namespace TKPEmu::Tools {
 	SettingsManager::SettingsManager(SettingsMap& settings, std::string config_file) :
 		config_file_(config_file),

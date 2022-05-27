@@ -1,10 +1,11 @@
 #include <iostream>
-#include "../lib/str_hash.h"
-#include "../include/emulator_factory.h"
-#include "../GameboyTKP/gb_disassembler.h"
-#include "../GameboyTKP/gb_tracelogger.h"
-#include "../GameboyTKP/gb_romdata.h"
-#include "../N64TKP/n64_tkpromdisassembly.hxx"
+#include <lib/str_hash.h>
+#include <include/emulator_factory.h>
+#include <GameboyTKP/gb_disassembler.h>
+#include <GameboyTKP/gb_tracelogger.h>
+#include <GameboyTKP/gb_romdata.h>
+#include <N64TKP/n64_tkpromdisassembly.hxx>
+
 namespace TKPEmu {
     void EmulatorFactory::LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, std::shared_ptr<Emulator> emulator, EmuType emu_type) {
         switch (emu_type) {

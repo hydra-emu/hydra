@@ -5,8 +5,8 @@
 #include <string>
 #include <memory>
 #include <iostream>
-#include "../imgui/imgui.h"
-#include "../include/settings_manager.h"
+#include <imgui/imgui.h>
+#include <include/settings_manager.h>
 namespace TKPEmu::Tools {
 	struct KeySelector {
 		public:
