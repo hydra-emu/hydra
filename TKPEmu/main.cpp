@@ -1,5 +1,6 @@
 #define SDL_MAIN_HANDLED
 #define GLEW_STATIC
+#define BUILDFORTKPEMU
 #include <execution>
 #include <iostream>
 #include <syncstream>

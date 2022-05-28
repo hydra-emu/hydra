@@ -318,7 +318,9 @@ namespace TKPEmu::Graphics {
             {
                 std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
                 float* data = emulator_->GetScreenData();
-                if (data){
+                bool& should_draw = emulator_->IsReadyToDraw();
+                if (data && should_draw){
+                    should_draw = false;
                     glTexSubImage2D(
                         GL_TEXTURE_2D,
                         0,
