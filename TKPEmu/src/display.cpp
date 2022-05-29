@@ -261,7 +261,7 @@ namespace TKPEmu::Graphics {
     }
     void Display::draw_disassembly(bool* draw) {
         if (*draw) {
-            if (ImGui::Begin("Disassembly"), draw) {
+            if (ImGui::Begin("Disassembly", draw)) {
                 constexpr size_t buf_size = 8 + 1; // null terminated
                 static char buf[buf_size] = "";
                 static std::string instr_string;
