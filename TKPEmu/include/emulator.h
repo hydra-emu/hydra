@@ -55,7 +55,7 @@ namespace TKPEmu {
 		virtual std::string GetScreenshotHash();
 		virtual std::string GetEmulatorName();
 		void WS_SetActionPtr(int* action_ptr);
-		virtual bool& IsReadyToDraw() { throw std::runtime_error("IsReadyToDraw not implemented for this emulator"); };
+		virtual bool& IsReadyToDraw() { return always_false_; };
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
 		std::mutex DebugUpdateMutex;
@@ -91,6 +91,7 @@ namespace TKPEmu {
 		bool logging_ = false;
 		bool log_changed_ = false;
 		std::string log_filename_;
+		bool always_false_ = false;
 	};
 }
 #endif

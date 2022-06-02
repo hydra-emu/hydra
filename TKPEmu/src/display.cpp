@@ -852,7 +852,7 @@ namespace TKPEmu::Graphics {
             draw_fps_counter(&window_fpscounter_open_);
             draw_disassembly(&window_disassembly_open_);
             draw_about(&window_about_open_);
-            draw_tools();
+            TKP_MAY_THROW(draw_tools());
             draw_settings(&window_settings_open_);
             draw_file_browser(&window_file_browser_open_);
             draw_messagebox(&window_messagebox_open_);
@@ -877,5 +877,6 @@ namespace TKPEmu::Graphics {
     void Display::throw_error(const std::runtime_error& ex) {
         window_messagebox_open_ = true;
         messagebox_body_ = ex.what();
+        emulator_->CloseAndWait();
     }
 }
