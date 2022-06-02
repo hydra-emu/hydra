@@ -11,6 +11,11 @@ Using [Dear ImGui](https://github.com/ocornut/imgui) ([License](https://raw.gith
 ## Current emulators
 - [Gameboy](https://github.com/OFFTKP/GameboyTKP)
 - [Chip8](https://github.com/OFFTKP/chip8)
+
+## WIP emulators
+- [N64](https://github.com/OFFTKP/N64TKP)
+- [NES](https://github.com/OFFTKP/NESTKP)
+
 ## Dependencies 
 Compiler: The `c++20` features used need at least `gcc-11` and `g++11` or latest `msvc`.   
 Dependencies: `cmake git `    
