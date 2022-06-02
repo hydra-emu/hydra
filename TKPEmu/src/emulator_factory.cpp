@@ -39,6 +39,9 @@ namespace TKPEmu {
             case str_hash(".z64"): {
                 return EmuType::N64;
             }
+            case str_hash(".ch8"): {
+                return EmuType::Chip8;
+            }
         }
         return EmuType::None;
     }

@@ -5,7 +5,8 @@ namespace TKPEmu {
     enum class EmuType {
         None,
         Gameboy,
-        N64
+        N64,
+        Chip8,
     };
 }
 #endif

@@ -16,7 +16,7 @@
 #include "TKPImage.h"
 #include "settings_manager.h"
 #include "base_application.h"
-#include "emulator_factory.h"   
+#include "emulator_factory.h"
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__MINGW32__) && !defined(__clang__)
 #define IM_FMTARGS(FMT)             __attribute__((format(gnu_printf, FMT, FMT+1)))
@@ -28,6 +28,15 @@
 #define IM_FMTARGS(FMT)
 #define IM_FMTLIST(FMT)
 #endif
+// runs a function that may throw - to be used inside display member functions
+#define TKP_MAY_THROW(func) do { \
+                                try { \
+                                    func; \
+                                } catch (const std::runtime_error& ex) { \
+                                    throw_error(ex); \
+                                } \
+                            } while(0)
+
 namespace TKPEmu::Graphics {
     constexpr auto GameboyWidth = 160;
     constexpr auto GameboyHeight = 144;
@@ -55,7 +64,7 @@ namespace TKPEmu::Graphics {
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
         using GameboyKeys = std::array<SDL_Keycode, 4>;
         const std::string GLSLVersion = "#version 130";
-        std::vector<std::string> SupportedRoms = { ".gb", ".gbc", ".n64", ".z64" };
+        std::vector<std::string> SupportedRoms = { ".gb", ".gbc", ".n64", ".z64", ".ch8" };
         #ifdef _WIN32
         wchar_t exe_dir[MAX_PATH];
         #endif
@@ -189,6 +198,8 @@ namespace TKPEmu::Graphics {
         void load_loop();
         void load_theme();
         void main_loop();
+        void throw_error(const std::runtime_error& ex);
+        std::runtime_error generate_exception(std::string func_name, int line_num, std::string description);
 	};
 }
 #endif

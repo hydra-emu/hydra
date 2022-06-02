@@ -8,6 +8,7 @@
 #include "emulator_types.hxx"
 #include <GameboyTKP/gameboy.h>
 #include <N64TKP/n64_tkpwrapper.hxx>
+#include <chip8/chip8_tkpwrapper.hxx>
 
 namespace TKPEmu {
     class EmulatorFactory {
@@ -21,6 +22,9 @@ namespace TKPEmu {
                 }
                 case EmuType::N64: {
                     return std::make_shared<N64::N64_TKPWrapper>(args);
+                }
+                case EmuType::Chip8: {
+                    return std::make_shared<Chip8::Chip8>(args);
                 }
                 case EmuType::None:
                 default: {

@@ -9,6 +9,7 @@
 #include <GameboyTKP/gb_disassembler.h>
 #include <GameboyTKP/gb_tracelogger.h>
 #include <include/emulator_disassembler.hxx>
+#include <include/error_factory.hxx>
 
 namespace TKPEmu::Graphics {
 	Display::DisplayInitializer::DisplayInitializer() {
@@ -296,7 +297,7 @@ namespace TKPEmu::Graphics {
             file_browser_.Display();
             if (file_browser_.HasSelected()) {
                 auto path = file_browser_.GetSelected();
-                load_rom(path);
+                TKP_MAY_THROW(load_rom(path));
                 if (recent_paths_.size() == RecentRomsMaxSize) {
                     recent_paths_.pop_back();
                 }
@@ -410,7 +411,7 @@ namespace TKPEmu::Graphics {
                     recent_paths_.erase(recent_paths_.begin() + i);
                     if (std::filesystem::exists(temp)) {
                         recent_paths_.push_front(temp);
-                        load_rom(temp);
+                        TKP_MAY_THROW(load_rom(temp));
                     } else {
                         messagebox_body_ = "File not found: ";
                         messagebox_body_ += temp.c_str();
@@ -552,8 +553,7 @@ namespace TKPEmu::Graphics {
         if (path.has_parent_path()) {
             settings_.at("General.last_dir") = path.parent_path();
         } else {
-            std::cerr << "Error loading rom: Path has no parent path" << std::endl;
-            exit(1);
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "Rom has no parent path");
         }
         if (emulator_ != nullptr) {
             if (!emulator_->Loaded) {
@@ -584,6 +584,7 @@ namespace TKPEmu::Graphics {
         image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
         emulator_->Start(options);
     }
+    // TODO: get rid of this ugly function and the std::any constructors
     std::any Display::get_emu_specific_args(EmuType type) {
         std::any ret;
         switch(type) {
@@ -595,11 +596,11 @@ namespace TKPEmu::Graphics {
                 // TODO: n64 arguments
                 break;
             }
+            case EmuType::Chip8: {
+                break;
+            }
             default: {
-                // TODO: better exception handling -> just dont open rom
-                // TODO: maybe a rom_open_error bool?
-                std::cerr << "Bad emulator type" << std::endl;
-                exit(1);
+                throw ErrorFactory::generate_exception(__func__, __LINE__, "Unhandled emulator type");
             }
         }
         return ret;
@@ -872,5 +873,9 @@ namespace TKPEmu::Graphics {
     void Display::WS_LoadRom(std::string path) {
         std::cout << "Loading rom for web server:" << path << std::endl;
         WS_path_ = path;
+    }
+    void Display::throw_error(const std::runtime_error& ex) {
+        window_messagebox_open_ = true;
+        messagebox_body_ = ex.what();
     }
 }

@@ -1,6 +1,7 @@
 #include <include/settings_manager.h>
 #include <filesystem>
 #include <iostream>
+#include <include/error_factory.hxx>
 
 namespace TKPEmu::Tools {
 	SettingsManager::SettingsManager(SettingsMap& settings, std::string config_file) :
@@ -44,8 +45,7 @@ namespace TKPEmu::Tools {
 			dir = getenv("APPDATA") + std::string("/tkpemu");
 			#endif
 			if (dir.empty()) {
-				std::cerr << "GetSavePath dir was not defined for this environment - settings_manager.cpp" << std::endl;
-				exit(1);
+				throw ErrorFactory::generate_exception(__func__, __LINE__, "GetSavePath was not defined for this environment");
 			}
 		}
 		return dir;

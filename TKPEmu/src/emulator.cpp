@@ -7,6 +7,7 @@
 #include <lib/md5.h>
 #include <GL/glew.h>
 #include <include/settings_manager.h>
+#include <include/error_factory.hxx>
 
 namespace TKPEmu {
     void Emulator::HandleKeyDown(SDL_Keycode keycode) { 
@@ -59,15 +60,14 @@ namespace TKPEmu {
 		try {
 			stbi_write_bmp(filename_final.c_str(), EmulatorImage.width, EmulatorImage.height, 4, data.data());
 		} catch (const std::exception& e) {
-			std::cerr << "Error writing screenshot: " << e.what() << std::endl;
+			throw ErrorFactory::generate_exception(__func__, __LINE__, e.what());
 		}
     }
 	std::string Emulator::GetScreenshotHash() {
 		return "Warning: GetScreenshotHash not implemented, hash not printed";
 	}
     float* Emulator::GetScreenData() { 
-        std::cerr << "GetScreenData was not implemented for this emulator" << std::endl;
-		exit(1);
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "GetScreenData was not implemented for this emulator");
     }
     void Emulator::Start(EmuStartOptions start_mode) { 
 		start_options = start_mode;
@@ -131,50 +131,40 @@ namespace TKPEmu {
 		}
 	}
 	std::string Emulator::GetEmulatorName() {
-		return "Unknown emulator";
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "GetEmulatorName was not implemented for this emulator");
 	}
 	void Emulator::v_log_state() {
-		std::cerr << "log_state was not implemented for this emulator" << std::endl;
-		exit(1);
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "log_state was not implemented for this emulator");
 	}
     void Emulator::start_normal() {
-        std::cerr << "start_normal was not implemented for this emulator" << std::endl;
-		exit(1);
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "start_normal was not implemented for this emulator");
     }
     void Emulator::start_debug() {
-        std::cerr << "start_debug was not implemented for this emulator" << std::endl;
-		exit(1);
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "start_debug was not implemented for this emulator");
     }
 	void Emulator::start_console() {
-		std::cerr << "start_console was not implemented for this emulator" << std::endl;
-		exit(1);
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "start_console was not implemented for this emulator");
 	}
 	void Emulator::reset_normal() {
-		std::cerr << "reset_normal was not implemented for this emulator" << std::endl;
-		exit(1);
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "reset_normal was not implemented for this emulator");
 	}
 	void Emulator::reset_skip() {
-		std::cerr << "reset_skip was not implemented for this emulator" << std::endl;
-		exit(1);
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "reset_skip was not implemented for this emulator");
 	}
     void Emulator::update() {
-        std::cerr << "update was not implemented for this emulator" << std::endl;
-		exit(1);
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "update was not implemented for this emulator");
     }
 	bool Emulator::load_file(std::string) {
-		std::cerr << "load_file was not implemented for this emulator" << std::endl;
-		exit(1);
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "load_file was not implemented for this emulator");
 	}
 	void Emulator::save_state(std::ofstream&) {
-		std::cerr << "save_state was not implemented for this emulator" << std::endl;
-		exit(1);
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "save_state was not implemented for this emulator");
 	}
 	void Emulator::load_state(std::ifstream&) {
-		std::cerr << "load_state was not implemented for this emulator" << std::endl;
-		exit(1);
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "load_state was not implemented for this emulator");
 	}
     std::string Emulator::print() const { 
-        return "Error: Override print function for this emulator";
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "print was not implemented for this emulator");
     }
 	void Emulator::WS_SetActionPtr(int* action_ptr) {
 		action_ptr_ = action_ptr;

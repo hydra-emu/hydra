@@ -15,6 +15,7 @@ add_subdirectory("GameboyTKP/")
 add_subdirectory("NESTKP/")
 add_subdirectory("chip8/")
 add_subdirectory("N64TKP/")
+find_package(Lua REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Boost 1.71 REQUIRED)
@@ -25,4 +26,4 @@ add_executable(TKPEmu main.cpp)
 target_include_directories(TKPEmu PUBLIC ./)
 target_link_libraries(TKPEmu PRIVATE TKPSrc TKPLib NESTKP GameboyTKP Chip8
     N64TKP ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}
-    ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} TBB::tbb Threads::Threads)
+    ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${LUA_LIBRARIES} TBB::tbb Threads::Threads)
