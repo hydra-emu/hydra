@@ -339,7 +339,7 @@ namespace TKPEmu::Graphics {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             ImGui::GetBackgroundDrawList()->AddImage(reinterpret_cast<void*>(static_cast<intptr_t>(emulator_->EmulatorImage.texture)), emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright);
             if (emulator_->Paused) {
-                ImGui::GetBackgroundDrawList()->AddText(nullptr, 40.0f, emulator_->EmulatorImage.topleft, 0xFF000000, "Paused");
+                ImGui::GetBackgroundDrawList()->AddText(nullptr, 40.0f, emulator_->EmulatorImage.topleft, 0xFF0000FF, "Paused");
             }
         } else {
             // Any logo goes here
