@@ -53,17 +53,14 @@ namespace TKPEmu::Applications {
     >
     class Disassembler : public Drawable, public InstructionPolicy {
     public:
-        Disassembler(std::shared_ptr<Emulator> emulator) : emulator_(std::move(emulator)) {}
+        Disassembler(std::shared_ptr<Emulator> emulator) : emulator_(emulator) {}
         void Draw() override {
-            if (emulator_) {
+            if (emulator_ && drawing_) {
                 ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
-                ImGui::SetNextWindowSizeConstraints(min_size, max_size);
-                if (!ImGui::Begin(window_title_, IsDrawing()) {
+                if (ImGui::Begin(window_title_, IsDrawing())) {
+                    ImGui::Text("test %d", emulator_->GetRomData()[0x107]);
                     ImGui::End();
-                    return;
                 }
-
-                ImGui::End();
             }
         }
         void Reset() override {
@@ -72,9 +69,12 @@ namespace TKPEmu::Applications {
         bool* IsDrawing() override {
             return &drawing_;
         }
+        const char* GetName() override {
+            return window_title_;
+        }
     private:
         std::shared_ptr<Emulator> emulator_;
-        constexpr char* window_title_ = "Disassembler";
+        constexpr static const char* window_title_ = "Disassembler";
         bool drawing_ = false;
     };
 }

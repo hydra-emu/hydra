@@ -51,6 +51,7 @@ namespace TKPEmu {
 		void StopLogging();
 		void Screenshot(std::string filename, std::string directory = {});
 		void CloseAndWait();
+		const std::vector<uint8_t>& GetRomData() { return rom_data_; };
 		virtual float* GetScreenData();
 		virtual std::string GetScreenshotHash();
 		virtual std::string GetEmulatorName();
@@ -92,6 +93,8 @@ namespace TKPEmu {
 		bool log_changed_ = false;
 		std::string log_filename_;
 		bool always_false_ = false;
+		std::vector<uint8_t> rom_data_;
+		size_t rom_size_ = 0;
 	};
 }
 #endif

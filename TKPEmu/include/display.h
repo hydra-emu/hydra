@@ -12,6 +12,7 @@
 #include <imgui/imgui_internal.h>
 #include <lib/widget_keyselector.h>
 #include <lib/imfilebrowser.h>
+#include <include/generic_drawable.h>
 #include "emulator_types.hxx"
 #include "TKPImage.h"
 #include "settings_manager.h"
@@ -59,6 +60,7 @@ namespace TKPEmu::Graphics {
         using EmuStartOptions = TKPEmu::EmuStartOptions;
         using SDL_GLContextType = std::remove_pointer_t<SDL_GLContext>;
         using IMApplication = TKPEmu::Applications::IMApplication;
+        using Drawable = TKPEmu::Applications::Drawable;
         using SettingsManager = TKPEmu::Tools::SettingsManager;
         using DisInstr = TKPEmu::Tools::DisInstr;
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
@@ -155,6 +157,8 @@ namespace TKPEmu::Graphics {
         std::shared_ptr<Emulator> emulator_;
         // Applications loaded according to the emulator (such as disassembler, tracelogger, other plugins etc)
         std::vector<std::unique_ptr<IMApplication>> emulator_tools_;
+        // Generic tools that work across emulators
+        std::vector<std::unique_ptr<Drawable>> generic_tools_;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window_ptr_;
         std::unique_ptr<SDL_GLContextType, decltype(&SDL_GL_DeleteContext)> gl_context_ptr_;
         std::chrono::system_clock::time_point a = std::chrono::system_clock::now();

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <lib/str_hash.h>
 #include <include/emulator_factory.h>
+#include <include/generic_tool_make.h>
 #include <GameboyTKP/gb_disassembler.h>
 #include <GameboyTKP/gb_tracelogger.h>
 #include <GameboyTKP/gb_romdata.h>
@@ -28,6 +29,10 @@ namespace TKPEmu {
             app->SetEmulator(emulator);
         }
     }
+    void EmulatorFactory::LoadGenericTools(std::vector<std::unique_ptr<TKPEmu::Applications::Drawable>>& tools, std::shared_ptr<Emulator> emulator, EmuType emu_type) {
+        tools.push_back(MakeGenericTool<TKPEmu::Applications::Type::GenericDisassembler>(emu_type, emulator));
+    }
+    // TODO: detect emutype by magic bytes instead of extension
     EmuType EmulatorFactory::GetEmulatorType(std::filesystem::path path) {
         auto ext = str_hash(path.extension().c_str());
         switch (ext) {

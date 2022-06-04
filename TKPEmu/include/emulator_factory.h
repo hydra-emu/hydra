@@ -6,6 +6,7 @@
 #include "emulator.h"
 #include "base_application.h"
 #include "emulator_types.hxx"
+#include <include/generic_drawable.h>
 #include <GameboyTKP/gameboy.h>
 #include <N64TKP/n64_tkpwrapper.hxx>
 #include <chip8/chip8_tkpwrapper.hxx>
@@ -33,6 +34,7 @@ namespace TKPEmu {
             }
         }
         static void LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, std::shared_ptr<Emulator> emulator, EmuType emu_type);
+        static void LoadGenericTools(std::vector<std::unique_ptr<TKPEmu::Applications::Drawable>>& tools, std::shared_ptr<Emulator> emulator, EmuType emu_type);
         static EmuType GetEmulatorType(std::filesystem::path path);
     };
 }

@@ -9,6 +9,13 @@
 #include <include/settings_manager.h>
 #include <include/error_factory.hxx>
 
+namespace {
+	std::ifstream::pos_type filesize(const char* filename) {
+        std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
+        return in.tellg(); 
+    }
+}
+
 namespace TKPEmu {
     void Emulator::HandleKeyDown(SDL_Keycode keycode) { 
         std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was pressed but\n"
@@ -89,9 +96,14 @@ namespace TKPEmu {
 	bool Emulator::LoadFromFile(std::string path) {
 		CurrentFilename = std::filesystem::path(path).filename().stem();
 		CurrentDirectory = std::filesystem::path(path).parent_path();
-		std::ifstream t(path);
+		std::ifstream t(path, std::ios::in | std::ios::binary);
 		std::stringstream buffer;
 		buffer << t.rdbuf();
+		rom_data_.clear();
+		rom_size_ = filesize(path.c_str());
+		rom_data_.resize(rom_size_);
+		t.seekg(std::ios_base::beg);
+		t.read((char*)rom_data_.data(), rom_size_);
 		RomHash = md5(buffer.str());
 		return load_file(path);
 	}

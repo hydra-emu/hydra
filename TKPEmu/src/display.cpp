@@ -274,6 +274,9 @@ namespace TKPEmu::Graphics {
         for (const auto& app : emulator_tools_) {
             app->Draw();
         }
+        for (const auto& app : generic_tools_) {
+            app->Draw();
+        }
     }
     void Display::draw_fps_counter(bool* draw){
         if (*draw) {
@@ -484,6 +487,13 @@ namespace TKPEmu::Graphics {
     }
     void Display::draw_menu_bar_tools() {
         if (rom_loaded_) {
+            for (const auto& app : generic_tools_) {
+                bool* drawing_ = app->IsDrawing();
+                if (ImGui::MenuItem(app->GetName(), NULL, *drawing_)) {
+                    *drawing_ ^= true;
+                }
+            }
+            ImGui::Separator();
             for (const auto& app : emulator_tools_) {
                 app->DrawMenuItem();
             }
@@ -619,7 +629,9 @@ namespace TKPEmu::Graphics {
         std::any emu_specific_args = get_emu_specific_args(emulator_type_);
         emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, emu_specific_args);
         emulator_tools_.clear();
+        generic_tools_.clear();
         TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_, emulator_type_);
+        TKPEmu::EmulatorFactory::LoadGenericTools(generic_tools_, emulator_, emulator_type_);
         setup_emulator_specific();
         rom_loaded_ = true;
         emulator_->SkipBoot = skip_boot_;

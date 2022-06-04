@@ -10,6 +10,9 @@ namespace TKPEmu::Applications {
         virtual void Draw() = 0;
         virtual void Reset() = 0;
         virtual bool* IsDrawing() = 0;
+        virtual const char* GetName() {
+            return "Invalid-Name";
+        };
     };
 }
 #endif
