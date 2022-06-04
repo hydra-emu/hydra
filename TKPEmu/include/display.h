@@ -63,6 +63,7 @@ namespace TKPEmu::Graphics {
         using DisInstr = TKPEmu::Tools::DisInstr;
         using GameboyPalettes = std::array<std::array<float, 3>,4>;
         using GameboyKeys = std::array<SDL_Keycode, 4>;
+        using Chip8Keys = std::array<SDL_Keycode, 16>;
         const std::string GLSLVersion = "#version 130";
         std::vector<std::string> SupportedRoms = { ".gb", ".gbc", ".n64", ".z64", ".ch8" };
         #ifdef _WIN32
@@ -116,6 +117,22 @@ namespace TKPEmu::Graphics {
             {"Gameboy.key_b", std::to_string(SDLK_x)},
             {"Gameboy.key_start", std::to_string(SDLK_RETURN)},
             {"Gameboy.key_select", std::to_string(SDLK_SPACE)},
+            {"Chip8.key_0", std::to_string(SDLK_1)},
+            {"Chip8.key_1", std::to_string(SDLK_2)},
+            {"Chip8.key_2", std::to_string(SDLK_3)},
+            {"Chip8.key_3", std::to_string(SDLK_4)},
+            {"Chip8.key_4", std::to_string(SDLK_q)},
+            {"Chip8.key_5", std::to_string(SDLK_w)},
+            {"Chip8.key_6", std::to_string(SDLK_e)},
+            {"Chip8.key_7", std::to_string(SDLK_a)},
+            {"Chip8.key_8", std::to_string(SDLK_s)},
+            {"Chip8.key_9", std::to_string(SDLK_d)},
+            {"Chip8.key_a", std::to_string(SDLK_z)},
+            {"Chip8.key_b", std::to_string(SDLK_x)},
+            {"Chip8.key_c", std::to_string(SDLK_4)},
+            {"Chip8.key_d", std::to_string(SDLK_r)},
+            {"Chip8.key_e", std::to_string(SDLK_f)},
+            {"Chip8.key_f", std::to_string(SDLK_v)},
         };
         SettingsManager settings_manager_;
 
@@ -123,6 +140,7 @@ namespace TKPEmu::Graphics {
         GameboyPalettes gb_palettes_{};
         GameboyKeys gb_keys_direction_{};
         GameboyKeys gb_keys_action_{};
+        Chip8Keys chip8_keys_{};
 
         bool limit_fps_ = true;
         int max_fps_ = 60;

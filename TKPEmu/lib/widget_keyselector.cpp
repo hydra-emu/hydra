@@ -8,7 +8,7 @@ namespace TKPEmu::Tools {
     void KeySelector::Draw(SDL_Keycode& new_key_press) {
         ImGui::Text(button_name_.c_str());
         ImGui::SameLine();
-        if (ImGui::Button(button_text_.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+        if (ImGui::Button(button_text_.c_str(), ImVec2(50, 0))) {
             if (!select_key_mode) {
                 if (!lock_key_mode_) {
                     old_button_text_ = std::move(button_text_);

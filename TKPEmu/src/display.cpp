@@ -77,14 +77,31 @@ namespace TKPEmu::Graphics {
         main_loop();
     }
     void Display::draw_settings(bool* draw) {
-        static KeySelector key_right("Direction Right:", "Gameboy.key_right", gb_keys_direction_[0]);
-        static KeySelector  key_left("Direction Left: ", "Gameboy.key_left", gb_keys_direction_[1]);
-        static KeySelector    key_up("Direction Up:   ", "Gameboy.key_up", gb_keys_direction_[2]);
-        static KeySelector  key_down("Direction Down: ", "Gameboy.key_down", gb_keys_direction_[3]);
-        static KeySelector     key_a("Action A:       ", "Gameboy.key_a", gb_keys_action_[0]);
-        static KeySelector     key_b("Action B:       ", "Gameboy.key_b", gb_keys_action_[1]);
-        static KeySelector   key_sel("Action Select:  ", "Gameboy.key_select", gb_keys_action_[2]);
-        static KeySelector key_start("Action Start:   ", "Gameboy.key_start", gb_keys_action_[3]);
+        static KeySelector gb_key_right("Direction Right:", "Gameboy.key_right", gb_keys_direction_[0]);
+        static KeySelector  gb_key_left("Direction Left: ", "Gameboy.key_left", gb_keys_direction_[1]);
+        static KeySelector    gb_key_up("Direction Up:   ", "Gameboy.key_up", gb_keys_direction_[2]);
+        static KeySelector  gb_key_down("Direction Down: ", "Gameboy.key_down", gb_keys_direction_[3]);
+        static KeySelector     gb_key_a("Action A:       ", "Gameboy.key_a", gb_keys_action_[0]);
+        static KeySelector     gb_key_b("Action B:       ", "Gameboy.key_b", gb_keys_action_[1]);
+        static KeySelector   gb_key_sel("Action Select:  ", "Gameboy.key_select", gb_keys_action_[2]);
+        static KeySelector gb_key_start("Action Start:   ", "Gameboy.key_start", gb_keys_action_[3]);
+
+        static KeySelector     c8_key_0("Key 0:", "Chip8.key_0", chip8_keys_[0]);
+        static KeySelector     c8_key_1("Key 1:", "Chip8.key_1", chip8_keys_[1]);
+        static KeySelector     c8_key_2("Key 2:", "Chip8.key_2", chip8_keys_[2]);
+        static KeySelector     c8_key_3("Key 3:", "Chip8.key_3", chip8_keys_[3]);
+        static KeySelector     c8_key_4("Key 4:", "Chip8.key_4", chip8_keys_[4]);
+        static KeySelector     c8_key_5("Key 5:", "Chip8.key_5", chip8_keys_[5]);
+        static KeySelector     c8_key_6("Key 6:", "Chip8.key_6", chip8_keys_[6]);
+        static KeySelector     c8_key_7("Key 7:", "Chip8.key_7", chip8_keys_[7]);
+        static KeySelector     c8_key_8("Key 8:", "Chip8.key_8", chip8_keys_[8]);
+        static KeySelector     c8_key_9("Key 9:", "Chip8.key_9", chip8_keys_[9]);
+        static KeySelector     c8_key_a("Key A:", "Chip8.key_a", chip8_keys_[10]);
+        static KeySelector     c8_key_b("Key B:", "Chip8.key_b", chip8_keys_[11]);
+        static KeySelector     c8_key_c("Key C:", "Chip8.key_c", chip8_keys_[12]);
+        static KeySelector     c8_key_d("Key D:", "Chip8.key_d", chip8_keys_[13]);
+        static KeySelector     c8_key_e("Key E:", "Chip8.key_e", chip8_keys_[14]);
+        static KeySelector     c8_key_f("Key F:", "Chip8.key_f", chip8_keys_[15]);
         if (*draw) {
             TKPEmu::Applications::IMApplication::SetupWindow(ImVec2(400, 400), ImVec2(700, 700));
             if (!ImGui::Begin("Settings", draw)) {
@@ -208,14 +225,47 @@ namespace TKPEmu::Graphics {
                 ImGui::Spacing();
                 ImGui::Text("Controls:");
                 ImGui::Separator();
-                key_right.Draw(last_key_pressed_);
-                key_left.Draw(last_key_pressed_);
-                key_up.Draw(last_key_pressed_);
-                key_down.Draw(last_key_pressed_);
-                key_a.Draw(last_key_pressed_);
-                key_b.Draw(last_key_pressed_);
-                key_sel.Draw(last_key_pressed_);
-                key_start.Draw(last_key_pressed_);
+                gb_key_right.Draw(last_key_pressed_);
+                gb_key_left.Draw(last_key_pressed_);
+                gb_key_up.Draw(last_key_pressed_);
+                gb_key_down.Draw(last_key_pressed_);
+                gb_key_a.Draw(last_key_pressed_);
+                gb_key_b.Draw(last_key_pressed_);
+                gb_key_sel.Draw(last_key_pressed_);
+                gb_key_start.Draw(last_key_pressed_);
+            }
+            if (ImGui::CollapsingHeader("Chip8")) {
+                c8_key_0.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_1.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_2.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_3.Draw(last_key_pressed_);
+
+                c8_key_4.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_5.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_6.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_7.Draw(last_key_pressed_);
+
+                c8_key_8.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_9.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_a.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_b.Draw(last_key_pressed_);
+
+                c8_key_c.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_d.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_e.Draw(last_key_pressed_);
+                ImGui::SameLine();
+                c8_key_f.Draw(last_key_pressed_);
             }
             ImGui::End();
         }
@@ -597,6 +647,7 @@ namespace TKPEmu::Graphics {
                 break;
             }
             case EmuType::Chip8: {
+                ret = chip8_keys_;
                 break;
             }
             default: {
