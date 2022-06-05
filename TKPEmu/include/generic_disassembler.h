@@ -82,11 +82,11 @@ namespace TKPEmu::Applications {
     public:
         Disassembler(std::shared_ptr<Emulator> emulator) : emulator_(emulator) {}
         void Draw() override {
-            if (!loaded_instrs_) {
-                load_instrs();
-            }
             static bool view_hex = true;
             if (emulator_ && drawing_) {
+                if (!loaded_instrs_) {
+                    load_instrs();
+                }
                 ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_FirstUseEver);
                 if (ImGui::Begin(window_title_, IsDrawing())) {
                     float mult = view_hex ? 0.6f : 1.0f;
@@ -121,6 +121,7 @@ namespace TKPEmu::Applications {
         bool drawing_ = false;
         bool loaded_instrs_ = false;
         std::vector<GenericInstruction> instrs_;
+        // TODO: add "must reload" bool for when code changed
         void load_instrs() {
             uint64_t nops = 0;
             instrs_.clear();
