@@ -142,6 +142,9 @@ namespace TKPEmu {
 				ofstream_ptr_.reset(nullptr);
 		}
 	}
+	std::vector<std::string> Emulator::Disassemble(std::string instr) {
+		throw ErrorFactory::generate_exception(__func__, __LINE__, "Disassemble was not implemented for this emulator");
+	}
 	std::string Emulator::GetEmulatorName() {
 		throw ErrorFactory::generate_exception(__func__, __LINE__, "GetEmulatorName was not implemented for this emulator");
 	}

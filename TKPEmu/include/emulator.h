@@ -52,11 +52,13 @@ namespace TKPEmu {
 		void Screenshot(std::string filename, std::string directory = {});
 		void CloseAndWait();
 		const std::vector<uint8_t>& GetRomData() { return rom_data_; };
+		size_t GetRomSize() { return rom_size_; };
 		virtual float* GetScreenData();
 		virtual std::string GetScreenshotHash();
 		virtual std::string GetEmulatorName();
 		void WS_SetActionPtr(int* action_ptr);
 		virtual bool& IsReadyToDraw() { return always_false_; };
+		virtual std::vector<std::string> Disassemble(std::string instr);
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
 		std::mutex DebugUpdateMutex;
