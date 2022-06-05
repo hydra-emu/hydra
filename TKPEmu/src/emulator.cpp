@@ -51,10 +51,10 @@ namespace TKPEmu {
 		std::string filename_final = scrnshot_dir + "/" + filename;
 		std::vector<uint8_t> data;
 		if (start_options == EmuStartOptions::Console && false /* TODO: weird needed for .gb server, otherwise blank image. investigate. false for now */) {
-			data = std::vector<uint8_t>(GetScreenData(), GetScreenData() + EmulatorImage.width * EmulatorImage.height * 4);
+			data = std::vector<uint8_t>((float*)GetScreenData(), (float*)GetScreenData() + EmulatorImage.width * EmulatorImage.height * 4);
 		} else {
 			data.resize(EmulatorImage.width * EmulatorImage.height * 4);
-			auto fl_ptr = GetScreenData();
+			float* fl_ptr = (float*)GetScreenData();
 			for (int i = 0; i < (EmulatorImage.width * EmulatorImage.height * 4); i++) {
 				if ((i & 0b11) != 0b11)
 					data[i] = static_cast<uint8_t>(fl_ptr[i] * 255.0f);
@@ -73,7 +73,7 @@ namespace TKPEmu {
 	std::string Emulator::GetScreenshotHash() {
 		return "Warning: GetScreenshotHash not implemented, hash not printed";
 	}
-    float* Emulator::GetScreenData() { 
+    void* Emulator::GetScreenData() { 
         throw ErrorFactory::generate_exception(__func__, __LINE__, "GetScreenData was not implemented for this emulator");
     }
     void Emulator::Start(EmuStartOptions start_mode) { 

@@ -4,7 +4,7 @@
 #include <string>
 #include <sstream>
 #include <any>
-#include "../N64TKP/core/common/n64_types.hxx"
+#include "../N64TKP/n64_types.hxx"
 #include "emulator_types.hxx"
 
 namespace TKPEmu {

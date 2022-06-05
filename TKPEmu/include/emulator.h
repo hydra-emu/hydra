@@ -53,7 +53,7 @@ namespace TKPEmu {
 		void CloseAndWait();
 		const std::vector<uint8_t>& GetRomData() { return rom_data_; };
 		size_t GetRomSize() { return rom_size_; };
-		virtual float* GetScreenData();
+		virtual void* GetScreenData();
 		virtual std::string GetScreenshotHash();
 		virtual std::string GetEmulatorName();
 		void WS_SetActionPtr(int* action_ptr);

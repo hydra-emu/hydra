@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(TKPEmu VERSION 0.1.6)
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE RelWithDebInfo)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)

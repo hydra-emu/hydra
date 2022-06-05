@@ -1,5 +1,5 @@
-#ifndef TKPEMU_ERROR_FACTORY_H
-#define TKPEMU_ERROR_FACTORY_H
+#ifndef TKP_ERROR_FACTORY_H
+#define TKP_ERROR_FACTORY_H
 #include <stdexcept>
 #include <sstream>
 

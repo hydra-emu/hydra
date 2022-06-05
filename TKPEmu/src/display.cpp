@@ -371,7 +371,7 @@ namespace TKPEmu::Graphics {
             glBindTexture(GL_TEXTURE_2D, emulator_->EmulatorImage.texture);
             {
                 std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
-                float* data = emulator_->GetScreenData();
+                void* data = emulator_->GetScreenData();
                 bool& should_draw = emulator_->IsReadyToDraw();
                 if (data && should_draw){
                     should_draw = false;
@@ -382,8 +382,8 @@ namespace TKPEmu::Graphics {
                         0,
                         emulator_->EmulatorImage.width,
                         emulator_->EmulatorImage.height,
-                        GL_RGBA,
-                        GL_FLOAT,
+                        emulator_->EmulatorImage.format,
+                        emulator_->EmulatorImage.type,
                         data
                     );
                 }
