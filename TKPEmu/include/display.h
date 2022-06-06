@@ -37,6 +37,17 @@
                                     throw_error(ex); \
                                 } \
                             } while(0)
+// runs a function that may throw - to be used inside display member functions
+// and runs an action after throwing
+#define TKP_MAY_THROW_ACTION(func, action)  do { \
+                                                try { \
+                                                    func; \
+                                                } catch (const std::runtime_error& ex) { \
+                                                    throw_error(ex); \
+                                                    action; \
+                                                } \
+                                            } while(0)
+
 
 namespace TKPEmu::Graphics {
     constexpr auto GameboyWidth = 160;

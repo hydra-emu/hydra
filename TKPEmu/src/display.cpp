@@ -615,6 +615,7 @@ namespace TKPEmu::Graphics {
         } else {
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Rom has no parent path");
         }
+        std::shared_ptr<Emulator> emu_copy_ = emulator_;
         if (emulator_ != nullptr) {
             if (!emulator_->Loaded) {
                 // Tried to open a new emulator before the old one finished loading.
@@ -630,8 +631,20 @@ namespace TKPEmu::Graphics {
         emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, emu_specific_args);
         emulator_tools_.clear();
         generic_tools_.clear();
+        if (emu_copy_ != nullptr) {
+            TKP_MAY_THROW_ACTION(
+                // Check that only instance of emulator shared_ptr is this copy
+                // to make sure it's properly destroyed
+                if (emu_copy_.use_count() != 1) {
+                    throw ErrorFactory::generate_exception(__func__, __LINE__, "Leaked memory");
+                } else {
+                    emu_copy_.reset();
+                },
+                return
+            );
+        }
         TKPEmu::EmulatorFactory::LoadEmulatorTools(emulator_tools_, emulator_, emulator_type_);
-        TKPEmu::EmulatorFactory::LoadGenericTools(generic_tools_, emulator_, emulator_type_);
+        // TKPEmu::EmulatorFactory::LoadGenericTools(generic_tools_, emulator_, emulator_type_);
         setup_emulator_specific();
         rom_loaded_ = true;
         emulator_->SkipBoot = skip_boot_;
