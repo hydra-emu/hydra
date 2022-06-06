@@ -15,7 +15,9 @@
 #include <include/emulator_types.hxx>
 #include <lib/str_hash.h>
 #include <httplib.h>
-
+#ifndef __GNUC__
+static_assert(false, "TKPEmu must be compiled with GCC as it uses GCC macros");
+#endif
 using TestResult = TKPEmu::Testing::TestResult;
 using TestData = TKPEmu::Testing::TestData;
 using TestDataVec = std::vector<TestData>;
