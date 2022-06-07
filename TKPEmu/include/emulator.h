@@ -63,6 +63,8 @@ namespace TKPEmu {
 		std::mutex DrawMutex;
 		std::mutex DebugUpdateMutex;
 		std::thread UpdateThread;
+		std::exception_ptr CurrentException;
+		bool HasException = false;
 		TKPImage EmulatorImage{};
 		std::string RomHash;
 		std::string ScreenshotHash;
@@ -74,6 +76,7 @@ namespace TKPEmu {
 		// Override v_log_state() to change what it does, log_state() will do the right
 		// checks for you
 		void log_state();
+		void throw_current_to_display();
 		std::unique_ptr<std::ofstream> ofstream_ptr_;
 		EmuStartOptions start_options = EmuStartOptions::Console;
 		int* action_ptr_ = nullptr;

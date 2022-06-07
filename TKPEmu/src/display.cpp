@@ -529,13 +529,13 @@ namespace TKPEmu::Graphics {
             }
             case TKPShortcut::CTRL_L: {
                 if (emulator_)
-                    emulator_->LoadState(settings_manager_.GetSavePath() + "/save_states/" + emulator_->RomHash + ".state");
+                    TKP_MAY_THROW(emulator_->LoadState(settings_manager_.GetSavePath() + "/save_states/" + emulator_->RomHash + ".state"));
                 last_shortcut_ = TKPShortcut::NONE;
                 break;
             }
             case TKPShortcut::CTRL_S: {
                 if (emulator_)
-                    emulator_->SaveState(settings_manager_.GetSavePath() + "/save_states/" + emulator_->RomHash + ".state");
+                    TKP_MAY_THROW(emulator_->SaveState(settings_manager_.GetSavePath() + "/save_states/" + emulator_->RomHash + ".state"));
                 last_shortcut_ = TKPShortcut::NONE;
                 break;
             }
@@ -903,6 +903,13 @@ namespace TKPEmu::Graphics {
 
             if (limit_fps_) {
                 limit_fps();
+            }
+            if (emulator_) {
+                if (emulator_->HasException) [[unlikely]]{
+					// std::lock_guard<std::mutex> lg(emulator_->DebugUpdateMutex);
+                    TKP_MAY_THROW(std::rethrow_exception(emulator_->CurrentException));
+                    emulator_->HasException = false;
+                }
             }
             handle_shortcuts();
             ImGui_ImplOpenGL3_NewFrame();

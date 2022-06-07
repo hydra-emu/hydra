@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.19)
 project(TKPEmu VERSION 0.1.6)
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Werror=return-type")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -Werror=return-type") # -O3 may not be safe to use
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror=return-type") # -O3 may not be safe to use
 add_subdirectory("src/")
 add_subdirectory("lib/")
 add_subdirectory("GameboyTKP/")
