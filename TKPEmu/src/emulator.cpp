@@ -104,7 +104,6 @@ namespace TKPEmu {
 		rom_data_.resize(rom_size_);
 		t.seekg(std::ios_base::beg);
 		t.read((char*)rom_data_.data(), rom_size_);
-		RomHash = md5(buffer.str());
 		return load_file(path);
 	}
     void Emulator::Reset() {
