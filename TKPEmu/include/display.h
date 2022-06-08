@@ -146,6 +146,7 @@ namespace TKPEmu::Graphics {
             {"Chip8.key_d", std::to_string(SDLK_r)},
             {"Chip8.key_e", std::to_string(SDLK_f)},
             {"Chip8.key_f", std::to_string(SDLK_v)},
+            {"N64.ipl_loc", "not set"},
         };
         SettingsManager settings_manager_;
 
@@ -154,6 +155,7 @@ namespace TKPEmu::Graphics {
         GameboyKeys gb_keys_direction_{};
         GameboyKeys gb_keys_action_{};
         Chip8Keys chip8_keys_{};
+        std::filesystem::path n64_ipl_loc_{};
 
         bool limit_fps_ = true;
         int max_fps_ = 60;
@@ -164,6 +166,8 @@ namespace TKPEmu::Graphics {
         WindowSettings window_settings_;
         GLuint frame_buffer_;
         ImGui::FileBrowser file_browser_;
+        using file_browser_callback_fncptr = void (Display::*)(std::filesystem::path);
+        file_browser_callback_fncptr file_browser_callback_;
         EmuType emulator_type_ = EmuType::None;
         std::shared_ptr<Emulator> emulator_;
         // Applications loaded according to the emulator (such as disassembler, tracelogger, other plugins etc)
@@ -190,6 +194,7 @@ namespace TKPEmu::Graphics {
         bool window_file_browser_open_ = false;
         bool window_about_open_ = false;
         bool window_messagebox_open_ = false;
+        bool ipl_changed_ = false;
         std::string messagebox_body_;
         std::string WS_path_;
         TKPShortcut last_shortcut_ = TKPShortcut::NONE;
@@ -209,7 +214,7 @@ namespace TKPEmu::Graphics {
         void draw_menu_bar_view();
         void draw_menu_bar_help();
         void draw_tools();
-        void open_file_browser();
+        void open_file_browser(std::string title, std::vector<std::string>& extensions);
         void handle_shortcuts();
         void save_recent_files();
         
@@ -218,6 +223,7 @@ namespace TKPEmu::Graphics {
         void limit_fps();
         void init_settings_values();
         void init_gameboy_values();
+        void init_n64_values();
         bool is_rom_loaded();
         bool is_rom_loaded_and_debugmode();
 
@@ -225,6 +231,7 @@ namespace TKPEmu::Graphics {
         void image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi);
 
         void load_rom(std::filesystem::path path);
+        void load_ipl(std::filesystem::path path);
         std::any get_emu_specific_args(EmuType type);
         void setup_emulator_specific();
         void setup_gameboy_palette();

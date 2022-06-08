@@ -267,6 +267,21 @@ namespace TKPEmu::Graphics {
                 ImGui::SameLine();
                 c8_key_f.Draw(last_key_pressed_);
             }
+            if (ImGui::CollapsingHeader("N64")) {
+                static std::string ipl_loc = "IPL location: " + settings_.at("N64.ipl_loc");
+                static std::vector<std::string> ipl_ext_ = { ".bin" };
+                if (ipl_changed_) {
+                    ipl_loc = "IPL location: " + settings_.at("N64.ipl_loc");
+                }
+                ImGui::TextUnformatted(ipl_loc.c_str());
+                if (ImGui::Button("Browse IPL...", ImVec2(200, 0))) {
+                    if (!window_file_browser_open_) {
+                        window_file_browser_open_ = true;
+                        file_browser_callback_ = &Display::load_ipl;
+                        open_file_browser("Browse IPL...", ipl_ext_);
+                    }
+                }
+            }
             ImGui::End();
         }
     }
@@ -350,7 +365,7 @@ namespace TKPEmu::Graphics {
             file_browser_.Display();
             if (file_browser_.HasSelected()) {
                 auto path = file_browser_.GetSelected();
-                TKP_MAY_THROW(load_rom(path));
+                TKP_MAY_THROW((this->*file_browser_callback_)(path));
                 if (recent_paths_.size() == RecentRomsMaxSize) {
                     recent_paths_.pop_back();
                 }
@@ -425,7 +440,8 @@ namespace TKPEmu::Graphics {
         if (ImGui::MenuItem("Open ROM", "Ctrl+O")) {
             if (!window_file_browser_open_) {
                 window_file_browser_open_ = true;
-                open_file_browser();
+                file_browser_callback_ = &Display::load_rom;
+                open_file_browser("Browse ROM...", SupportedRoms);
             }
         }
         if (ImGui::BeginMenu("Open Recent")) {
@@ -522,7 +538,7 @@ namespace TKPEmu::Graphics {
             case TKPShortcut::CTRL_O: {
                 if (!window_file_browser_open_) {
                     window_file_browser_open_ = true;
-                    open_file_browser();
+                    open_file_browser("Browse ROM...", SupportedRoms);
                 }
                 last_shortcut_ = TKPShortcut::NONE;
                 break;
@@ -659,6 +675,9 @@ namespace TKPEmu::Graphics {
         image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
         emulator_->Start(options);
     }
+    void Display::load_ipl(std::filesystem::path path) {
+        settings_.at("N64.ipl_loc") = path.string();
+    }
     // TODO: get rid of this ugly function and the std::any constructors
     std::any Display::get_emu_specific_args(EmuType type) {
         std::any ret;
@@ -719,11 +738,12 @@ namespace TKPEmu::Graphics {
         gb_palettes_[3][1] = ((color3 >> 8) & 0xFF) / 255.0f;
         gb_palettes_[3][2] = ((color3) & 0xFF) / 255.0f;
     }
-
+    void Display::init_n64_values() {
+        n64_ipl_loc_ = settings_.at("N64.ipl_loc");
+    }
     bool Display::is_rom_loaded() {
         return rom_loaded_;
     }
-
     bool Display::is_rom_loaded_and_debugmode() {
         return rom_loaded_ && debug_mode_;
     }
@@ -807,8 +827,8 @@ namespace TKPEmu::Graphics {
         style.FrameRounding = 4;
         style.IndentSpacing = 12.0f;
     }
-    void Display::open_file_browser() {
-        file_browser_.SetTitle("Select a ROM...");
+    void Display::open_file_browser(std::string title, std::vector<std::string>& extensions) {
+        file_browser_.SetTitle(title);
         file_browser_.SetTypeFilters(SupportedRoms);
         std::filesystem::path path = settings_manager_.GetSavePath();
         if (!(settings_.at("General.last_dir").empty())) {
