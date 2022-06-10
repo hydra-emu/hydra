@@ -8,6 +8,7 @@
 #include <include/disassembly_instr.h>
 #include <GameboyTKP/gb_disassembler.h>
 #include <GameboyTKP/gb_tracelogger.h>
+#include <N64TKP/n64_tkpargs.hxx>
 #include <include/emulator_disassembler.hxx>
 #include <include/error_factory.hxx>
 
@@ -677,6 +678,8 @@ namespace TKPEmu::Graphics {
     }
     void Display::load_ipl(std::filesystem::path path) {
         settings_.at("N64.ipl_loc") = path.string();
+        n64_ipl_loc_ = path;
+        ipl_changed_ = true;
     }
     // TODO: get rid of this ugly function and the std::any constructors
     std::any Display::get_emu_specific_args(EmuType type) {
@@ -687,7 +690,9 @@ namespace TKPEmu::Graphics {
                 break;
             }
             case EmuType::N64: {
-                // TODO: n64 arguments
+                ret = N64Args {
+                    .IPLPath = n64_ipl_loc_.string(),
+                };
                 break;
             }
             case EmuType::Chip8: {
@@ -719,6 +724,7 @@ namespace TKPEmu::Graphics {
         sleep_time_ = 1000.0f / max_fps_;
         KeySelector::Initialize(&settings_);
         init_gameboy_values();
+        init_n64_values();
     }
     void Display::init_gameboy_values(){
         int color0 = std::stoi(settings_.at("Gameboy.color0"), 0, 16);
@@ -739,7 +745,9 @@ namespace TKPEmu::Graphics {
         gb_palettes_[3][2] = ((color3) & 0xFF) / 255.0f;
     }
     void Display::init_n64_values() {
-        n64_ipl_loc_ = settings_.at("N64.ipl_loc");
+        auto path = settings_.at("N64.ipl_loc");
+        if (std::filesystem::exists(path))
+            n64_ipl_loc_ = path;
     }
     bool Display::is_rom_loaded() {
         return rom_loaded_;
@@ -829,7 +837,7 @@ namespace TKPEmu::Graphics {
     }
     void Display::open_file_browser(std::string title, std::vector<std::string>& extensions) {
         file_browser_.SetTitle(title);
-        file_browser_.SetTypeFilters(SupportedRoms);
+        file_browser_.SetTypeFilters(extensions);
         std::filesystem::path path = settings_manager_.GetSavePath();
         if (!(settings_.at("General.last_dir").empty())) {
             path = settings_.at("General.last_dir");
