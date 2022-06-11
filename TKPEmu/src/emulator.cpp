@@ -125,6 +125,7 @@ namespace TKPEmu {
 		Step.store(true);
         Paused.store(false);
         Stopped.store(true);
+		v_extra_close();
         Step.notify_all();
         std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
 	}

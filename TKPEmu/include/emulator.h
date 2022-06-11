@@ -84,6 +84,8 @@ namespace TKPEmu {
 		virtual void save_state(std::ofstream& ofstream);
 		virtual void load_state(std::ifstream& ifstream);
 		virtual void v_log_state();
+		// extra stuff you need to run during CloseAndWait
+		virtual void v_extra_close() {};
 		virtual void start_normal();
 		virtual void start_debug();
 		virtual void start_console();
