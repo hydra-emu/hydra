@@ -14,6 +14,22 @@
 #include "disassembly_instr.h"
 #include <any>
 
+#define TKP_EMULATOR(emulator)									\
+	public:														\
+	emulator();													\
+	emulator(std::any args);									\
+	~emulator()	;												\
+	void* GetScreenData() override;								\
+	bool& IsReadyToDraw() override;								\
+	void HandleKeyDown(SDL_Keycode key) override;				\
+	void HandleKeyUp(SDL_Keycode key) override;					\
+	std::string GetEmulatorName() override { return #emulator; }\
+	private:													\
+	void reset_skip() override;									\
+	void start_debug() override;								\
+	bool load_file(std::string path) override 	// missing semicolon to require
+											  	// semicolon on virtual classes
+
 namespace TKPEmu {
 	enum class EmuStartOptions {
 		Normal,
@@ -91,7 +107,6 @@ namespace TKPEmu {
 		virtual void start_console();
 		virtual void reset_normal();
 		virtual void reset_skip();
-		virtual void update();
 		virtual bool load_file(std::string);
 		virtual std::string print() const;
 		friend std::ostream& operator<<(std::ostream& os, const Emulator& obj);

@@ -7,7 +7,7 @@
 #include "base_application.h"
 #include "emulator_types.hxx"
 #include <include/generic_drawable.h>
-#include <GameboyTKP/gameboy.h>
+#include <GameboyTKP/gb_tkpwrapper.h>
 #include <N64TKP/n64_tkpwrapper.hxx>
 #include <chip8/chip8_tkpwrapper.hxx>
 

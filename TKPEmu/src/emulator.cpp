@@ -166,9 +166,6 @@ namespace TKPEmu {
 	void Emulator::reset_skip() {
 		throw ErrorFactory::generate_exception(__func__, __LINE__, "reset_skip was not implemented for this emulator");
 	}
-    void Emulator::update() {
-        throw ErrorFactory::generate_exception(__func__, __LINE__, "update was not implemented for this emulator");
-    }
 	bool Emulator::load_file(std::string) {
 		throw ErrorFactory::generate_exception(__func__, __LINE__, "load_file was not implemented for this emulator");
 	}
