@@ -41,6 +41,7 @@ namespace TKPEmu {
                 return EmuType::Gameboy;
             }
             case str_hash(".n64"):
+            case str_hash(".N64"):
             case str_hash(".z64"): {
                 return EmuType::N64;
             }

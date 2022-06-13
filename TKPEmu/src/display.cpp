@@ -439,11 +439,7 @@ namespace TKPEmu::Graphics {
     }
     void Display::draw_menu_bar_file() {
         if (ImGui::MenuItem("Open ROM", "Ctrl+O")) {
-            if (!window_file_browser_open_) {
-                window_file_browser_open_ = true;
-                file_browser_callback_ = &Display::load_rom;
-                open_file_browser("Browse ROM...", SupportedRoms);
-            }
+            open_file_browser_rom();
         }
         if (ImGui::BeginMenu("Open Recent")) {
             draw_menu_bar_file_recent();
@@ -462,7 +458,6 @@ namespace TKPEmu::Graphics {
         ImGui::Separator();
         if (ImGui::MenuItem("Screenshot", NULL, false, is_rom_loaded())) {
             emulator_->Screenshot("Screenshot.bmp");
-            std::cout << emulator_->GetScreenshotHash() << std::endl;
         }
         ImGui::Separator();
         if (ImGui::MenuItem("Settings", NULL, window_settings_open_, true)) { 
@@ -537,10 +532,7 @@ namespace TKPEmu::Graphics {
     void Display::handle_shortcuts() {
         switch(last_shortcut_) {
             case TKPShortcut::CTRL_O: {
-                if (!window_file_browser_open_) {
-                    window_file_browser_open_ = true;
-                    open_file_browser("Browse ROM...", SupportedRoms);
-                }
+                open_file_browser_rom();
                 last_shortcut_ = TKPShortcut::NONE;
                 break;
             }
@@ -633,7 +625,7 @@ namespace TKPEmu::Graphics {
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Rom has no parent path");
         }
         std::shared_ptr<Emulator> emu_copy_ = emulator_;
-        if (emulator_ != nullptr) {
+        if (emulator_) {
             if (!emulator_->Loaded) {
                 // Tried to open a new emulator before the old one finished loading.
                 // Impossibly rare, but would avoid a program hang
@@ -648,7 +640,7 @@ namespace TKPEmu::Graphics {
         emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, emu_specific_args);
         emulator_tools_.clear();
         generic_tools_.clear();
-        if (emu_copy_ != nullptr) {
+        if (emu_copy_) {
             TKP_MAY_THROW_ACTION(
                 // Check that only instance of emulator shared_ptr is this copy
                 // to make sure it's properly destroyed
@@ -845,6 +837,14 @@ namespace TKPEmu::Graphics {
         file_browser_.SetPwd(path);
         file_browser_.Open();
     }
+    void Display::open_file_browser_rom() {
+        if (!window_file_browser_open_) {
+            window_file_browser_open_ = true;
+            file_browser_callback_ = &Display::load_rom;
+            std::cout << "set to " << file_browser_callback_ << std::endl;
+            open_file_browser("Browse ROM...", SupportedRoms);
+        }
+    }
     void Display::main_loop() {
         load_loop();
         bool loop = true;
@@ -973,6 +973,7 @@ namespace TKPEmu::Graphics {
     void Display::throw_error(const std::runtime_error& ex) {
         window_messagebox_open_ = true;
         messagebox_body_ = ex.what();
-        emulator_->CloseAndWait();
+        if (emulator_)
+            emulator_->CloseAndWait();
     }
 }

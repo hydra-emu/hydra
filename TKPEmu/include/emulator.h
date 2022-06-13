@@ -14,6 +14,7 @@
 #include "disassembly_instr.h"
 #include <any>
 
+// Macro that adds the essential functions that every emulator have
 #define TKP_EMULATOR(emulator)									\
 	public:														\
 	emulator();													\

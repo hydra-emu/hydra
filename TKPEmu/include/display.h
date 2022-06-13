@@ -78,7 +78,7 @@ namespace TKPEmu::Graphics {
         using GameboyKeys = std::array<SDL_Keycode, 4>;
         using Chip8Keys = std::array<SDL_Keycode, 16>;
         const std::string GLSLVersion = "#version 130";
-        std::vector<std::string> SupportedRoms = { ".gb", ".gbc", ".n64", ".z64", ".ch8" };
+        std::vector<std::string> SupportedRoms = { ".gb", ".gbc", ".n64", ".N64", ".z64", ".ch8" };
         #ifdef _WIN32
         wchar_t exe_dir[MAX_PATH];
         #endif
@@ -215,6 +215,7 @@ namespace TKPEmu::Graphics {
         void draw_menu_bar_help();
         void draw_tools();
         void open_file_browser(std::string title, std::vector<std::string>& extensions);
+        void open_file_browser_rom();
         void handle_shortcuts();
         void save_recent_files();
         

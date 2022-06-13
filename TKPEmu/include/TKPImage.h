@@ -6,8 +6,8 @@
 namespace TKPEmu::Tools {
     struct TKPImage {
         GLuint texture = 0;
-        int width = 0;
-        int height = 0;
+        GLuint width = 0;
+        GLuint height = 0;
         GLuint format = GL_RGBA;
         GLuint type = GL_FLOAT;
         ImVec2 topleft;
