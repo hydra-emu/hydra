@@ -75,6 +75,7 @@ namespace TKPEmu {
 		virtual std::string GetEmulatorName();
 		void WS_SetActionPtr(int* action_ptr);
 		virtual bool& IsReadyToDraw() { return always_false_; };
+		virtual bool& IsResized() { return always_false_; };
 		virtual std::vector<std::string> Disassemble(std::string instr);
 		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;

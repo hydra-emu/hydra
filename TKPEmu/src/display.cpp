@@ -388,8 +388,23 @@ namespace TKPEmu::Graphics {
             {
                 std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
                 void* data = emulator_->GetScreenData();
+                bool& should_resize = emulator_->IsResized();
+                if (data && should_resize) {
+                    glTexImage2D(
+                        GL_TEXTURE_2D,
+                        0,
+                        GL_RGB,
+                        emulator_->EmulatorImage.width,
+                        emulator_->EmulatorImage.height,
+                        0,
+                        emulator_->EmulatorImage.format,
+                        emulator_->EmulatorImage.type,
+                        data
+                    );
+                    should_resize = false;
+                }
                 bool& should_draw = emulator_->IsReadyToDraw();
-                if (data && should_draw){
+                if (data && should_draw) {
                     should_draw = false;
                     glTexSubImage2D(
                         GL_TEXTURE_2D,
@@ -841,7 +856,6 @@ namespace TKPEmu::Graphics {
         if (!window_file_browser_open_) {
             window_file_browser_open_ = true;
             file_browser_callback_ = &Display::load_rom;
-            std::cout << "set to " << file_browser_callback_ << std::endl;
             open_file_browser("Browse ROM...", SupportedRoms);
         }
     }
