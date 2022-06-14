@@ -599,16 +599,16 @@ namespace TKPEmu::Graphics {
         }
     }
     void Display::image_scale(ImVec2& topleft, ImVec2& bottomright, float wi, float hi) {
-        float ws = window_settings_.window_width; float hs = window_settings_.window_height;
-        float ri = wi / hi;
+        float ws = window_settings_.window_width;
+        float hs = window_settings_.window_height;
+        float ri = wi / (hi + MenuBarHeight);
         float rs = ws / hs;
         float new_w;
         float new_h;
         if (rs > ri) {
             new_h = hs - MenuBarHeight;
             new_w = wi * (new_h / hi);
-        }
-        else {
+        } else {
             new_w = ws;
             new_h = hi * (ws / wi);
         }
