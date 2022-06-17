@@ -15,27 +15,14 @@ namespace TKPEmu {
     class EmulatorFactory {
     private:
         using IMApplication = TKPEmu::Applications::IMApplication;
+        using ExtensionMappings = std::unordered_map<std::string, EmuType>;
+        static const ExtensionMappings& get_extension_mappings();
     public:
-        static std::shared_ptr<Emulator> Create(EmuType type, std::any args = {}) { 
-            switch (type) {
-                case EmuType::Gameboy: {
-                    return std::make_shared<Gameboy::Gameboy>(args);
-                }
-                case EmuType::N64: {
-                    return std::make_shared<N64::N64_TKPWrapper>(args);
-                }
-                case EmuType::Chip8: {
-                    return std::make_shared<Chip8::Chip8>(args);
-                }
-                case EmuType::None:
-                default: {
-                    return nullptr;
-                }
-            }
-        }
+        static std::shared_ptr<Emulator> Create(EmuType type, std::any args = {});
         static void LoadEmulatorTools(std::vector<std::unique_ptr<IMApplication>>& tools, std::shared_ptr<Emulator> emulator, EmuType emu_type);
         static void LoadGenericTools(std::vector<std::unique_ptr<TKPEmu::Applications::Drawable>>& tools, std::shared_ptr<Emulator> emulator, EmuType emu_type);
         static EmuType GetEmulatorType(std::filesystem::path path);
+        static const std::vector<std::string>& GetSupportedExtensions();
     };
 }
 #endif

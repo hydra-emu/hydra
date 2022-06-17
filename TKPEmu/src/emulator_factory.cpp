@@ -1,6 +1,7 @@
 #include <iostream>
 #include <lib/str_hash.h>
 #include <include/emulator_factory.h>
+#include <include/error_factory.hxx>
 #include <include/generic_tool_make.h>
 #include <GameboyTKP/gb_disassembler.h>
 #include <GameboyTKP/gb_tracelogger.h>
@@ -34,21 +35,51 @@ namespace TKPEmu {
     }
     // TODO: detect emutype by magic bytes instead of extension
     EmuType EmulatorFactory::GetEmulatorType(std::filesystem::path path) {
-        auto ext = str_hash(path.extension().c_str());
-        switch (ext) {
-            case str_hash(".gbc"):
-            case str_hash(".gb"): {
-                return EmuType::Gameboy;
-            }
-            case str_hash(".n64"):
-            case str_hash(".N64"):
-            case str_hash(".z64"): {
-                return EmuType::N64;
-            }
-            case str_hash(".ch8"): {
-                return EmuType::Chip8;
+        auto ext = path.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(),
+            [](unsigned char c){ return std::tolower(c); });
+        auto& extension_mappings = get_extension_mappings();
+        try {
+            return extension_mappings.at(ext);
+        } catch (...) {
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "Unknown file extension");
+        }
+    }
+    const EmulatorFactory::ExtensionMappings& EmulatorFactory::get_extension_mappings() {
+        static ExtensionMappings extension_mappings_ = {
+            { ".gb", EmuType::Gameboy },
+            { ".gbc", EmuType::Gameboy },
+            { ".n64", EmuType::N64 },
+            { ".z64", EmuType::N64 },
+            { ".ch8", EmuType::Chip8 },
+        };
+        return extension_mappings_;
+    }
+    const std::vector<std::string>& EmulatorFactory::GetSupportedExtensions() {
+        static std::vector<std::string> supported_extensions_;
+        if (supported_extensions_.empty()) {
+            auto& extension_mappings = get_extension_mappings();
+            for (const auto& item : extension_mappings) {
+                supported_extensions_.push_back(item.first);
             }
         }
-        return EmuType::None;
+        return supported_extensions_;
+    }
+    std::shared_ptr<Emulator> EmulatorFactory::Create(EmuType type, std::any args) { 
+        switch (type) {
+            case EmuType::Gameboy: {
+                return std::make_shared<Gameboy::Gameboy>(args);
+            }
+            case EmuType::N64: {
+                return std::make_shared<N64::N64_TKPWrapper>(args);
+            }
+            case EmuType::Chip8: {
+                return std::make_shared<Chip8::Chip8>(args);
+            }
+            case EmuType::None:
+            default: {
+                return nullptr;
+            }
+        }
     }
 }

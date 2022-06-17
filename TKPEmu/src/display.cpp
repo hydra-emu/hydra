@@ -639,6 +639,12 @@ namespace TKPEmu::Graphics {
         } else {
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Rom has no parent path");
         }
+        auto old_emulator_type_ = emulator_type_;
+        // First check if the path is valid
+        TKP_MAY_THROW_ACTION(
+            emulator_type_ = EmulatorFactory::GetEmulatorType(path),
+            emulator_type_ = old_emulator_type_
+        );
         std::shared_ptr<Emulator> emu_copy_ = emulator_;
         if (emulator_) {
             if (!emulator_->Loaded) {
@@ -649,8 +655,6 @@ namespace TKPEmu::Graphics {
             emulator_->CloseAndWait();
             emulator_.reset();
         }
-        auto old_emulator_type_ = emulator_type_;
-        emulator_type_ = EmulatorFactory::GetEmulatorType(path);
         std::any emu_specific_args = get_emu_specific_args(emulator_type_);
         emulator_ = TKPEmu::EmulatorFactory::Create(emulator_type_, emu_specific_args);
         emulator_tools_.clear();
@@ -830,7 +834,7 @@ namespace TKPEmu::Graphics {
         style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.72f, 1.00f, 1.00f, 0.86f);
         style.Colors[ImGuiCol_Header] = ImVec4(0.65f, 0.78f, 0.84f, 0.80f);
         style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.75f, 0.88f, 0.94f, 0.80f);
-        style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.55f, 0.68f, 0.74f, 0.80f);//ImVec4(0.46f, 0.84f, 0.90f, 1.00f);
+        style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.55f, 0.68f, 0.74f, 0.80f);
         style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.60f, 0.60f, 0.80f, 0.30f);
         style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(1.00f, 1.00f, 1.00f, 0.60f);
         style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(1.00f, 1.00f, 1.00f, 0.90f);
@@ -842,21 +846,23 @@ namespace TKPEmu::Graphics {
         style.FrameRounding = 4;
         style.IndentSpacing = 12.0f;
     }
-    void Display::open_file_browser(std::string title, std::vector<std::string>& extensions) {
+    void Display::open_file_browser(std::string title, const std::vector<std::string>& extensions) {
         file_browser_.SetTitle(title);
         file_browser_.SetTypeFilters(extensions);
-        std::filesystem::path path = settings_manager_.GetSavePath();
-        if (!(settings_.at("General.last_dir").empty())) {
-            path = settings_.at("General.last_dir");
-        }
-        file_browser_.SetPwd(path);
-        file_browser_.Open();
+        TKP_MAY_THROW(
+            std::filesystem::path path = settings_manager_.GetSavePath();
+            if (!(settings_.at("General.last_dir").empty())) {
+                path = settings_.at("General.last_dir");
+            }
+            file_browser_.SetPwd(path);
+            file_browser_.Open();
+        );
     }
     void Display::open_file_browser_rom() {
         if (!window_file_browser_open_) {
             window_file_browser_open_ = true;
             file_browser_callback_ = &Display::load_rom;
-            open_file_browser("Browse ROM...", SupportedRoms);
+            open_file_browser("Browse ROM...", EmulatorFactory::GetSupportedExtensions());
         }
     }
     void Display::main_loop() {

@@ -367,3 +367,4 @@ imstb_truetype.h
 glad.h
 glad.c
 *.sav
+callgrind.out.*

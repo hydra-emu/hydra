@@ -9,12 +9,13 @@ namespace TKPEmu::Tools {
 		settings_(settings)
 	{
 		try {
-			std::string SaveDataDir = GetSavePath();
-			if (!std::filesystem::exists(SaveDataDir)) {
-				std::cout << "Creating " << SaveDataDir << " directories..." << std::endl;
-				std::filesystem::create_directories(SaveDataDir);
+			std::string save_dir_ = GetSavePath();
+			if (!std::filesystem::exists(save_dir_)) {
+				// TODO: test that this actually works
+				std::cout << "Creating " << save_dir_ << " directories..." << std::endl;
+				std::filesystem::create_directories(save_dir_);
 			}
-			config_file_ = SaveDataDir + config_file_;
+			config_file_ = save_dir_ + config_file_;
 			if (!std::filesystem::exists(config_file_)) {
 				std::cout << "User settings not found. Loading default settings..." << std::endl;
 				std::fstream temp;
