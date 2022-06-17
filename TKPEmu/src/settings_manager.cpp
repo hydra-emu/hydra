@@ -35,7 +35,7 @@ namespace TKPEmu::Tools {
 		}
 	}
 	SettingsManager::~SettingsManager() {
-		save_settings();
+		Save();
 	}
 	std::string SettingsManager::GetSavePath() {
 		static std::string dir;
@@ -51,10 +51,14 @@ namespace TKPEmu::Tools {
 		}
 		return dir;
 	}
-	void SettingsManager::save_settings() noexcept {
+	void SettingsManager::Save() {
 		for (auto& item : settings_) {
 			ptree_.put(item.first, item.second);
 		}
-		boost::property_tree::ini_parser::write_ini(config_file_, ptree_);
+		try {
+			boost::property_tree::ini_parser::write_ini(config_file_, ptree_);
+		} catch (...) {
+			throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not save user data");
+		}
 	}
 }

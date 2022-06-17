@@ -12,9 +12,8 @@ namespace TKPEmu::Tools {
 		std::string config_file_;
 		SettingsMap& settings_;
 		boost::property_tree::ptree ptree_;
-		// Declared noexcept to terminate the program if this throws
-		void save_settings() noexcept;
 	public:
+		void Save();
 		static std::string GetSavePath();
 		SettingsManager(SettingsMap& settings, std::string config_file);
 		~SettingsManager();

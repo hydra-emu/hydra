@@ -686,6 +686,7 @@ namespace TKPEmu::Graphics {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         image_scale(emulator_->EmulatorImage.topleft, emulator_->EmulatorImage.botright, emulator_->EmulatorImage.width, emulator_->EmulatorImage.height);
         emulator_->Start(options);
+        settings_manager_.Save();
     }
     void Display::load_ipl(std::filesystem::path path) {
         settings_.at("N64.ipl_loc") = path.string();
