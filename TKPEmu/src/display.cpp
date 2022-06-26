@@ -87,21 +87,21 @@ namespace TKPEmu::Graphics {
         static KeySelector   gb_key_sel("Action Select:  ", "Gameboy.key_select", gb_keys_action_[2]);
         static KeySelector gb_key_start("Action Start:   ", "Gameboy.key_start", gb_keys_action_[3]);
 
-        static KeySelector     c8_key_0("Key 0:", "Chip8.key_0", chip8_keys_[0]);
         static KeySelector     c8_key_1("Key 1:", "Chip8.key_1", chip8_keys_[1]);
         static KeySelector     c8_key_2("Key 2:", "Chip8.key_2", chip8_keys_[2]);
         static KeySelector     c8_key_3("Key 3:", "Chip8.key_3", chip8_keys_[3]);
+        static KeySelector     c8_key_c("Key C:", "Chip8.key_c", chip8_keys_[12]);
         static KeySelector     c8_key_4("Key 4:", "Chip8.key_4", chip8_keys_[4]);
         static KeySelector     c8_key_5("Key 5:", "Chip8.key_5", chip8_keys_[5]);
         static KeySelector     c8_key_6("Key 6:", "Chip8.key_6", chip8_keys_[6]);
+        static KeySelector     c8_key_d("Key D:", "Chip8.key_d", chip8_keys_[13]);
         static KeySelector     c8_key_7("Key 7:", "Chip8.key_7", chip8_keys_[7]);
         static KeySelector     c8_key_8("Key 8:", "Chip8.key_8", chip8_keys_[8]);
         static KeySelector     c8_key_9("Key 9:", "Chip8.key_9", chip8_keys_[9]);
-        static KeySelector     c8_key_a("Key A:", "Chip8.key_a", chip8_keys_[10]);
-        static KeySelector     c8_key_b("Key B:", "Chip8.key_b", chip8_keys_[11]);
-        static KeySelector     c8_key_c("Key C:", "Chip8.key_c", chip8_keys_[12]);
-        static KeySelector     c8_key_d("Key D:", "Chip8.key_d", chip8_keys_[13]);
         static KeySelector     c8_key_e("Key E:", "Chip8.key_e", chip8_keys_[14]);
+        static KeySelector     c8_key_a("Key A:", "Chip8.key_a", chip8_keys_[10]);
+        static KeySelector     c8_key_0("Key 0:", "Chip8.key_0", chip8_keys_[0]);
+        static KeySelector     c8_key_b("Key B:", "Chip8.key_b", chip8_keys_[11]);
         static KeySelector     c8_key_f("Key F:", "Chip8.key_f", chip8_keys_[15]);
         if (*draw) {
             TKPEmu::Applications::IMApplication::SetupWindow(ImVec2(400, 400), ImVec2(700, 700));
@@ -623,6 +623,10 @@ namespace TKPEmu::Graphics {
         if (rs > ri) {
             new_h = hs - MenuBarHeight;
             new_w = wi * (new_h / hi);
+            if (new_w > ws) {
+                new_w = ws;
+                new_h = hi * (ws / wi);
+            }
         } else {
             new_w = ws;
             new_h = hi * (ws / wi);
