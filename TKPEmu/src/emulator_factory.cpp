@@ -49,6 +49,7 @@ namespace TKPEmu {
         static ExtensionMappings extension_mappings_ = {
             { ".gb", EmuType::Gameboy },
             { ".gbc", EmuType::Gameboy },
+            { ".nes", EmuType::NES },
             { ".n64", EmuType::N64 },
             { ".z64", EmuType::N64 },
             { ".ch8", EmuType::Chip8 },
