@@ -20,8 +20,8 @@ find_package(OpenGL REQUIRED)
 find_package(Boost 1.71 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 
 add_subdirectory("src/")
 add_subdirectory("lib/")
@@ -31,9 +31,10 @@ add_subdirectory("chip8/")
 add_subdirectory("N64TKP/")
 
 set(PROJECT_SOURCES
-        qt/main.cxx
-        qt/mainwindow.cxx
-        qt/mainwindow.hxx
+    qt/main.cxx
+    qt/mainwindow.cxx
+    qt/mainwindow.hxx
+    src/emulator.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -59,8 +60,9 @@ else()
     endif()
 endif()
 
-target_link_libraries(TKPEmu PRIVATE Qt${QT_VERSION_MAJOR}::Widgets TKPSrc TKPLib NESTKP GameboyTKP Chip8 
-    N64TKP ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} Threads::Threads)
+target_link_libraries(TKPEmu PRIVATE TKPSrc TKPLib NESTKP GameboyTKP Chip8 N64TKP
+    Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL Qt${QT_VERSION_MAJOR}::OpenGLWidgets
+    ${SDL2_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} Threads::Threads)
 
 set_target_properties(TKPEmu PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.tkpemu.com

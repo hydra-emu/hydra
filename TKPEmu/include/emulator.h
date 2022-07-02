@@ -8,18 +8,17 @@
 #include <atomic>
 #include <functional>
 #include <thread>
-#include <fstream>
-#include "TKPImage.h"
-#include "emulator_results.h"
-#include "disassembly_instr.h"
 #include <any>
+#include <fstream>
+#include "emulator_results.h"
+#include "../lib/messagequeue.hxx"
 
 // Macro that adds the essential functions that every emulator have
 #define TKP_EMULATOR(emulator)									\
 	public:														\
 	emulator();													\
 	emulator(std::any args);									\
-	~emulator()	;												\
+	~emulator() override;										\
 	void* GetScreenData() override;								\
 	bool& IsReadyToDraw() override;								\
 	void HandleKeyDown(SDL_Keycode key) override;				\
@@ -38,9 +37,6 @@ namespace TKPEmu {
 		Console
 	};
 	class Emulator {
-	private:
-		using TKPImage = TKPEmu::Tools::TKPImage;
-		using DisInstr = TKPEmu::Tools::DisInstr;
 	public:
 		Emulator() {};
 		Emulator(std::any args) {};
@@ -83,11 +79,7 @@ namespace TKPEmu {
 		std::thread UpdateThread;
 		std::exception_ptr CurrentException;
 		bool HasException = false;
-		TKPImage EmulatorImage{};
-		std::string RomHash;
-		std::string ScreenshotHash;
-		std::string CurrentFilename;
-		std::string CurrentDirectory;
+		TKPEmu::Tools::MQServer MessageQueueServer;
 		TKPEmu::Testing::TestResult Result = TKPEmu::Testing::TestResult::Unknown; 
 	protected:
 		// To be placed at the end of your update function

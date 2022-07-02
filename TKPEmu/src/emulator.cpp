@@ -3,7 +3,6 @@
 #include <iostream>
 #include <fstream>
 #include <include/emulator.h>
-#include <lib/stb_image_write.h>
 #include <lib/md5.h>
 #include <GL/glew.h>
 #include <include/settings_manager.h>
@@ -37,38 +36,6 @@ namespace TKPEmu {
 	}
     void Emulator::Screenshot(std::string filename, std::string directory) { 
 		std::lock_guard<std::mutex> lg(DrawMutex);
-		// std::string scrnshot_dir = TKPEmu::Tools::SettingsManager::GetSavePath() + "/screenshots/";
-		std::string scrnshot_dir;
-		if (directory.empty()) {
-			scrnshot_dir = std::filesystem::current_path().string();
-		} else {
-			scrnshot_dir = directory;
-		}
-		if (!std::filesystem::is_directory(scrnshot_dir)) {
-			std::filesystem::create_directories(scrnshot_dir);
-		}
-		int index = 0;
-		std::string filename_final = scrnshot_dir + "/" + filename;
-		std::vector<uint8_t> data;
-		if (start_options == EmuStartOptions::Console && false /* TODO: weird needed for .gb server, otherwise blank image. investigate. false for now */) {
-			data = std::vector<uint8_t>((float*)GetScreenData(), (float*)GetScreenData() + EmulatorImage.width * EmulatorImage.height * 4);
-		} else {
-			data.resize(EmulatorImage.width * EmulatorImage.height * 4);
-			float* fl_ptr = (float*)GetScreenData();
-			for (int i = 0; i < (EmulatorImage.width * EmulatorImage.height * 4); i++) {
-				if ((i & 0b11) != 0b11)
-					data[i] = static_cast<uint8_t>(fl_ptr[i] * 255.0f);
-				else
-					data[i] = 0xFF; // stbi doesnt take float as input so we have to multiply with 255 to convert back to
-					// uint8_t. But alpha needs no conversion because its already 255 and if its multiplied by 255 again
-					// we get 0 cus of overflow
-			}
-		}
-		try {
-			stbi_write_bmp(filename_final.c_str(), EmulatorImage.width, EmulatorImage.height, 4, data.data());
-		} catch (const std::exception& e) {
-			throw ErrorFactory::generate_exception(__func__, __LINE__, e.what());
-		}
     }
 	std::string Emulator::GetScreenshotHash() {
 		return "Warning: GetScreenshotHash not implemented, hash not printed";
@@ -94,8 +61,6 @@ namespace TKPEmu {
 		}
     }
 	bool Emulator::LoadFromFile(std::string path) {
-		CurrentFilename = std::filesystem::path(path).filename().stem();
-		CurrentDirectory = std::filesystem::path(path).parent_path();
 		std::ifstream t(path, std::ios::in | std::ios::binary);
 		std::stringstream buffer;
 		buffer << t.rdbuf();
