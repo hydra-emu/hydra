@@ -41,15 +41,16 @@ void MainWindow::create_menus() {
 }
 
 void MainWindow::open_file() {
-    auto path = QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr(""
+    std::string path = QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr(""
         "All supported types (*.gb *.gbc *.nes *.ch8 *.z64);;"
         "Gameboy (*.gb *.gbc);;"
         "NES (*.nes);;"
         "Chip 8 (*.ch8);;"
         "Nintendo 64 (*.z64);;"
-    ));
-    auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path.toStdString());
+    )).toStdString();
+    auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path);
     auto emulator = TKPEmu::EmulatorFactory::Create(type);
+    emulator->LoadFromFile(path);
 }
 
 void MainWindow::pause_emulator() {

@@ -4,7 +4,12 @@
 #include <queue>
 #include <mutex>
 #include <memory>
-using Message = std::string;
+
+struct Message {
+    std::string Type;
+    std::shared_ptr<void> Data;
+    size_t Size;
+};
 // My many <-> one message queue design pattern implementation
 namespace TKPEmu::Tools {
     class MQBase {
