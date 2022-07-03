@@ -13,6 +13,10 @@
 #include "emulator_results.h"
 #include "../lib/messagequeue.hxx"
 
+namespace {
+	bool always_false_ = false;
+}
+
 // Macro that adds the essential functions that every emulator have
 #define TKP_EMULATOR(emulator)									\
 	public:														\
@@ -23,19 +27,13 @@
 	bool& IsReadyToDraw() override;								\
 	void HandleKeyDown(SDL_Keycode key) override;				\
 	void HandleKeyUp(SDL_Keycode key) override;					\
-	std::string GetEmulatorName() override { return #emulator; }\
 	private:													\
-	void reset_skip() override;									\
-	void start_debug() override;								\
+	void reset() override;										\
+	void start() override;										\
 	bool load_file(std::string path) override 	// missing semicolon to require
 											  	// semicolon on virtual classes
 
 namespace TKPEmu {
-	enum class EmuStartOptions {
-		Normal,
-		Debug,
-		Console
-	};
 	class Emulator {
 	public:
 		Emulator() {};
@@ -47,70 +45,27 @@ namespace TKPEmu {
 		std::atomic_bool Paused = false;
 		std::atomic_bool Step = false;
 		std::atomic_bool Loaded = false;
-		std::atomic_int InstructionBreak = -1;
 		bool SkipBoot = false;
 		bool FastMode = false;
-		bool TakeScreenshot = false;
-		unsigned long long TotalClocks = 0;
-		unsigned long long ScreenshotClocks = 0;
-		void Start(EmuStartOptions start_mode);
+		void Start();
 		void Reset();
 		virtual void HandleKeyDown(SDL_Keycode keycode);
 		virtual void HandleKeyUp(SDL_Keycode keycode);
-		virtual void SaveState(std::string filename);
-		virtual void LoadState(std::string filename);
 		bool LoadFromFile(std::string path);
-		void StartLogging(std::string filename);
-		void StopLogging();
 		void Screenshot(std::string filename, std::string directory = {});
 		void CloseAndWait();
-		const std::vector<uint8_t>& GetRomData() { return rom_data_; };
-		size_t GetRomSize() { return rom_size_; };
 		virtual void* GetScreenData();
-		virtual std::string GetScreenshotHash();
-		virtual std::string GetEmulatorName();
-		void WS_SetActionPtr(int* action_ptr);
 		virtual bool& IsReadyToDraw() { return always_false_; };
 		virtual bool& IsResized() { return always_false_; };
-		virtual std::vector<std::string> Disassemble(std::string instr);
-		std::mutex ThreadStartedMutex;
 		std::mutex DrawMutex;
-		std::mutex DebugUpdateMutex;
-		std::thread UpdateThread;
-		std::exception_ptr CurrentException;
-		bool HasException = false;
+		std::mutex FrameMutex;
+		std::mutex ThreadStartedMutex;
 		TKPEmu::Tools::MQServer MessageQueueServer;
-		TKPEmu::Testing::TestResult Result = TKPEmu::Testing::TestResult::Unknown; 
-	protected:
-		// To be placed at the end of your update function
-		// Override v_log_state() to change what it does, log_state() will do the right
-		// checks for you
-		void log_state();
-		void throw_current_to_display();
-		std::unique_ptr<std::ofstream> ofstream_ptr_;
-		EmuStartOptions start_options = EmuStartOptions::Console;
-		int* action_ptr_ = nullptr;
 	private:
-		virtual void save_state(std::ofstream& ofstream);
-		virtual void load_state(std::ifstream& ifstream);
-		virtual void v_log_state();
-		// extra stuff you need to run during CloseAndWait
 		virtual void v_extra_close() {};
-		virtual void start_normal();
-		virtual void start_debug();
-		virtual void start_console();
-		virtual void reset_normal();
-		virtual void reset_skip();
+		virtual void start();
+		virtual void reset();
 		virtual bool load_file(std::string);
-		virtual std::string print() const;
-		friend std::ostream& operator<<(std::ostream& os, const Emulator& obj);
-		// TODO: move all this to gameboy class only - clean up emulator
-		bool logging_ = false;
-		bool log_changed_ = false;
-		std::string log_filename_;
-		bool always_false_ = false;
-		std::vector<uint8_t> rom_data_;
-		size_t rom_size_ = 0;
 	};
 }
 #endif

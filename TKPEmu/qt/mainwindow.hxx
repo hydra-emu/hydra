@@ -7,7 +7,11 @@
 #include <QStatusBar>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <memory>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include "../include/emulator_factory.h"
+#include "../include/emulator.h"
 
 class MainWindow : public QMainWindow
 {
@@ -19,7 +23,12 @@ private:
 
     // Menu bar actions
     void open_file();
+
+    // Emulation functions
     void pause_emulator();
+
+private slots:
+    void redraw_screen();
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -30,5 +39,7 @@ public:
     QAction* pause_act_;
     QLabel *lbl_;
     QPixmap texture_;
+    std::shared_ptr<TKPEmu::Emulator> emulator_;
+    std::thread emulator_thread_;
 };
 #endif // MAINWINDOW_HXX
