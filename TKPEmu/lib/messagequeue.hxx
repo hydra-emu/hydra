@@ -3,29 +3,37 @@
 #include <string>
 #include <queue>
 #include <mutex>
+#include <shared_mutex>
 #include <memory>
 
-struct Message {
+enum {
+    TKPMQ_RESPONSE_MAIN = 1,
+};
+
+struct Response {
+    uint32_t Recipient;
     std::string Type;
-    std::shared_ptr<void> Data;
+    void* Data;
     size_t Size;
 };
-// My many <-> one message queue design pattern implementation
+using Request = std::string;
+// My message queue design pattern implementation
 namespace TKPEmu::Tools {
     class MQBase {
     public:
-        void Push(Message message);
-        Message Pop();
-        bool Poll();
+        void PushRequest(Request message);
+        Request PopRequest();
+        bool PollRequests();
+        void PushResponse(Response message);
+        Response PopResponse();
+        bool PollResponses();
+        // Checks the response type before copying the entire response over
+        uint32_t PeekResponseRecipient();
     protected:
-        std::queue<Message> messages_;
-        std::mutex queue_mutex_;
+        std::queue<Request> requests_;
+        std::queue<Response> responses_;
+        std::shared_mutex requests_mutex_;
+        std::shared_mutex responses_mutex_;
     };
-    class MQClient final : public MQBase {
-        MQClient(std::shared_ptr<MQBase> server);
-    private:
-        std::shared_ptr<MQBase> server_;
-    };
-    class MQServer final : public MQBase {};
 }
 #endif

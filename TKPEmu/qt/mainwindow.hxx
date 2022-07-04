@@ -8,8 +8,6 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <memory>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
 #include "../include/emulator_factory.h"
 #include "../include/emulator.h"
 
@@ -26,6 +24,8 @@ private:
 
     // Emulation functions
     void pause_emulator();
+    void stop_emulator();
+    void enable_emulation_actions(bool should);
 
 private slots:
     void redraw_screen();
@@ -37,8 +37,10 @@ public:
     QMenu* emulation_menu_;
     QAction* open_act_;
     QAction* pause_act_;
+    QAction* stop_act_;
     QLabel *lbl_;
     QPixmap texture_;
+    std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     std::shared_ptr<TKPEmu::Emulator> emulator_;
     std::thread emulator_thread_;
 };

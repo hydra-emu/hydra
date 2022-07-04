@@ -6,6 +6,7 @@
 #include <lib/md5.h>
 #include <GL/glew.h>
 #include <include/error_factory.hxx>
+#include <lib/str_hash.h>
 
 namespace {
 	std::ifstream::pos_type filesize(const char* filename) {
@@ -55,4 +56,21 @@ namespace TKPEmu {
         Step.notify_all();
 		std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
 	}
+    bool Emulator::poll_request(const Request& request) {
+        auto cur = str_hash(request.c_str());
+        switch (cur) {
+            case str_hash("pause"): {
+                Paused.store(true);
+                Step.store(true);
+                Step.notify_all();
+                Response response {
+                    .Recipient = TKPMQ_RESPONSE_MAIN,
+                    .Type = "paused",
+                };
+                MessageQueue->PushResponse(response);
+                return true;
+            }
+            default: return poll_uncommon_request(request);
+        }
+    }
 }

@@ -42,6 +42,8 @@ MainWindow::MainWindow(QWidget *parent)
     QTimer *timer = new QTimer;
     timer->start(16);
     connect(timer, SIGNAL(timeout()), this, SLOT(redraw_screen()));
+
+    enable_emulation_actions(false);
 }
 
 void MainWindow::create_actions() {
@@ -53,6 +55,10 @@ void MainWindow::create_actions() {
     pause_act_->setShortcut(Qt::CTRL | Qt::Key_P);
     pause_act_->setStatusTip(tr("Pause emulation"));
     connect(pause_act_, &QAction::triggered, this, &MainWindow::pause_emulator);
+    stop_act_ = new QAction(tr("&Stop"), this);
+    stop_act_->setShortcut(Qt::CTRL | Qt::Key_Q);
+    stop_act_->setStatusTip(tr("Stop emulation immediately"));
+    connect(stop_act_, &QAction::triggered, this, &MainWindow::stop_emulator);
 }
 
 void MainWindow::create_menus() {
@@ -60,6 +66,7 @@ void MainWindow::create_menus() {
     file_menu_->addAction(open_act_);
     emulation_menu_ = menuBar()->addMenu(tr("&Emulation"));
     emulation_menu_->addAction(pause_act_);
+    emulation_menu_->addAction(stop_act_);
 }
 
 void MainWindow::open_file() {
@@ -81,17 +88,36 @@ void MainWindow::open_file() {
         }
         if (!emulator_->LoadFromFile(path))
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
+        message_queue_ = emulator_->MessageQueue;
         emulator_->SkipBoot = true;
         auto func = [&]() {
             emulator_->Start();
         };
         emulator_thread_ = std::thread(func);
         emulator_thread_.detach();
+        enable_emulation_actions(true);
     );
 }
 
+void MainWindow::enable_emulation_actions(bool should) {
+    pause_act_->setEnabled(should);
+    stop_act_->setEnabled(should);
+    lbl_->setVisible(should);
+}
+
 void MainWindow::pause_emulator() {
-    
+    if (emulator_->Paused.load()) {
+        emulator_->Paused.store(false);
+        emulator_->Step.store(true);
+        emulator_->Step.notify_all();
+    } else {
+        message_queue_->PushRequest("pause");
+    }
+}
+
+void MainWindow::stop_emulator() {
+    emulator_->CloseAndWait();
+    enable_emulation_actions(false);
 }
 
 void MainWindow::redraw_screen() {

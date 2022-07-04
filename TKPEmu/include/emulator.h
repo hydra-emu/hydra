@@ -30,8 +30,8 @@ namespace {
 	private:													\
 	void reset() override;										\
 	void start() override;										\
-	bool load_file(std::string path) override 	// missing semicolon to require
-											  	// semicolon on virtual classes
+	bool load_file(std::string path) override;					\
+	bool poll_uncommon_request(const Request& request) override
 
 namespace TKPEmu {
 	class Emulator {
@@ -60,12 +60,19 @@ namespace TKPEmu {
 		std::mutex DrawMutex;
 		std::mutex FrameMutex;
 		std::mutex ThreadStartedMutex;
-		TKPEmu::Tools::MQServer MessageQueueServer;
+		std::shared_ptr<TKPEmu::Tools::MQBase> MessageQueue = std::shared_ptr<TKPEmu::Tools::MQBase>(new TKPEmu::Tools::MQBase);
+	protected:
+		// Polls common requests across emulators and returns true
+		// if such a request is at the front of the queue
+		// This function should only be ran if you're sure there's
+		// at least 1 request
+		bool poll_request(const Request& request);
 	private:
 		virtual void v_extra_close() {};
 		virtual void start();
 		virtual void reset();
 		virtual bool load_file(std::string);
+		virtual bool poll_uncommon_request(const Request& request) = 0;
 	};
 }
 #endif
