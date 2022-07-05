@@ -2,6 +2,7 @@
 #include "../include/error_factory.hxx"
 #include <QMessageBox>
 #include <QTimer>
+#include <QKeyEvent>
 #include <iostream>
 
 #define QT_MAY_THROW(func) try {\
@@ -10,7 +11,6 @@
     QMessageBox messageBox; \
     messageBox.critical(0,"Error", ex.what()); \
     messageBox.setFixedSize(500,200); \
-    messageBox.exec(); \
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -69,6 +69,16 @@ void MainWindow::create_menus() {
     emulation_menu_->addAction(stop_act_);
 }
 
+void MainWindow::keyPressEvent(QKeyEvent *event) {
+    if (emulator_)
+        emulator_->HandleKeyDown(event->key());
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *event) {
+    if (emulator_)
+        emulator_->HandleKeyUp(event->key());
+}
+
 void MainWindow::open_file() {
     std::string path = QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr(""
         "All supported types (*.gb *.gbc *.nes *.ch8 *.z64);;"
@@ -117,6 +127,7 @@ void MainWindow::pause_emulator() {
 
 void MainWindow::stop_emulator() {
     emulator_->CloseAndWait();
+    emulator_.reset();
     enable_emulation_actions(false);
 }
 

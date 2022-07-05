@@ -15,6 +15,9 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 private:
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+
     // Initialization functions
     void create_actions();
     void create_menus();

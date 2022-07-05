@@ -16,11 +16,11 @@ namespace {
 }
 
 namespace TKPEmu {
-    void Emulator::HandleKeyDown(SDL_Keycode keycode) { 
+    void Emulator::HandleKeyDown(uint32_t keycode) { 
         std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was pressed but\n"
         	"emulator.HandleKeyDown was not implemented" << std::endl;
     }
-    void Emulator::HandleKeyUp(SDL_Keycode keycode) { 
+    void Emulator::HandleKeyUp(uint32_t keycode) { 
         std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was released but\n"
         	"emulator.HandleKeyUp was not implemented" << std::endl;
     }
