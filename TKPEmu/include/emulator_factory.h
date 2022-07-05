@@ -15,7 +15,7 @@ namespace TKPEmu {
         using ExtensionMappings = std::unordered_map<std::string, EmuType>;
         static const ExtensionMappings& get_extension_mappings();
     public:
-        static std::shared_ptr<Emulator> Create(EmuType type, std::any args = {});
+        static std::shared_ptr<Emulator> Create(EmuType type);
         static EmuType GetEmulatorType(std::filesystem::path path);
         static const std::vector<std::string>& GetSupportedExtensions();
     };

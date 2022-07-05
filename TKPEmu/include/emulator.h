@@ -10,6 +10,7 @@
 #include <thread>
 #include <any>
 #include <fstream>
+#include "start_options.hxx"
 #include "emulator_results.h"
 #include "../lib/messagequeue.hxx"
 
@@ -21,12 +22,12 @@ namespace {
 #define TKP_EMULATOR(emulator)									\
 	public:														\
 	emulator();													\
-	emulator(std::any args);									\
+	emulator(std::unique_ptr<OptionsBase> args);				\
 	~emulator() override;										\
 	void* GetScreenData() override;								\
 	bool& IsReadyToDraw() override;								\
-	void HandleKeyDown(SDL_Keycode key) override;				\
-	void HandleKeyUp(SDL_Keycode key) override;					\
+	void HandleKeyDown(uint32_t key) override;				 	\
+	void HandleKeyUp(uint32_t key) override;					\
 	private:													\
 	void reset() override;										\
 	void start() override;										\
@@ -37,7 +38,7 @@ namespace TKPEmu {
 	class Emulator {
 	public:
 		Emulator() {};
-		Emulator(std::any args) {};
+		Emulator(std::unique_ptr<OptionsBase> args) {};
 		virtual ~Emulator() = default;
 		Emulator(const Emulator&) = delete;
 		Emulator& operator=(const Emulator&) = delete;
@@ -49,8 +50,8 @@ namespace TKPEmu {
 		bool FastMode = false;
 		void Start();
 		void Reset();
-		virtual void HandleKeyDown(SDL_Keycode keycode);
-		virtual void HandleKeyUp(SDL_Keycode keycode);
+		virtual void HandleKeyDown(uint32_t keycode);
+		virtual void HandleKeyUp(uint32_t keycode);
 		bool LoadFromFile(std::string path);
 		void Screenshot(std::string filename, std::string directory = {});
 		void CloseAndWait();

@@ -2,6 +2,7 @@
 #include <lib/str_hash.h>
 #include <include/emulator_factory.h>
 #include <include/error_factory.hxx>
+#include <include/start_options.hxx>
 
 namespace TKPEmu {
     // TODO: detect emutype by magic bytes instead of extension
@@ -37,16 +38,17 @@ namespace TKPEmu {
         }
         return supported_extensions_;
     }
-    std::shared_ptr<Emulator> EmulatorFactory::Create(EmuType type, std::any args) { 
+    std::shared_ptr<Emulator> EmulatorFactory::Create(EmuType type) { 
+        auto args = GetOptions(type);
         switch (type) {
             case EmuType::Gameboy: {
-                return std::make_shared<Gameboy::Gameboy>(args);
+                return std::make_shared<Gameboy::Gameboy>(std::move(args));
             }
             case EmuType::N64: {
-                return std::make_shared<N64::N64_TKPWrapper>(args);
+                return std::make_shared<N64::N64_TKPWrapper>(std::move(args));
             }
             case EmuType::Chip8: {
-                return std::make_shared<Chip8::Chip8>(args);
+                return std::make_shared<Chip8::Chip8>(std::move(args));
             }
             case EmuType::None:
             default: {
