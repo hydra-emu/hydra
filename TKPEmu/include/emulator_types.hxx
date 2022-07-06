@@ -3,11 +3,12 @@
 #define TKP_EMUTYPES_H
 namespace TKPEmu {
     enum class EmuType {
-        None,
         Gameboy,
         NES,
         N64,
         Chip8,
+
+        EmuTypeSize, // Used to iterate all emutypes like so: for (int i = 0; i < Final; i++)
     };
 }
 #endif

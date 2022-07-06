@@ -8,6 +8,7 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <memory>
+#include <array>
 #include "../include/emulator_factory.h"
 #include "../include/emulator.h"
 
@@ -32,6 +33,7 @@ private:
     void reset_emulator();
     void stop_emulator();
     void enable_emulation_actions(bool should);
+    void setup_emulator_specific();
 
 private slots:
     void redraw_screen();
@@ -52,7 +54,6 @@ public:
     std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     std::shared_ptr<TKPEmu::Emulator> emulator_;
     std::thread emulator_thread_;
-
-    bool settings_open_ = false;    
+    bool settings_open_ = false;
 };
 #endif // MAINWINDOW_HXX

@@ -1,0 +1,32 @@
+{
+    "0": {
+        "Name": "Gameboy",
+        "SettingsFile": "gameboy.json",
+        "Extensions": [
+            ".gb",
+            ".gbc"
+        ]
+    },
+    "1": {
+        "Name": "Nintendo Entertainment System",
+        "SettingsFile": "nes.json",
+        "Extensions": [
+            ".nes"
+        ]
+    },
+    "2": {
+        "Name": "Nintendo 64",
+        "SettingsFile": "n64.json",
+        "Extensions": [
+            ".n64",
+            ".z64"
+        ]
+    },
+    "3": {
+        "Name": "Chip 8",
+        "SettingsFile": "chip8.json",
+        "Extensions": [
+            ".ch8"
+        ]
+    }
+}

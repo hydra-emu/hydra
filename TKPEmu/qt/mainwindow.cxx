@@ -19,6 +19,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    setup_emulator_specific();
     if(SDL_Init(SDL_INIT_AUDIO) != 0) [[unlikely]] {
         SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
         exit(1);
@@ -137,7 +138,7 @@ void MainWindow::open_settings() {
 }
 
 void MainWindow::screenshot() {
-    QApplication::clipboard()->setImage(texture_.toImage());
+    // QApplication::clipboard()->setImage(texture_.toImage());
 }
 
 void MainWindow::enable_emulation_actions(bool should) {
@@ -148,6 +149,42 @@ void MainWindow::enable_emulation_actions(bool should) {
     if (!should) {
         pause_act_->setChecked(false);
     }
+}
+
+void MainWindow::setup_emulator_specific() {
+    QFile f(":/data/matches.json");
+    if (!f.open(QIODevice::ReadOnly)) {
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open matches.json");
+    } else {
+    }
+    QString data = f.readAll();
+    json j = json::parse(data.toStdString());
+    EmulatorDataMap map;
+    for (auto it = j.begin(); it != j.end(); ++it) {
+        EmulatorData d;
+        json& o = it.value();
+        o.at("Name").get_to(d.Name);
+        o.at("SettingsFile").get_to(d.SettingsFile);
+        o.at("Extensions").get_to(d.Extensions);
+        map[std::stoi(it.key())] = d;
+    }
+    // Setup default options
+    for (auto& e : map) {
+        if (!std::filesystem::exists(TKPEmu::EmulatorFactory::GetSavePath() + e.SettingsFile)) {
+            std::ofstream ofs(TKPEmu::EmulatorFactory::GetSavePath() + e.SettingsFile);
+            if (ofs.is_open()) {
+                QFile resource(std::string(":/data/" + e.SettingsFile).c_str());
+                if (!resource.open(QIODeviceBase::ReadOnly))
+                    throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open resource file");
+                ofs << resource.readAll().toStdString();
+                ofs.close();
+            } else {
+                throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not create default options file");
+            }
+        }
+    }
+
+    TKPEmu::EmulatorFactory::SetEmulatorData(map);
 }
 
 void MainWindow::pause_emulator() {
