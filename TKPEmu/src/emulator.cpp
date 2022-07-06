@@ -70,6 +70,10 @@ namespace TKPEmu {
                 MessageQueue->PushResponse(response);
                 return true;
             }
+            case str_hash("reset"): {
+                Reset();
+                return true;
+            }
             default: return poll_uncommon_request(request);
         }
     }

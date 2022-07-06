@@ -1,8 +1,11 @@
 #include "mainwindow.hxx"
+#include "settingswindow.hxx"
 #include "../include/error_factory.hxx"
 #include <QMessageBox>
 #include <QTimer>
 #include <QKeyEvent>
+#include <QApplication>
+#include <QClipboard>
 #include <iostream>
 
 #define QT_MAY_THROW(func) try {\
@@ -20,7 +23,6 @@ MainWindow::MainWindow(QWidget *parent)
         SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
         exit(1);
     }
-    std::cout << "SDL initialized successfully" << std::endl;
     QWidget *widget = new QWidget;
     setCentralWidget(widget);
     QVBoxLayout *layout = new QVBoxLayout;
@@ -51,21 +53,39 @@ void MainWindow::create_actions() {
     open_act_->setShortcuts(QKeySequence::Open);
     open_act_->setStatusTip(tr("Open a ROM"));
     connect(open_act_, &QAction::triggered, this, &MainWindow::open_file);
+    settings_act_ = new QAction(tr("&Settings"), this);
+    settings_act_->setShortcut(Qt::CTRL | Qt::Key_Comma);
+    settings_act_->setStatusTip(tr("Emulator settings"));
+    connect(settings_act_, &QAction::triggered, this, &MainWindow::open_settings);
     pause_act_ = new QAction(tr("&Pause"), this);
     pause_act_->setShortcut(Qt::CTRL | Qt::Key_P);
+    pause_act_->setCheckable(true);
     pause_act_->setStatusTip(tr("Pause emulation"));
     connect(pause_act_, &QAction::triggered, this, &MainWindow::pause_emulator);
     stop_act_ = new QAction(tr("&Stop"), this);
     stop_act_->setShortcut(Qt::CTRL | Qt::Key_Q);
     stop_act_->setStatusTip(tr("Stop emulation immediately"));
     connect(stop_act_, &QAction::triggered, this, &MainWindow::stop_emulator);
+    reset_act_ = new QAction(tr("&Reset"), this);
+    reset_act_->setShortcut(Qt::CTRL | Qt::Key_R);
+    reset_act_->setStatusTip(tr("Soft reset emulator"));
+    connect(reset_act_, &QAction::triggered, this, &MainWindow::reset_emulator);
+    screenshot_act_ = new QAction(tr("S&creenshot to clipboard"), this);
+    screenshot_act_->setShortcut(Qt::CTRL | Qt::Key_C);
+    screenshot_act_->setStatusTip(tr("Take a screenshot to clipboard"));
+    connect(screenshot_act_, &QAction::triggered, this, &MainWindow::screenshot);
 }
 
 void MainWindow::create_menus() {
     file_menu_ = menuBar()->addMenu(tr("&File"));
     file_menu_->addAction(open_act_);
+    file_menu_->addSeparator();
+    file_menu_->addAction(screenshot_act_);
+    file_menu_->addSeparator();
+    file_menu_->addAction(settings_act_);
     emulation_menu_ = menuBar()->addMenu(tr("&Emulation"));
     emulation_menu_->addAction(pause_act_);
+    emulation_menu_->addAction(reset_act_);
     emulation_menu_->addAction(stop_act_);
 }
 
@@ -109,10 +129,25 @@ void MainWindow::open_file() {
     );
 }
 
+void MainWindow::open_settings() {
+    if (!settings_open_) {
+        QWidget* qw = new SettingsWindow(settings_open_);
+        qw->show();
+    }
+}
+
+void MainWindow::screenshot() {
+    QApplication::clipboard()->setImage(texture_.toImage());
+}
+
 void MainWindow::enable_emulation_actions(bool should) {
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
+    reset_act_->setEnabled(should);
     lbl_->setVisible(should);
+    if (!should) {
+        pause_act_->setChecked(false);
+    }
 }
 
 void MainWindow::pause_emulator() {
@@ -123,6 +158,10 @@ void MainWindow::pause_emulator() {
     } else {
         message_queue_->PushRequest("pause");
     }
+}
+
+void MainWindow::reset_emulator() {
+    message_queue_->PushRequest("reset");
 }
 
 void MainWindow::stop_emulator() {
@@ -140,8 +179,3 @@ void MainWindow::redraw_screen() {
     QImage image((const unsigned char*)emulator_->GetScreenData(), 160, 144, QImage::Format_RGBA8888);
     lbl_->setPixmap(QPixmap::fromImage(image.scaled(lbl_->width(), lbl_->height(), Qt::KeepAspectRatio, Qt::FastTransformation)));
 }
-
-MainWindow::~MainWindow()
-{
-}
-

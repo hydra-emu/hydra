@@ -1,6 +1,6 @@
-#ifndef MAINWINDOW_HXX
-#define MAINWINDOW_HXX
-
+#pragma once
+#ifndef TKP_MAINWINDOW_HXX
+#define TKP_MAINWINDOW_HXX
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QFileDialog>
@@ -24,9 +24,12 @@ private:
 
     // Menu bar actions
     void open_file();
+    void open_settings();
+    void screenshot();
 
     // Emulation functions
     void pause_emulator();
+    void reset_emulator();
     void stop_emulator();
     void enable_emulation_actions(bool should);
 
@@ -35,16 +38,21 @@ private slots:
 
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    ~MainWindow() = default;
     QMenu* file_menu_;
     QMenu* emulation_menu_;
     QAction* open_act_;
     QAction* pause_act_;
+    QAction* reset_act_;
     QAction* stop_act_;
-    QLabel *lbl_;
+    QAction* settings_act_;
+    QAction* screenshot_act_;
+    QLabel* lbl_;
     QPixmap texture_;
     std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     std::shared_ptr<TKPEmu::Emulator> emulator_;
     std::thread emulator_thread_;
+
+    bool settings_open_ = false;    
 };
 #endif // MAINWINDOW_HXX

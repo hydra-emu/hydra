@@ -31,9 +31,12 @@ add_subdirectory("chip8/")
 add_subdirectory("N64TKP/")
 
 set(PROJECT_SOURCES
+    resources.qrc
     qt/main.cxx
     qt/mainwindow.cxx
     qt/mainwindow.hxx
+    qt/settingswindow.hxx
+    qt/settingswindow.cxx
     src/emulator.cpp
 )
 
