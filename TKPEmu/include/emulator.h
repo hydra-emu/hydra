@@ -55,6 +55,10 @@ namespace TKPEmu {
 		bool LoadFromFile(std::string path);
 		void Screenshot(std::string filename, std::string directory = {});
 		void CloseAndWait();
+		int GetWidth() { return width_; }
+		int GetHeight() { return height_; }
+		void SetWidth(int width) { width_ = width; }
+		void SetHeight(int height) { height_ = height; }
 		virtual void* GetScreenData();
 		virtual bool& IsReadyToDraw() { return always_false_; };
 		virtual bool& IsResized() { return always_false_; };
@@ -74,6 +78,7 @@ namespace TKPEmu {
 		virtual void reset();
 		virtual bool load_file(std::string);
 		virtual bool poll_uncommon_request(const Request& request) = 0;
+		int width_, height_;
 	};
 }
 #endif

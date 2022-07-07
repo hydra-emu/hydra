@@ -1,5 +1,6 @@
 #include "mainwindow.hxx"
 #include "settingswindow.hxx"
+#include "aboutwindow.hxx"
 #include "../include/error_factory.hxx"
 #include <QMessageBox>
 #include <QTimer>
@@ -43,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
     QString message = tr("A context menu is available by right-clicking");
     statusBar()->showMessage(message);
     setMinimumSize(160, 160);
-    resize(480, 320);
+    resize(640, 480);
     setWindowTitle("hydra");
     setWindowIcon(QIcon(":/images/hydra.png"));
 
@@ -83,7 +84,12 @@ void MainWindow::create_actions() {
     about_act_ = new QAction(tr("&About"), this);
     about_act_->setShortcut(QKeySequence::HelpContents);
     about_act_->setStatusTip(tr("Show about dialog"));
-    connect(about_act_, &QAction::triggered, this, &MainWindow::show_about);
+    connect(about_act_, &QAction::triggered, this, &MainWindow::open_about);
+    debugger_act_ = new QAction(tr("&Debugger"), this);
+    debugger_act_->setShortcut(Qt::Key_F2);
+    debugger_act_->setStatusTip("Open the debugger");
+    debugger_act_->setIcon(QIcon(":/images/debugger.png"));
+    connect(debugger_act_, &QAction::triggered, this, &MainWindow::open_debugger);
 }
 
 void MainWindow::create_menus() {
@@ -97,6 +103,8 @@ void MainWindow::create_menus() {
     emulation_menu_->addAction(pause_act_);
     emulation_menu_->addAction(reset_act_);
     emulation_menu_->addAction(stop_act_);
+    tools_menu_ = menuBar()->addMenu(tr("&Tools"));
+    tools_menu_->addAction(debugger_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
 }
@@ -112,6 +120,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event) {
 }
 
 void MainWindow::open_file() {
+    // TODO: get dynamically
     std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", tr(""
         "All supported types (*.gb *.gbc *.nes *.ch8 *.z64);;"
         "Gameboy (*.gb *.gbc);;"
@@ -132,6 +141,9 @@ void MainWindow::open_file() {
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
         message_queue_ = emulator_->MessageQueue;
         emulator_->SkipBoot = true;
+        const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
+        emulator_->SetWidth(data[static_cast<int>(type)].DefaultWidth);
+        emulator_->SetHeight(data[static_cast<int>(type)].DefaultHeight);
         auto func = [&]() {
             emulator_->Start();
         };
@@ -143,66 +155,33 @@ void MainWindow::open_file() {
 
 void MainWindow::open_settings() {
     if (!settings_open_) {
-        QWidget* qw = new SettingsWindow(settings_open_, this);
-        qw->show();
+        QT_MAY_THROW(
+            auto* qw = new SettingsWindow(settings_open_, this);
+        );
     }
+}
+
+void MainWindow::open_debugger() {
+
 }
 
 void MainWindow::screenshot() {
     // QApplication::clipboard()->setImage(texture_.toImage());
 }
 
-void MainWindow::show_about() {
-    static QString html;
-    if (html.isEmpty()) {
-        QFile file(":/data/about.html");
+void MainWindow::open_about() {
+    if (!about_open_) {
         QT_MAY_THROW(
-            if (file.open(QIODevice::ReadOnly))
-                html = file.readAll();
-            else
-                throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to load about.html");
+            auto* qw = new AboutWindow(about_open_, this);
         );
     }
-    QDialog* dialog = new QDialog(this);
-    dialog->setWindowTitle("About");
-    dialog->setAttribute(Qt::WA_DeleteOnClose, true);
-    QGridLayout* layout = new QGridLayout;
-    QHBoxLayout* top_layout = new QHBoxLayout;
-    QHBoxLayout* bot_layout = new QHBoxLayout;
-    QLabel* hydra = new QLabel;
-    QLabel* logo = new QLabel;
-    QLabel* lbl_text = new QLabel;
-    QGroupBox* top_qgb = new QGroupBox;
-    QGroupBox* bot_qgb = new QGroupBox;
-    top_qgb->setFlat(true);
-    bot_qgb->setFlat(true);
-    top_qgb->setStyleSheet("border:0;");
-    bot_qgb->setStyleSheet("border:0;");
-    hydra->setPixmap(QPixmap::fromImage(QImage(":/images/hydra.png")));
-    logo->setPixmap(QPixmap::fromImage(QImage(":/images/logo.png")));
-    lbl_text->setText(html);
-    lbl_text->setTextFormat(Qt::RichText);
-    lbl_text->setTextInteractionFlags(Qt::TextBrowserInteraction);
-    lbl_text->setOpenExternalLinks(true);
-    lbl_text->setAlignment(Qt::AlignCenter);
-    layout->setAlignment(Qt::AlignLeft);
-    layout->setContentsMargins(5, 5, 5, 5);
-    top_layout->addWidget(hydra);
-    top_layout->addWidget(logo);
-    bot_layout->addWidget(lbl_text);
-    top_qgb->setLayout(top_layout);
-    bot_qgb->setLayout(bot_layout);
-    layout->addWidget(top_qgb, 0, 0);
-    layout->addWidget(bot_qgb, 1, 0);
-    dialog->setLayout(layout);
-    dialog->layout()->setSizeConstraint(QLayout::SetFixedSize);
-    dialog->show();
 }
 
 void MainWindow::enable_emulation_actions(bool should) {
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
+    debugger_act_->setEnabled(should);
     lbl_->setVisible(should);
     if (!should) {
         pause_act_->setChecked(false);
@@ -224,6 +203,8 @@ void MainWindow::setup_emulator_specific() {
         o.at("Name").get_to(d.Name);
         o.at("SettingsFile").get_to(d.SettingsFile);
         o.at("Extensions").get_to(d.Extensions);
+        o.at("DefaultWidth").get_to(d.DefaultWidth);
+        o.at("DefaultHeight").get_to(d.DefaultHeight);
         map[std::stoi(it.key())] = d;
     }
     // Setup default options
@@ -271,6 +252,6 @@ void MainWindow::redraw_screen() {
     std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
     if (!emulator_->IsReadyToDraw())
         return;
-    QImage image((const unsigned char*)emulator_->GetScreenData(), 160, 144, QImage::Format_RGBA8888);
+    QImage image((const unsigned char*)emulator_->GetScreenData(), emulator_->GetWidth(), emulator_->GetHeight(), QImage::Format_RGBA8888);
     lbl_->setPixmap(QPixmap::fromImage(image.scaled(lbl_->width(), lbl_->height(), Qt::KeepAspectRatio, Qt::FastTransformation)));
 }

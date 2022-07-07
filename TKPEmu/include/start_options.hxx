@@ -15,6 +15,8 @@ struct EmulatorData {
     std::string Name;
     std::string SettingsFile;
     std::vector<std::string> Extensions;
+    int DefaultWidth;
+    int DefaultHeight;
 };
 struct OptionsBase {};
 struct GameboyOptions : public OptionsBase {

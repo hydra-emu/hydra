@@ -3,7 +3,6 @@
 #include <QGroupBox>
 
 SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidget(parent, Qt::Window) {
-    open_ = true;
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle("Settings");
     QGridLayout* main_layout = new QGridLayout;
@@ -33,6 +32,8 @@ SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidg
     main_layout->setColumnStretch(0, 0);
     main_layout->setColumnStretch(1, 1);
     setLayout(main_layout);
+    show();
+    open_ = true;
 }
 
 SettingsWindow::~SettingsWindow() {

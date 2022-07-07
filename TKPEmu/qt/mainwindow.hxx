@@ -26,8 +26,9 @@ private:
     // Menu bar actions
     void open_file();
     void open_settings();
+    void open_about();
+    void open_debugger();
     void screenshot();
-    void show_about();
 
     // Emulation functions
     void pause_emulator();
@@ -44,6 +45,7 @@ public:
     ~MainWindow() = default;
     QMenu* file_menu_;
     QMenu* emulation_menu_;
+    QMenu* tools_menu_;
     QMenu* help_menu_;
     QAction* open_act_;
     QAction* pause_act_;
@@ -52,11 +54,13 @@ public:
     QAction* stop_act_;
     QAction* settings_act_;
     QAction* screenshot_act_;
+    QAction* debugger_act_;
     QLabel* lbl_;
     QPixmap texture_;
     std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     std::shared_ptr<TKPEmu::Emulator> emulator_;
     std::thread emulator_thread_;
     bool settings_open_ = false;
+    bool about_open_ = false;
 };
 #endif // MAINWINDOW_HXX

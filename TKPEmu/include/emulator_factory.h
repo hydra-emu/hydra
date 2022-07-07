@@ -10,7 +10,7 @@
 #include <chip8/chip8_tkpwrapper.hxx>
 #include <NESTKP/nes_tkpwrapper.hxx>
 using EmulatorDataMap = std::array<EmulatorData, static_cast<int>(TKPEmu::EmuType::EmuTypeSize)>;
-    using ExtensionMappings = std::unordered_map<std::string, TKPEmu::EmuType>;
+using ExtensionMappings = std::unordered_map<std::string, TKPEmu::EmuType>;
 namespace TKPEmu {
     class EmulatorFactory {
     private:
@@ -23,6 +23,7 @@ namespace TKPEmu {
         static const std::vector<std::string>& GetSupportedExtensions();
         static std::unique_ptr<OptionsBase> GetOptions(TKPEmu::EmuType type);
         static void SetEmulatorData(EmulatorDataMap map);
+        static const EmulatorDataMap& GetEmulatorData() { return emulator_data_; }
     };
 }
 #endif

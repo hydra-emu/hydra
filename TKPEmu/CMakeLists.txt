@@ -37,6 +37,8 @@ set(PROJECT_SOURCES
     qt/mainwindow.hxx
     qt/settingswindow.hxx
     qt/settingswindow.cxx
+    qt/aboutwindow.hxx
+    qt/aboutwindow.cxx
     src/emulator.cpp
 )
 
