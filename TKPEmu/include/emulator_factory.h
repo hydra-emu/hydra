@@ -8,6 +8,7 @@
 #include <GameboyTKP/gb_tkpwrapper.h>
 #include <N64TKP/n64_tkpwrapper.hxx>
 #include <chip8/chip8_tkpwrapper.hxx>
+#include <NESTKP/nes_tkpwrapper.hxx>
 using EmulatorDataMap = std::array<EmulatorData, static_cast<int>(TKPEmu::EmuType::EmuTypeSize)>;
     using ExtensionMappings = std::unordered_map<std::string, TKPEmu::EmuType>;
 namespace TKPEmu {

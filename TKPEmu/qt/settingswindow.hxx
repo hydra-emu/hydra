@@ -9,7 +9,7 @@ class SettingsWindow : public QWidget {
 private:
     bool& open_;
 public:
-    SettingsWindow(bool& open);
+    SettingsWindow(bool& open, QWidget* parent = nullptr);
     ~SettingsWindow();
 
 };

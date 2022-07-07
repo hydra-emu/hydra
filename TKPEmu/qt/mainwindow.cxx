@@ -6,6 +6,8 @@
 #include <QKeyEvent>
 #include <QApplication>
 #include <QClipboard>
+#include <QGridLayout>
+#include <QGroupBox>
 #include <iostream>
 
 #define QT_MAY_THROW(func) try {\
@@ -14,6 +16,7 @@
     QMessageBox messageBox; \
     messageBox.critical(0,"Error", ex.what()); \
     messageBox.setFixedSize(500,200); \
+    return; \
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -41,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent)
     statusBar()->showMessage(message);
     setMinimumSize(160, 160);
     resize(480, 320);
+    setWindowTitle("hydra");
+    setWindowIcon(QIcon(":/images/hydra.png"));
 
     QTimer *timer = new QTimer;
     timer->start(16);
@@ -75,6 +80,10 @@ void MainWindow::create_actions() {
     screenshot_act_->setShortcut(Qt::CTRL | Qt::Key_C);
     screenshot_act_->setStatusTip(tr("Take a screenshot to clipboard"));
     connect(screenshot_act_, &QAction::triggered, this, &MainWindow::screenshot);
+    about_act_ = new QAction(tr("&About"), this);
+    about_act_->setShortcut(QKeySequence::HelpContents);
+    about_act_->setStatusTip(tr("Show about dialog"));
+    connect(about_act_, &QAction::triggered, this, &MainWindow::show_about);
 }
 
 void MainWindow::create_menus() {
@@ -88,6 +97,8 @@ void MainWindow::create_menus() {
     emulation_menu_->addAction(pause_act_);
     emulation_menu_->addAction(reset_act_);
     emulation_menu_->addAction(stop_act_);
+    help_menu_ = menuBar()->addMenu(tr("&Help"));
+    help_menu_->addAction(about_act_);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
@@ -101,7 +112,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event) {
 }
 
 void MainWindow::open_file() {
-    std::string path = QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr(""
+    std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", tr(""
         "All supported types (*.gb *.gbc *.nes *.ch8 *.z64);;"
         "Gameboy (*.gb *.gbc);;"
         "NES (*.nes);;"
@@ -132,13 +143,60 @@ void MainWindow::open_file() {
 
 void MainWindow::open_settings() {
     if (!settings_open_) {
-        QWidget* qw = new SettingsWindow(settings_open_);
+        QWidget* qw = new SettingsWindow(settings_open_, this);
         qw->show();
     }
 }
 
 void MainWindow::screenshot() {
     // QApplication::clipboard()->setImage(texture_.toImage());
+}
+
+void MainWindow::show_about() {
+    static QString html;
+    if (html.isEmpty()) {
+        QFile file(":/data/about.html");
+        QT_MAY_THROW(
+            if (file.open(QIODevice::ReadOnly))
+                html = file.readAll();
+            else
+                throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to load about.html");
+        );
+    }
+    QDialog* dialog = new QDialog(this);
+    dialog->setWindowTitle("About");
+    dialog->setAttribute(Qt::WA_DeleteOnClose, true);
+    QGridLayout* layout = new QGridLayout;
+    QHBoxLayout* top_layout = new QHBoxLayout;
+    QHBoxLayout* bot_layout = new QHBoxLayout;
+    QLabel* hydra = new QLabel;
+    QLabel* logo = new QLabel;
+    QLabel* lbl_text = new QLabel;
+    QGroupBox* top_qgb = new QGroupBox;
+    QGroupBox* bot_qgb = new QGroupBox;
+    top_qgb->setFlat(true);
+    bot_qgb->setFlat(true);
+    top_qgb->setStyleSheet("border:0;");
+    bot_qgb->setStyleSheet("border:0;");
+    hydra->setPixmap(QPixmap::fromImage(QImage(":/images/hydra.png")));
+    logo->setPixmap(QPixmap::fromImage(QImage(":/images/logo.png")));
+    lbl_text->setText(html);
+    lbl_text->setTextFormat(Qt::RichText);
+    lbl_text->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    lbl_text->setOpenExternalLinks(true);
+    lbl_text->setAlignment(Qt::AlignCenter);
+    layout->setAlignment(Qt::AlignLeft);
+    layout->setContentsMargins(5, 5, 5, 5);
+    top_layout->addWidget(hydra);
+    top_layout->addWidget(logo);
+    bot_layout->addWidget(lbl_text);
+    top_qgb->setLayout(top_layout);
+    bot_qgb->setLayout(bot_layout);
+    layout->addWidget(top_qgb, 0, 0);
+    layout->addWidget(bot_qgb, 1, 0);
+    dialog->setLayout(layout);
+    dialog->layout()->setSizeConstraint(QLayout::SetFixedSize);
+    dialog->show();
 }
 
 void MainWindow::enable_emulation_actions(bool should) {

@@ -2,9 +2,10 @@
 #include <QVBoxLayout>
 #include <QGroupBox>
 
-SettingsWindow::SettingsWindow(bool& open) : open_(open) {
+SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidget(parent, Qt::Window) {
     open_ = true;
     setAttribute(Qt::WA_DeleteOnClose);
+    setWindowTitle("Settings");
     QGridLayout* main_layout = new QGridLayout;
     QGroupBox* left_group_box = new QGroupBox;
     QGroupBox* right_group_box = new QGroupBox;

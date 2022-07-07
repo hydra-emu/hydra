@@ -27,6 +27,7 @@ private:
     void open_file();
     void open_settings();
     void screenshot();
+    void show_about();
 
     // Emulation functions
     void pause_emulator();
@@ -43,9 +44,11 @@ public:
     ~MainWindow() = default;
     QMenu* file_menu_;
     QMenu* emulation_menu_;
+    QMenu* help_menu_;
     QAction* open_act_;
     QAction* pause_act_;
     QAction* reset_act_;
+    QAction* about_act_;
     QAction* stop_act_;
     QAction* settings_act_;
     QAction* screenshot_act_;

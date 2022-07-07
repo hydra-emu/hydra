@@ -1,6 +1,9 @@
 <RCC>
     <qresource prefix="/">
         <file>images/support.png</file>
+        <file>images/debugger.png</file>
+        <file>images/hydra.png</file>
+        <file>images/logo.png</file>
         <file>images/gameboy.png</file>
         <file>images/chip8.png</file>
         <file>images/n64.png</file>
@@ -9,5 +12,6 @@
         <file>data/nes.json</file>
         <file>data/n64.json</file>
         <file>data/chip8.json</file>
+        <file>data/about.html</file>
     </qresource>
 </RCC>
