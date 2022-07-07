@@ -11,6 +11,5 @@ private:
 public:
     SettingsWindow(bool& open, QWidget* parent = nullptr);
     ~SettingsWindow();
-
 };
 #endif

@@ -17,6 +17,9 @@ struct EmulatorData {
     std::vector<std::string> Extensions;
     int DefaultWidth;
     int DefaultHeight;
+    bool HasDebugger;
+    bool HasTracelogger;
+    std::vector<std::string> LoggingOptions;
 };
 struct OptionsBase {};
 struct GameboyOptions : public OptionsBase {

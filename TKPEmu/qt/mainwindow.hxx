@@ -28,6 +28,7 @@ private:
     void open_settings();
     void open_about();
     void open_debugger();
+    void open_tracelogger();
     void screenshot();
 
     // Emulation functions
@@ -55,12 +56,16 @@ public:
     QAction* settings_act_;
     QAction* screenshot_act_;
     QAction* debugger_act_;
+    QAction* tracelogger_act_;
     QLabel* lbl_;
     QPixmap texture_;
     std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     std::shared_ptr<TKPEmu::Emulator> emulator_;
+    TKPEmu::EmuType emulator_type_;
     std::thread emulator_thread_;
     bool settings_open_ = false;
     bool about_open_ = false;
+    bool debugger_open_ = false;
+    bool tracelogger_open_ = false;
 };
 #endif // MAINWINDOW_HXX

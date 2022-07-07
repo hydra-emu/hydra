@@ -10,6 +10,5 @@ private:
 public:
     AboutWindow(bool& open, QWidget* parent = nullptr);
     ~AboutWindow();
-
 };
 #endif

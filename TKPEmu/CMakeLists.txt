@@ -39,6 +39,10 @@ set(PROJECT_SOURCES
     qt/settingswindow.cxx
     qt/aboutwindow.hxx
     qt/aboutwindow.cxx
+    qt/debuggerwindow.hxx
+    qt/debuggerwindow.cxx
+    qt/traceloggerwindow.hxx
+    qt/traceloggerwindow.cxx
     src/emulator.cpp
 )
 

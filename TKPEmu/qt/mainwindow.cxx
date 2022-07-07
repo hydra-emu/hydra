@@ -1,7 +1,8 @@
 #include "mainwindow.hxx"
 #include "settingswindow.hxx"
+#include "debuggerwindow.hxx"
 #include "aboutwindow.hxx"
-#include "../include/error_factory.hxx"
+#include <include/error_factory.hxx>
 #include <QMessageBox>
 #include <QTimer>
 #include <QKeyEvent>
@@ -77,9 +78,9 @@ void MainWindow::create_actions() {
     reset_act_->setShortcut(Qt::CTRL | Qt::Key_R);
     reset_act_->setStatusTip(tr("Soft reset emulator"));
     connect(reset_act_, &QAction::triggered, this, &MainWindow::reset_emulator);
-    screenshot_act_ = new QAction(tr("S&creenshot to clipboard"), this);
-    screenshot_act_->setShortcut(Qt::CTRL | Qt::Key_C);
-    screenshot_act_->setStatusTip(tr("Take a screenshot to clipboard"));
+    screenshot_act_ = new QAction(tr("S&creenshot"), this);
+    screenshot_act_->setShortcut(Qt::Key_F12);
+    screenshot_act_->setStatusTip(tr("Take a screenshot (check settings for save path)"));
     connect(screenshot_act_, &QAction::triggered, this, &MainWindow::screenshot);
     about_act_ = new QAction(tr("&About"), this);
     about_act_->setShortcut(QKeySequence::HelpContents);
@@ -90,6 +91,11 @@ void MainWindow::create_actions() {
     debugger_act_->setStatusTip("Open the debugger");
     debugger_act_->setIcon(QIcon(":/images/debugger.png"));
     connect(debugger_act_, &QAction::triggered, this, &MainWindow::open_debugger);
+    tracelogger_act_ = new QAction(tr("&Tracelogger"), this);
+    tracelogger_act_->setShortcut(Qt::Key_F3);
+    tracelogger_act_->setStatusTip("Open the tracelogger");
+    tracelogger_act_->setIcon(QIcon(":/images/tracelogger.png"));
+    connect(tracelogger_act_, &QAction::triggered, this, &MainWindow::open_tracelogger);
 }
 
 void MainWindow::create_menus() {
@@ -105,6 +111,7 @@ void MainWindow::create_menus() {
     emulation_menu_->addAction(stop_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
     tools_menu_->addAction(debugger_act_);
+    tools_menu_->addAction(tracelogger_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
 }
@@ -120,14 +127,28 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event) {
 }
 
 void MainWindow::open_file() {
-    // TODO: get dynamically
-    std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", tr(""
-        "All supported types (*.gb *.gbc *.nes *.ch8 *.z64);;"
-        "Gameboy (*.gb *.gbc);;"
-        "NES (*.nes);;"
-        "Chip 8 (*.ch8);;"
-        "Nintendo 64 (*.z64);;"
-    )).toStdString();
+    static QString extensions;
+    if (extensions.isEmpty()) {
+        const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
+        QString indep;
+        extensions = "All supported types (";
+        for (int i = 0; i < static_cast<int>(TKPEmu::EmuType::EmuTypeSize); i++) {
+            indep += data[i].Name.c_str();
+            indep += " (";
+            for (const auto& str : data[i].Extensions) {
+                extensions += "*";
+                extensions += str.c_str();
+                extensions += " ";
+                indep += "*";
+                indep += str.c_str();
+                indep += " ";
+            }
+            indep += ");;";
+        }
+        extensions += ");;";
+        extensions += indep;
+    }
+    std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", extensions).toStdString();
     if (path.empty())
         return;
     QT_MAY_THROW(
@@ -149,6 +170,7 @@ void MainWindow::open_file() {
         };
         emulator_thread_ = std::thread(func);
         emulator_thread_.detach();
+        emulator_type_ = type;
         enable_emulation_actions(true);
     );
 }
@@ -162,7 +184,19 @@ void MainWindow::open_settings() {
 }
 
 void MainWindow::open_debugger() {
+    if (!debugger_open_) {
+        QT_MAY_THROW(
+            auto* qw = new DebuggerWindow(debugger_open_, emulator_->MessageQueue, this);
+        );
+    }
+}
 
+void MainWindow::open_tracelogger() {
+    if (!tracelogger_open_) {
+        QT_MAY_THROW(
+
+        );
+    }
 }
 
 void MainWindow::screenshot() {
@@ -181,10 +215,13 @@ void MainWindow::enable_emulation_actions(bool should) {
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
-    debugger_act_->setEnabled(should);
     lbl_->setVisible(should);
-    if (!should) {
-        pause_act_->setChecked(false);
+    debugger_act_->setEnabled(false);
+    tracelogger_act_->setEnabled(false);
+    if (should) {
+        const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData().at(static_cast<int>(emulator_type_));
+        debugger_act_->setEnabled(data.HasDebugger);
+        tracelogger_act_->setEnabled(data.HasTracelogger);
     }
 }
 
@@ -205,6 +242,9 @@ void MainWindow::setup_emulator_specific() {
         o.at("Extensions").get_to(d.Extensions);
         o.at("DefaultWidth").get_to(d.DefaultWidth);
         o.at("DefaultHeight").get_to(d.DefaultHeight);
+        o.at("HasDebugger").get_to(d.HasDebugger);
+        o.at("HasTracelogger").get_to(d.HasTracelogger);
+        o.at("LoggingOptions").get_to(d.LoggingOptions);
         map[std::stoi(it.key())] = d;
     }
     // Setup default options
