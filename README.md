@@ -3,13 +3,12 @@
 ![Commit activity](https://img.shields.io/github/commit-activity/m/OFFTKP/hydra?style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/OFFTKP/hydra?style=for-the-badge)
 ![Size](https://img.shields.io/github/repo-size/OFFTKP/hydra?style=for-the-badge) -->
-![Image](./TKPEmu/images/hydra.png) ![Image](./TKPEmu/images/logo.png)
+<p align="center"> <img src="./TKPEmu/images/hydra.png"><img src="./TKPEmu/images/logo.png"></p>
 
 ----
 
-<center>A FLOSS multi-system emulator</center>
-
-![Image](./TKPEmu/screen.png)
+<p align="center">A FLOSS multi-system emulator</p>
+<p align="center"><img src="./TKPEmu/screen.png"></p>
 
 ## Current systems
 - [Gameboy](https://github.com/OFFTKP/GameboyTKP)
