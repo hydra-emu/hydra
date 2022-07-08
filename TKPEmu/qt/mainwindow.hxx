@@ -30,6 +30,7 @@ private:
     void open_debugger();
     void open_tracelogger();
     void screenshot();
+    void close_tools();
 
     // Emulation functions
     void pause_emulator();
@@ -43,7 +44,7 @@ private slots:
 
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow() = default;
+    ~MainWindow();
     QMenu* file_menu_;
     QMenu* emulation_menu_;
     QMenu* tools_menu_;
@@ -61,6 +62,7 @@ public:
     QPixmap texture_;
     std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     std::shared_ptr<TKPEmu::Emulator> emulator_;
+    std::array<QWidget*, 2> emulator_tools_;
     TKPEmu::EmuType emulator_type_;
     std::thread emulator_thread_;
     bool settings_open_ = false;

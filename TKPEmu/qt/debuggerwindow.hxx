@@ -14,5 +14,8 @@ private:
 public:
     DebuggerWindow(bool& open, std::shared_ptr<TKPEmu::Tools::MQBase> mq, QWidget* parent = nullptr);
     ~DebuggerWindow();
+    static int GetToolIndex() {
+        return 0;
+    }
 };
 #endif

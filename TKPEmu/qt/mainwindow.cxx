@@ -1,6 +1,7 @@
 #include "mainwindow.hxx"
 #include "settingswindow.hxx"
 #include "debuggerwindow.hxx"
+#include "traceloggerwindow.hxx"
 #include "aboutwindow.hxx"
 #include <include/error_factory.hxx>
 #include <QMessageBox>
@@ -54,6 +55,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(timer, SIGNAL(timeout()), this, SLOT(redraw_screen()));
 
     enable_emulation_actions(false);
+}
+
+MainWindow::~MainWindow() {
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    SDL_Quit();
 }
 
 void MainWindow::create_actions() {
@@ -152,6 +158,7 @@ void MainWindow::open_file() {
     if (path.empty())
         return;
     QT_MAY_THROW(
+        close_tools();
         auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path);
         {
             auto emulator = TKPEmu::EmulatorFactory::Create(type);
@@ -187,6 +194,7 @@ void MainWindow::open_debugger() {
     if (!debugger_open_) {
         QT_MAY_THROW(
             auto* qw = new DebuggerWindow(debugger_open_, emulator_->MessageQueue, this);
+            emulator_tools_[DebuggerWindow::GetToolIndex()] = qw;
         );
     }
 }
@@ -194,13 +202,18 @@ void MainWindow::open_debugger() {
 void MainWindow::open_tracelogger() {
     if (!tracelogger_open_) {
         QT_MAY_THROW(
-
+            auto* qw = new TraceloggerWindow(tracelogger_open_, emulator_->MessageQueue, emulator_type_, this);
+            emulator_tools_[TraceloggerWindow::GetToolIndex()] = qw;
         );
     }
 }
 
 void MainWindow::screenshot() {
     // QApplication::clipboard()->setImage(texture_.toImage());
+}
+
+void MainWindow::close_tools() {
+    
 }
 
 void MainWindow::open_about() {
@@ -272,12 +285,16 @@ void MainWindow::pause_emulator() {
         emulator_->Step.store(true);
         emulator_->Step.notify_all();
     } else {
-        message_queue_->PushRequest("pause");
+        message_queue_->PushRequest({
+            .Id = RequestId::COMMON_PAUSE,
+        });
     }
 }
 
 void MainWindow::reset_emulator() {
-    message_queue_->PushRequest("reset");
+    message_queue_->PushRequest({
+        .Id = RequestId::COMMON_RESET,
+    });
 }
 
 void MainWindow::stop_emulator() {

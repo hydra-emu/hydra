@@ -6,17 +6,26 @@
 #include <shared_mutex>
 #include <memory>
 
-enum {
-    TKPMQ_RESPONSE_MAIN = 1,
+enum class ResponseId : int {
+    COMMON_PAUSED = 0x100,
 };
 
 struct Response {
-    uint32_t Recipient;
-    std::string Type;
-    void* Data;
-    size_t Size;
+    ResponseId Id;
+    std::string Data;
 };
-using Request = std::string;
+
+enum class RequestId : int {
+    COMMON_PAUSE = 0x100,
+    COMMON_RESET = 0x101,
+    COMMON_START_LOG = 0x102,
+    COMMON_STOP_LOG = 0x103,
+};
+
+struct Request {
+    RequestId Id;
+    std::string Data;
+};
 // My message queue design pattern implementation
 namespace TKPEmu::Tools {
     class MQBase {
@@ -28,7 +37,7 @@ namespace TKPEmu::Tools {
         Response PopResponse();
         bool PollResponses();
         // Checks the response type before copying the entire response over
-        uint32_t PeekResponseRecipient();
+        ResponseId PeekResponse();
     protected:
         std::queue<Request> requests_;
         std::queue<Response> responses_;

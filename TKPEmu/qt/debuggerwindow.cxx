@@ -11,6 +11,7 @@ DebuggerWindow::DebuggerWindow(bool& open, std::shared_ptr<TKPEmu::Tools::MQBase
     QGridLayout* layout = new QGridLayout;
     layout->addWidget(combo_box_);
     setLayout(layout);
+    setWindowTitle("Debugger");
     show();
     open_ = true;
 }

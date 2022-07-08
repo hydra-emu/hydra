@@ -57,24 +57,24 @@ namespace TKPEmu {
 		std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
 	}
     bool Emulator::poll_request(const Request& request) {
-        auto cur = str_hash(request.c_str());
+        auto cur = request.Id;
         switch (cur) {
-            case str_hash("pause"): {
+            case RequestId::COMMON_PAUSE: {
                 Paused.store(true);
                 Step.store(true);
                 Step.notify_all();
                 Response response {
-                    .Recipient = TKPMQ_RESPONSE_MAIN,
-                    .Type = "paused",
+                    .Id = ResponseId::COMMON_PAUSED,
                 };
                 MessageQueue->PushResponse(response);
                 return true;
             }
-            case str_hash("reset"): {
+            case RequestId::COMMON_RESET: {
                 Reset();
                 return true;
             }
             default: return poll_uncommon_request(request);
         }
+        return false;
     }
 }

@@ -15,8 +15,8 @@ namespace TKPEmu::Tools {
         std::unique_lock lg(responses_mutex_);
         responses_.push(message);
     }
-    uint32_t MQBase::PeekResponseRecipient() {
-        return responses_.front().Recipient;
+    ResponseId MQBase::PeekResponse() {
+        return responses_.front().Id;
     }
     Request MQBase::PopRequest() {
         std::unique_lock lg(requests_mutex_);
