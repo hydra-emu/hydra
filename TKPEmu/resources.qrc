@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>images/support.png</file>
+        <file>images/input.png</file>
         <file>images/debugger.png</file>
         <file>images/tracelogger.png</file>
         <file>images/hydra.png</file>
@@ -8,7 +9,8 @@
         <file>images/gameboy.png</file>
         <file>images/chip8.png</file>
         <file>images/n64.png</file>
-        <file>data/matches.json</file>
+        <file>data/emulators.json</file>
+        <file>data/mappings.json</file>
         <file>data/gameboy.json</file>
         <file>data/nes.json</file>
         <file>data/n64.json</file>

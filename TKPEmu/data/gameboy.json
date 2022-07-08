@@ -5,16 +5,7 @@
         8421504,
         0
     ],
-    "DirectionMappings": [
-        16777236,
-        16777234,
-        16777235,
-        16777237
-    ],
-    "ActionMappings": [
-        90,
-        88,
-        32,
-        16777220
-    ]
+    "SkipBoot": true,
+    "DMGBiosPath": "",
+    "CGBBiosPath": ""
 }

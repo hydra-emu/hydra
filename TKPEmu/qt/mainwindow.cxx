@@ -239,13 +239,35 @@ void MainWindow::enable_emulation_actions(bool should) {
 }
 
 void MainWindow::setup_emulator_specific() {
-    QFile f(":/data/matches.json");
+    QFile f(":/data/emulators.json");
     if (!f.open(QIODevice::ReadOnly)) {
-        throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open matches.json");
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open default emulators.json");
+    }
+    auto mappings_path = TKPEmu::EmulatorFactory::GetSavePath() + "mappings.json";
+    QString data_mappings;
+    if (std::filesystem::exists(mappings_path)) {
+        QFile f2(mappings_path.c_str());
+        if (!f2.open(QIODevice::ReadOnly)) {
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open mappings.json");
+        }
+        data_mappings = f2.readAll();
     } else {
+        QFile f2(":/data/mappings.json");
+        if (!f2.open(QIODevice::ReadOnly)) {
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open default mappings.json");
+        }
+        data_mappings = f2.readAll();
+        std::ofstream ofs(mappings_path);
+        if (ofs.is_open()) {
+            ofs << data_mappings.toStdString();
+            ofs.close();
+        } else {
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open mappings.json");
+        }
     }
     QString data = f.readAll();
     json j = json::parse(data.toStdString());
+    json j_mappings = json::parse(data_mappings.toStdString());
     EmulatorDataMap map;
     for (auto it = j.begin(); it != j.end(); ++it) {
         EmulatorData d;
@@ -259,6 +281,12 @@ void MainWindow::setup_emulator_specific() {
         o.at("HasTracelogger").get_to(d.HasTracelogger);
         o.at("LoggingOptions").get_to(d.LoggingOptions);
         map[std::stoi(it.key())] = d;
+    }
+    for (auto it = j_mappings.begin(); it != j_mappings.end(); ++it) {
+        auto& d = map[std::stoi(it.key())];
+        json& o = it.value();
+        o.at("KeyNames").get_to(d.Mappings.KeyNames);
+        o.at("KeyValues").get_to(d.Mappings.KeyValues);
     }
     // Setup default options
     for (auto& e : map) {

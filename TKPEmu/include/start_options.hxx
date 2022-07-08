@@ -11,6 +11,10 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
+struct KeyMappings {
+    std::vector<std::string> KeyNames;
+    std::vector<uint32_t> KeyValues;
+};
 struct EmulatorData {
     std::string Name;
     std::string SettingsFile;
@@ -20,11 +24,12 @@ struct EmulatorData {
     bool HasDebugger;
     bool HasTracelogger;
     std::vector<std::string> LoggingOptions;
+    KeyMappings Mappings;
 };
-struct OptionsBase {};
+struct OptionsBase {
+    KeyMappings Mappings;
+};
 struct GameboyOptions : public OptionsBase {
     std::vector<uint32_t> DMGColors;
-    std::vector<uint32_t> DirectionMappings;
-    std::vector<uint32_t> ActionMappings;
 };
 #endif

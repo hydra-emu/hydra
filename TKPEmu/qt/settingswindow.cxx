@@ -1,7 +1,10 @@
 #include "settingswindow.hxx"
-#include <iostream>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QScrollBar>
+#include <QCheckBox>
 
 SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidget(parent, Qt::Window) {
     setAttribute(Qt::WA_DeleteOnClose);
@@ -12,10 +15,12 @@ SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidg
     {
         tab_list_ = new QListWidget;
         QListWidgetItem* general = new QListWidgetItem(QPixmap(":/images/support.png"), QString("General"));
+        QListWidgetItem* input = new QListWidgetItem(QPixmap(":/images/input.png"), QString("Input"));
         QListWidgetItem* gameboy = new QListWidgetItem(QPixmap(":/images/gameboy.png"), QString("Gameboy"));
         QListWidgetItem* n64 = new QListWidgetItem(QPixmap(":/images/n64.png"), QString("Nintendo 64"));
         QListWidgetItem* chip8 = new QListWidgetItem(QPixmap(":/images/chip8.png"), QString("Chip 8"));
         tab_list_->addItem(general);
+        tab_list_->addItem(input);
         tab_list_->addItem(gameboy);
         tab_list_->addItem(n64);
         tab_list_->addItem(chip8);
@@ -58,17 +63,47 @@ void SettingsWindow::create_tabs() {
         tab_show_->addTab(general_tab, "General");
     }
     {
+        QGridLayout* input_layout = new QGridLayout;
+        QWidget* input_tab = new QWidget;
+        input_tab->setLayout(input_layout);
+        tab_show_->addTab(input_tab, "Input");
+    }
+    {
         QGridLayout* gb_layout = new QGridLayout;
-        gb_layout->addWidget(new QLabel("Test"));
+        QPlainTextEdit* dmg_bios_path = new QPlainTextEdit;
+        QFontMetrics m(dmg_bios_path->font());
+        int height = m.lineSpacing();
+        dmg_bios_path->setReadOnly(true);
+        dmg_bios_path->verticalScrollBar()->hide();
+        QPlainTextEdit* cgb_bios_path = new QPlainTextEdit;
+        cgb_bios_path->setReadOnly(true);
+        cgb_bios_path->setFixedHeight(height * 1.5);
+        cgb_bios_path->verticalScrollBar()->hide();
+        QPushButton* dmg_file_pick = new QPushButton;
+        dmg_file_pick->setText("...");
+        dmg_bios_path->setFixedHeight(height * 1.5);
+        QPushButton* cgb_file_pick = new QPushButton;
+        cgb_file_pick->setText("...");
+        gb_layout->addWidget(new QLabel("DMG bios path:"), 0, 0);
+        gb_layout->addWidget(dmg_bios_path, 0, 1);
+        gb_layout->addWidget(dmg_file_pick, 0, 2);
+        gb_layout->addWidget(new QLabel("CGB bios path:"), 1, 0);
+        gb_layout->addWidget(cgb_bios_path, 1, 1);
+        gb_layout->addWidget(cgb_file_pick, 1, 2);
+        QCheckBox* skip_bios = new QCheckBox("Skip bios?");
+        gb_layout->addWidget(skip_bios, 2, 0);
+        QWidget* empty = new QWidget();
+        empty->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        gb_layout->addWidget(empty, 10, 0);
         QWidget* gb_tab = new QWidget;
         gb_tab->setLayout(gb_layout);
         tab_show_->addTab(gb_tab, "GB");
     }
     {
-    QGridLayout* nes_layout = new QGridLayout;
-    QWidget* nes_tab = new QWidget;
-    nes_tab->setLayout(nes_layout);
-    tab_show_->addTab(nes_tab, "NES");
+        QGridLayout* nes_layout = new QGridLayout;
+        QWidget* nes_tab = new QWidget;
+        nes_tab->setLayout(nes_layout);
+        tab_show_->addTab(nes_tab, "NES");
     }
     {
         QGridLayout* n64_layout = new QGridLayout;

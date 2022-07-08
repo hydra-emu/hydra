@@ -28,28 +28,29 @@ namespace TKPEmu {
     }
     std::unique_ptr<OptionsBase> EmulatorFactory::GetOptions(TKPEmu::EmuType type) {
         using nlohmann::json;
+        std::unique_ptr<OptionsBase> ret;
+        const auto& data = GetEmulatorData();
         auto path = GetSavePath() + emulator_data_[static_cast<int>(type)].SettingsFile;
         switch (type) {
             case TKPEmu::EmuType::Gameboy: {
-                std::unique_ptr<OptionsBase> ret(new GameboyOptions);
+                ret.reset(new GameboyOptions);
                 auto gb = static_cast<GameboyOptions*>(ret.get());
                 std::ifstream ifs(path);
                 if (ifs.is_open()) {
                     json j;
                     ifs >> j;
                     j.at("DMGColors").get_to(gb->DMGColors);
-                    j.at("DirectionMappings").get_to(gb->DirectionMappings);
-                    j.at("ActionMappings").get_to(gb->ActionMappings);
                     ifs.close();
                 } else {
                     throw ErrorFactory::generate_exception(__func__, __LINE__, std::string("File does not exist:") + path);
                 }
-                return ret;
                 break;
             }
             default:
             return nullptr;
         }
+        ret->Mappings = data[static_cast<int>(type)].Mappings;
+        return ret;
     }
     // TODO: detect emutype by magic bytes instead of extension
     EmuType EmulatorFactory::GetEmulatorType(std::filesystem::path path) {
