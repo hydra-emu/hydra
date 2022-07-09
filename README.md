@@ -3,12 +3,12 @@
 ![Commit activity](https://img.shields.io/github/commit-activity/m/OFFTKP/hydra?style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/OFFTKP/hydra?style=for-the-badge)
 ![Size](https://img.shields.io/github/repo-size/OFFTKP/hydra?style=for-the-badge) -->
-<p align="center"> <img src="./TKPEmu/images/hydra.png"><img src="./TKPEmu/images/logo.png"></p>
+<p align="center"> <img src="./hydra/images/hydra.png"><img src="./hydra/images/logo.png"></p>
 
 ----
 
 <p align="center">A FLOSS multi-system emulator</p>
-<p align="center"><img src="./TKPEmu/screen.png"></p>
+<p align="center"><img src="./hydra/screen.png"></p>
 
 ## Current systems
 - [Gameboy](https://github.com/OFFTKP/GameboyTKP)
@@ -62,5 +62,3 @@ Copyright (C) 2021-2022 Paris Oplopoios
 
 ## Contributors
 [![GitHub contributors](https://contrib.rocks/image?repo=OFFTKP/hydra)](https://github.com/OFFTKP/hydra/graphs/contributors)
-
-*This emulator was called TKPEmu, but after the switch from imgui to Qt it's now called hydra. There's still a lot of uses of the name TKPEmu which may be removed in the future.*
