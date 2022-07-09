@@ -1,15 +1,15 @@
 [submodule "TKPEmu/GameboyTKP"]
-	path = TKPEmu/GameboyTKP
+	path = hydra/GameboyTKP
 	url = https://github.com/OFFTKP/GameboyTKP
 [submodule "TKPEmu/NESTKP"]
-	path = TKPEmu/NESTKP
+	path = hydra/NESTKP
 	url = http://github.com/offtkp/NESTKP
 [submodule "TKPEmu/N64TKP"]
-	path = TKPEmu/N64TKP
+	path = hydra/N64TKP
 	url = https://github.com/OFFTKP/N64TKP
 [submodule "TKPEmu/chip8"]
-	path = TKPEmu/chip8
+	path = hydra/chip8
 	url = https://github.com/OFFTKP/chip8
 [submodule "TKPEmu/cppunit"]
-	path = TKPEmu/cppunit
+	path = hydra/cppunit
 	url = git://anongit.freedesktop.org/git/libreoffice/cppunit/
