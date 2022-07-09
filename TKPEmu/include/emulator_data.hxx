@@ -1,6 +1,6 @@
 #pragma once
-#ifndef TKP_GB_START_OPTIONS_H
-#define TKP_GB_START_OPTIONS_H
+#ifndef TKP_EMULATOR_DATA_H
+#define TKP_EMULATOR_DATA_H
 #include <string>
 #include <array>
 #include <filesystem>
@@ -10,7 +10,6 @@
 #include "error_factory.hxx"
 #include "json.hpp"
 using json = nlohmann::json;
-
 struct KeyMappings {
     std::vector<std::string> KeyNames;
     std::vector<uint32_t> KeyValues;
@@ -25,11 +24,5 @@ struct EmulatorData {
     bool HasTracelogger;
     std::vector<std::string> LoggingOptions;
     KeyMappings Mappings;
-};
-struct OptionsBase {
-    KeyMappings Mappings;
-};
-struct GameboyOptions : public OptionsBase {
-    std::vector<uint32_t> DMGColors;
 };
 #endif

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
 project(TKPSrc)
-set(FILES emulator.cpp emulator_factory.cpp emulator_results.cpp)
+set(FILES emulator.cpp emulator_factory.cpp emulator_user_data.cxx)
 add_library(TKPSrc ${FILES})
 target_include_directories(TKPSrc PUBLIC ../)

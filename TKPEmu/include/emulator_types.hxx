@@ -8,7 +8,7 @@ namespace TKPEmu {
         N64,
         Chip8,
 
-        EmuTypeSize, // Used to iterate all emutypes like so: for (int i = 0; i < Final; i++)
+        EmuTypeSize, // Used to iterate all emutypes like so: for (int i = 0; i < EmuTypeSize; i++)
         Error
     };
 }

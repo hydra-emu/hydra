@@ -1,11 +1,6 @@
 {
-    "DMGColors": [
-        16777215,
-        12632256,
-        8421504,
-        0
-    ],
-    "SkipBoot": true,
-    "DMGBiosPath": "",
-    "CGBBiosPath": ""
+    "dmg_c0": "16777215",
+    "dmg_c1": "12632256",
+    "dmg_c2": "8421504",
+    "dmg_c3": "0"
 }

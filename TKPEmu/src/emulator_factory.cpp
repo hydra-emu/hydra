@@ -2,10 +2,12 @@
 #include <lib/str_hash.h>
 #include <include/emulator_factory.h>
 #include <include/error_factory.hxx>
-#include <include/start_options.hxx>
+#include <include/emulator_data.hxx>
+#include <include/emulator_user_data.hxx>
 
 namespace TKPEmu {
     EmulatorDataMap EmulatorFactory::emulator_data_{};
+    EmulatorUserDataMap EmulatorFactory::emulator_user_data_{};
     ExtensionMappings EmulatorFactory::extension_mappings_{};
     std::string EmulatorFactory::GetSavePath() {
         static std::string dir;
@@ -26,32 +28,6 @@ namespace TKPEmu {
         }
         return dir;
     }
-    std::unique_ptr<OptionsBase> EmulatorFactory::GetOptions(TKPEmu::EmuType type) {
-        using nlohmann::json;
-        std::unique_ptr<OptionsBase> ret;
-        const auto& data = GetEmulatorData();
-        auto path = GetSavePath() + emulator_data_[static_cast<int>(type)].SettingsFile;
-        switch (type) {
-            case TKPEmu::EmuType::Gameboy: {
-                ret.reset(new GameboyOptions);
-                auto gb = static_cast<GameboyOptions*>(ret.get());
-                std::ifstream ifs(path);
-                if (ifs.is_open()) {
-                    json j;
-                    ifs >> j;
-                    j.at("DMGColors").get_to(gb->DMGColors);
-                    ifs.close();
-                } else {
-                    throw ErrorFactory::generate_exception(__func__, __LINE__, std::string("File does not exist:") + path);
-                }
-                break;
-            }
-            default:
-            return nullptr;
-        }
-        ret->Mappings = data[static_cast<int>(type)].Mappings;
-        return ret;
-    }
     // TODO: detect emutype by magic bytes instead of extension
     EmuType EmulatorFactory::GetEmulatorType(std::filesystem::path path) {
         auto ext = path.extension().string();
@@ -64,19 +40,18 @@ namespace TKPEmu {
         }
     }
     std::shared_ptr<Emulator> EmulatorFactory::Create(EmuType type) { 
-        auto args = GetOptions(type);
         switch (type) {
             case EmuType::Gameboy: {
-                return std::make_shared<Gameboy::Gameboy>(std::move(args));
+                return std::make_shared<Gameboy::Gameboy>();
             }
             case EmuType::N64: {
-                return std::make_shared<N64::N64_TKPWrapper>(std::move(args));
+                return std::make_shared<N64::N64_TKPWrapper>();
             }
             case EmuType::Chip8: {
-                return std::make_shared<Chip8::Chip8>(std::move(args));
+                return std::make_shared<Chip8::Chip8>();
             }
             case EmuType::NES: {
-                return std::make_shared<NES::NES>(std::move(args));
+                return std::make_shared<NES::NES>();
             }
             default: {
                 throw ErrorFactory::generate_exception(__func__, __LINE__, "EmulatorFactory::Create failed");
@@ -92,5 +67,8 @@ namespace TKPEmu {
                 EmulatorFactory::extension_mappings_[ext] = static_cast<EmuType>(i);
             }
         }
+    }
+    void EmulatorFactory::SetEmulatorUserData(EmulatorUserDataMap map) {
+        EmulatorFactory::emulator_user_data_ = std::move(map);
     }
 }

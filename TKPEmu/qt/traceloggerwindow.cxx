@@ -1,6 +1,9 @@
 #include "traceloggerwindow.hxx"
 #include <QVBoxLayout>
 #include <QGroupBox>
+#include <QPlainTextEdit>
+#include <QFileDialog>
+#include <QPushButton>
 #include <include/emulator_factory.h>
 
 TraceloggerWindow::TraceloggerWindow(bool& open, std::shared_ptr<TKPEmu::Tools::MQBase> mq, TKPEmu::EmuType type, QWidget* parent) :
@@ -29,7 +32,14 @@ TraceloggerWindow::TraceloggerWindow(bool& open, std::shared_ptr<TKPEmu::Tools::
     }
     {
         QHBoxLayout* bot_layout = new QHBoxLayout;
-
+        QPlainTextEdit* text_edit = new QPlainTextEdit;
+        if (log_path_.isEmpty())
+            text_edit->setPlaceholderText("Log directory");
+        QPushButton* browse_button = new QPushButton;
+        browse_button->setText("...");
+        connect(browse_button, SIGNAL(clicked()), this, SLOT(browse_clicked()));
+        bot_layout->addWidget(text_edit);
+        bot_layout->addWidget(browse_button);
         bot_qgb->setLayout(bot_layout);
     }
     layout->addWidget(top_qgb);
@@ -42,6 +52,10 @@ TraceloggerWindow::TraceloggerWindow(bool& open, std::shared_ptr<TKPEmu::Tools::
 
 TraceloggerWindow::~TraceloggerWindow() {
     open_ = false;
+}
+
+void TraceloggerWindow::browse_clicked() {
+    log_path_ = QFileDialog::getExistingDirectory(this, tr("Select log directory..."), QString(), QFileDialog::ShowDirsOnly);
 }
 
 void TraceloggerWindow::Reset(std::shared_ptr<TKPEmu::Tools::MQBase> mq, TKPEmu::EmuType type) {

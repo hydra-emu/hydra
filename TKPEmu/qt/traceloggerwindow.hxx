@@ -15,6 +15,9 @@ private:
     TKPEmu::EmuType emulator_type_;
     QComboBox* combo_box_;
     std::vector<QListWidgetItem*> checkboxes_;
+    QString log_path_;
+private slots:
+    void browse_clicked();
 public:
     TraceloggerWindow(bool& open, std::shared_ptr<TKPEmu::Tools::MQBase> mq, TKPEmu::EmuType type, QWidget* parent = nullptr);
     ~TraceloggerWindow();

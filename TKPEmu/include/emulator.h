@@ -10,8 +10,8 @@
 #include <thread>
 #include <any>
 #include <fstream>
-#include "start_options.hxx"
-#include "emulator_results.h"
+#include "emulator_data.hxx"
+#include "emulator_user_data.hxx"
 #include "../lib/messagequeue.hxx"
 
 namespace {
@@ -22,7 +22,6 @@ namespace {
 #define TKP_EMULATOR(emulator)									\
 	public:														\
 	emulator();													\
-	emulator(std::unique_ptr<OptionsBase> args);				\
 	~emulator() override;										\
 	void* GetScreenData() override;								\
 	bool& IsReadyToDraw() override;								\
@@ -38,7 +37,6 @@ namespace TKPEmu {
 	class Emulator {
 	public:
 		Emulator() {};
-		Emulator(std::unique_ptr<OptionsBase> args) {};
 		virtual ~Emulator() = default;
 		Emulator(const Emulator&) = delete;
 		Emulator& operator=(const Emulator&) = delete;
