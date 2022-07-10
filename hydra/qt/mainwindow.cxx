@@ -359,4 +359,5 @@ void MainWindow::redraw_screen() {
         return;
     QImage image((const unsigned char*)emulator_->GetScreenData(), emulator_->GetWidth(), emulator_->GetHeight(), QImage::Format_RGBA8888);
     lbl_->setPixmap(QPixmap::fromImage(image.scaled(lbl_->width(), lbl_->height(), Qt::KeepAspectRatio, Qt::FastTransformation)));
+    emulator_->IsReadyToDraw() = false;
 }

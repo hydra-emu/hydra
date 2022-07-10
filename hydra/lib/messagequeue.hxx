@@ -5,6 +5,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <memory>
+#include <any>
 
 enum class ResponseId : int {
     COMMON_PAUSED = 0x100,
@@ -24,7 +25,8 @@ enum class RequestId : int {
 
 struct Request {
     RequestId Id;
-    std::string Data;
+    // Any type of data a request can have
+    std::any Data;
 };
 // My message queue design pattern implementation
 namespace TKPEmu::Tools {

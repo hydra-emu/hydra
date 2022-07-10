@@ -10,6 +10,7 @@
 #include <thread>
 #include <any>
 #include <fstream>
+#include <bitset>
 #include "emulator_data.hxx"
 #include "emulator_user_data.hxx"
 #include "../lib/messagequeue.hxx"
@@ -37,7 +38,7 @@ namespace TKPEmu {
 	class Emulator {
 	public:
 		Emulator() {};
-		virtual ~Emulator() = default;
+		virtual ~Emulator();
 		Emulator(const Emulator&) = delete;
 		Emulator& operator=(const Emulator&) = delete;
 		std::atomic_bool Stopped = false;
@@ -70,8 +71,12 @@ namespace TKPEmu {
 		// This function should only be ran if you're sure there's
 		// at least 1 request
 		bool poll_request(const Request& request);
+		std::unique_ptr<std::ofstream> log_file_ptr_;
+		std::bitset<64> log_flags_;
+		bool logging_ = false;
 	private:
 		virtual void v_extra_close() {};
+		virtual void v_log() {};
 		virtual void start();
 		virtual void reset();
 		virtual bool load_file(std::string);

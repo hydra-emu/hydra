@@ -30,7 +30,7 @@ namespace TKPEmu {
         static void SetEmulatorData(EmulatorDataMap map);
         static const EmulatorDataMap& GetEmulatorData() { return emulator_data_; }
         static void SetEmulatorUserData(EmulatorUserDataMap map);
-        static const EmulatorUserDataMap& GetEmulatorUserData() { return emulator_user_data_; }
+        static EmulatorUserDataMap& GetEmulatorUserData() { return emulator_user_data_; }
     };
 }
 #endif
