@@ -62,7 +62,7 @@ public:
     QPixmap texture_;
     std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     std::shared_ptr<TKPEmu::Emulator> emulator_;
-    std::array<QWidget*, 2> emulator_tools_;
+    std::array<QWidget*, 2> emulator_tools_ {};
     TKPEmu::EmuType emulator_type_;
     std::thread emulator_thread_;
     bool settings_open_ = false;

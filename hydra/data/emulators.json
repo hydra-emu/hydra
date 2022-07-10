@@ -11,7 +11,7 @@
         "HasDebugger": false,
         "HasTracelogger": true,
         "LoggingOptions": [
-            "CPU registers"
+            "Registers"
         ]
     },
     "1": {
@@ -23,9 +23,9 @@
         "DefaultWidth": 256,
         "DefaultHeight": 240,
         "HasDebugger": false,
-        "HasTracelogger": false,
+        "HasTracelogger": true,
         "LoggingOptions": [
-            "CPU registers"
+            "Registers"
         ]
     },
     "2": {
@@ -40,7 +40,7 @@
         "HasDebugger": false,
         "HasTracelogger": false,
         "LoggingOptions": [
-            "CPU registers"
+            "Registers"
         ]
     },
     "3": {
@@ -52,9 +52,9 @@
         "DefaultWidth": 64,
         "DefaultHeight": 32,
         "HasDebugger": false,
-        "HasTracelogger": false,
+        "HasTracelogger": true,
         "LoggingOptions": [
-            "CPU registers"
+            "Registers"
         ]
     }
 }

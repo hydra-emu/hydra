@@ -1,4 +1,5 @@
 #include <include/emulator_user_data.hxx>
+#include <include/error_factory.hxx>
 #include <fstream>
 #include <include/json.hpp>
 using json = nlohmann::json;
@@ -19,7 +20,11 @@ void EmulatorUserData::Save() {
 
 std::string EmulatorUserData::Get(const std::string& key) const {
     std::lock_guard lg(*mutex_);
-    return map_.at(key);
+    try {
+        return map_.at(key);
+    } catch (std::exception& ex) {
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to get: " + key);
+    }
 }
 
 void EmulatorUserData::Set(const std::string& key, const std::string& value) {

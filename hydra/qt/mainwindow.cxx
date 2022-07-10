@@ -179,6 +179,13 @@ void MainWindow::open_file() {
         emulator_thread_.detach();
         emulator_type_ = type;
         enable_emulation_actions(true);
+        for (int i = 0; i < emulator_tools_.size(); i++) {
+            if (emulator_tools_[i])
+                delete emulator_tools_[i];
+            emulator_tools_[i] = nullptr;
+        }
+        debugger_open_ = false;
+        tracelogger_open_ = false;
     );
 }
 
