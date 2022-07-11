@@ -97,7 +97,7 @@ void SettingsWindow::create_tabs() {
         gb_layout->addWidget(cgb_file_pick, 1, 2);
         QCheckBox* skip_bios = new QCheckBox("Skip bios?");
         skip_bios->setChecked(skip_bios_val);
-        connect(skip_bios, SIGNAL(stateChanged()), this, SLOT(on_gb_skip_bios_click()));
+        connect(skip_bios, SIGNAL(stateChanged(int)), this, SLOT(on_gb_skip_bios_click(int)));
         gb_layout->addWidget(skip_bios, 2, 0);
         QWidget* empty = new QWidget();
         empty->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);

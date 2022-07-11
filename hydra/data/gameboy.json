@@ -6,5 +6,5 @@
     "log_path": "",
     "dmg_path": "",
     "cgb_path": "",
-    "skip_bios": "false"
+    "skip_bios": "true"
 }

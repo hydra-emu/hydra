@@ -168,7 +168,6 @@ void MainWindow::open_file() {
         if (!emulator_->LoadFromFile(path))
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
         message_queue_ = emulator_->MessageQueue;
-        emulator_->SkipBoot = true;
         const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
         emulator_->SetWidth(data[static_cast<int>(type)].DefaultWidth);
         emulator_->SetHeight(data[static_cast<int>(type)].DefaultHeight);

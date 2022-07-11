@@ -42,7 +42,7 @@ namespace TKPEmu {
     std::shared_ptr<Emulator> EmulatorFactory::Create(EmuType type) { 
         switch (type) {
             case EmuType::Gameboy: {
-                return std::make_shared<Gameboy::Gameboy>();
+                return std::make_shared<Gameboy::Gameboy_TKPWrapper>();
             }
             case EmuType::N64: {
                 return std::make_shared<N64::N64_TKPWrapper>();
