@@ -1,10 +1,13 @@
 #include "settingswindow.hxx"
 #include <QVBoxLayout>
 #include <QLabel>
-#include <QPlainTextEdit>
+#include <QFileDialog>
 #include <QPushButton>
 #include <QScrollBar>
 #include <QCheckBox>
+#include <include/emulator_types.hxx>
+#include <include/emulator_factory.h>
+#define emu_data(emu_type) TKPEmu::EmulatorFactory::GetEmulatorUserData()[static_cast<int>(emu_type)]
 
 SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidget(parent, Qt::Window) {
     setAttribute(Qt::WA_DeleteOnClose);
@@ -39,7 +42,7 @@ SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidg
         layout->setContentsMargins(5, 5, 5, 5);
         layout->addWidget(tab_show_);
         right_group_box_->setLayout(layout);
-        right_group_box_->setMinimumWidth(400);
+        right_group_box_->setMinimumWidth(500);
         right_group_box_->setMinimumHeight(400);
     }
     main_layout->addWidget(left_group_box_, 0, 0, 1, 1);
@@ -69,28 +72,32 @@ void SettingsWindow::create_tabs() {
         tab_show_->addTab(input_tab, "Input");
     }
     {
+        auto dmg_path = emu_data(TKPEmu::EmuType::Gameboy).Get("dmg_path");
+        auto cgb_path = emu_data(TKPEmu::EmuType::Gameboy).Get("cgb_path");
+        auto skip_bios_val = emu_data(TKPEmu::EmuType::Gameboy).Get("skip_bios") == "true";
         QGridLayout* gb_layout = new QGridLayout;
-        QPlainTextEdit* dmg_bios_path = new QPlainTextEdit;
-        QFontMetrics m(dmg_bios_path->font());
-        int height = m.lineSpacing();
-        dmg_bios_path->setReadOnly(true);
-        dmg_bios_path->verticalScrollBar()->hide();
-        QPlainTextEdit* cgb_bios_path = new QPlainTextEdit;
-        cgb_bios_path->setReadOnly(true);
-        cgb_bios_path->setFixedHeight(height * 1.5);
-        cgb_bios_path->verticalScrollBar()->hide();
+        dmg_bios_path_ = new QLineEdit;
+        dmg_bios_path_->setReadOnly(true);
+        dmg_bios_path_->setText(dmg_path.c_str());
+        cgb_bios_path_ = new QLineEdit;
+        cgb_bios_path_->setReadOnly(true);
+        cgb_bios_path_->setText(cgb_path.c_str());
         QPushButton* dmg_file_pick = new QPushButton;
         dmg_file_pick->setText("...");
-        dmg_bios_path->setFixedHeight(height * 1.5);
+        connect(dmg_file_pick, SIGNAL(clicked()), this, SLOT(on_dmg_click()));
         QPushButton* cgb_file_pick = new QPushButton;
         cgb_file_pick->setText("...");
+        connect(cgb_file_pick, SIGNAL(clicked()), this, SLOT(on_cgb_click()));
+        gb_layout->setColumnStretch(1, 3);
         gb_layout->addWidget(new QLabel("DMG bios path:"), 0, 0);
-        gb_layout->addWidget(dmg_bios_path, 0, 1);
+        gb_layout->addWidget(dmg_bios_path_, 0, 1);
         gb_layout->addWidget(dmg_file_pick, 0, 2);
         gb_layout->addWidget(new QLabel("CGB bios path:"), 1, 0);
-        gb_layout->addWidget(cgb_bios_path, 1, 1);
+        gb_layout->addWidget(cgb_bios_path_, 1, 1);
         gb_layout->addWidget(cgb_file_pick, 1, 2);
         QCheckBox* skip_bios = new QCheckBox("Skip bios?");
+        skip_bios->setChecked(skip_bios_val);
+        connect(skip_bios, SIGNAL(stateChanged()), this, SLOT(on_gb_skip_bios_click()));
         gb_layout->addWidget(skip_bios, 2, 0);
         QWidget* empty = new QWidget();
         empty->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -117,6 +124,26 @@ void SettingsWindow::create_tabs() {
         c8_tab->setLayout(c8_layout);
         tab_show_->addTab(c8_tab, "C8");
     }
+}
+
+void SettingsWindow::on_dmg_click() {
+    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
+    emu_data(TKPEmu::EmuType::Gameboy).Set("dmg_path", path.toStdString());
+    emu_data(TKPEmu::EmuType::Gameboy).Save();
+    dmg_bios_path_->setText(path);
+}
+
+void SettingsWindow::on_cgb_click() {
+    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
+    emu_data(TKPEmu::EmuType::Gameboy).Set("cgb_path", path.toStdString());
+    emu_data(TKPEmu::EmuType::Gameboy).Save();
+    cgb_bios_path_->setText(path);
+}
+
+void SettingsWindow::on_gb_skip_bios_click(int state) {
+    auto str = (state == Qt::CheckState::Checked) ? "true" : "false";
+    emu_data(TKPEmu::EmuType::Gameboy).Set("skip_bios", str);
+    emu_data(TKPEmu::EmuType::Gameboy).Save();
 }
 
 void SettingsWindow::on_tab_change() {

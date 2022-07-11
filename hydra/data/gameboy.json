@@ -3,5 +3,8 @@
     "dmg_c1": "12632256",
     "dmg_c2": "8421504",
     "dmg_c3": "0",
-    "log_path": ""
+    "log_path": "",
+    "dmg_path": "",
+    "cgb_path": "",
+    "skip_bios": "false"
 }
