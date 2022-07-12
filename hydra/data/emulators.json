@@ -25,7 +25,8 @@
         "HasDebugger": false,
         "HasTracelogger": true,
         "LoggingOptions": [
-            "Registers"
+            "Registers",
+            "Cycles"
         ]
     },
     "2": {
