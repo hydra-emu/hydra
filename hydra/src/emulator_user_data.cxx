@@ -27,6 +27,10 @@ std::string EmulatorUserData::Get(const std::string& key) const {
     }
 }
 
+bool EmulatorUserData::IsEmpty() const {
+    return map_.empty();
+}
+
 void EmulatorUserData::Set(const std::string& key, const std::string& value) {
     std::lock_guard lg(*mutex_);
     map_[key] = value;

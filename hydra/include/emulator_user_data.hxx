@@ -13,6 +13,7 @@ public:
     EmulatorUserData(std::string path, std::map<std::string, std::string> map);
     std::string Get(const std::string& key) const;
     void Set(const std::string& key, const std::string& value);
+    bool IsEmpty() const;
     void Save();
 private:
     std::map<std::string, std::string> map_;

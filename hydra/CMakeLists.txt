@@ -12,8 +12,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Werror=return-type")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Werror=return-type") # -O3 may not be safe to use
+set(CMAKE_CXX_FLAGS "-g -Werror=return-type")
 
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -83,4 +82,52 @@ set_target_properties(TKPEmu PROPERTIES
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(TKPEmu)
+endif()
+
+# Testing
+set(CPPUNIT_DIR cppunit/src/cppunit)
+set(CPPUNIT_FILES 
+    ${CPPUNIT_DIR}/AdditionalMessage.cpp
+    ${CPPUNIT_DIR}/Asserter.cpp
+    ${CPPUNIT_DIR}/CompilerOutputter.cpp
+    ${CPPUNIT_DIR}/DefaultProtector.cpp
+    ${CPPUNIT_DIR}/Exception.cpp
+    ${CPPUNIT_DIR}/Message.cpp
+    ${CPPUNIT_DIR}/Protector.cpp
+    ${CPPUNIT_DIR}/ProtectorChain.cpp
+    ${CPPUNIT_DIR}/SourceLine.cpp
+    ${CPPUNIT_DIR}/StringTools.cpp
+    ${CPPUNIT_DIR}/SynchronizedObject.cpp
+    ${CPPUNIT_DIR}/Test.cpp
+    ${CPPUNIT_DIR}/TestCase.cpp
+    ${CPPUNIT_DIR}/TestComposite.cpp
+    ${CPPUNIT_DIR}/TestFactoryRegistry.cpp
+    ${CPPUNIT_DIR}/TestFailure.cpp
+    ${CPPUNIT_DIR}/TestLeaf.cpp
+    ${CPPUNIT_DIR}/TestNamer.cpp
+    ${CPPUNIT_DIR}/TestPath.cpp
+    ${CPPUNIT_DIR}/TestResult.cpp
+    ${CPPUNIT_DIR}/TestResultCollector.cpp
+    ${CPPUNIT_DIR}/TestRunner.cpp
+    ${CPPUNIT_DIR}/TestSuccessListener.cpp
+    ${CPPUNIT_DIR}/TestSuite.cpp
+    ${CPPUNIT_DIR}/TestSuiteBuilderContext.cpp
+    ${CPPUNIT_DIR}/TextOutputter.cpp
+    ${CPPUNIT_DIR}/TextTestProgressListener.cpp
+    ${CPPUNIT_DIR}/TextTestRunner.cpp
+    ${CPPUNIT_DIR}/TypeInfoHelper.cpp
+)
+set(TKP_ENABLE_TESTING 1)
+if (TKP_ENABLE_TESTING EQUAL 1)
+    project(cppunit)
+    add_library(cppunit ${CPPUNIT_FILES})
+    enable_testing()
+    project(GameboyTKPTest)
+    set(GBTKPTEST_FILES
+        GameboyTKP/qa/test_runner.cpp
+        GameboyTKP/qa/test_gameboy.cpp
+    )
+    add_executable(GameboyTKPTest ${GBTKPTEST_FILES})
+    target_link_libraries(GameboyTKPTest GameboyTKP TKPSrc TKPLib N64TKP NESTKP Chip8 ${SDL2_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} cppunit)
+    add_test(NAME GameboyTKPTest COMMAND GameboyTKPTest)
 endif()

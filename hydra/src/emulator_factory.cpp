@@ -51,7 +51,7 @@ namespace TKPEmu {
                 return std::make_shared<Chip8::Chip8>();
             }
             case EmuType::NES: {
-                return std::make_shared<NES::NES>();
+                return std::make_shared<NES::NES_TKPWrapper>();
             }
             default: {
                 throw ErrorFactory::generate_exception(__func__, __LINE__, "EmulatorFactory::Create failed");

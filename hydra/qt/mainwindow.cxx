@@ -58,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 MainWindow::~MainWindow() {
+    stop_emulator();
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
     SDL_Quit();
 }
@@ -161,6 +162,7 @@ void MainWindow::open_file() {
         close_tools();
         auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path);
         {
+            stop_emulator();
             auto emulator = TKPEmu::EmulatorFactory::Create(type);
             std::swap(emulator, emulator_);
             // Old emulator is destroyed here
@@ -171,6 +173,7 @@ void MainWindow::open_file() {
         const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
         emulator_->SetWidth(data[static_cast<int>(type)].DefaultWidth);
         emulator_->SetHeight(data[static_cast<int>(type)].DefaultHeight);
+        emulator_->Paused = pause_act_->isChecked();
         auto func = [&]() {
             emulator_->Start();
         };
@@ -352,9 +355,11 @@ void MainWindow::reset_emulator() {
 }
 
 void MainWindow::stop_emulator() {
-    emulator_->CloseAndWait();
-    emulator_.reset();
-    enable_emulation_actions(false);
+    if (emulator_) {
+        emulator_->CloseAndWait();
+        emulator_.reset();
+        enable_emulation_actions(false);
+    }
 }
 
 void MainWindow::redraw_screen() {
