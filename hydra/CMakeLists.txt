@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(TKPEmu VERSION 0.2.0 LANGUAGES CXX)
+set(TKP_ENABLE_TESTING 1)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -117,17 +118,30 @@ set(CPPUNIT_FILES
     ${CPPUNIT_DIR}/TextTestRunner.cpp
     ${CPPUNIT_DIR}/TypeInfoHelper.cpp
 )
-set(TKP_ENABLE_TESTING 1)
 if (TKP_ENABLE_TESTING EQUAL 1)
     project(cppunit)
     add_library(cppunit ${CPPUNIT_FILES})
     enable_testing()
-    project(GameboyTKPTest)
+endif()
+if (TKP_ENABLE_TESTING EQUAL 1)
+    project(TestGameboy)
     set(GBTKPTEST_FILES
         GameboyTKP/qa/test_runner.cpp
         GameboyTKP/qa/test_gameboy.cpp
     )
-    add_executable(GameboyTKPTest ${GBTKPTEST_FILES})
-    target_link_libraries(GameboyTKPTest GameboyTKP TKPSrc TKPLib N64TKP NESTKP Chip8 ${SDL2_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} cppunit)
-    add_test(NAME GameboyTKPTest COMMAND GameboyTKPTest)
+    add_executable(TestGameboy ${GBTKPTEST_FILES})
+    target_link_libraries(TestGameboy GameboyTKP TKPSrc TKPLib N64TKP NESTKP Chip8 ${SDL2_LIBRARIES} cppunit)
+    add_test(NAME TestGameboy COMMAND TestGameboy)
+endif()
+if (TKP_ENABLE_TESTING EQUAL 1)
+    project(TestEmulatorFactory)
+    set(EMUFACTEST_FILES
+        src/qa/test_runner.cpp
+        src/qa/test_emulator_factory.cpp
+        src/emulator.cpp
+        src/emulator_user_data.cxx
+    )
+    add_executable(TestEmulatorFactory ${EMUFACTEST_FILES})
+    target_link_libraries(TestEmulatorFactory TKPLib TKPSrc N64TKP NESTKP GameboyTKP Chip8 ${SDL2_LIBRARIES} cppunit)
+    add_test(Name TestEmulatorFactory COMMAND TestEmulatorFactory)
 endif()
