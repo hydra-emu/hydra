@@ -15,6 +15,7 @@ public:
     ~ScreenWidget();
     void InitializeTexture(int width, int height, void* data);
     void Redraw(int width, int height, void* data);
+    static bool GLInitialized;
 private:
     void initializeGL() override;
     void paintGL() override;

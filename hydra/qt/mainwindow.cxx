@@ -41,7 +41,8 @@ MainWindow::MainWindow(QWidget *parent)
     QSurfaceFormat::setDefaultFormat(format);
     screen_ = new ScreenWidget(this);
     screen_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-    screen_->setMinimumSize(160, 144);
+    screen_->setVisible(true);
+    screen_->setMinimumSize(1, 1);
     layout->addWidget(screen_);
     widget->setLayout(layout);
     create_actions();
@@ -176,6 +177,7 @@ void MainWindow::open_file() {
         const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
         emulator_->SetWidth(data[static_cast<int>(type)].DefaultWidth);
         emulator_->SetHeight(data[static_cast<int>(type)].DefaultHeight);
+        screen_->setMinimumSize(emulator_->GetWidth(), emulator_->GetHeight());
         screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetScreenData());
         emulator_->Paused = pause_act_->isChecked();
         auto func = [&]() {
@@ -241,6 +243,8 @@ void MainWindow::enable_emulation_actions(bool should) {
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
+    if (ScreenWidget::GLInitialized)
+        screen_->setVisible(should);
     debugger_act_->setEnabled(false);
     tracelogger_act_->setEnabled(false);
     if (should) {

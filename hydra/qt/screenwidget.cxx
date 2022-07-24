@@ -1,5 +1,6 @@
 #include "screenwidget.hxx"
 #include <iostream>
+bool ScreenWidget::GLInitialized = false;
 
 ScreenWidget::ScreenWidget(QWidget *parent) : QOpenGLWidget(parent) {}
 
