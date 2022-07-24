@@ -11,6 +11,7 @@
 #include <QClipboard>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QSurfaceFormat>
 #include <iostream>
 
 #define QT_MAY_THROW(func) try {\
@@ -33,13 +34,15 @@ MainWindow::MainWindow(QWidget *parent)
     QWidget *widget = new QWidget;
     setCentralWidget(widget);
     QVBoxLayout *layout = new QVBoxLayout;
-    layout->setAlignment(Qt::AlignHCenter);
+    layout->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     layout->setContentsMargins(5, 5, 5, 5);
-    lbl_ = new QLabel(this);
-    lbl_->setScaledContents(false);
-    lbl_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    lbl_->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    layout->addWidget(lbl_);
+    QSurfaceFormat format;
+    format.setDepthBufferSize(24);
+    QSurfaceFormat::setDefaultFormat(format);
+    screen_ = new ScreenWidget(this);
+    screen_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    screen_->setMinimumSize(160, 144);
+    layout->addWidget(screen_);
     widget->setLayout(layout);
     create_actions();
     create_menus();
@@ -173,6 +176,7 @@ void MainWindow::open_file() {
         const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
         emulator_->SetWidth(data[static_cast<int>(type)].DefaultWidth);
         emulator_->SetHeight(data[static_cast<int>(type)].DefaultHeight);
+        screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetScreenData());
         emulator_->Paused = pause_act_->isChecked();
         auto func = [&]() {
             emulator_->Start();
@@ -237,7 +241,6 @@ void MainWindow::enable_emulation_actions(bool should) {
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
-    lbl_->setVisible(should);
     debugger_act_->setEnabled(false);
     tracelogger_act_->setEnabled(false);
     if (should) {
@@ -368,7 +371,7 @@ void MainWindow::redraw_screen() {
     std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
     if (!emulator_->IsReadyToDraw())
         return;
-    QImage image((const unsigned char*)emulator_->GetScreenData(), emulator_->GetWidth(), emulator_->GetHeight(), QImage::Format_RGBA8888);
-    lbl_->setPixmap(QPixmap::fromImage(image.scaled(lbl_->width(), lbl_->height(), Qt::KeepAspectRatio, Qt::FastTransformation)));
+    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetScreenData());
+    screen_->update();
     emulator_->IsReadyToDraw() = false;
 }

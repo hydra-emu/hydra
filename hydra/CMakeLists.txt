@@ -35,6 +35,8 @@ set(PROJECT_SOURCES
     qt/main.cxx
     qt/mainwindow.cxx
     qt/mainwindow.hxx
+    qt/screenwidget.hxx
+    qt/screenwidget.cxx
     qt/settingswindow.hxx
     qt/settingswindow.cxx
     qt/aboutwindow.hxx
@@ -43,6 +45,8 @@ set(PROJECT_SOURCES
     qt/debuggerwindow.cxx
     qt/traceloggerwindow.hxx
     qt/traceloggerwindow.cxx
+    qt/nes_ppuviewer.hxx
+    qt/nes_ppuviewer.cxx
     src/emulator.cpp
 )
 

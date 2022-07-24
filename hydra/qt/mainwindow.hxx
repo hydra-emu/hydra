@@ -11,6 +11,7 @@
 #include <array>
 #include "../include/emulator_factory.h"
 #include "../include/emulator.h"
+#include "screenwidget.hxx"
 
 class MainWindow : public QMainWindow
 {
@@ -58,8 +59,7 @@ public:
     QAction* screenshot_act_;
     QAction* debugger_act_;
     QAction* tracelogger_act_;
-    QLabel* lbl_;
-    QPixmap texture_;
+    ScreenWidget* screen_;
     std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     std::shared_ptr<TKPEmu::Emulator> emulator_;
     std::array<QWidget*, 2> emulator_tools_ {};

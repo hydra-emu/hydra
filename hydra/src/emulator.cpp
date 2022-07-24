@@ -4,7 +4,6 @@
 #include <fstream>
 #include <include/emulator.h>
 #include <lib/md5.h>
-#include <GL/glew.h>
 #include <include/error_factory.hxx>
 #include <lib/str_hash.h>
 
