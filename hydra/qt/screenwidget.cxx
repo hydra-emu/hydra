@@ -1,5 +1,8 @@
 #include "screenwidget.hxx"
+#include <include/error_factory.hxx>
 #include <iostream>
+#include <QFile>
+
 bool ScreenWidget::GLInitialized = false;
 
 ScreenWidget::ScreenWidget(QWidget *parent) : QOpenGLWidget(parent) {}
@@ -25,34 +28,29 @@ void ScreenWidget::Redraw(int width, int height, void* data) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void ScreenWidget::initializeGL() {
-    initializeOpenGLFunctions();
-    glGenTextures(1, &texture_);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glEnable(GL_TEXTURE_2D);
+void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
+    if (!vertex && !fragment) {
+        QFile vfile(":/shaders/simple.vs"); vfile.open(QIODevice::ReadOnly);
+        QFile ffile(":/shaders/simple.fs"); ffile.open(QIODevice::ReadOnly);
+        vshader_source_ = vfile.readAll();
+        fshader_source_ = ffile.readAll();
+    } else {
+        vshader_source_ = *vertex;
+        fshader_source_ = *fragment;
+    }
+    if (program_) {
+        delete program_;
+    }
     QOpenGLShader *vshader = new QOpenGLShader(QOpenGLShader::Vertex, this);
-    const char *vsrc =
-        "#version 150 core\n"
-        "in vec2 in_Vertex;\n"
-        "in vec2 vertTexCoord;\n"
-        "out vec2 fragTexCoord;\n"
-        "void main(void)\n"
-        "{\n"
-        "    gl_Position = vec4(in_Vertex, 0.0, 1.0);\n"
-        "    fragTexCoord = vertTexCoord;\n"
-        "}\n";
-    vshader->compileSourceCode(vsrc);
-
+    vshader->compileSourceCode(vshader_source_);
+    if (!vshader->log().isEmpty()) {
+        throw ErrorFactory::generate_exception(__func__, __LINE__, vshader->log().toStdString());
+    }
     QOpenGLShader *fshader = new QOpenGLShader(QOpenGLShader::Fragment, this);
-    const char *fsrc =
-            "#version 150 core\n"
-            "uniform sampler2D tex;\n"
-            "in vec2 fragTexCoord;\n"
-            "void main(void)\n"
-            "{\n"
-            "    gl_FragColor = texture2D(tex,fragTexCoord);\n"
-            "}\n";
-    fshader->compileSourceCode(fsrc);
+    fshader->compileSourceCode(fshader_source_);
+    if (!fshader->log().isEmpty()) {
+        throw ErrorFactory::generate_exception(__func__, __LINE__, fshader->log().toStdString());
+    }
     program_ = new QOpenGLShaderProgram;
     program_->addShader(vshader);
     program_->addShader(fshader);
@@ -60,6 +58,20 @@ void ScreenWidget::initializeGL() {
     program_->bind();
     glActiveTexture(GL_TEXTURE0);
     program_->setUniformValue("tex", 0);
+    delete vshader;
+    delete fshader;
+}
+
+void ScreenWidget::initializeGL() {
+    initializeOpenGLFunctions();
+    glGenTextures(1, &texture_);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_TEXTURE_2D);
+    ResetProgram();
+}
+
+void ScreenWidget::resizeGL(int width, int height) {
+    
 }
 
 void ScreenWidget::paintGL() {

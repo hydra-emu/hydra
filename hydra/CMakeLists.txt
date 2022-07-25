@@ -39,6 +39,8 @@ set(PROJECT_SOURCES
     qt/screenwidget.cxx
     qt/settingswindow.hxx
     qt/settingswindow.cxx
+    qt/shadereditor.hxx
+    qt/shadereditor.cxx
     qt/aboutwindow.hxx
     qt/aboutwindow.cxx
     qt/debuggerwindow.hxx

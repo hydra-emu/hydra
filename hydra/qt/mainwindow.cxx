@@ -1,5 +1,6 @@
 #include "mainwindow.hxx"
 #include "settingswindow.hxx"
+#include "shadereditor.hxx"
 #include "debuggerwindow.hxx"
 #include "traceloggerwindow.hxx"
 #include "aboutwindow.hxx"
@@ -97,6 +98,11 @@ void MainWindow::create_actions() {
     about_act_->setShortcut(QKeySequence::HelpContents);
     about_act_->setStatusTip(tr("Show about dialog"));
     connect(about_act_, &QAction::triggered, this, &MainWindow::open_about);
+    shaders_act_ = new QAction(tr("&Shaders"), this);
+    shaders_act_->setShortcut(Qt::Key_F12);
+    shaders_act_->setStatusTip("Open the shader editor");
+    shaders_act_->setIcon(QIcon(":/images/shaders.png"));
+    connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
     debugger_act_ = new QAction(tr("&Debugger"), this);
     debugger_act_->setShortcut(Qt::Key_F2);
     debugger_act_->setStatusTip("Open the debugger");
@@ -121,6 +127,8 @@ void MainWindow::create_menus() {
     emulation_menu_->addAction(reset_act_);
     emulation_menu_->addAction(stop_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
+    tools_menu_->addAction(shaders_act_);
+    tools_menu_->addSeparator();
     tools_menu_->addAction(debugger_act_);
     tools_menu_->addAction(tracelogger_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
@@ -203,6 +211,10 @@ void MainWindow::open_settings() {
             auto* qw = new SettingsWindow(settings_open_, this);
         );
     }
+}
+
+void MainWindow::open_shaders() {
+
 }
 
 void MainWindow::open_debugger() {

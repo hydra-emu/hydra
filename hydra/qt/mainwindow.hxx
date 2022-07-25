@@ -28,6 +28,7 @@ private:
     void open_file();
     void open_settings();
     void open_about();
+    void open_shaders();
     void open_debugger();
     void open_tracelogger();
     void screenshot();
@@ -57,6 +58,7 @@ public:
     QAction* stop_act_;
     QAction* settings_act_;
     QAction* screenshot_act_;
+    QAction* shaders_act_;
     QAction* debugger_act_;
     QAction* tracelogger_act_;
     ScreenWidget* screen_;
@@ -67,6 +69,7 @@ public:
     std::thread emulator_thread_;
     bool settings_open_ = false;
     bool about_open_ = false;
+    bool shaders_open_ = false;
     bool debugger_open_ = false;
     bool tracelogger_open_ = false;
 };
