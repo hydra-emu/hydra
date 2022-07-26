@@ -1,5 +1,4 @@
 #include "screenwidget.hxx"
-#include <include/error_factory.hxx>
 #include <iostream>
 #include <QFile>
 
@@ -42,18 +41,22 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
     } else {
         fshader_source_ = *fragment;
     }
-    if (program_) {
-        delete program_;
-    }
     QOpenGLShader *vshader = new QOpenGLShader(QOpenGLShader::Vertex, this);
     vshader->compileSourceCode(vshader_source_);
     if (!vshader->log().isEmpty()) {
-        throw ErrorFactory::generate_exception(__func__, __LINE__, vshader->log().toStdString());
+        auto error = vshader->log().toStdString();
+        delete vshader;
+        throw std::runtime_error(error);
     }
     QOpenGLShader *fshader = new QOpenGLShader(QOpenGLShader::Fragment, this);
     fshader->compileSourceCode(fshader_source_);
     if (!fshader->log().isEmpty()) {
-        throw ErrorFactory::generate_exception(__func__, __LINE__, fshader->log().toStdString());
+        auto error = fshader->log().toStdString();
+        delete fshader;
+        throw std::runtime_error(error);
+    }
+    if (program_) {
+        delete program_;
     }
     program_ = new QOpenGLShaderProgram;
     program_->addShader(vshader);

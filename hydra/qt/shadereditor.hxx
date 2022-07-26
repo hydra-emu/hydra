@@ -41,12 +41,17 @@ public:
     ShaderEditor& operator=(const ShaderEditor&) = delete;
 private slots:
     void compile();
+    void autocompile();
+    void open_shader();
 private:
     QTextEdit* editor_;
     QToolBar* toolbar_;
     QAction* compile_act_;
+    QAction* autocompile_act_;
+    QAction* open_act_;
     ShaderHighlighter* highlighter_;
     std::function<void(QString*, QString*)> callback_;
     bool& open_;
+    bool autocompile_ = false;
 };
 #endif

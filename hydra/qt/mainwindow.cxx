@@ -72,6 +72,7 @@ void MainWindow::create_actions() {
     open_act_ = new QAction(tr("&Open ROM"), this);
     open_act_->setShortcuts(QKeySequence::Open);
     open_act_->setStatusTip(tr("Open a ROM"));
+    open_act_->setIcon(QIcon(":/images/open.png"));
     connect(open_act_, &QAction::triggered, this, &MainWindow::open_file);
     settings_act_ = new QAction(tr("&Settings"), this);
     settings_act_->setShortcut(Qt::CTRL | Qt::Key_Comma);

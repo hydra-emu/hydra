@@ -7,7 +7,7 @@
     func \
 } catch (std::exception& ex) { \
     QMessageBox messageBox; \
-    messageBox.critical(0,"Error", ex.what()); \
+    messageBox.critical(0,"Shader compilation error", ex.what()); \
     messageBox.setFixedSize(500,200); \
     return; \
 }
@@ -197,14 +197,22 @@ ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> c
     font.setFixedPitch(true);
     font.setPointSize(10);
     editor_ = new QTextEdit;
+    editor_->setMinimumSize(400, 400);
     editor_->setFont(font);
     highlighter_ = new ShaderHighlighter(editor_->document());
     QFile file(":/shaders/simple.fs");
     if (file.open(QFile::ReadOnly | QFile::Text))
         editor_->setPlainText(file.readAll());
     toolbar_ = new QToolBar;
+    open_act_ = toolbar_->addAction(QIcon(":/images/open.png"), "Open shader");
+    connect(open_act_, SIGNAL(triggered()), this, SLOT(open_shader()));
+    toolbar_->addSeparator();
+    autocompile_act_ = toolbar_->addAction(QIcon(":/images/autocompile.png"), "Auto compile");
+    autocompile_act_->setCheckable(true);
+    connect(autocompile_act_, SIGNAL(triggered()), this, SLOT(autocompile()));
     compile_act_ = toolbar_->addAction(QIcon(":/images/compile.png"), "Compile");
     connect(compile_act_, SIGNAL(triggered()), this, SLOT(compile()));
+    autocompile();
     QVBoxLayout* layout = new QVBoxLayout;
     layout->addWidget(toolbar_);
     layout->addWidget(editor_);
@@ -220,6 +228,16 @@ void ShaderEditor::compile() {
         QString src = editor_->toPlainText();
         callback_(nullptr, &src);
     );
+}
+
+void ShaderEditor::open_shader() {
+
+}
+
+void ShaderEditor::autocompile() {
+    autocompile_ ^= true;
+    autocompile_act_->setChecked(autocompile_);
+    compile_act_->setEnabled(!autocompile_);
 }
 
 ShaderEditor::~ShaderEditor() {
