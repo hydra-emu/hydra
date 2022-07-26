@@ -99,7 +99,7 @@ void MainWindow::create_actions() {
     about_act_->setStatusTip(tr("Show about dialog"));
     connect(about_act_, &QAction::triggered, this, &MainWindow::open_about);
     shaders_act_ = new QAction(tr("&Shaders"), this);
-    shaders_act_->setShortcut(Qt::Key_F12);
+    shaders_act_->setShortcut(Qt::Key_F11);
     shaders_act_->setStatusTip("Open the shader editor");
     shaders_act_->setIcon(QIcon(":/images/shaders.png"));
     connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
@@ -214,7 +214,13 @@ void MainWindow::open_settings() {
 }
 
 void MainWindow::open_shaders() {
-
+    if (!shaders_open_) {
+        using namespace std::placeholders;
+        QT_MAY_THROW(
+            std::function<void(QString*, QString*)> callback = std::bind(&ScreenWidget::ResetProgram, screen_, _1, _2);
+            auto* qw = new ShaderEditor(shaders_open_, callback, this);
+        );
+    }
 }
 
 void MainWindow::open_debugger() {

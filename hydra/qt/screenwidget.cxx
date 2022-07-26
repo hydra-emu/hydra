@@ -29,13 +29,17 @@ void ScreenWidget::Redraw(int width, int height, void* data) {
 }
 
 void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
-    if (!vertex && !fragment) {
+    
+    if (!vertex) {
         QFile vfile(":/shaders/simple.vs"); vfile.open(QIODevice::ReadOnly);
-        QFile ffile(":/shaders/simple.fs"); ffile.open(QIODevice::ReadOnly);
         vshader_source_ = vfile.readAll();
-        fshader_source_ = ffile.readAll();
     } else {
         vshader_source_ = *vertex;
+    }
+    if (!fragment) {
+        QFile ffile(":/shaders/simple.fs"); ffile.open(QIODevice::ReadOnly);
+        fshader_source_ = ffile.readAll();
+    } else {
         fshader_source_ = *fragment;
     }
     if (program_) {
@@ -58,8 +62,9 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
     program_->bind();
     glActiveTexture(GL_TEXTURE0);
     program_->setUniformValue("tex", 0);
-    delete vshader;
+    // program_->removeShader(fshader);
     delete fshader;
+    delete vshader;
 }
 
 void ScreenWidget::initializeGL() {

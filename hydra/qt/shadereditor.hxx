@@ -4,8 +4,12 @@
 #include <QSyntaxHighlighter>
 #include <QList>
 #include <QString>
+#include <QTextEdit>
+#include <QFile>
+#include <QToolBar>
 #include <QTextCharFormat>
 #include <QRegularExpression>
+#include <functional>
 
 class ShaderHighlighter final : public QSyntaxHighlighter {
     Q_OBJECT
@@ -18,18 +22,31 @@ private:
         QTextCharFormat format;
     };
     void highlightBlock(const QString& text) override;
+    QRegularExpression comment_start_expression_;
+    QRegularExpression comment_end_expression_;
+    QTextCharFormat multiline_comment_format_;
+    QTextCharFormat singleline_comment_format_;
+    QTextCharFormat hashtag_format_;
     QList<HighlightingRule> highlighting_rules_;
-    QTextCharFormat keyword_format_;
+    QTextCharFormat keyword_blue_format_;
+    QTextCharFormat keyword_pink_format_;
 };
 
 class ShaderEditor final : public QWidget {
     Q_OBJECT
 public:
-    ShaderEditor(bool& open, QWidget* parent = nullptr);
+    ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback, QWidget* parent = nullptr);
     ~ShaderEditor();
     ShaderEditor(const ShaderEditor&) = delete;
     ShaderEditor& operator=(const ShaderEditor&) = delete;
+private slots:
+    void compile();
 private:
+    QTextEdit* editor_;
+    QToolBar* toolbar_;
+    QAction* compile_act_;
+    ShaderHighlighter* highlighter_;
+    std::function<void(QString*, QString*)> callback_;
     bool& open_;
 };
 #endif

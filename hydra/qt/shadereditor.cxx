@@ -1,8 +1,32 @@
 #include "shadereditor.hxx"
+#include <QVBoxLayout>
+#include <QOpenGLShader>
+#include <QMessageBox>
+
+#define QT_MAY_THROW(func) try {\
+    func \
+} catch (std::exception& ex) { \
+    QMessageBox messageBox; \
+    messageBox.critical(0,"Error", ex.what()); \
+    messageBox.setFixedSize(500,200); \
+    return; \
+}
 
 ShaderHighlighter::ShaderHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent) {
-    const QString patterns[] = {
+    const QString patterns_pink[] = {
+        QStringLiteral("\\bbreak\\b"),
+        QStringLiteral("\\bcontinue\\b"),
+        QStringLiteral("\\bdo\\b"),
+        QStringLiteral("\\bfor\\b"),
+        QStringLiteral("\\bwhile\\b"),
+        QStringLiteral("\\bswitch\\b"),
+        QStringLiteral("\\bcase\\b"),
+        QStringLiteral("\\bdefault\\b"),
+        QStringLiteral("\\bif\\b"),
+        QStringLiteral("\\belse\\b"),
+    };
+    const QString patterns_blue[] = {
         QStringLiteral("\\battribute\\b"),
         QStringLiteral("\\bconst\\b"),
         QStringLiteral("\\buniform\\b"),
@@ -14,16 +38,6 @@ ShaderHighlighter::ShaderHighlighter(QTextDocument *parent)
         QStringLiteral("\\bnoperspective\\b"),
         QStringLiteral("\\bpatch\\b"),
         QStringLiteral("\\bsample\\b"),
-        QStringLiteral("\\bbreak\\b"),
-        QStringLiteral("\\bcontinue\\b"),
-        QStringLiteral("\\bdo\\b"),
-        QStringLiteral("\\bfor\\b"),
-        QStringLiteral("\\bwhile\\b"),
-        QStringLiteral("\\bswitch\\b"),
-        QStringLiteral("\\bcase\\b"),
-        QStringLiteral("\\bdefault\\b"),
-        QStringLiteral("\\bif\\b"),
-        QStringLiteral("\\belse\\b"),
         QStringLiteral("\\bsubroutine\\b"),
         QStringLiteral("\\bin\\b"),
         QStringLiteral("\\bout\\b"),
@@ -124,18 +138,89 @@ ShaderHighlighter::ShaderHighlighter(QTextDocument *parent)
         QStringLiteral("\\busamplerCubeArray\\b"),
         QStringLiteral("\\bstruct\\b"),
     };
-    keyword_format_.setForeground(Qt::darkBlue);
-    keyword_format_.setFontWeight(QFont::Bold);
-    for (const QString& pattern : patterns) {
-        highlighting_rules_.append({QRegularExpression(pattern), keyword_format_});
+    keyword_blue_format_.setForeground(Qt::darkBlue);
+    keyword_blue_format_.setFontWeight(QFont::Bold);
+    keyword_pink_format_.setForeground(QBrush(QColor(174, 50, 160)));
+    keyword_pink_format_.setFontWeight(QFont::Bold);
+    for (const QString& pattern : patterns_blue) {
+        highlighting_rules_.append({QRegularExpression(pattern), keyword_blue_format_});
     }
+    for (const QString& pattern : patterns_pink) {
+        highlighting_rules_.append({QRegularExpression(pattern), keyword_pink_format_});
+    }
+    multiline_comment_format_.setForeground(Qt::darkGreen);
+    singleline_comment_format_.setForeground(Qt::darkGreen);
+    hashtag_format_.setForeground(Qt::lightGray);
+    highlighting_rules_.append({QRegularExpression(QStringLiteral("//[^\n]*")), singleline_comment_format_});
+    highlighting_rules_.append({QRegularExpression(QStringLiteral("#[^\n]*")), hashtag_format_});
+    comment_start_expression_ = QRegularExpression(QStringLiteral("/\\*"));
+    comment_end_expression_ = QRegularExpression(QStringLiteral("\\*/"));
 }
 
 void ShaderHighlighter::highlightBlock(const QString& text) {
-    
+    if (text.isEmpty())
+        return;
+    for (const HighlightingRule &rule : qAsConst(highlighting_rules_)) {
+        QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
+        while (matchIterator.hasNext()) {
+            QRegularExpressionMatch match = matchIterator.next();
+            setFormat(match.capturedStart(), match.capturedLength(), rule.format);
+        }
+    }
+    setCurrentBlockState(0);
+    int startIndex = 0;
+    if (previousBlockState() != 1)
+        startIndex = text.indexOf(comment_start_expression_);
+
+    while (startIndex >= 0) {
+        QRegularExpressionMatch match = comment_end_expression_.match(text, startIndex);
+        int endIndex = match.capturedStart();
+        int commentLength = 0;
+        if (endIndex == -1) {
+            setCurrentBlockState(1);
+            commentLength = text.length() - startIndex;
+        } else {
+            commentLength = endIndex - startIndex
+                            + match.capturedLength();
+        }
+        setFormat(startIndex, commentLength, multiline_comment_format_);
+        startIndex = text.indexOf(comment_start_expression_, startIndex + commentLength);
+    }
 }
 
-ShaderEditor::ShaderEditor(bool& open, QWidget *parent) : open_(open), QWidget(parent) {}
+ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback, QWidget *parent) : open_(open),
+    callback_(callback), QWidget(parent, Qt::Window)
+{
+    setAttribute(Qt::WA_DeleteOnClose);
+    QFont font;
+    font.setFamily("Courier");
+    font.setFixedPitch(true);
+    font.setPointSize(10);
+    editor_ = new QTextEdit;
+    editor_->setFont(font);
+    highlighter_ = new ShaderHighlighter(editor_->document());
+    QFile file(":/shaders/simple.fs");
+    if (file.open(QFile::ReadOnly | QFile::Text))
+        editor_->setPlainText(file.readAll());
+    toolbar_ = new QToolBar;
+    compile_act_ = toolbar_->addAction(QIcon(":/images/compile.png"), "Compile");
+    connect(compile_act_, SIGNAL(triggered()), this, SLOT(compile()));
+    QVBoxLayout* layout = new QVBoxLayout;
+    layout->addWidget(toolbar_);
+    layout->addWidget(editor_);
+    setLayout(layout);
+    setWindowTitle(tr("Shader editor"));
+    setWindowIcon(QIcon(":/images/shaders.png"));
+    show();
+    open_ = true;
+}
+
+void ShaderEditor::compile() {
+    QT_MAY_THROW(
+        QString src = editor_->toPlainText();
+        callback_(nullptr, &src);
+    );
+}
 
 ShaderEditor::~ShaderEditor() {
     open_ = false;
