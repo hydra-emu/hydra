@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     format.setDepthBufferSize(24);
     QSurfaceFormat::setDefaultFormat(format);
     screen_ = new ScreenWidget(this);
-    screen_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    screen_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     screen_->setVisible(true);
     screen_->setMinimumSize(1, 1);
     layout->addWidget(screen_);
@@ -186,7 +186,7 @@ void MainWindow::open_file() {
         const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
         emulator_->SetWidth(data[static_cast<int>(type)].DefaultWidth);
         emulator_->SetHeight(data[static_cast<int>(type)].DefaultHeight);
-        screen_->setMinimumSize(emulator_->GetWidth(), emulator_->GetHeight());
+        screen_->setMinimumSize(emulator_->GetWidth() * 2, emulator_->GetHeight() * 2);
         screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetScreenData());
         emulator_->Paused = pause_act_->isChecked();
         auto func = [&]() {
