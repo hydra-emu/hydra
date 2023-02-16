@@ -10,6 +10,3 @@
 [submodule "TKPEmu/chip8"]
 	path = hydra/chip8
 	url = https://github.com/OFFTKP/chip8
-[submodule "TKPEmu/cppunit"]
-	path = hydra/cppunit
-	url = git://anongit.freedesktop.org/git/libreoffice/cppunit/

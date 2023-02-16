@@ -14,8 +14,8 @@ class ScreenWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 public:
     ScreenWidget(QWidget *parent = nullptr);
     ~ScreenWidget();
-    void InitializeTexture(int width, int height, void* data);
-    void Redraw(int width, int height, void* data);
+    void InitializeTexture(int width, int height, int bitdepth, void* data);
+    void Redraw(int width, int height, int bitdepth, void* data);
     void ResetProgram(QString* vertex = nullptr, QString* fragment = nullptr);
     static bool GLInitialized;
 private:

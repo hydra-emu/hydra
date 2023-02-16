@@ -186,8 +186,8 @@ void MainWindow::open_file() {
         const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
         emulator_->SetWidth(data[static_cast<int>(type)].DefaultWidth);
         emulator_->SetHeight(data[static_cast<int>(type)].DefaultHeight);
-        screen_->setMinimumSize(emulator_->GetWidth() * 2, emulator_->GetHeight() * 2);
-        screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetScreenData());
+        screen_->setMinimumSize(emulator_->GetWidth(), emulator_->GetHeight());
+        screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(), emulator_->GetScreenData());
         emulator_->Paused = pause_act_->isChecked();
         auto func = [&]() {
             emulator_->Start();
@@ -394,7 +394,7 @@ void MainWindow::redraw_screen() {
     std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
     if (!emulator_->IsReadyToDraw())
         return;
-    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetScreenData());
+    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(), emulator_->GetScreenData());
     screen_->update();
     emulator_->IsReadyToDraw() = false;
 }

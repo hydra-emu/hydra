@@ -54,13 +54,14 @@ namespace TKPEmu {
 		bool LoadFromFile(std::string path);
 		void Screenshot(std::string filename, std::string directory = {});
 		void CloseAndWait();
-		int GetWidth() { return width_; }
-		int GetHeight() { return height_; }
+		virtual int GetWidth() { return width_; }
+		virtual int GetHeight() { return height_; }
 		void SetWidth(int width) { width_ = width; }
 		void SetHeight(int height) { height_ = height; }
 		virtual void* GetScreenData();
 		virtual bool& IsReadyToDraw() { return always_false_; };
 		virtual bool& IsResized() { return always_false_; };
+		virtual int GetBitdepth() { return 0x1401; /* GL_UNSIGNED_BYTE */ }
 		std::mutex DrawMutex;
 		std::mutex FrameMutex;
 		std::mutex ThreadStartedMutex;

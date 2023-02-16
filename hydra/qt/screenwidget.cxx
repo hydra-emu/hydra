@@ -12,23 +12,22 @@ ScreenWidget::~ScreenWidget() {
     glDeleteTextures(1, &texture_);
 }
 
-void ScreenWidget::InitializeTexture(int width, int height, void* data) {
+void ScreenWidget::InitializeTexture(int width, int height, int bitdepth, void* data) {
     glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
     initialized_ = true;
 }
 
-void ScreenWidget::Redraw(int width, int height, void* data) {
+void ScreenWidget::Redraw(int width, int height, int bitdepth, void* data) {
     glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
-    
     if (!vertex) {
         QFile vfile(":/shaders/simple.vs"); vfile.open(QIODevice::ReadOnly);
         vshader_source_ = vfile.readAll();
