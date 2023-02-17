@@ -27,7 +27,7 @@ Libraries: `sdl2 tbb qt`. See `Installation` for an easy installation guide
 
 <details>
  <summary>Archlinux</summary>
-<pre><code>pacman -S --needed git cmake sdl2 glew glfw-x11 ninja qt
+<pre><code>pacman -S --needed git cmake sdl2 glfw-x11 ninja qt
 git clone --recurse-submodules -j8 https://github.com/OFFTKP/hydra.git
 cd hydra
 cmake -S hydra -B hydra/build -G Ninja

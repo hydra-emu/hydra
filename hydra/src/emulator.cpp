@@ -21,11 +21,11 @@ namespace TKPEmu {
                 log_file_ptr_->close();
     }
     void Emulator::HandleKeyDown(uint32_t keycode) { 
-        std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was pressed but\n"
+        std::cout << "Warning: Key " << keycode << " was pressed but\n"
         	"emulator.HandleKeyDown was not implemented" << std::endl;
     }
     void Emulator::HandleKeyUp(uint32_t keycode) { 
-        std::cout << "Warning: Key " << SDL_GetKeyName(keycode) << " was released but\n"
+        std::cout << "Warning: Key " << keycode << " was released but\n"
         	"emulator.HandleKeyUp was not implemented" << std::endl;
     }
     void Emulator::Screenshot(std::string filename, std::string directory) { 
