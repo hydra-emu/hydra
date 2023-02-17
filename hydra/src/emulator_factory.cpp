@@ -4,6 +4,10 @@
 #include <include/error_factory.hxx>
 #include <include/emulator_data.hxx>
 #include <include/emulator_user_data.hxx>
+#include <GameboyTKP/gb_tkpwrapper.h>
+#include <N64TKP/n64_tkpwrapper.hxx>
+#include <chip8/chip8_tkpwrapper.hxx>
+#include <NESTKP/nes_tkpwrapper.hxx>
 
 namespace TKPEmu {
     EmulatorDataMap EmulatorFactory::emulator_data_{};

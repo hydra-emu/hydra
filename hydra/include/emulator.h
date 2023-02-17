@@ -1,7 +1,6 @@
 #pragma once
 #ifndef TKP_EMULATOR_H
 #define TKP_EMULATOR_H
-#include <SDL2/SDL.h>
 #include <iosfwd>
 #include <mutex>
 #include <vector>

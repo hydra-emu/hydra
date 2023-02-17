@@ -6,10 +6,7 @@
 #include <include/emulator.h>
 #include <include/emulator_user_data.hxx>
 #include <include/emulator_types.hxx>
-#include <GameboyTKP/gb_tkpwrapper.h>
-#include <N64TKP/n64_tkpwrapper.hxx>
-#include <chip8/chip8_tkpwrapper.hxx>
-#include <NESTKP/nes_tkpwrapper.hxx>
+
 // Map for constant emulator data like screen size
 using EmulatorDataMap = std::array<EmulatorData, static_cast<int>(TKPEmu::EmuType::EmuTypeSize)>;
 // Map for variable emulator data like firmware path

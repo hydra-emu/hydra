@@ -1,7 +1,6 @@
 #include "mainwindow.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
-#include "debuggerwindow.hxx"
 #include "traceloggerwindow.hxx"
 #include "aboutwindow.hxx"
 #include <include/error_factory.hxx>
@@ -28,10 +27,6 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setup_emulator_specific();
-    if(SDL_Init(SDL_INIT_AUDIO) != 0) [[unlikely]] {
-        SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
-        exit(1);
-    }
     QWidget *widget = new QWidget;
     setCentralWidget(widget);
     QVBoxLayout *layout = new QVBoxLayout;
@@ -64,8 +59,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() {
     stop_emulator();
-    SDL_QuitSubSystem(SDL_INIT_AUDIO);
-    SDL_Quit();
 }
 
 void MainWindow::create_actions() {
@@ -227,8 +220,7 @@ void MainWindow::open_shaders() {
 void MainWindow::open_debugger() {
     if (!debugger_open_) {
         QT_MAY_THROW(
-            auto* qw = new DebuggerWindow(debugger_open_, emulator_->MessageQueue, this);
-            emulator_tools_[DebuggerWindow::GetToolIndex()] = qw;
+
         );
     }
 }
