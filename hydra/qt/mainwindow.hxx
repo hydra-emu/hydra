@@ -40,6 +40,7 @@ private:
     void stop_emulator();
     void enable_emulation_actions(bool should);
     void setup_emulator_specific();
+    void empty_screen();
 
 private slots:
     void redraw_screen();
