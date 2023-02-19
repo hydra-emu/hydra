@@ -140,27 +140,23 @@ void SettingsWindow::create_tabs() {
 void SettingsWindow::on_dmg_click() {
     auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
     emu_data(TKPEmu::EmuType::Gameboy).Set("dmg_path", path.toStdString());
-    emu_data(TKPEmu::EmuType::Gameboy).Save();
     dmg_bios_path_->setText(path);
 }
 
 void SettingsWindow::on_cgb_click() {
     auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
     emu_data(TKPEmu::EmuType::Gameboy).Set("cgb_path", path.toStdString());
-    emu_data(TKPEmu::EmuType::Gameboy).Save();
     cgb_bios_path_->setText(path);
 }
 
 void SettingsWindow::on_gb_skip_bios_click(int state) {
     auto str = (state == Qt::CheckState::Checked) ? "true" : "false";
     emu_data(TKPEmu::EmuType::Gameboy).Set("skip_bios", str);
-    emu_data(TKPEmu::EmuType::Gameboy).Save();
 }
 
 void SettingsWindow::on_ipl_click() {
     auto path = QFileDialog::getOpenFileName(this, tr("Open IPL"), "", "Binary files (*.bin)");
     emu_data(TKPEmu::EmuType::N64).Set("IPLPath", path.toStdString());
-    emu_data(TKPEmu::EmuType::N64).Save();
     ipl_path_->setText(path);
 }
 

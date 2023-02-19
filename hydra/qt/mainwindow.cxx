@@ -161,9 +161,17 @@ void MainWindow::open_file() {
         extensions += ");;";
         extensions += indep;
     }
-    std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", extensions).toStdString();
+    std::string lastpath = "";
+    if (TKPEmu::EmulatorFactory::GetGeneralSettings().Has("last_path"))
+    lastpath = TKPEmu::EmulatorFactory::GetGeneralSettings().Get("last_path");
+    std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"),  QString::fromStdString(lastpath), extensions).toStdString();
     if (path.empty())
         return;
+    std::filesystem::path pathfs(path);
+    if (!std::filesystem::is_regular_file(pathfs))
+        return;
+    auto dirpath = pathfs.parent_path();
+    TKPEmu::EmulatorFactory::GetGeneralSettings().Set("last_path", dirpath);
     QT_MAY_THROW(
         close_tools();
         auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path);
@@ -345,10 +353,30 @@ void MainWindow::setup_emulator_specific() {
                 temp[it.key()] = it.value();
             }
         } else {
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open options file");
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open emulator options file");
         }
         EmulatorUserData user_data(path, temp);
         user_map[i] = std::move(user_data);
+    }
+    // Read general options
+    {
+        auto path = TKPEmu::EmulatorFactory::GetSavePath() + "settings.json";
+        std::map<std::string, std::string> temp;
+        if (std::filesystem::exists(path)) {
+            std::ifstream ifs(path);
+            if (ifs.is_open()) {
+                std::stringstream buf;
+                buf << ifs.rdbuf();
+                json j = json::parse(buf.str());
+                for (auto it = j.begin(); it != j.end(); ++it) {
+                    temp[it.key()] = it.value();
+                }
+            } else {
+                throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open options file");
+            }
+        }
+        GeneralSettings settings(path, temp);
+        TKPEmu::EmulatorFactory::SetGeneralSettings(std::move(settings));
     }
     TKPEmu::EmulatorFactory::SetEmulatorData(std::move(constant_map));
     TKPEmu::EmulatorFactory::SetEmulatorUserData(std::move(user_map));

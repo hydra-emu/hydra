@@ -368,3 +368,4 @@ glad.h
 glad.c
 *.sav
 callgrind.out.*
+logs/
