@@ -9,12 +9,12 @@
 // upon access and has a save function that saves as a json to file
 class EmulatorUserData {
 public:
-    EmulatorUserData() = default;
+    EmulatorUserData();
     EmulatorUserData(std::string path, std::map<std::string, std::string> map);
     std::string Get(const std::string& key) const;
+    bool Has(const std::string& key) const;
     void Set(const std::string& key, const std::string& value);
     bool IsEmpty() const;
-    void Save();
 private:
     std::map<std::string, std::string> map_;
     std::string save_path_;

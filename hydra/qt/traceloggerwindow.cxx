@@ -71,7 +71,6 @@ void TraceloggerWindow::browse_clicked() {
     log_path_ = QFileDialog::getExistingDirectory(this, tr("Select log directory..."), QString(), QFileDialog::ShowDirsOnly);
     text_edit_->setPlainText(log_path_);
     emu_data.Set("log_path", log_path_.toStdString());
-    emu_data.Save();
 }
 
 void TraceloggerWindow::log_clicked() {

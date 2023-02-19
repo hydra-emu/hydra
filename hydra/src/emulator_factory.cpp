@@ -13,6 +13,7 @@ namespace TKPEmu {
     EmulatorDataMap EmulatorFactory::emulator_data_{};
     EmulatorUserDataMap EmulatorFactory::emulator_user_data_{};
     ExtensionMappings EmulatorFactory::extension_mappings_{};
+    GeneralSettings EmulatorFactory::settings_{};
     std::string EmulatorFactory::GetSavePath() {
         static std::string dir;
         if (dir.empty()) {
