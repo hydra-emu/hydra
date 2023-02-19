@@ -228,7 +228,6 @@ void MainWindow::open_shaders() {
 void MainWindow::open_debugger() {
     if (!debugger_open_) {
         QT_MAY_THROW(
-
         );
     }
 }
@@ -395,6 +394,7 @@ void MainWindow::pause_emulator() {
 }
 
 void MainWindow::reset_emulator() {
+    empty_screen();
     message_queue_->PushRequest({
         .Id = RequestId::COMMON_RESET,
     });
@@ -402,6 +402,7 @@ void MainWindow::reset_emulator() {
 
 void MainWindow::stop_emulator() {
     if (emulator_) {
+        empty_screen();
         emulator_->CloseAndWait();
         emulator_.reset();
         enable_emulation_actions(false);
@@ -417,4 +418,12 @@ void MainWindow::redraw_screen() {
     screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(), emulator_->GetScreenData());
     screen_->update();
     emulator_->IsReadyToDraw() = false;
+}
+
+void MainWindow::empty_screen() {
+    std::vector<uint8_t> empty_screen;
+    empty_screen.resize(emulator_->GetWidth() * emulator_->GetHeight() * 4);
+    std::fill(empty_screen.begin(), empty_screen.end(), 0);
+    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(), empty_screen.data());
+    screen_->update();
 }
