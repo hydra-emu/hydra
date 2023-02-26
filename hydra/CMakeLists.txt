@@ -35,6 +35,7 @@ set(PROJECT_SOURCES
     qt/shadereditor.cxx
     qt/aboutwindow.cxx
     qt/traceloggerwindow.cxx
+    qt/n64_debugger.cxx
     qt/nes_ppuviewer.cxx
     src/emulator.cpp
 )

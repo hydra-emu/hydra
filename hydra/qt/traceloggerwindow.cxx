@@ -64,7 +64,6 @@ TraceloggerWindow::TraceloggerWindow(bool& open, std::shared_ptr<TKPEmu::Tools::
 }
 
 TraceloggerWindow::~TraceloggerWindow() {
-    open_ = false;
 }
 
 void TraceloggerWindow::browse_clicked() {

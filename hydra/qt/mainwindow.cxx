@@ -4,6 +4,7 @@
 #include "traceloggerwindow.hxx"
 #include "aboutwindow.hxx"
 #include <include/error_factory.hxx>
+#include <qt/emulator_tool_factory.hxx>
 #include <QMessageBox>
 #include <QTimer>
 #include <QKeyEvent>
@@ -228,6 +229,16 @@ void MainWindow::open_shaders() {
 void MainWindow::open_debugger() {
     if (!debugger_open_) {
         QT_MAY_THROW(
+            if (emulator_tools_[0]) {
+                if (emulator_tools_[0]->isHidden()) {
+                    emulator_tools_[0]->show();
+                } else {
+                    emulator_tools_[0]->hide();
+                }
+            } else {
+                auto qw = EmulatorToolFactory::CreateDebugger(debugger_open_, emulator_->MessageQueue, emulator_type_, this, emulator_.get());
+                emulator_tools_[0] = qw;
+            }
         );
     }
 }
@@ -235,8 +246,17 @@ void MainWindow::open_debugger() {
 void MainWindow::open_tracelogger() {
     if (!tracelogger_open_) {
         QT_MAY_THROW(
-            auto* qw = new TraceloggerWindow(tracelogger_open_, emulator_->MessageQueue, emulator_type_, this);
-            emulator_tools_[TraceloggerWindow::GetToolIndex()] = qw;
+            if (emulator_tools_[1]) {
+                if (emulator_tools_[1]->isHidden()) {
+                    emulator_tools_[1]->show();
+                } else {
+                    emulator_tools_[1]->hide();
+                }
+            } else {
+                // todo: EmulatorToolFactory
+                auto qw = new TraceloggerWindow(tracelogger_open_, emulator_->MessageQueue, emulator_type_, this);
+                emulator_tools_[1 /* todo: enum*/] = qw;
+            }
         );
     }
 }
