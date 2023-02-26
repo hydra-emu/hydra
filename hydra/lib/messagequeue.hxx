@@ -9,6 +9,7 @@
 
 enum class ResponseId : int {
     COMMON_PAUSED = 0x100,
+    COMMON_REGISTERS = 0x104,
 };
 
 struct Response {
@@ -21,6 +22,7 @@ enum class RequestId : int {
     COMMON_RESET = 0x101,
     COMMON_START_LOG = 0x102,
     COMMON_STOP_LOG = 0x103,
+    COMMON_GET_REGISTERS = 0x104,
 };
 
 struct Request {

@@ -38,7 +38,7 @@
         ],
         "DefaultWidth": 320,
         "DefaultHeight": 240,
-        "HasDebugger": false,
+        "HasDebugger": true,
         "HasTracelogger": false,
         "LoggingOptions": [
             "Registers"
