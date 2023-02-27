@@ -2,14 +2,13 @@
 #include <iostream>
 #include <QFile>
 
-bool ScreenWidget::GLInitialized = false;
-
 ScreenWidget::ScreenWidget(QWidget *parent) : QOpenGLWidget(parent) {}
 
 ScreenWidget::~ScreenWidget() {
-    vbo_.destroy();
+    if (initialized_) {
+        glDeleteTextures(1, &texture_);
+    }
     delete program_;
-    glDeleteTextures(1, &texture_);
 }
 
 void ScreenWidget::InitializeTexture(int width, int height, int bitdepth, void* data) {
@@ -22,13 +21,15 @@ void ScreenWidget::InitializeTexture(int width, int height, int bitdepth, void* 
 }
 
 void ScreenWidget::Redraw(int width, int height, int bitdepth, void* data) {
-    if (bitdepth == GL_UNSIGNED_SHORT_5_5_5_1) // n64 (TODO: make a bool in this function that sets this)
-        glPixelStorei(GL_UNPACK_SWAP_BYTES, 1);
-    glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, bitdepth, data);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    if (bitdepth == GL_UNSIGNED_SHORT_5_5_5_1)
-        glPixelStorei(GL_UNPACK_SWAP_BYTES, 0);
+    if (initialized_) [[likely]] {
+        if (bitdepth == GL_UNSIGNED_SHORT_5_5_5_1) // n64 (TODO: make a bool in this function that sets this)
+            glPixelStorei(GL_UNPACK_SWAP_BYTES, 1);
+        glBindTexture(GL_TEXTURE_2D, texture_);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, bitdepth, data);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        if (bitdepth == GL_UNSIGNED_SHORT_5_5_5_1)
+            glPixelStorei(GL_UNPACK_SWAP_BYTES, 0);
+    }
 }
 
 void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
@@ -68,17 +69,18 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
     program_->bind();
     glActiveTexture(GL_TEXTURE0);
     program_->setUniformValue("tex", 0);
-    // program_->removeShader(fshader);
     delete fshader;
     delete vshader;
 }
 
 void ScreenWidget::initializeGL() {
+    std::cout << "Initializing OpenGL" << std::endl;
     initializeOpenGLFunctions();
     glGenTextures(1, &texture_);
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_TEXTURE_2D);
     ResetProgram();
+    hide();
 }
 
 void ScreenWidget::resizeGL(int width, int height) {

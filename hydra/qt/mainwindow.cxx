@@ -54,7 +54,6 @@ MainWindow::MainWindow(QWidget *parent)
     QTimer *timer = new QTimer;
     timer->start(16);
     connect(timer, SIGNAL(timeout()), this, SLOT(redraw_screen()));
-
     enable_emulation_actions(false);
 }
 
@@ -165,7 +164,7 @@ void MainWindow::open_file() {
     std::string lastpath = "";
     if (TKPEmu::EmulatorFactory::GetGeneralSettings().Has("last_path"))
     lastpath = TKPEmu::EmulatorFactory::GetGeneralSettings().Get("last_path");
-    std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"),  QString::fromStdString(lastpath), extensions).toStdString();
+    std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"), QString::fromStdString(lastpath), extensions).toStdString();
     if (path.empty())
         return;
     std::filesystem::path pathfs(path);
@@ -185,11 +184,9 @@ void MainWindow::open_file() {
         if (!emulator_->LoadFromFile(path))
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
         message_queue_ = emulator_->MessageQueue;
-        const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
-        emulator_->SetWidth(data[static_cast<int>(type)].DefaultWidth);
-        emulator_->SetHeight(data[static_cast<int>(type)].DefaultHeight);
         screen_->setMinimumSize(emulator_->GetWidth(), emulator_->GetHeight());
         screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(), emulator_->GetScreenData());
+        screen_->show();
         emulator_->Paused = pause_act_->isChecked();
         auto func = [&]() {
             emulator_->Start();
@@ -281,8 +278,6 @@ void MainWindow::enable_emulation_actions(bool should) {
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
-    if (ScreenWidget::GLInitialized)
-        screen_->setVisible(should);
     debugger_act_->setEnabled(false);
     tracelogger_act_->setEnabled(false);
     if (should) {
@@ -427,6 +422,7 @@ void MainWindow::stop_emulator() {
         emulator_.reset();
         enable_emulation_actions(false);
     }
+    screen_->hide();
 }
 
 void MainWindow::redraw_screen() {

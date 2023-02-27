@@ -45,23 +45,32 @@ namespace TKPEmu {
         }
     }
     std::shared_ptr<Emulator> EmulatorFactory::Create(EmuType type) { 
+        const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
+        std::shared_ptr<Emulator> emulator;
         switch (type) {
             case EmuType::Gameboy: {
-                return std::make_shared<Gameboy::Gameboy_TKPWrapper>();
+                emulator = std::make_shared<Gameboy::Gameboy_TKPWrapper>();
+                break;
             }
             case EmuType::N64: {
-                return std::make_shared<N64::N64_TKPWrapper>();
+                emulator = std::make_shared<N64::N64_TKPWrapper>();
+                break;
             }
             case EmuType::Chip8: {
-                return std::make_shared<Chip8::Chip8>();
+                emulator = std::make_shared<Chip8::Chip8>();
+                break;
             }
             case EmuType::NES: {
-                return std::make_shared<NES::NES_TKPWrapper>();
+                emulator = std::make_shared<NES::NES_TKPWrapper>();
+                break;
             }
             default: {
                 throw ErrorFactory::generate_exception(__func__, __LINE__, "EmulatorFactory::Create failed");
             }
         }
+        emulator->SetWidth(data[static_cast<int>(type)].DefaultWidth);
+        emulator->SetHeight(data[static_cast<int>(type)].DefaultHeight);
+        return emulator;
     }
     void EmulatorFactory::SetEmulatorData(EmulatorDataMap map) {
         EmulatorFactory::emulator_data_ = std::move(map);
