@@ -17,6 +17,7 @@ find_package(Boost 1.71 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets Multimedia)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets Multimedia)
+find_package(fmt)
 
 add_subdirectory("src/")
 add_subdirectory("lib/")
@@ -65,7 +66,7 @@ endif()
 target_link_libraries(TKPEmu PRIVATE TKPSrc TKPLib NESTKP GameboyTKP Chip8 N64TKP
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL Qt${QT_VERSION_MAJOR}::OpenGLWidgets
     ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} ${OPENGL_LIBRARIES}
-    Qt6::Multimedia Threads::Threads)
+    Qt6::Multimedia Threads::Threads fmt::fmt)
 
 set_target_properties(TKPEmu PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.tkpemu.com
