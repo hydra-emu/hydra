@@ -4,86 +4,86 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QTextEdit>
+#include <QListWidgetItem>
 #include <iostream>
+#include <string>
+#include <utility>
 
-N64Debugger::N64Debugger(bool& open, std::shared_ptr<TKPEmu::Tools::MQBase> mq, QWidget* parent)
+bool registerNames = false;
+
+std::string get_gpr_name(int n) {
+    if (registerNames) {
+        switch (n) {
+        case 0:
+            return "zero";
+        case 1:
+            return "at";
+        case 2 ... 3:
+            return "v" + std::to_string(n - 2);
+        case 4 ... 7:
+            return "a" + std::to_string(n - 4);
+        case 8 ... 15:
+            return "t" + std::to_string(n - 8);
+        case 16 ... 23:
+            return "s" + std::to_string(n - 16);
+        case 24 ... 25:
+            return "t" + std::to_string(n - 16);
+        case 26 ... 27:
+            return "k" + std::to_string(n - 26);
+        case 28:
+            return "gp";
+        case 29:
+            return "sp";
+        case 30:
+            return "fp";
+        case 31:
+            return "ra";
+        }
+    } else {
+        return "r" + std::to_string(n);
+    }
+    std::unreachable();
+}
+
+N64Debugger::N64Debugger(bool& open, QWidget* parent)
     : open_(open),
-    message_queue_(mq),
     emulator_type_(TKPEmu::EmuType::N64),
     QWidget(parent, Qt::Window)
 {
-    QVBoxLayout* layout = new QVBoxLayout;
-    QGroupBox* top_qgb = new QGroupBox;
+    QGridLayout* main_layout = new QGridLayout;
+    left_group_box_ = new QGroupBox;
+    right_group_box_ = new QGroupBox;
     {
-        QVBoxLayout* top_layout = new QVBoxLayout;
-        {
-            pc_label_ = new QLabel;
-            QPushButton* button = new QPushButton("Test");
-            top_layout->addWidget(pc_label_);
-            text_edit_ = new QTextEdit;
-            top_layout->addWidget(text_edit_);
-            connect(button, SIGNAL(clicked()), this, SLOT(test()));
-            QPushButton* button2 = new QPushButton("Test2");
-            connect(button2, SIGNAL(clicked()), this, SLOT(test2()));
-            QPushButton* button3 = new QPushButton("Pi DMA");
-            connect(button3, SIGNAL(clicked()), this, SLOT(pi_dma()));
-            QPushButton* button4 = new QPushButton("Si DMA");
-            connect(button4, SIGNAL(clicked()), this, SLOT(si_dma()));
-            QPushButton* button5 = new QPushButton("Vi DMA");
-            connect(button5, SIGNAL(clicked()), this, SLOT(vi_dma()));
-            top_layout->addWidget(button);
-            top_layout->addWidget(button2);
-            top_layout->addWidget(button3);
-            top_layout->addWidget(button4);
-            top_layout->addWidget(button5);
-        }
-        top_qgb->setLayout(top_layout);
+        tab_list_ = new QListWidget;
+        QVBoxLayout* left_layout = new QVBoxLayout;
+        left_layout->addWidget(tab_list_);
+        left_group_box_->setLayout(left_layout);
+        left_group_box_->setFixedWidth(200);
+        left_group_box_->setMinimumHeight(400);
+        connect(tab_list_, SIGNAL(itemSelectionChanged()), this, SLOT(on_tab_change()));
     }
-    layout->addWidget(top_qgb);
-    setLayout(layout);
+    {
+        tab_show_ = new QTabWidget;
+        tab_show_->tabBar()->hide();
+        QVBoxLayout* layout = new QVBoxLayout;
+        layout->setContentsMargins(5, 5, 5, 5);
+        layout->addWidget(tab_show_);
+        right_group_box_->setLayout(layout);
+        right_group_box_->setMinimumWidth(500);
+        right_group_box_->setMinimumHeight(400);
+    }
+    create_tabs();
+    main_layout->addWidget(left_group_box_, 0, 0, 1, 1);
+    main_layout->addWidget(right_group_box_, 0, 1, 1, 5);
+    main_layout->setColumnStretch(0, 0);
+    main_layout->setColumnStretch(1, 1);
+    setLayout(main_layout);
     setWindowTitle("Debugger");
     show();
     open_ = true;
 }
 
 N64Debugger::~N64Debugger() {}
-
-void N64Debugger::test() {
-    std::stringstream ss;
-    ss << "PC: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.pc_ << '\n';
-    ss << "$zero: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[0].UD << '\n';
-    ss << "$at: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[1].UD << '\n';
-    ss << "$v0: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[2].UD << '\n';
-    ss << "$v1: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[3].UD << '\n';
-    for (int i = 0; i < 4; i++) {
-        ss << "$a" << i << ": " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[4 + i].UD << '\n';
-    }
-    for (int i = 0; i < 8; i++) {
-        ss << "$t" << i << ": " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[8 + i].UD << '\n';
-    }
-    for (int i = 0; i < 8; i++) {
-        ss << "$s" << i << ": " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[16 + i].UD << '\n';
-    }
-    ss << "$t8: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[24].UD << '\n';
-    ss << "$t9: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[25].UD << '\n';
-    ss << "$k0: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[26].UD << '\n';
-    ss << "$k1: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[27].UD << '\n';
-    ss << "$gp: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[28].UD << '\n';
-    ss << "$sp: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[29].UD << '\n';
-    ss << "$fp: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[30].UD << '\n';
-    ss << "$ra: " << std::hex << std::setfill('0') << std::setw(8) << emulator_->n64_impl_.cpu_.gpr_regs_[31].UD << '\n';
-    QString text = QString::fromStdString(ss.str());
-    pc_label_->setText(text);
-}
-
-void N64Debugger::test2() {
-    uint8_t* data = emulator_->n64_impl_.cpubus_.redirect_paddress(0x0000'0180);
-    std::stringstream ss;
-    for (int i = 0; i < 10000; i++) {
-        ss << std::hex << std::setfill('0') << std::setw(2) << (int)data[i];
-    }
-    text_edit_->setText(QString::fromStdString(ss.str()));
-}
 
 void N64Debugger::pi_dma() {
     emulator_->n64_impl_.cpu_.queue_event(SchedulerEventType::Pi, 100);
@@ -99,4 +99,17 @@ void N64Debugger::vi_dma() {
 
 void N64Debugger::SetEmulator(TKPEmu::N64::N64_TKPWrapper* emulator) {
     emulator_ = emulator;
+}
+
+void N64Debugger::customEvent(QEvent* event) {
+    std::shared_lock lock(emulator_->DataMutex);
+    
+}
+
+void N64Debugger::create_tabs() {
+    #define add_tab(name) QListWidgetItem* name = new QListWidgetItem(#name); tab_list_->addItem(name); QWidget* name##_tab = new QWidget; tab_show_->addTab(name##_tab, #name);
+    add_tab(Registers)
+    #undef add_tab
+    tab_list_->setCurrentItem(Registers);
+    tab_show_->setCurrentIndex(0);
 }

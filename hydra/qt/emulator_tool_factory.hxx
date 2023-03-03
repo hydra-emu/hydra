@@ -8,7 +8,6 @@
 struct EmulatorToolFactory {
     static QWidget* CreateDebugger(
         bool& open,
-        std::shared_ptr<TKPEmu::Tools::MQBase> mq,
         TKPEmu::EmuType emu_type,
         QWidget* parent,
         TKPEmu::Emulator* emulator
@@ -16,7 +15,7 @@ struct EmulatorToolFactory {
     {
         switch (emu_type) {
             case TKPEmu::EmuType::N64: {
-                auto ret = new N64Debugger(open, mq, parent);
+                auto ret = new N64Debugger(open, parent);
                 ret->SetEmulator(dynamic_cast<TKPEmu::N64::N64_TKPWrapper*>(emulator));
                 return ret;
             }
