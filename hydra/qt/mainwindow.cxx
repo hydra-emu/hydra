@@ -1,7 +1,6 @@
 #include "mainwindow.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
-#include "traceloggerwindow.hxx"
 #include "aboutwindow.hxx"
 #include <include/error_factory.hxx>
 #include <qt/emulator_tool_factory.hxx>
@@ -28,9 +27,9 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setup_emulator_specific();
-    QWidget *widget = new QWidget;
+    QWidget* widget = new QWidget;
     setCentralWidget(widget);
-    QVBoxLayout *layout = new QVBoxLayout;
+    QVBoxLayout* layout = new QVBoxLayout;
     layout->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     layout->setContentsMargins(5, 5, 5, 5);
     QSurfaceFormat format;
@@ -51,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("hydra");
     setWindowIcon(QIcon(":/images/hydra.png"));
 
-    QTimer *timer = new QTimer;
+    QTimer *timer = new QTimer(this);
     timer->start(16);
     connect(timer, SIGNAL(timeout()), this, SLOT(redraw_screen()));
     enable_emulation_actions(false);
@@ -183,7 +182,6 @@ void MainWindow::open_file() {
         }
         if (!emulator_->LoadFromFile(path))
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
-        message_queue_ = emulator_->MessageQueue;
         screen_->setMinimumSize(emulator_->GetWidth(), emulator_->GetHeight());
         screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(), emulator_->GetScreenData());
         screen_->show();
@@ -233,7 +231,7 @@ void MainWindow::open_debugger() {
                     emulator_tools_[0]->hide();
                 }
             } else {
-                auto qw = EmulatorToolFactory::CreateDebugger(debugger_open_, emulator_->MessageQueue, emulator_type_, this, emulator_.get());
+                auto qw = EmulatorToolFactory::CreateDebugger(debugger_open_, emulator_type_, this, emulator_.get());
                 emulator_tools_[0] = qw;
             }
         );
@@ -251,8 +249,6 @@ void MainWindow::open_tracelogger() {
                 }
             } else {
                 // todo: EmulatorToolFactory
-                auto qw = new TraceloggerWindow(tracelogger_open_, emulator_->MessageQueue, emulator_type_, this);
-                emulator_tools_[1 /* todo: enum*/] = qw;
             }
         );
     }
@@ -402,17 +398,13 @@ void MainWindow::pause_emulator() {
         emulator_->Step.store(true);
         emulator_->Step.notify_all();
     } else {
-        message_queue_->PushRequest({
-            .Id = RequestId::COMMON_PAUSE,
-        });
+        emulator_->Paused.store(true);
     }
 }
 
 void MainWindow::reset_emulator() {
     empty_screen();
-    message_queue_->PushRequest({
-        .Id = RequestId::COMMON_RESET,
-    });
+    emulator_->Reset();
 }
 
 void MainWindow::stop_emulator() {
@@ -428,7 +420,7 @@ void MainWindow::stop_emulator() {
 void MainWindow::redraw_screen() {
     if (!emulator_)
         return;
-    std::lock_guard<std::mutex> lg(emulator_->DrawMutex);
+    std::shared_lock lock(emulator_->DataMutex);
     if (!emulator_->IsReadyToDraw())
         return;
     screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(), emulator_->GetScreenData());

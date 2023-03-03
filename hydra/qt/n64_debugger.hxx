@@ -1,6 +1,9 @@
 #ifndef N64_DEBUGGER
 #define N64_DEBUGGER
 #include <QWidget>
+#include <QListWidget>
+#include <QGroupBox>
+#include <QTabWidget>
 #include <memory>
 #include <lib/messagequeue.hxx>
 #include <include/emulator_types.hxx>
@@ -12,23 +15,24 @@ class QTextEdit;
 class N64Debugger : public QWidget {
     Q_OBJECT;
 public:
-    N64Debugger(bool& open, std::shared_ptr<TKPEmu::Tools::MQBase> mq, QWidget* parent = nullptr);
+    N64Debugger(bool& open, QWidget* parent = nullptr);
     ~N64Debugger();
 
     void SetEmulator(TKPEmu::N64::N64_TKPWrapper* emulator);
 private slots:
-    void test();
-    void test2();
     void pi_dma();
     void si_dma();
     void vi_dma();
 private:
     bool open_;
-    std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     TKPEmu::EmuType emulator_type_;
     TKPEmu::N64::N64_TKPWrapper* emulator_;
 
-    QLabel* pc_label_;
-    QTextEdit* text_edit_;
+    QListWidget* tab_list_;
+    QTabWidget* tab_show_;
+    QGroupBox* right_group_box_, *left_group_box_;
+
+    void create_tabs();
+    void customEvent(QEvent* event) override;
 };
 #endif

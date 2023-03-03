@@ -5,11 +5,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-set(CMAKE_CXX_FLAGS "-O3 -Werror=return-type -DBOOST_STACKTRACE_USE_ADDR2LINE")
+set(CMAKE_CXX_FLAGS "-g -O3 -Werror=return-type -DBOOST_STACKTRACE_USE_ADDR2LINE")
 set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(OpenGL REQUIRED)
@@ -24,8 +24,8 @@ add_subdirectory("GameboyTKP/")
 add_subdirectory("NESTKP/")
 add_subdirectory("chip8/")
 add_subdirectory("N64TKP/")
-add_compile_options(-fsanitize=address)
-add_link_options(-fsanitize=address)
+# add_compile_options(-fsanitize=address)
+# add_link_options(-fsanitize=address)
 set(PROJECT_SOURCES
     resources.qrc
     qt/main.cxx
@@ -34,7 +34,6 @@ set(PROJECT_SOURCES
     qt/settingswindow.cxx
     qt/shadereditor.cxx
     qt/aboutwindow.cxx
-    qt/traceloggerwindow.cxx
     qt/n64_debugger.cxx
     qt/nes_ppuviewer.cxx
     src/emulator.cpp
