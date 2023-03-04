@@ -1,15 +1,80 @@
 #include "n64_debugger.hxx"
+#include <N64TKP/core/n64_types.hxx>
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QLabel>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QTextEdit>
 #include <QListWidgetItem>
 #include <QTimer>
+#include <QCheckBox>
 #include <iostream>
 #include <string>
-#include <utility>
 #include <fmt/format.h>
+
+MIPSHighlighter::MIPSHighlighter(QTextDocument *parent)
+    : QSyntaxHighlighter(parent)
+{
+    instruction_format_.setForeground(QBrush(QColor(154, 134, 214)));
+    register_format_.setForeground(QBrush(QColor(6, 170, 112)));
+    constant_format_.setForeground(QBrush(QColor(221, 170, 13)));
+    singleline_comment_format_.setForeground(QBrush(QColor(85, 170, 0)));
+    label_format_.setForeground(QBrush(QColor(170, 170, 127)));
+    punctuator_format_.setForeground(QBrush(QColor(170, 0, 0)));
+    for (int i = 0; i < TKPEmu::N64::OperationCodes.size(); i++) {
+        HighlightingRule rule;
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + TKPEmu::N64::OperationCodes[i] + std::string("\\b")));
+        rule.format = instruction_format_;
+        highlighting_rules_.append(rule);
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + TKPEmu::N64::SpecialCodes[i] + std::string("\\b")));
+        highlighting_rules_.append(rule);
+    }
+    for (int i = 0; i < 32; i++) {
+        HighlightingRule rule;
+        rule.format = register_format_;
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + TKPEmu::N64::gpr_get_name(i, false) + std::string("\\b")));
+        highlighting_rules_.append(rule);
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + TKPEmu::N64::gpr_get_name(i, true) + std::string("\\b")));
+        highlighting_rules_.append(rule);
+    }
+    {
+        HighlightingRule rule;
+        rule.format = constant_format_;
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b0x[0-9a-fA-F]+\\b")));
+        highlighting_rules_.append(rule);
+    }
+    {
+        HighlightingRule rule;
+        rule.format = label_format_;
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("lbl_[0-9a-zA-Z]+")));
+        highlighting_rules_.append(rule);
+    }
+    {
+        HighlightingRule rule;
+        rule.format = punctuator_format_;
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("[\\(\\),:]")));
+        highlighting_rules_.append(rule);
+    }
+    {
+        HighlightingRule rule;
+        rule.format = singleline_comment_format_;
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string(";.*")));
+        highlighting_rules_.append(rule);
+    }
+}
+
+void MIPSHighlighter::highlightBlock(const QString& text) {
+    if (text.isEmpty())
+        return;
+    for (const HighlightingRule &rule : qAsConst(highlighting_rules_)) {
+        QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
+        while (matchIterator.hasNext()) {
+            QRegularExpressionMatch match = matchIterator.next();
+            setFormat(match.capturedStart(), match.capturedLength(), rule.format);
+        }
+    }
+}
 
 std::string N64Debugger::get_gpr_value(int n) {
     std::shared_lock lock(emulator_->DataMutex);
@@ -17,38 +82,7 @@ std::string N64Debugger::get_gpr_value(int n) {
 }
 
 std::string N64Debugger::get_gpr_name(int n) {
-    if (register_names_) {
-        switch (n) {
-        case 0:
-            return "zero";
-        case 1:
-            return "at";
-        case 2 ... 3:
-            return "v" + std::to_string(n - 2);
-        case 4 ... 7:
-            return "a" + std::to_string(n - 4);
-        case 8 ... 15:
-            return "t" + std::to_string(n - 8);
-        case 16 ... 23:
-            return "s" + std::to_string(n - 16);
-        case 24 ... 25:
-            return "t" + std::to_string(n - 16);
-        case 26 ... 27:
-            return "k" + std::to_string(n - 26);
-        case 28:
-            return "gp";
-        case 29:
-            return "sp";
-        case 30:
-            return "fp";
-        case 31:
-            return "ra";
-        default:
-            std::unreachable();
-        }
-    } else {
-        return "r" + std::to_string(n);
-    }
+    return TKPEmu::N64::gpr_get_name(n, register_names_);
 }
 
 N64Debugger::N64Debugger(bool& open, QWidget* parent)
@@ -120,24 +154,39 @@ void N64Debugger::update_debugger_tab() {
     if (!emulator_->Paused || !was_paused_) {
         was_paused_ = emulator_->Paused;
         switch (tab_list_->currentRow()) {
-        case 0:
-            for (int i = 0; i < 32; i++) {
-                gpr_edit_[i]->blockSignals(true);
-                gpr_edit_[i]->setText(QString::fromStdString(get_gpr_value(i)));
-                gpr_edit_[i]->blockSignals(false);
-                gpr_edit_[i]->setReadOnly(!emulator_->Paused);
+            case RegistersIndex: {
+                for (int i = 0; i < 32; i++) {
+                    gpr_edit_[i]->blockSignals(true);
+                    gpr_edit_[i]->setText(QString::fromStdString(get_gpr_value(i)));
+                    gpr_edit_[i]->blockSignals(false);
+                    gpr_edit_[i]->setReadOnly(!emulator_->Paused);
+                }
+                break;
             }
-            break;
+            case DisassemblerIndex: {
+                std::string disasm = emulator_->n64_impl_.cpu_.disassemble(emulator_->n64_impl_.cpu_.pc_, emulator_->n64_impl_.cpu_.pc_ + 0x100, register_names_);
+                disassembler_text_->setPlainText(QString::fromStdString(disasm));
+                break;
+            }
         }
+        
     }
 }
 
 void N64Debugger::create_tabs() {
-    #define X(name) QListWidgetItem* name = new QListWidgetItem(#name); tab_list_->addItem(name); name##_tab = new QWidget; tab_show_->addTab(name##_tab, #name); name##_layout = new QGridLayout; name##_tab->setLayout(name##_layout);
+    #define X(name) QListWidgetItem* name = new QListWidgetItem(#name); \
+                    tab_list_->addItem(name); name##_tab = new QWidget; \
+                    tab_show_->addTab(name##_tab, #name); \
+                    name##_layout = new QGridLayout; \
+                    name##_tab->setLayout(name##_layout); \
+                    name##_layout->addWidget(new QLabel(#name), 0, 0, 1, 1); \
+                    QFrame* name##_line = new QFrame; \
+                    name##_line->setFrameShape(QFrame::HLine); \
+                    name##_line->setFrameShadow(QFrame::Sunken); \
+                    name##_layout->addWidget(name##_line, 1, 0, 1, 2); \
+                    create_##name##_tab();
     N64_DEBUGGER_TABS
     #undef X
-    create_registers_tab();
-    create_settings_tab();
     tab_list_->setCurrentItem(Registers);
     tab_show_->setCurrentIndex(0);
 }
@@ -152,15 +201,11 @@ void N64Debugger::register_changed(const QString&, int reg) {
     }
 }
 
-void N64Debugger::create_registers_tab() {
-    Registers_layout->addWidget(new QLabel("Registers"), 0, 0, 1, 1);
-    QFrame *line;
-    line = new QFrame;
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
-    Registers_layout->addWidget(line, 1, 0, 1, 2);
+void N64Debugger::create_Registers_tab() {
     for (int i = 0; i < 32; i++) {
-        Registers_layout->addWidget(new QLabel(QString::fromStdString(get_gpr_name(i))), i + 2, 0, 1, 1);
+        QLabel*& label = gpr_edit_names_[i];
+        label = new QLabel(QString::fromStdString(get_gpr_name(i)));
+        Registers_layout->addWidget(label, i + 2, 0, 1, 1);
         QLineEdit*& text = gpr_edit_[i];
         text = new QLineEdit;
         text->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
@@ -171,8 +216,26 @@ void N64Debugger::create_registers_tab() {
         connect(text, &QLineEdit::textChanged, this, std::bind(&N64Debugger::register_changed, this, std::placeholders::_1, i));
         Registers_layout->addWidget(text, i + 2, 1, 1, 1);
     }
+    Registers_layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 100, 0, 1, 1);
 }
 
-void N64Debugger::create_settings_tab() {
+void N64Debugger::create_Disassembler_tab() {
+    disassembler_text_ = new QTextEdit;
+    // disassembler_text_->setReadOnly(true);
+    disassembler_text_->setFont(fixedfont);
+    disassembler_text_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    highlighter_ = new MIPSHighlighter(disassembler_text_->document());
+    Disassembler_layout->addWidget(disassembler_text_, 2, 0, 1, 2);
+}
 
+void N64Debugger::create_Settings_tab() {
+    QCheckBox* register_name_type = new QCheckBox("Use register name instead of number");
+    connect(register_name_type, &QCheckBox::stateChanged, this, [this](int state) {
+        register_names_ = state == Qt::Checked;
+        for (int i = 0; i < 32; i++) {
+            gpr_edit_names_[i]->setText(QString::fromStdString(get_gpr_name(i)));
+        }
+    });
+    Settings_layout->addWidget(register_name_type, 2, 0, 1, 1);
+    Settings_layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 100, 0, 1, 1);
 }
