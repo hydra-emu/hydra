@@ -1,5 +1,6 @@
 #ifndef N64_DEBUGGER
 #define N64_DEBUGGER
+#include <N64TKP/core/n64_types.hxx>
 #include <QWidget>
 #include <QListWidget>
 #include <QGroupBox>
@@ -11,6 +12,7 @@
 #include <N64TKP/n64_tkpwrapper.hxx>
 #include <QFontDatabase>
 #include <QSyntaxHighlighter>
+#include <QPlainTextEdit>
 
 class QLabel;
 class QTextEdit;
@@ -38,6 +40,48 @@ private:
     QTextCharFormat constant_format_;
     QTextCharFormat punctuator_format_;
     QTextCharFormat label_format_;
+};
+
+class N64Disassembler : public QPlainTextEdit {
+    Q_OBJECT
+public:
+    N64Disassembler(bool& register_names, QWidget* parent = nullptr);
+    void setInstructions(const std::vector<TKPEmu::N64::DisassemblerInstruction>& instructions);
+    void setGPRs(const std::array<TKPEmu::N64::MemDataUnionDW, 32>& gprs);
+    void wheelEvent(QWheelEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
+    void lineNumberAreaPaintEvent(QPaintEvent *event);
+    int lineNumberAreaWidth();
+    bool event(QEvent *e) override;
+    void updateText();
+private slots:
+    void updateLineNumberAreaWidth(int newBlockCount);
+    void updateLineNumberArea(const QRect &rect, int dy);
+private:
+    std::vector<TKPEmu::N64::DisassemblerInstruction> instructions_;
+    std::array<TKPEmu::N64::MemDataUnionDW, 32> gprs_;
+    MIPSHighlighter* highlighter_;
+    int top_line_ = 0;
+    int top_line_pixel_ = 0;
+    QWidget* line_number_area_;
+    bool& register_names_;
+};
+
+class LineNumberArea : public QWidget
+{
+public:
+    LineNumberArea(N64Disassembler* debugger) : QWidget(debugger), debugger_(debugger) {}
+    QSize sizeHint() const override
+    {
+        return QSize(debugger_->lineNumberAreaWidth(), 0);
+    }
+protected:
+    void paintEvent(QPaintEvent* event) override
+    {
+        debugger_->lineNumberAreaPaintEvent(event);
+    }
+private:
+    N64Disassembler* debugger_;
 };
 
 class N64Debugger : public QWidget {
@@ -68,8 +112,8 @@ private:
     std::array<QLabel*, 32> gpr_edit_names_;
     std::array<QLineEdit*, 32> gpr_edit_;
 
-    QTextEdit* disassembler_text_;
-    MIPSHighlighter* highlighter_;
+    bool disassembled_ = false;
+    N64Disassembler* disassembler_text_;
 
     void create_tabs();
     std::string get_gpr_name(int n);

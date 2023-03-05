@@ -3,7 +3,6 @@
 #include <QLabel>
 #include <QFileDialog>
 #include <QPushButton>
-#include <QScrollBar>
 #include <QCheckBox>
 #include <include/emulator_types.hxx>
 #include <include/emulator_factory.h>
