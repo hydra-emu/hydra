@@ -1,5 +1,4 @@
 #include "n64_debugger.hxx"
-#include <N64TKP/core/n64_types.hxx>
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QLabel>
@@ -9,6 +8,8 @@
 #include <QListWidgetItem>
 #include <QTimer>
 #include <QCheckBox>
+#include <QPainter>
+#include <QToolTip>
 #include <iostream>
 #include <string>
 #include <fmt/format.h>
@@ -74,6 +75,156 @@ void MIPSHighlighter::highlightBlock(const QString& text) {
             setFormat(match.capturedStart(), match.capturedLength(), rule.format);
         }
     }
+}
+
+N64Disassembler::N64Disassembler(bool& register_names, QWidget* parent) : register_names_(register_names), QPlainTextEdit(parent)
+{
+    highlighter_ = new MIPSHighlighter(document());
+    setReadOnly(true);
+    setLineWrapMode(QPlainTextEdit::NoWrap);
+    setWordWrapMode(QTextOption::NoWrap);
+    setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setMinimumHeight(200);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    line_number_area_ = new LineNumberArea(this);
+    connect(this, &N64Disassembler::blockCountChanged, this, &N64Disassembler::updateLineNumberAreaWidth);
+    connect(this, &N64Disassembler::updateRequest, this, &N64Disassembler::updateLineNumberArea);
+    updateLineNumberAreaWidth(0);
+    setMouseTracking(true);
+}
+
+bool N64Disassembler::event(QEvent *event)
+{
+    if (event->type() == QEvent::ToolTip)
+    {
+        QHelpEvent* helpEvent = static_cast<QHelpEvent*>(event);
+        QPoint pos = helpEvent->pos() - QPoint(lineNumberAreaWidth(), 0);
+        QTextCursor cursor = cursorForPosition(pos);
+        cursor.select(QTextCursor::WordUnderCursor);
+        if (!cursor.selectedText().isEmpty()) {
+            std::string reg_value;
+            bool is_reg = false;
+            if (cursor.selectedText().length() <= 4) {
+                auto reg = cursor.selectedText();
+                if (!register_names_) {
+                    if (reg[0] == 'r') {
+                        QString int_s = reg.mid(1);
+                        bool ok = false;
+                        int i = int_s.toInt(&ok);
+                        if (ok) {
+                            reg_value = fmt::format("0x{:016x}", gprs_[i].UD);
+                            is_reg = true;
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < 32; i++) {
+                        // Slow, but I'm not writing a case for each alternative register name
+                        if (reg == QString::fromStdString(TKPEmu::N64::gpr_get_name(i, true))) {
+                            reg_value = fmt::format("0x{:016x}", gprs_[i].UD);
+                            is_reg = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (is_reg) {
+                QToolTip::showText(helpEvent->globalPos(), QString::fromStdString(reg_value));
+            } else {
+                QToolTip::hideText();
+            }
+        } else {
+            QToolTip::hideText();
+        }
+        return true;
+    }
+    return QPlainTextEdit::event(event);
+}
+
+int N64Disassembler::lineNumberAreaWidth() {
+    int space = 3 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * 10;
+    return space;
+}
+
+void N64Disassembler::updateLineNumberAreaWidth(int /* newBlockCount */) {
+    setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
+}
+
+void N64Disassembler::setInstructions(const std::vector<TKPEmu::N64::DisassemblerInstruction>& instructions) {
+    instructions_ = instructions;
+}
+
+void N64Disassembler::setGPRs(const std::array<TKPEmu::N64::MemDataUnionDW, 32>& gprs) {
+    gprs_ = gprs;
+}
+
+void N64Disassembler::updateLineNumberArea(const QRect &rect, int dy) {
+    if (dy)
+        line_number_area_->scroll(0, dy);
+    else
+        line_number_area_->update(0, rect.y(), line_number_area_->width(), rect.height());
+
+    if (rect.contains(viewport()->rect()))
+        updateLineNumberAreaWidth(0);
+}
+
+void N64Disassembler::resizeEvent(QResizeEvent *e) {
+    QPlainTextEdit::resizeEvent(e);
+    updateText();
+    QRect cr = contentsRect();
+    line_number_area_->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
+}
+
+void N64Disassembler::lineNumberAreaPaintEvent(QPaintEvent *event)
+{
+    if (instructions_.empty())
+        return;
+    QPainter painter(line_number_area_);
+    painter.fillRect(event->rect(), Qt::lightGray);
+    QTextBlock block = firstVisibleBlock();
+    int blockNumber = block.blockNumber();
+    int top = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
+    int bottom = top + qRound(blockBoundingRect(block).height());
+    while (block.isValid() && top <= event->rect().bottom()) {
+        if (block.isVisible() && bottom >= event->rect().top()) {
+            QString number = "0x" + QString::number(instructions_[top_line_ + blockNumber].vaddr, 16);
+            painter.setPen(Qt::black);
+            painter.drawText(0, top, line_number_area_->width(), fontMetrics().height(),
+                             Qt::AlignRight, number);
+        }
+
+        block = block.next();
+        top = bottom;
+        bottom = top + qRound(blockBoundingRect(block).height());
+        ++blockNumber;
+    }
+}
+
+void N64Disassembler::wheelEvent(QWheelEvent *e) {
+    top_line_pixel_ -= e->angleDelta().y();
+    if (top_line_pixel_ < 0)
+        top_line_pixel_ = 0;
+    top_line_ = top_line_pixel_ / fontMetrics().height();
+    updateText();
+}
+
+void N64Disassembler::updateText() {
+    int doc_size = size().height();
+    int font_height = fontMetrics().height();
+    if (font_height == 0)
+        return;
+    int lines = top_line_ + doc_size / font_height;
+    if (lines > instructions_.size())
+        lines = instructions_.size();
+    std::string text;
+    if (lines != 0) {
+        for (int i = top_line_; i < lines - 1; i++) {
+            text += instructions_.at(i).disassembly + "\n";
+        }
+        text += instructions_.at(lines - 1).disassembly;
+    }
+    setPlainText(QString::fromStdString(text));
 }
 
 std::string N64Debugger::get_gpr_value(int n) {
@@ -164,12 +315,16 @@ void N64Debugger::update_debugger_tab() {
                 break;
             }
             case DisassemblerIndex: {
-                std::string disasm = emulator_->n64_impl_.cpu_.disassemble(emulator_->n64_impl_.cpu_.pc_, emulator_->n64_impl_.cpu_.pc_ + 0x100, register_names_);
-                disassembler_text_->setPlainText(QString::fromStdString(disasm));
+                if (!disassembled_) {
+                    auto disasm = emulator_->n64_impl_.cpu_.disassemble(0x8000'0000, 0x8080'0000, register_names_);
+                    disassembler_text_->setInstructions(disasm);
+                    disassembler_text_->setGPRs(emulator_->n64_impl_.cpu_.gpr_regs_);
+                    disassembler_text_->updateText();
+                    disassembled_ = true;
+                }
                 break;
             }
         }
-        
     }
 }
 
@@ -220,11 +375,7 @@ void N64Debugger::create_Registers_tab() {
 }
 
 void N64Debugger::create_Disassembler_tab() {
-    disassembler_text_ = new QTextEdit;
-    // disassembler_text_->setReadOnly(true);
-    disassembler_text_->setFont(fixedfont);
-    disassembler_text_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    highlighter_ = new MIPSHighlighter(disassembler_text_->document());
+    disassembler_text_ = new N64Disassembler(register_names_);
     Disassembler_layout->addWidget(disassembler_text_, 2, 0, 1, 2);
 }
 
