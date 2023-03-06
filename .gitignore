@@ -369,3 +369,5 @@ glad.c
 *.sav
 callgrind.out.*
 logs/
+out**
+.qt/
