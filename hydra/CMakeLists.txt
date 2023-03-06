@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-set(CMAKE_CXX_FLAGS "-g -O3 -Werror=return-type -DBOOST_STACKTRACE_USE_ADDR2LINE")
+set(CMAKE_CXX_FLAGS "-g -O3 -no-pie -fno-pie -Werror=return-type -DBOOST_STACKTRACE_USE_ADDR2LINE")
 set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(OpenGL REQUIRED)
@@ -66,7 +66,7 @@ endif()
 target_link_libraries(TKPEmu PRIVATE TKPSrc TKPLib NESTKP GameboyTKP Chip8 N64TKP
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL Qt${QT_VERSION_MAJOR}::OpenGLWidgets
     ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} ${OPENGL_LIBRARIES}
-    Qt6::Multimedia Threads::Threads fmt::fmt)
+    Qt6::Multimedia Threads::Threads fmt::fmt dl)
 
 set_target_properties(TKPEmu PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.tkpemu.com

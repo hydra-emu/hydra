@@ -10,6 +10,7 @@
 #include <QCheckBox>
 #include <QPainter>
 #include <QToolTip>
+#include <QMessageBox>
 #include <iostream>
 #include <string>
 #include <fmt/format.h>
@@ -236,6 +237,18 @@ std::string N64Debugger::get_gpr_name(int n) {
     return TKPEmu::N64::gpr_get_name(n, register_names_);
 }
 
+void N64Disassembler::Goto(uint32_t addr) {
+    for (int i = 0; i < instructions_.size(); i++) {
+        if (instructions_.at(i).vaddr == addr) {
+            top_line_ = i;
+            top_line_pixel_ = top_line_ * fontMetrics().height();
+            updateText();
+            return;
+        }
+    }
+    QMessageBox::warning(this, "Error", "Address not found");
+}
+
 N64Debugger::N64Debugger(bool& open, QWidget* parent)
     : open_(open),
     emulator_type_(TKPEmu::EmuType::N64),
@@ -307,10 +320,12 @@ void N64Debugger::update_debugger_tab() {
         switch (tab_list_->currentRow()) {
             case RegistersIndex: {
                 for (int i = 0; i < 32; i++) {
-                    gpr_edit_[i]->blockSignals(true);
-                    gpr_edit_[i]->setText(QString::fromStdString(get_gpr_value(i)));
-                    gpr_edit_[i]->blockSignals(false);
-                    gpr_edit_[i]->setReadOnly(!emulator_->Paused);
+                    if (QString::fromStdString(get_gpr_value(i)) != gpr_edit_[i]->text()) {
+                        gpr_edit_[i]->blockSignals(true);
+                        gpr_edit_[i]->setText(QString::fromStdString(get_gpr_value(i)));
+                        gpr_edit_[i]->blockSignals(false);
+                        gpr_edit_[i]->setReadOnly(!was_paused_);
+                    }
                 }
                 break;
             }
@@ -377,6 +392,18 @@ void N64Debugger::create_Registers_tab() {
 void N64Debugger::create_Disassembler_tab() {
     disassembler_text_ = new N64Disassembler(register_names_);
     Disassembler_layout->addWidget(disassembler_text_, 2, 0, 1, 2);
+    QPushButton* goto_button = new QPushButton("Goto");
+    QLineEdit* goto_edit = new QLineEdit;
+    goto_edit->setInputMask("\\0\\xHHHHHHHH");
+    connect(goto_button, &QPushButton::clicked, this, [this, goto_edit]() {
+        bool ok = false;
+        auto addr = goto_edit->text().toULongLong(&ok, 16);
+        if (ok) {
+            disassembler_text_->Goto(addr);
+        }
+    });
+    Disassembler_layout->addWidget(goto_edit, 0, 1, 1, 1);
+    Disassembler_layout->addWidget(goto_button, 0, 2, 1, 1);
 }
 
 void N64Debugger::create_Settings_tab() {
@@ -389,4 +416,12 @@ void N64Debugger::create_Settings_tab() {
     });
     Settings_layout->addWidget(register_name_type, 2, 0, 1, 1);
     Settings_layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 100, 0, 1, 1);
+}
+
+void N64Debugger::create_Interrupts_tab() {
+    QPushButton* interrupt_button = new QPushButton("Interrupt");
+    connect(interrupt_button, &QPushButton::clicked, this, [this]() {
+        emulator_->n64_impl_.cpu_.queue_event(SchedulerEventType::Vi, 0);
+    });
+    Interrupts_layout->addWidget(interrupt_button, 2, 0, 1, 1);
 }

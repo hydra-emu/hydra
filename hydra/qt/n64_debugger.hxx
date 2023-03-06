@@ -20,6 +20,7 @@ class QTextEdit;
 #define N64_DEBUGGER_TABS \
     X(Registers) \
     X(Disassembler) \
+    X(Interrupts) \
     X(Settings)
 
 class MIPSHighlighter final : public QSyntaxHighlighter {
@@ -54,6 +55,7 @@ public:
     int lineNumberAreaWidth();
     bool event(QEvent *e) override;
     void updateText();
+    void Goto(uint32_t addr);
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void updateLineNumberArea(const QRect &rect, int dy);

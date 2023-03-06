@@ -74,7 +74,6 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
 }
 
 void ScreenWidget::initializeGL() {
-    std::cout << "Initializing OpenGL" << std::endl;
     initializeOpenGLFunctions();
     glGenTextures(1, &texture_);
     glClear(GL_COLOR_BUFFER_BIT);
