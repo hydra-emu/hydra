@@ -63,7 +63,6 @@ public:
     QAction* debugger_act_;
     QAction* tracelogger_act_;
     ScreenWidget* screen_;
-    std::shared_ptr<TKPEmu::Tools::MQBase> message_queue_;
     std::shared_ptr<TKPEmu::Emulator> emulator_;
     std::array<QWidget*, 2> emulator_tools_ {};
     TKPEmu::EmuType emulator_type_;

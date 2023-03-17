@@ -3,6 +3,7 @@
 #define TKP_EMULATOR_H
 #include <iosfwd>
 #include <mutex>
+#include <shared_mutex>
 #include <vector>
 #include <atomic>
 #include <functional>
@@ -12,7 +13,6 @@
 #include <bitset>
 #include "emulator_data.hxx"
 #include "emulator_user_data.hxx"
-#include "../lib/messagequeue.hxx"
 
 namespace {
 	bool always_false_ = false;

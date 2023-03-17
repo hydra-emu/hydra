@@ -2,7 +2,6 @@
 #define TKP_EMULATOR_TOOL_FACTORY_H
 #include <memory>
 #include <qt/n64_debugger.hxx>
-#include <lib/messagequeue.hxx>
 #include <include/emulator_types.hxx>
 
 struct EmulatorToolFactory {
