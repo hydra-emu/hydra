@@ -6,7 +6,8 @@
 #include <lib/md5.h>
 #include <include/error_factory.hxx>
 #include <lib/str_hash.h>
-#include <valgrind/callgrind.h>
+// TODO: add make target for profiling that includes this
+// #include <valgrind/callgrind.h>
 
 #ifndef CALLGRIND_START_INSTRUMENTATION
 #define NO_PROFILING

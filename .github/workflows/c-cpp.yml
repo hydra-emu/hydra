@@ -12,18 +12,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: 'true'
-    - name: update-apt-get
-      run: sudo apt-get update
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
     - name: install-deps
-      run: sudo apt-get install libtbb-dev libboost-all-dev build-essential gcc-11 g++-11 ninja-build qt5-default
-    - name: configure-first
       run: |
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
-        sudo update-alternatives --set gcc /usr/bin/gcc-11
+        sudo apt-get update
+        sudo apt-get install libgl-dev libtbb-dev libboost-all-dev build-essential gcc-12 g++-12 ninja-build qt6-base-dev libfmt-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6
     - name: configure
-      run: cmake -S TKPEmu -B TKPEmu/build -G Ninja
+      run: |
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12
+        sudo update-alternatives --set gcc /usr/bin/gcc-12
+        cmake -S hydra -B hydra/build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make
-      run: cmake --build TKPEmu/build
+      run: cmake --build hydra/build
