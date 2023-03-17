@@ -228,15 +228,6 @@ void N64Disassembler::updateText() {
     setPlainText(QString::fromStdString(text));
 }
 
-std::string N64Debugger::get_gpr_value(int n) {
-    std::shared_lock lock(emulator_->DataMutex);
-    return fmt::format("0x{:016x}", emulator_->n64_impl_.cpu_.gpr_regs_[n].UD);
-}
-
-std::string N64Debugger::get_gpr_name(int n) {
-    return TKPEmu::N64::gpr_get_name(n, register_names_);
-}
-
 void N64Disassembler::Goto(uint32_t addr) {
     for (int i = 0; i < instructions_.size(); i++) {
         if (instructions_.at(i).vaddr == addr) {
@@ -247,6 +238,15 @@ void N64Disassembler::Goto(uint32_t addr) {
         }
     }
     QMessageBox::warning(this, "Error", "Address not found");
+}
+
+std::string N64Debugger::get_gpr_value(int n) {
+    std::shared_lock lock(emulator_->DataMutex);
+    return fmt::format("0x{:016x}", emulator_->n64_impl_.cpu_.gpr_regs_[n].UD);
+}
+
+std::string N64Debugger::get_gpr_name(int n) {
+    return TKPEmu::N64::gpr_get_name(n, register_names_);
 }
 
 N64Debugger::N64Debugger(bool& open, QWidget* parent)
