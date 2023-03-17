@@ -19,7 +19,6 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidg
 find_package(fmt)
 
 add_subdirectory("src/")
-add_subdirectory("lib/")
 add_subdirectory("GameboyTKP/")
 add_subdirectory("NESTKP/")
 add_subdirectory("chip8/")
@@ -44,7 +43,7 @@ qt_add_executable(hydra
     ${PROJECT_SOURCES}
 )
 
-target_link_libraries(hydra PRIVATE TKPSrc TKPLib NESTKP GameboyTKP Chip8 N64TKP
+target_link_libraries(hydra PRIVATE TKPSrc NESTKP GameboyTKP Chip8 N64TKP
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL Qt${QT_VERSION_MAJOR}::OpenGLWidgets
     ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}
     Threads::Threads fmt::fmt dl)

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <lib/str_hash.h>
+#include <include/str_hash.h>
 #include <include/emulator_factory.h>
 #include <include/error_factory.hxx>
 #include <include/emulator_data.hxx>

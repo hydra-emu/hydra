@@ -371,3 +371,4 @@ callgrind.out.*
 logs/
 out**
 .qt/
+compile_commands.json

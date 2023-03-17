@@ -7,7 +7,6 @@
 #include <QGridLayout>
 #include <QTabWidget>
 #include <memory>
-#include <lib/messagequeue.hxx>
 #include <include/emulator_types.hxx>
 #include <N64TKP/n64_tkpwrapper.hxx>
 #include <QFontDatabase>

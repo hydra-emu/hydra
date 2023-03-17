@@ -3,9 +3,8 @@
 #include <iostream>
 #include <fstream>
 #include <include/emulator.h>
-#include <lib/md5.h>
 #include <include/error_factory.hxx>
-#include <lib/str_hash.h>
+#include <include/str_hash.h>
 // TODO: add make target for profiling that includes this
 // #include <valgrind/callgrind.h>
 
