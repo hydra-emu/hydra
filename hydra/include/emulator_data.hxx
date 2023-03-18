@@ -6,14 +6,13 @@
 #include <filesystem>
 #include <memory>
 #include <fstream>
+#include <map>
+#include <include/emulator_user_data.hxx>
 #include "emulator_types.hxx"
 #include "error_factory.hxx"
 #include "json.hpp"
 using json = nlohmann::json;
-struct KeyMappings {
-    std::vector<std::string> KeyNames;
-    std::vector<uint32_t> KeyValues;
-};
+using KeyMappings = std::map<std::string, std::string>;
 struct EmulatorData {
     std::string Name;
     std::string SettingsFile;
@@ -24,5 +23,6 @@ struct EmulatorData {
     bool HasTracelogger;
     std::vector<std::string> LoggingOptions;
     KeyMappings Mappings;
+    EmulatorUserData UserData;
 };
 #endif

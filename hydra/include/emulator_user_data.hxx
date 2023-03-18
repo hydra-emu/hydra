@@ -18,6 +18,6 @@ public:
 private:
     std::map<std::string, std::string> map_;
     std::string save_path_;
-    std::unique_ptr<std::mutex> mutex_;
+    std::shared_ptr<std::mutex> mutex_;
 };
 #endif

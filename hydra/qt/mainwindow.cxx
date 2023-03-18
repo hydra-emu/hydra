@@ -3,6 +3,7 @@
 #include "shadereditor.hxx"
 #include "aboutwindow.hxx"
 #include <include/error_factory.hxx>
+#include <include/emulator_settings.hxx>
 #include <qt/emulator_tool_factory.hxx>
 #include <QMessageBox>
 #include <QTimer>
@@ -141,13 +142,13 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event) {
 void MainWindow::open_file() {
     static QString extensions;
     if (extensions.isEmpty()) {
-        const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
         QString indep;
         extensions = "All supported types (";
-        for (int i = 0; i < static_cast<int>(TKPEmu::EmuType::EmuTypeSize); i++) {
-            indep += data[i].Name.c_str();
+        for (int i = 0; i < EmuTypeSize; i++) {
+            const auto& data = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i));
+            indep += data.Name.c_str();
             indep += " (";
-            for (const auto& str : data[i].Extensions) {
+            for (const auto& str : data.Extensions) {
                 extensions += "*";
                 extensions += str.c_str();
                 extensions += " ";
@@ -161,8 +162,8 @@ void MainWindow::open_file() {
         extensions += indep;
     }
     std::string lastpath = "";
-    if (TKPEmu::EmulatorFactory::GetGeneralSettings().Has("last_path"))
-    lastpath = TKPEmu::EmulatorFactory::GetGeneralSettings().Get("last_path");
+    if (EmulatorSettings::GetGeneralSettings().Has("last_path"))
+    lastpath = EmulatorSettings::GetGeneralSettings().Get("last_path");
     std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"), QString::fromStdString(lastpath), extensions).toStdString();
     if (path.empty())
         return;
@@ -170,7 +171,7 @@ void MainWindow::open_file() {
     if (!std::filesystem::is_regular_file(pathfs))
         return;
     auto dirpath = pathfs.parent_path();
-    TKPEmu::EmulatorFactory::GetGeneralSettings().Set("last_path", dirpath);
+    EmulatorSettings::GetGeneralSettings().Set("last_path", dirpath);
     QT_MAY_THROW(
         close_tools();
         auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path);
@@ -277,15 +278,13 @@ void MainWindow::enable_emulation_actions(bool should) {
     debugger_act_->setEnabled(false);
     tracelogger_act_->setEnabled(false);
     if (should) {
-        const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData().at(static_cast<int>(emulator_type_));
+        const auto& data = EmulatorSettings::GetEmulatorData(emulator_type_);
         debugger_act_->setEnabled(data.HasDebugger);
         tracelogger_act_->setEnabled(data.HasTracelogger);
     }
 }
 
 void MainWindow::setup_emulator_specific() {
-    EmulatorDataMap constant_map;
-    EmulatorUserDataMap user_map;
     QFile f(":/data/emulators.json");
     if (!f.open(QIODevice::ReadOnly)) {
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open default emulators.json");
@@ -326,16 +325,17 @@ void MainWindow::setup_emulator_specific() {
         o.at("HasDebugger").get_to(d.HasDebugger);
         o.at("HasTracelogger").get_to(d.HasTracelogger);
         o.at("LoggingOptions").get_to(d.LoggingOptions);
-        constant_map[std::stoi(it.key())] = d;
+        EmulatorData& constant_settings = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(std::stoi(it.key())));
+        constant_settings = d;
     }
     for (auto it = j_mappings.begin(); it != j_mappings.end(); ++it) {
-        auto& d = constant_map[std::stoi(it.key())];
+        auto& d = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(std::stoi(it.key())));
         json& o = it.value();
-        o.at("KeyNames").get_to(d.Mappings.KeyNames);
-        o.at("KeyValues").get_to(d.Mappings.KeyValues);
+        o.get_to(d.Mappings);
     }
     // Write default emulator options if they dont exist
-    for (auto& e : constant_map) {
+    for (int i = 0; i < EmuTypeSize; i++) {
+        const auto& e = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i));
         if (!std::filesystem::exists(TKPEmu::EmulatorFactory::GetSavePath() + e.SettingsFile)) {
             std::ofstream ofs(TKPEmu::EmulatorFactory::GetSavePath() + e.SettingsFile);
             if (ofs.is_open()) {
@@ -350,23 +350,21 @@ void MainWindow::setup_emulator_specific() {
         }
     }
     // Read emulator options
-    for (int i = 0; i < static_cast<int>(TKPEmu::EmuType::EmuTypeSize); i++) {
+    for (int i = 0; i < EmuTypeSize; i++) {
         std::map<std::string, std::string> temp;
-        const auto& e = constant_map[i];
-        auto path = TKPEmu::EmulatorFactory::GetSavePath() + e.SettingsFile;
+        EmulatorUserData& user_data = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i)).UserData;
+        auto path = TKPEmu::EmulatorFactory::GetSavePath() + EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i)).SettingsFile;
         std::ifstream ifs(path);
         if (ifs.is_open()) {
             std::stringstream buf;
             buf << ifs.rdbuf();
             json j = json::parse(buf.str());
             for (auto it = j.begin(); it != j.end(); ++it) {
-                temp[it.key()] = it.value();
+                user_data.Set(it.key(), it.value());
             }
         } else {
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open emulator options file");
         }
-        EmulatorUserData user_data(path, temp);
-        user_map[i] = std::move(user_data);
     }
     // Read general options
     {
@@ -385,11 +383,7 @@ void MainWindow::setup_emulator_specific() {
                 throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open options file");
             }
         }
-        GeneralSettings settings(path, temp);
-        TKPEmu::EmulatorFactory::SetGeneralSettings(std::move(settings));
     }
-    TKPEmu::EmulatorFactory::SetEmulatorData(std::move(constant_map));
-    TKPEmu::EmulatorFactory::SetEmulatorUserData(std::move(user_map));
 }
 
 void MainWindow::pause_emulator() {
