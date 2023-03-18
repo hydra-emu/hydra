@@ -8,13 +8,13 @@ using json = nlohmann::json;
 EmulatorUserData::EmulatorUserData() :
 save_path_(),
 map_(),
-mutex_(std::make_unique<std::mutex>())
+mutex_(std::make_shared<std::mutex>())
 {}
 
 EmulatorUserData::EmulatorUserData(std::string path, std::map<std::string, std::string> map) :
 save_path_(path),
 map_(std::move(map)),
-mutex_(std::make_unique<std::mutex>())
+mutex_(std::make_shared<std::mutex>())
 {}
 
 std::string EmulatorUserData::Get(const std::string& key) const {
@@ -42,5 +42,4 @@ void EmulatorUserData::Set(const std::string& key, const std::string& value) {
     std::ofstream ofs(save_path_, std::ios::trunc);
     json j_map(map_);
     ofs << j_map << std::endl;
-    ofs.close();
 }

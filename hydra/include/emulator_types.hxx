@@ -12,4 +12,5 @@ namespace TKPEmu {
         Error
     };
 }
+constexpr static int EmuTypeSize = static_cast<int>(TKPEmu::EmuType::EmuTypeSize);
 #endif

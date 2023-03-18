@@ -2,6 +2,7 @@
 #include <include/str_hash.h>
 #include <include/emulator_factory.h>
 #include <include/error_factory.hxx>
+#include <include/emulator_settings.hxx>
 #include <include/emulator_data.hxx>
 #include <include/emulator_user_data.hxx>
 #include <GameboyTKP/gb_tkpwrapper.h>
@@ -10,10 +11,7 @@
 #include <NESTKP/nes_tkpwrapper.hxx>
 
 namespace TKPEmu {
-    EmulatorDataMap EmulatorFactory::emulator_data_{};
-    EmulatorUserDataMap EmulatorFactory::emulator_user_data_{};
     ExtensionMappings EmulatorFactory::extension_mappings_{};
-    GeneralSettings EmulatorFactory::settings_{};
     std::string EmulatorFactory::GetSavePath() {
         static std::string dir;
         if (dir.empty()) {
@@ -45,7 +43,7 @@ namespace TKPEmu {
         }
     }
     std::shared_ptr<Emulator> EmulatorFactory::Create(EmuType type) { 
-        const auto& data = TKPEmu::EmulatorFactory::GetEmulatorData();
+        const auto& data = EmulatorSettings::GetEmulatorData(type);
         std::shared_ptr<Emulator> emulator;
         switch (type) {
             case EmuType::Gameboy: {
@@ -68,21 +66,8 @@ namespace TKPEmu {
                 throw ErrorFactory::generate_exception(__func__, __LINE__, "EmulatorFactory::Create failed");
             }
         }
-        emulator->SetWidth(data[static_cast<int>(type)].DefaultWidth);
-        emulator->SetHeight(data[static_cast<int>(type)].DefaultHeight);
+        emulator->SetWidth(data.DefaultWidth);
+        emulator->SetHeight(data.DefaultHeight);
         return emulator;
-    }
-    void EmulatorFactory::SetEmulatorData(EmulatorDataMap map) {
-        EmulatorFactory::emulator_data_ = std::move(map);
-        // Map extensions to EmuType
-        for (int i = 0; i < EmulatorFactory::emulator_data_.size(); i++) {
-            auto& data = EmulatorFactory::emulator_data_[i];
-            for (auto& ext : data.Extensions) {
-                EmulatorFactory::extension_mappings_[ext] = static_cast<EmuType>(i);
-            }
-        }
-    }
-    void EmulatorFactory::SetEmulatorUserData(EmulatorUserDataMap map) {
-        EmulatorFactory::emulator_user_data_ = std::move(map);
     }
 }

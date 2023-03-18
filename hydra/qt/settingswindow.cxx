@@ -1,4 +1,5 @@
 #include "settingswindow.hxx"
+#include "keypicker.hxx"
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QFileDialog>
@@ -6,7 +7,8 @@
 #include <QCheckBox>
 #include <include/emulator_types.hxx>
 #include <include/emulator_factory.h>
-#define emu_data(emu_type) TKPEmu::EmulatorFactory::GetEmulatorUserData()[static_cast<int>(emu_type)]
+#include <include/emulator_settings.hxx>
+#define emu_data(emu_type) EmulatorSettings::GetEmulatorData(emu_type).UserData
 
 SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidget(parent, Qt::Window) {
     setAttribute(Qt::WA_DeleteOnClose);
@@ -65,10 +67,8 @@ void SettingsWindow::create_tabs() {
         tab_show_->addTab(general_tab, "General");
     }
     {
-        QGridLayout* input_layout = new QGridLayout;
-        QWidget* input_tab = new QWidget;
-        input_tab->setLayout(input_layout);
-        tab_show_->addTab(input_tab, "Input");
+        KeyPickerPage* key_picker = new KeyPickerPage(this);
+        tab_show_->addTab(key_picker, "Input");
     }
     {
         auto dmg_path = emu_data(TKPEmu::EmuType::Gameboy).Get("dmg_path");

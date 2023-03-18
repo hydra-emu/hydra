@@ -33,6 +33,7 @@ set(PROJECT_SOURCES
     qt/settingswindow.cxx
     qt/shadereditor.cxx
     qt/aboutwindow.cxx
+    qt/keypicker.cxx
     qt/n64_debugger.cxx
     qt/nes_ppuviewer.cxx
     src/emulator.cpp
