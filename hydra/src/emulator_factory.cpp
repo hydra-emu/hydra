@@ -36,6 +36,14 @@ namespace TKPEmu {
         auto ext = path.extension().string();
         std::transform(ext.begin(), ext.end(), ext.begin(),
             [](unsigned char c){ return std::tolower(c); });
+        if (extension_mappings_.empty()) {
+            for (int i = 0; i < EmuTypeSize; ++i) {
+                auto& data = EmulatorSettings::GetEmulatorData(static_cast<EmuType>(i));
+                for (auto& ext : data.Extensions) {
+                    extension_mappings_[ext] = static_cast<EmuType>(i);
+                }
+            }
+        }
         try {
             return extension_mappings_.at(ext);
         } catch (...) {

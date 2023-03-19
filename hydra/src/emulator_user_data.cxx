@@ -11,11 +11,18 @@ map_(),
 mutex_(std::make_shared<std::mutex>())
 {}
 
-EmulatorUserData::EmulatorUserData(std::string path, std::map<std::string, std::string> map) :
+EmulatorUserData::EmulatorUserData(std::string path) :
 save_path_(path),
-map_(std::move(map)),
+map_(),
 mutex_(std::make_shared<std::mutex>())
-{}
+{
+    std::ifstream ifs(save_path_);
+    if (ifs.good()) {
+        json j_map;
+        ifs >> j_map;
+        map_ = j_map.get<std::map<std::string, std::string>>();
+    }
+}
 
 std::string EmulatorUserData::Get(const std::string& key) const {
     std::lock_guard lg(*mutex_);
@@ -40,6 +47,7 @@ void EmulatorUserData::Set(const std::string& key, const std::string& value) {
     std::lock_guard lg(*mutex_);
     map_[key] = value;
     std::ofstream ofs(save_path_, std::ios::trunc);
+    std::cout << "saving : " << save_path_ << std::endl;
     json j_map(map_);
     ofs << j_map << std::endl;
 }
