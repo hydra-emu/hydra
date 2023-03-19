@@ -10,7 +10,7 @@
 class EmulatorUserData {
 public:
     EmulatorUserData();
-    EmulatorUserData(std::string path, std::map<std::string, std::string> map);
+    EmulatorUserData(std::string path);
     std::string Get(const std::string& key) const;
     bool Has(const std::string& key) const;
     void Set(const std::string& key, const std::string& value);
