@@ -39,7 +39,7 @@ namespace TKPEmu {
 		Paused = false; // TODO: get from settings
 		Stopped = false;
 		Step = false;
-		Reset();
+		reset();
 		if (Paused) {
 			goto paused;
 		}
@@ -58,6 +58,10 @@ namespace TKPEmu {
 			}
 			if (Paused.load()) {
 				break;
+			}
+			if (reset_flag_) {
+				reset();
+				reset_flag_ = false;
 			}
 			should_draw_ = true;
             cur_instr_ = 0;
@@ -79,7 +83,7 @@ namespace TKPEmu {
 		return load_file(path);
 	}
     void Emulator::Reset() {
-        reset();
+        reset_flag_ = true;
     }
 	void Emulator::CloseAndWait() {
 		Step.store(true);

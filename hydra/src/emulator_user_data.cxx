@@ -47,7 +47,6 @@ void EmulatorUserData::Set(const std::string& key, const std::string& value) {
     std::lock_guard lg(*mutex_);
     map_[key] = value;
     std::ofstream ofs(save_path_, std::ios::trunc);
-    std::cout << "saving : " << save_path_ << std::endl;
     json j_map(map_);
     ofs << j_map << std::endl;
 }
