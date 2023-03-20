@@ -71,6 +71,7 @@ namespace TKPEmu {
 		bool should_draw_ = false;
 		int64_t last_frame_time_ms_;
 		int cur_instr_ = 0;
+		bool reset_flag_ = false;
 		std::chrono::system_clock::time_point frame_start_ = std::chrono::system_clock::now();
 	};
 }
