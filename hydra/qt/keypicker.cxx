@@ -3,6 +3,7 @@
 #include <QKeyEvent>
 #include <include/emulator_settings.hxx>
 #include <include/emulator_factory.h>
+#include <iostream>
 
 KeyPickerPage::KeyPickerPage(QWidget *parent) : QWidget(parent) {
     emulator_picker_ = new QComboBox(this);
@@ -16,7 +17,9 @@ KeyPickerPage::KeyPickerPage(QWidget *parent) : QWidget(parent) {
         int j = 0;
         for (auto pair : data.Mappings) {
             table->setItem(j, 0, new QTableWidgetItem(QString::fromStdString(pair.first)));
-            table->setItem(j, 1, new QTableWidgetItem(QKeySequence(std::stoi(pair.second)).toString()));
+            if (!pair.second.empty()) {
+                table->setItem(j, 1, new QTableWidgetItem(QKeySequence(std::atoi(pair.second.c_str())).toString()));
+            }
             j++;
         }
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);

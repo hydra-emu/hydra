@@ -14,6 +14,7 @@
 #include <iostream>
 #include <string>
 #include <fmt/format.h>
+#include <include/log.hxx>
 
 MIPSHighlighter::MIPSHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
@@ -404,6 +405,13 @@ void N64Debugger::create_Disassembler_tab() {
     });
     Disassembler_layout->addWidget(goto_edit, 0, 1, 1, 1);
     Disassembler_layout->addWidget(goto_button, 0, 2, 1, 1);
+    QPushButton* goto_pc_button = new QPushButton("Goto PC");
+    connect(goto_pc_button, &QPushButton::clicked, this, [this]() {
+        Logger::Info(fmt::format("Goto PC: {:#x}", emulator_->n64_impl_.cpu_.pc_));
+        disassembler_text_->Goto(emulator_->n64_impl_.cpu_.pc_);
+    });
+    Disassembler_layout->addWidget(goto_pc_button, 0, 3, 1, 1);
+    Disassembler_layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 100, 0, 1, 1);
 }
 
 void N64Debugger::create_Settings_tab() {
