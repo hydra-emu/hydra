@@ -23,8 +23,8 @@ add_subdirectory("GameboyTKP/")
 add_subdirectory("NESTKP/")
 add_subdirectory("chip8/")
 add_subdirectory("N64TKP/")
-# add_compile_options(-fsanitize=address)
-# add_link_options(-fsanitize=address)
+add_compile_options(-fsanitize=address)
+add_link_options(-fsanitize=address)
 set(PROJECT_SOURCES
     resources.qrc
     qt/main.cxx
@@ -37,6 +37,7 @@ set(PROJECT_SOURCES
     qt/n64_debugger.cxx
     qt/nes_ppuviewer.cxx
     src/emulator.cpp
+    src/global.cxx
 )
 
 qt_add_executable(hydra
