@@ -4,6 +4,8 @@
 #include <fmt/color.h>
 #include <include/global.hxx>
 
+// #define ENABLE_LOGGING
+
 struct Logger {
     static void Fatal(std::string message) {
         log_impl<LogFatal, ConsoleFatal>(message);
@@ -84,11 +86,13 @@ private:
 
     template <auto PrefixFunction, auto OutputFunction>
     static inline void log_impl(std::string message) {
+        #ifdef ENABLE_LOGGING
         std::string prefix = PrefixFunction();
         if (prefix.empty())
             return;
         std::string messagef = fmt::format(" {}\n", message);
         OutputFunction(prefix + messagef);
+        #endif
     }
 };
 
