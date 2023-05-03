@@ -63,12 +63,12 @@ namespace TKPEmu {
 	protected:
 		void stop();
 		int instrs_per_frame_ = 0;
+		bool should_draw_ = false;
 	private:
 		virtual void update() = 0;
 		virtual void reset();
 		virtual bool load_file(std::string);
 		int width_, height_;
-		bool should_draw_ = false;
 		int64_t last_frame_time_ms_;
 		int cur_instr_ = 0;
 		bool reset_flag_ = false;

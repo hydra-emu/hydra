@@ -4,7 +4,7 @@
 #include <fmt/color.h>
 #include <include/global.hxx>
 
-// #define ENABLE_LOGGING
+#define ENABLE_LOGGING
 
 struct Logger {
     static void Fatal(std::string message) {
