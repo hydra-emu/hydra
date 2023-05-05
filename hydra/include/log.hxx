@@ -81,7 +81,6 @@ private:
 
     static inline void ConsoleFatal(std::string message) {
         ConsoleNormal(message);
-        exit(1);
     }
 
     template <auto PrefixFunction, auto OutputFunction>
