@@ -294,18 +294,6 @@ N64Debugger::N64Debugger(bool& open, QWidget* parent)
 
 N64Debugger::~N64Debugger() {}
 
-void N64Debugger::pi_dma() {
-    emulator_->n64_impl_.cpu_.queue_event(SchedulerEventType::Pi, 100);
-}
-
-void N64Debugger::si_dma() {
-    emulator_->n64_impl_.cpu_.queue_event(SchedulerEventType::Si, 100);
-}
-
-void N64Debugger::vi_dma() {
-    emulator_->n64_impl_.cpu_.queue_event(SchedulerEventType::Vi, 100);
-}
-
 void N64Debugger::on_tab_change() {
     tab_show_->setCurrentIndex(tab_list_->currentRow());
 }
@@ -424,12 +412,4 @@ void N64Debugger::create_Settings_tab() {
     });
     Settings_layout->addWidget(register_name_type, 2, 0, 1, 1);
     Settings_layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 100, 0, 1, 1);
-}
-
-void N64Debugger::create_Interrupts_tab() {
-    QPushButton* interrupt_button = new QPushButton("Interrupt");
-    connect(interrupt_button, &QPushButton::clicked, this, [this]() {
-        emulator_->n64_impl_.cpu_.queue_event(SchedulerEventType::Vi, 0);
-    });
-    Interrupts_layout->addWidget(interrupt_button, 2, 0, 1, 1);
 }

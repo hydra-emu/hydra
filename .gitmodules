@@ -13,3 +13,6 @@
 [submodule "TKPEmu/cppunit"]
 	path = hydra/cppunit
 	url = git://anongit.freedesktop.org/git/libreoffice/cppunit/
+[submodule "hydra/libsamplerate"]
+	path = hydra/libsamplerate
+	url = https://github.com/libsndfile/libsamplerate
