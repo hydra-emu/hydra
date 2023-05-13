@@ -4,7 +4,7 @@
 #include <fmt/color.h>
 #include <include/global.hxx>
 
-#define ENABLE_LOGGING
+#define ENABLE_LOGGING 1
 
 struct Logger {
     static void Fatal(std::string message) {
@@ -81,11 +81,12 @@ private:
 
     static inline void ConsoleFatal(std::string message) {
         ConsoleNormal(message);
+        exit(1);
     }
 
     template <auto PrefixFunction, auto OutputFunction>
     static inline void log_impl(std::string message) {
-        #ifdef ENABLE_LOGGING
+        #if ENABLE_LOGGING == 1
         std::string prefix = PrefixFunction();
         if (prefix.empty())
             return;

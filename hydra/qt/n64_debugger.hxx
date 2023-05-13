@@ -19,7 +19,6 @@ class QTextEdit;
 #define N64_DEBUGGER_TABS \
     X(Registers) \
     X(Disassembler) \
-    X(Interrupts) \
     X(Settings)
 
 class MIPSHighlighter final : public QSyntaxHighlighter {
@@ -93,9 +92,6 @@ public:
 
     void SetEmulator(TKPEmu::N64::N64_TKPWrapper* emulator);
 private slots:
-    void pi_dma();
-    void si_dma();
-    void vi_dma();
     void on_tab_change();
     void update_debugger_tab();
 private:
