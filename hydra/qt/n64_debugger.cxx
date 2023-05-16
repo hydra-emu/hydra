@@ -395,7 +395,7 @@ void N64Debugger::create_Disassembler_tab() {
     Disassembler_layout->addWidget(goto_button, 0, 2, 1, 1);
     QPushButton* goto_pc_button = new QPushButton("Goto PC");
     connect(goto_pc_button, &QPushButton::clicked, this, [this]() {
-        Logger::Info(fmt::format("Goto PC: {:#x}", emulator_->n64_impl_.cpu_.pc_));
+        Logger::Info("Goto PC: {:#x}", emulator_->n64_impl_.cpu_.pc_);
         disassembler_text_->Goto(emulator_->n64_impl_.cpu_.pc_);
     });
     Disassembler_layout->addWidget(goto_pc_button, 0, 3, 1, 1);
