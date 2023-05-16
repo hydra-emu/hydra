@@ -2,38 +2,39 @@
 #define TKP_LOG_HXX
 #include <fmt/core.h>
 #include <fmt/color.h>
+#include <fmt/format.h>
 #include <include/global.hxx>
 
-#define ENABLE_LOGGING 1
+#define ENABLE_LOGGING 0
+#define ENABLE_DEBUG 0
 
 struct Logger {
-    static void Fatal(std::string message) {
-        log_impl<LogFatal, ConsoleFatal>(message);
+    template<typename... T>
+    static void Fatal(fmt::format_string<T...> fmt, T&&... args) {
+        std::string str = fmt::format(fmt, std::forward<T>(args)...);
+        log_impl<LogFatal, ConsoleFatal>(str);
     }
 
-    static void Warn(std::string message) {
-        log_impl<LogWarning, ConsoleNormal>(message);
+    template<typename... T>
+    static void Warn(fmt::format_string<T...> fmt, T&&... args) {
+        std::string str = fmt::format(fmt, std::forward<T>(args)...);
+        log_impl<LogWarning, ConsoleNormal>(str);
     }
 
-    static void V(std::string message) {
-        log_impl<LogVerbose1, ConsoleNormal>(message);
+    template<typename... T>
+    static void Info(fmt::format_string<T...> fmt, T&&... args) {
+        std::string str = fmt::format(fmt, std::forward<T>(args)...);
+        log_impl<LogInfo, ConsoleNormal>(str);
     }
 
-    static void VV(std::string message) {
-        log_impl<LogVerbose2, ConsoleNormal>(message);
+    template<typename... T>
+    static void Debug(fmt::format_string<T...> fmt, T&&... args) {
+        #if ENABLE_DEBUG == 1
+        std::string str = fmt::format(fmt, std::forward<T>(args)...);
+        log_impl<LogInfo, ConsoleNormal>(str);
+        #endif
     }
 
-    static void VVV(std::string message) {
-        log_impl<LogVerbose3, ConsoleNormal>(message);
-    }
-
-    static void VVVV(std::string message) {
-        log_impl<LogVerbose4, ConsoleNormal>(message);
-    }
-
-    static void Info(std::string message) {
-        log_impl<LogInfo, ConsoleNormal>(message);
-    }
 private:
     static inline std::string LogInfo() {
         return fmt::format(fg(fmt::color::green), "[INFO]");
@@ -47,32 +48,8 @@ private:
         return fmt::format(fg(fmt::color::red), "[FATAL]");
     }
 
-    static inline std::string LogVerbose1() {
-        if (Global::VerboseLevel < 1)
-            return {};
-        return fmt::format(fg(fmt::color::cyan), "[VERBOSE]");
-    }
-
-    static inline std::string LogVerbose2() {
-        if (Global::VerboseLevel < 2)
-            return {};
-        return fmt::format(fg(fmt::color::cyan), "[VERBOSE]");
-    }
-
-    static inline std::string LogVerbose3() {
-        if (Global::VerboseLevel < 3)
-            return {};
-        return fmt::format(fg(fmt::color::cyan), "[VERBOSE]");
-    }
-
-    static inline std::string LogVerbose4() {
-        if (Global::VerboseLevel < 4)
-            return {};
-        return fmt::format(fg(fmt::color::cyan), "[VERBOSE]");
-    }
-
-    static inline std::string LogCustom(std::string scope) {
-        return fmt::format(fg(fmt::color::magenta), "[{}]", scope);
+    static inline std::string LogDebug() {
+        return fmt::format(fg(fmt::color::magenta), "[DEBUG]");
     }
 
     static inline void ConsoleNormal(std::string message) {
