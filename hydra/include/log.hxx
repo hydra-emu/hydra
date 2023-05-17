@@ -5,7 +5,7 @@
 #include <fmt/format.h>
 #include <include/global.hxx>
 
-#define ENABLE_LOGGING 0
+#define ENABLE_LOGGING 1
 #define ENABLE_DEBUG 0
 
 struct Logger {
@@ -31,7 +31,7 @@ struct Logger {
     static void Debug(fmt::format_string<T...> fmt, T&&... args) {
         #if ENABLE_DEBUG == 1
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
-        log_impl<LogInfo, ConsoleNormal>(str);
+        printf("%s\n", str.c_str());
         #endif
     }
 
