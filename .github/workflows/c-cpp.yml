@@ -23,6 +23,6 @@ jobs:
       run: |
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12
         sudo update-alternatives --set gcc /usr/bin/gcc-12
-        cmake -S hydra -B hydra/build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake -S . -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make
-      run: cmake --build hydra/build
+      run: cmake --build build

@@ -3,12 +3,12 @@
 ![Commit activity](https://img.shields.io/github/commit-activity/m/OFFTKP/hydra?style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/OFFTKP/hydra?style=for-the-badge)
 ![Size](https://img.shields.io/github/repo-size/OFFTKP/hydra?style=for-the-badge) -->
-<p align="center"> <img src="./hydra/images/hydra.png"><img src="./hydra/images/logo.png"></p>
+<p align="center"> <img src="./data/images/hydra.png"><img src="./data/images/logo.png"></p>
 
 ----
 
-<p align="center">A FLOSS multi-system emulator</p>
-<p align="center"><img src="./hydra/screen.png"></p>
+<p align="center">A multi-system emulator</p>
+<p align="center"><img src="./data/images/screen.png"></p>
 
 ## Current systems
 - Gameboy / Gameboy Color

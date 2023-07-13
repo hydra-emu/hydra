@@ -204,13 +204,13 @@ ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> c
     if (file.open(QFile::ReadOnly | QFile::Text))
         editor_->setPlainText(file.readAll());
     toolbar_ = new QToolBar;
-    open_act_ = toolbar_->addAction(QIcon(":/images/open.png"), "Open shader");
+    open_act_ = toolbar_->addAction(QIcon(":/data/images/open.png"), "Open shader");
     connect(open_act_, SIGNAL(triggered()), this, SLOT(open_shader()));
     toolbar_->addSeparator();
-    autocompile_act_ = toolbar_->addAction(QIcon(":/images/autocompile.png"), "Auto compile");
+    autocompile_act_ = toolbar_->addAction(QIcon(":/data/images/autocompile.png"), "Auto compile");
     autocompile_act_->setCheckable(true);
     connect(autocompile_act_, SIGNAL(triggered()), this, SLOT(autocompile()));
-    compile_act_ = toolbar_->addAction(QIcon(":/images/compile.png"), "Compile");
+    compile_act_ = toolbar_->addAction(QIcon(":/data/images/compile.png"), "Compile");
     connect(compile_act_, SIGNAL(triggered()), this, SLOT(compile()));
     autocompile();
     QVBoxLayout* layout = new QVBoxLayout;
@@ -218,7 +218,7 @@ ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> c
     layout->addWidget(editor_);
     setLayout(layout);
     setWindowTitle(tr("Shader editor"));
-    setWindowIcon(QIcon(":/images/shaders.png"));
+    setWindowIcon(QIcon(":/data/images/shaders.png"));
     show();
     open_ = true;
 }
