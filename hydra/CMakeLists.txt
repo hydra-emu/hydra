@@ -48,7 +48,7 @@ qt_add_executable(hydra
 target_link_libraries(hydra PRIVATE TKPSrc nes gb c8 n64
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL Qt${QT_VERSION_MAJOR}::OpenGLWidgets
     ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}
-    Threads::Threads fmt::fmt dl samplerate)
+    Threads::Threads fmt::fmt dl)
 
 set_target_properties(hydra PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.hydra.com
