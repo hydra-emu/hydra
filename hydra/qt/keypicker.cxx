@@ -9,8 +9,8 @@ KeyPickerPage::KeyPickerPage(QWidget *parent) : QWidget(parent) {
     emulator_picker_ = new QComboBox(this);
     tab_show_ = new QTabWidget(this);
     for (int i = 0; i < EmuTypeSize; i++) {
-        emulator_picker_->addItem(QString::fromStdString(EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i)).Name));
-        EmulatorData& data = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i));
+        emulator_picker_->addItem(QString::fromStdString(EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).Name));
+        EmulatorData& data = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
         QTableWidget* table = new QTableWidget(this);
         table->setColumnCount(2);
         table->setRowCount(data.Mappings.size());
@@ -54,7 +54,7 @@ void KeyPickerPage::keyPressEvent(QKeyEvent* event) {
         waiting_input_ = false;
         auto table = static_cast<QTableWidget*>(tab_show_->currentWidget());
         table->setItem(row_waiting_, 1, new QTableWidgetItem(QKeySequence(event->key()).toString()));
-        EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(emulator_picker_->currentIndex()))
+        EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(emulator_picker_->currentIndex()))
             .Mappings[table->currentItem()->text().toStdString()] = event->key();
         saveKeySettings();
     }
@@ -64,9 +64,9 @@ void KeyPickerPage::saveKeySettings() {
     using emu_settings = std::map<std::string, std::map<std::string, std::string>>;
     emu_settings es;
     for (int i = 0; i < EmuTypeSize; i++) {
-        es[std::to_string(i)] = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i)).Mappings;
+        es[std::to_string(i)] = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).Mappings;
     }
-    std::ofstream ofs(TKPEmu::EmulatorFactory::GetSavePath() + "mappings.json", std::ios::trunc);
+    std::ofstream ofs(hydra::EmulatorFactory::GetSavePath() + "mappings.json", std::ios::trunc);
     json j_map(es);
     ofs << j_map << std::endl;
 }

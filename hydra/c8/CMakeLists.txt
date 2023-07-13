@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.19)
+project(c8)
+set(FILES c8_inter.cxx c8_tkpwrapper.cxx)
+add_library(c8 ${FILES})
+target_include_directories(c8 PUBLIC ../)

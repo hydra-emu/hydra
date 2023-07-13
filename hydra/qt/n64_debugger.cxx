@@ -25,20 +25,20 @@ MIPSHighlighter::MIPSHighlighter(QTextDocument *parent)
     singleline_comment_format_.setForeground(QBrush(QColor(85, 170, 0)));
     label_format_.setForeground(QBrush(QColor(170, 170, 127)));
     punctuator_format_.setForeground(QBrush(QColor(170, 0, 0)));
-    for (int i = 0; i < TKPEmu::N64::OperationCodes.size(); i++) {
+    for (int i = 0; i < hydra::N64::OperationCodes.size(); i++) {
         HighlightingRule rule;
-        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + TKPEmu::N64::OperationCodes[i] + std::string("\\b")));
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + hydra::N64::OperationCodes[i] + std::string("\\b")));
         rule.format = instruction_format_;
         highlighting_rules_.append(rule);
-        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + TKPEmu::N64::SpecialCodes[i] + std::string("\\b")));
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + hydra::N64::SpecialCodes[i] + std::string("\\b")));
         highlighting_rules_.append(rule);
     }
     for (int i = 0; i < 32; i++) {
         HighlightingRule rule;
         rule.format = register_format_;
-        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + TKPEmu::N64::gpr_get_name(i, false) + std::string("\\b")));
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + hydra::N64::gpr_get_name(i, false) + std::string("\\b")));
         highlighting_rules_.append(rule);
-        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + TKPEmu::N64::gpr_get_name(i, true) + std::string("\\b")));
+        rule.pattern = QRegularExpression(QString::fromStdString(std::string("\\b") + hydra::N64::gpr_get_name(i, true) + std::string("\\b")));
         highlighting_rules_.append(rule);
     }
     {
@@ -123,7 +123,7 @@ bool N64Disassembler::event(QEvent *event)
                 } else {
                     for (int i = 0; i < 32; i++) {
                         // Slow, but I'm not writing a case for each alternative register name
-                        if (reg == QString::fromStdString(TKPEmu::N64::gpr_get_name(i, true))) {
+                        if (reg == QString::fromStdString(hydra::N64::gpr_get_name(i, true))) {
                             reg_value = fmt::format("0x{:016x}", gprs_[i].UD);
                             is_reg = true;
                             break;
@@ -153,11 +153,11 @@ void N64Disassembler::updateLineNumberAreaWidth(int /* newBlockCount */) {
     setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
 }
 
-void N64Disassembler::setInstructions(const std::vector<TKPEmu::N64::DisassemblerInstruction>& instructions) {
+void N64Disassembler::setInstructions(const std::vector<hydra::N64::DisassemblerInstruction>& instructions) {
     instructions_ = instructions;
 }
 
-void N64Disassembler::setGPRs(const std::array<TKPEmu::N64::MemDataUnionDW, 32>& gprs) {
+void N64Disassembler::setGPRs(const std::array<hydra::N64::MemDataUnionDW, 32>& gprs) {
     gprs_ = gprs;
 }
 
@@ -247,12 +247,12 @@ std::string N64Debugger::get_gpr_value(int n) {
 }
 
 std::string N64Debugger::get_gpr_name(int n) {
-    return TKPEmu::N64::gpr_get_name(n, register_names_);
+    return hydra::N64::gpr_get_name(n, register_names_);
 }
 
 N64Debugger::N64Debugger(bool& open, QWidget* parent)
     : open_(open),
-    emulator_type_(TKPEmu::EmuType::N64),
+    emulator_type_(hydra::EmuType::N64),
     QWidget(parent, Qt::Window)
 {
     QGridLayout* main_layout = new QGridLayout;
@@ -298,7 +298,7 @@ void N64Debugger::on_tab_change() {
     tab_show_->setCurrentIndex(tab_list_->currentRow());
 }
 
-void N64Debugger::SetEmulator(TKPEmu::N64::N64_TKPWrapper* emulator) {
+void N64Debugger::SetEmulator(hydra::N64::N64_TKPWrapper* emulator) {
     emulator_ = emulator;
 }
 
@@ -395,7 +395,7 @@ void N64Debugger::create_Disassembler_tab() {
     Disassembler_layout->addWidget(goto_button, 0, 2, 1, 1);
     QPushButton* goto_pc_button = new QPushButton("Goto PC");
     connect(goto_pc_button, &QPushButton::clicked, this, [this]() {
-        Logger::Info("Goto PC: {:#x}", emulator_->n64_impl_.cpu_.pc_);
+        Logger::Info("Goto PC: {:#x} - instr: {:#x}", emulator_->n64_impl_.cpu_.pc_, emulator_->n64_impl_.cpu_.instruction_.full);
         disassembler_text_->Goto(emulator_->n64_impl_.cpu_.pc_);
     });
     Disassembler_layout->addWidget(goto_pc_button, 0, 3, 1, 1);
@@ -412,4 +412,12 @@ void N64Debugger::create_Settings_tab() {
     });
     Settings_layout->addWidget(register_name_type, 2, 0, 1, 1);
     Settings_layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding), 100, 0, 1, 1);
+}
+
+void N64Debugger::create_TMem_tab() {
+    // tmem_image_ = new QLabel;
+    // QImage img = { 10, 10, QImage::Format_RGB555 };
+    // img.loadFromData(emulator_->n64_impl_.rcp_.rdp_.tmem_.data(), 1);
+    // tmem_image_->setPixmap(QPixmap::fromImage(img));
+    // TMem_layout->addWidget(tmem_image_, 2, 0, 1, 1);
 }

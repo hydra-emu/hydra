@@ -7,15 +7,15 @@
 struct EmulatorToolFactory {
     static QWidget* CreateDebugger(
         bool& open,
-        TKPEmu::EmuType emu_type,
+        hydra::EmuType emu_type,
         QWidget* parent,
-        TKPEmu::Emulator* emulator
+        hydra::Emulator* emulator
     )
     {
         switch (emu_type) {
-            case TKPEmu::EmuType::N64: {
+            case hydra::EmuType::N64: {
                 auto ret = new N64Debugger(open, parent);
-                ret->SetEmulator(dynamic_cast<TKPEmu::N64::N64_TKPWrapper*>(emulator));
+                ret->SetEmulator(dynamic_cast<hydra::N64::N64_TKPWrapper*>(emulator));
                 return ret;
             }
         }

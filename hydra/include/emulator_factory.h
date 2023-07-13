@@ -6,8 +6,8 @@
 #include <include/emulator.h>
 #include <include/emulator_types.hxx>
 
-using ExtensionMappings = std::unordered_map<std::string, TKPEmu::EmuType>;
-namespace TKPEmu {
+using ExtensionMappings = std::unordered_map<std::string, hydra::EmuType>;
+namespace hydra {
     class EmulatorFactory {
     private:
         static ExtensionMappings extension_mappings_;

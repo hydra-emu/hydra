@@ -31,7 +31,7 @@ namespace {
 	void reset() override;										\
 	bool load_file(std::string path) override;					\
 
-namespace TKPEmu {
+namespace hydra {
 	class Emulator {
 	public:
 		Emulator() {};

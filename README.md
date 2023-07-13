@@ -11,12 +11,10 @@
 <p align="center"><img src="./hydra/screen.png"></p>
 
 ## Current systems
-- [Gameboy](https://github.com/OFFTKP/GameboyTKP)
-- [Chip8](https://github.com/OFFTKP/chip8)
-
-## WIP systems
-- [N64](https://github.com/OFFTKP/N64TKP)
-- [NES](https://github.com/OFFTKP/NESTKP)
+- Gameboy / Gameboy Color
+- Chip 8
+- NES (WIP)
+- Nintendo 64 (WIP)
 
 ## Dependencies 
 Compiler: The `c++20` features used need at least `gcc-11` and `g++11` or latest `msvc`.   

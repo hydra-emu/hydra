@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.19)
+enable_testing()
+project(n64_qa)
+find_package(GTest REQUIRED)
+find_package(fmt REQUIRED)
+set(CMAKE_CXX_STANDARD 23)
+add_compile_options(-Wall)
+add_executable(n64_qa n64_rdp_qa.cxx ../core/n64_rdp.cxx)
+# TODO: Please for the love of god move include/log.hxx somewhere else
+target_include_directories(n64_qa PRIVATE ../ ../../)
+target_link_libraries(n64_qa gtest fmt::fmt)
+add_test(NAME n64_qa COMMAND n64_qa WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

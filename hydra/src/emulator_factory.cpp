@@ -5,20 +5,20 @@
 #include <include/emulator_settings.hxx>
 #include <include/emulator_data.hxx>
 #include <include/emulator_user_data.hxx>
-#include <GameboyTKP/gb_tkpwrapper.h>
-#include <N64TKP/n64_tkpwrapper.hxx>
-#include <chip8/chip8_tkpwrapper.hxx>
-#include <NESTKP/nes_tkpwrapper.hxx>
+#include <gb/gb_tkpwrapper.h>
+#include <n64/n64_tkpwrapper.hxx>
+#include <c8/c8_tkpwrapper.hxx>
+#include <nes/nes_tkpwrapper.hxx>
 
-namespace TKPEmu {
+namespace hydra {
     ExtensionMappings EmulatorFactory::extension_mappings_{};
     std::string EmulatorFactory::GetSavePath() {
         static std::string dir;
         if (dir.empty()) {
             #if defined(__linux__)
-            dir = getenv("HOME") + std::string("/.config/tkpemu/");
+            dir = getenv("HOME") + std::string("/.config/hydra/");
             #elif defined(_WIN32)
-            dir = getenv("APPDATA") + std::string("/tkpemu/");
+            dir = getenv("APPDATA") + std::string("/hydra/");
             #endif
             if (dir.empty()) {
                 throw ErrorFactory::generate_exception(__func__, __LINE__, "GetSavePath was not defined for this environment");
@@ -62,8 +62,8 @@ namespace TKPEmu {
                 emulator = std::make_shared<N64::N64_TKPWrapper>();
                 break;
             }
-            case EmuType::Chip8: {
-                emulator = std::make_shared<Chip8::Chip8>();
+            case EmuType::c8: {
+                emulator = std::make_shared<c8::c8>();
                 break;
             }
             case EmuType::NES: {

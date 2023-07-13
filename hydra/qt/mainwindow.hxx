@@ -63,9 +63,9 @@ public:
     QAction* debugger_act_;
     QAction* tracelogger_act_;
     ScreenWidget* screen_;
-    std::shared_ptr<TKPEmu::Emulator> emulator_;
+    std::shared_ptr<hydra::Emulator> emulator_;
     std::array<QWidget*, 2> emulator_tools_ {};
-    TKPEmu::EmuType emulator_type_;
+    hydra::EmuType emulator_type_;
     std::thread emulator_thread_;
     bool settings_open_ = false;
     bool about_open_ = false;
