@@ -1,6 +1,6 @@
 #ifndef N64_DEBUGGER
 #define N64_DEBUGGER
-#include <N64TKP/core/n64_types.hxx>
+#include <n64/core/n64_types.hxx>
 #include <QWidget>
 #include <QListWidget>
 #include <QGroupBox>
@@ -8,7 +8,7 @@
 #include <QTabWidget>
 #include <memory>
 #include <include/emulator_types.hxx>
-#include <N64TKP/n64_tkpwrapper.hxx>
+#include <n64/n64_tkpwrapper.hxx>
 #include <QFontDatabase>
 #include <QSyntaxHighlighter>
 #include <QPlainTextEdit>
@@ -19,7 +19,8 @@ class QTextEdit;
 #define N64_DEBUGGER_TABS \
     X(Registers) \
     X(Disassembler) \
-    X(Settings)
+    X(Settings) \
+    X(TMem)
 
 class MIPSHighlighter final : public QSyntaxHighlighter {
     Q_OBJECT
@@ -45,8 +46,8 @@ class N64Disassembler : public QPlainTextEdit {
     Q_OBJECT
 public:
     N64Disassembler(bool& register_names, QWidget* parent = nullptr);
-    void setInstructions(const std::vector<TKPEmu::N64::DisassemblerInstruction>& instructions);
-    void setGPRs(const std::array<TKPEmu::N64::MemDataUnionDW, 32>& gprs);
+    void setInstructions(const std::vector<hydra::N64::DisassemblerInstruction>& instructions);
+    void setGPRs(const std::array<hydra::N64::MemDataUnionDW, 32>& gprs);
     void wheelEvent(QWheelEvent *e) override;
     void resizeEvent(QResizeEvent *e) override;
     void lineNumberAreaPaintEvent(QPaintEvent *event);
@@ -58,8 +59,8 @@ private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void updateLineNumberArea(const QRect &rect, int dy);
 private:
-    std::vector<TKPEmu::N64::DisassemblerInstruction> instructions_;
-    std::array<TKPEmu::N64::MemDataUnionDW, 32> gprs_;
+    std::vector<hydra::N64::DisassemblerInstruction> instructions_;
+    std::array<hydra::N64::MemDataUnionDW, 32> gprs_;
     MIPSHighlighter* highlighter_;
     int top_line_ = 0;
     int top_line_pixel_ = 0;
@@ -90,19 +91,20 @@ public:
     N64Debugger(bool& open, QWidget* parent = nullptr);
     ~N64Debugger();
 
-    void SetEmulator(TKPEmu::N64::N64_TKPWrapper* emulator);
+    void SetEmulator(hydra::N64::N64_TKPWrapper* emulator);
 private slots:
     void on_tab_change();
     void update_debugger_tab();
 private:
     bool open_;
     bool was_paused_ = false;
-    TKPEmu::EmuType emulator_type_;
-    TKPEmu::N64::N64_TKPWrapper* emulator_ { nullptr };
+    hydra::EmuType emulator_type_;
+    hydra::N64::N64_TKPWrapper* emulator_ { nullptr };
 
     QListWidget* tab_list_;
     QTabWidget* tab_show_;
     QGroupBox* right_group_box_, *left_group_box_;
+    QLabel* tmem_image_;
     const QFont fixedfont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
     bool register_names_ = false;

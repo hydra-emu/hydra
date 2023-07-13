@@ -46,7 +46,7 @@
     },
     "3": {
         "Name": "Chip 8",
-        "SettingsFile": "chip8.json",
+        "SettingsFile": "c8.json",
         "Extensions": [
             ".ch8"
         ],

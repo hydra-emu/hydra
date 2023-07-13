@@ -145,7 +145,7 @@ void MainWindow::open_file() {
         QString indep;
         extensions = "All supported types (";
         for (int i = 0; i < EmuTypeSize; i++) {
-            const auto& data = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i));
+            const auto& data = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
             indep += data.Name.c_str();
             indep += " (";
             for (const auto& str : data.Extensions) {
@@ -174,10 +174,10 @@ void MainWindow::open_file() {
     EmulatorSettings::GetGeneralSettings().Set("last_path", dirpath);
     QT_MAY_THROW(
         close_tools();
-        auto type = TKPEmu::EmulatorFactory::GetEmulatorType(path);
+        auto type = hydra::EmulatorFactory::GetEmulatorType(path);
         {
             stop_emulator();
-            auto emulator = TKPEmu::EmulatorFactory::Create(type);
+            auto emulator = hydra::EmulatorFactory::Create(type);
             std::swap(emulator, emulator_);
             // Old emulator is destroyed here
         }
@@ -289,7 +289,7 @@ void MainWindow::setup_emulator_specific() {
     if (!f.open(QIODevice::ReadOnly)) {
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open default emulators.json");
     }
-    auto mappings_path = TKPEmu::EmulatorFactory::GetSavePath() + "mappings.json";
+    auto mappings_path = hydra::EmulatorFactory::GetSavePath() + "mappings.json";
     QString data_mappings;
     if (std::filesystem::exists(mappings_path)) {
         QFile f2(mappings_path.c_str());
@@ -325,19 +325,19 @@ void MainWindow::setup_emulator_specific() {
         o.at("HasDebugger").get_to(d.HasDebugger);
         o.at("HasTracelogger").get_to(d.HasTracelogger);
         o.at("LoggingOptions").get_to(d.LoggingOptions);
-        EmulatorData& constant_settings = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(std::stoi(it.key())));
+        EmulatorData& constant_settings = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(std::stoi(it.key())));
         constant_settings = d;
     }
     for (auto it = j_mappings.begin(); it != j_mappings.end(); ++it) {
-        auto& d = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(std::stoi(it.key())));
+        auto& d = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(std::stoi(it.key())));
         json& o = it.value();
         o.get_to(d.Mappings);
     }
     // Write default emulator options if they dont exist
     for (int i = 0; i < EmuTypeSize; i++) {
-        const auto& e = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i));
-        if (!std::filesystem::exists(TKPEmu::EmulatorFactory::GetSavePath() + e.SettingsFile)) {
-            std::ofstream ofs(TKPEmu::EmulatorFactory::GetSavePath() + e.SettingsFile);
+        const auto& e = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
+        if (!std::filesystem::exists(hydra::EmulatorFactory::GetSavePath() + e.SettingsFile)) {
+            std::ofstream ofs(hydra::EmulatorFactory::GetSavePath() + e.SettingsFile);
             if (ofs.is_open()) {
                 QFile resource(std::string(":/data/" + e.SettingsFile).c_str());
                 if (!resource.open(QIODeviceBase::ReadOnly))
@@ -352,8 +352,8 @@ void MainWindow::setup_emulator_specific() {
     // Read emulator options
     for (int i = 0; i < EmuTypeSize; i++) {
         std::map<std::string, std::string> temp;
-        EmulatorUserData& user_data = EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i)).UserData;
-        auto path = TKPEmu::EmulatorFactory::GetSavePath() + EmulatorSettings::GetEmulatorData(static_cast<TKPEmu::EmuType>(i)).SettingsFile;
+        EmulatorUserData& user_data = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).UserData;
+        auto path = hydra::EmulatorFactory::GetSavePath() + EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).SettingsFile;
         std::ifstream ifs(path);
         if (ifs.is_open()) {
             std::stringstream buf;
@@ -368,7 +368,7 @@ void MainWindow::setup_emulator_specific() {
     }
     // Read general options
     {
-        auto path = TKPEmu::EmulatorFactory::GetSavePath() + "settings.json";
+        auto path = hydra::EmulatorFactory::GetSavePath() + "settings.json";
         std::map<std::string, std::string> temp;
         if (std::filesystem::exists(path)) {
             std::ifstream ifs(path);

@@ -16,7 +16,7 @@
 #define CALLGRIND_STOP_INSTRUMENTATION
 #endif
 
-namespace TKPEmu {
+namespace hydra {
     Emulator::~Emulator() {}
     void Emulator::HandleKeyDown(uint32_t keycode) { 
         std::cout << "Warning: Key " << keycode << " was pressed but\n"

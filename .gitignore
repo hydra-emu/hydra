@@ -367,8 +367,10 @@ imstb_truetype.h
 glad.h
 glad.c
 *.sav
+*.raw
 callgrind.out.*
 logs/
 out**
 .qt/
+Testing/
 compile_commands.json

@@ -5,14 +5,18 @@
 #include <fmt/format.h>
 #include <include/global.hxx>
 
-#define ENABLE_LOGGING 1
+// TODO: move to cpp file
+#define ENABLE_LOGGING true
 #define ENABLE_DEBUG 0
+#define RSP_LOGGING false
+#define CPU_LOGGING false
 
 struct Logger {
     template<typename... T>
     static void Fatal(fmt::format_string<T...> fmt, T&&... args) {
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
-        log_impl<LogFatal, ConsoleFatal>(str);
+        printf("%s\n", str.c_str());
+        exit(1);
     }
 
     template<typename... T>
@@ -54,11 +58,6 @@ private:
 
     static inline void ConsoleNormal(std::string message) {
         fmt::print("{}", message);
-    }
-
-    static inline void ConsoleFatal(std::string message) {
-        ConsoleNormal(message);
-        exit(1);
     }
 
     template <auto PrefixFunction, auto OutputFunction>

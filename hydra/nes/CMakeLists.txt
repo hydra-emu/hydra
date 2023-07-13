@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.19)
+project(nes)
+set(FILES nes_tkpwrapper.cxx nes_cpu.cxx nes_cpubus.cxx nes_ppu.cxx nes_apu.cxx NTSC_CRT/crt_core.c NTSC_CRT/crt_ntsc.c)
+add_library(nes ${FILES})
+target_include_directories(nes PUBLIC ../)

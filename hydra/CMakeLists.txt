@@ -19,11 +19,10 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidg
 find_package(fmt)
 
 add_subdirectory("src/")
-add_subdirectory("GameboyTKP/")
-add_subdirectory("NESTKP/")
-add_subdirectory("chip8/")
-add_subdirectory("N64TKP/")
-add_subdirectory("libsamplerate/")
+add_subdirectory("gb/")
+add_subdirectory("nes/")
+add_subdirectory("c8/")
+add_subdirectory("n64/")
 add_compile_options(-fsanitize=address)
 add_link_options(-fsanitize=address)
 set(PROJECT_SOURCES
@@ -46,7 +45,7 @@ qt_add_executable(hydra
     ${PROJECT_SOURCES}
 )
 
-target_link_libraries(hydra PRIVATE TKPSrc NESTKP GameboyTKP Chip8 N64TKP
+target_link_libraries(hydra PRIVATE TKPSrc nes gb c8 n64
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL Qt${QT_VERSION_MAJOR}::OpenGLWidgets
     ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}
     Threads::Threads fmt::fmt dl samplerate)
