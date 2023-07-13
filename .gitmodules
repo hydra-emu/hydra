@@ -1,3 +1,0 @@
-[submodule "hydra/libsamplerate"]
-	path = hydra/libsamplerate
-	url = https://github.com/libsndfile/libsamplerate

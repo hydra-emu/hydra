@@ -26,7 +26,7 @@ Libraries: `sdl2 tbb qt`. See `Installation` for an easy installation guide
 <details>
  <summary>Archlinux</summary>
 <pre><code>pacman -S --needed git cmake sdl2 glfw-x11 ninja qt
-git clone --recurse-submodules -j8 https://github.com/OFFTKP/hydra.git
+git clone https://github.com/OFFTKP/hydra.git
 cd hydra
 cmake -S hydra -B hydra/build -G Ninja
 cmake --build hydra/build
@@ -40,7 +40,7 @@ These commands are used to install on a fresh ubuntu environment and some can be
 sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential gcc-11 g++-11 ninja-build
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
 sudo update-alternatives --set gcc /usr/bin/gcc-11
-git clone --recurse-submodules -j8 https://github.com/OFFTKP/hydra.git
+git clone https://github.com/OFFTKP/hydra.git
 cd hydra
 cmake -S hydra -B hydra/build
 cmake --build hydra/build
@@ -48,7 +48,7 @@ cmake --build hydra/build
 </details>
 <details>
 <summary>Windows</summary><br>
-Has not been tested. Follow similar procedure, clone with submodules, build with cmake.
+Has not been tested. Follow similar procedure, clone and build with cmake.
 </details>
 
 ## Contributing
