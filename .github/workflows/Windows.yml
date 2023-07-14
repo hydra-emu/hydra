@@ -1,4 +1,4 @@
-name: Build MacOS
+name: Build Windows
 
 on:
   push:
@@ -9,13 +9,13 @@ on:
 jobs:
   build:
 
-    runs-on: macos-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v3
     - name: install-deps
-      run: brew install qt6 fmt
+      run: vcpkg install qtbase qtshadertools fmt
     - name: configure
-      run: cmake -B build 
+      run: cmake -B build
     - name: make
       run: cmake --build build
