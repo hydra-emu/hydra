@@ -8,10 +8,6 @@
 #define immval (instruction_.IType.immediate)
 #define seimmval (static_cast<int64_t>(static_cast<int16_t>(instruction_.IType.immediate)))
 
-constexpr uint64_t LUT[] = {
-    0, 0xFF, 0xFFFF, 0, 0xFFFFFFFF, 0, 0, 0, 0xFFFFFFFFFFFFFFFF,
-};
-
 namespace hydra::N64
 {
     void CPU::LDL()

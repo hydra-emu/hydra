@@ -16,6 +16,8 @@ namespace hydra::N64
             uint64_t format       : 3;
             uint64_t command      : 8 = 0x3f;
         };
+
+        SetColorImageCommand() { full = 0; }
     };
 
     union SetFillColorCommand
@@ -28,6 +30,8 @@ namespace hydra::N64
             uint64_t         : 24;
             uint64_t command : 8 = 0x37;
         };
+
+        SetFillColorCommand() { full = 0; }
     };
 
     union EdgeCoefficients
@@ -39,6 +43,8 @@ namespace hydra::N64
             uint64_t slope : 32;
             uint64_t X     : 32;
         };
+
+        EdgeCoefficients() { full = 0; }
     };
 
     union EdgeCoefficientsCommand
@@ -59,6 +65,8 @@ namespace hydra::N64
             uint64_t lft     : 1;
             uint64_t command : 8;
         };
+
+        EdgeCoefficientsCommand() { full = 0; }
     };
 
     union RectangleCommand
@@ -75,6 +83,8 @@ namespace hydra::N64
             uint64_t XMAX : 12;
             uint64_t      : 8;
         };
+
+        RectangleCommand() { full = 0; }
     };
 
     union SetTileCommand
@@ -100,6 +110,8 @@ namespace hydra::N64
             uint64_t format      : 3;
             uint64_t             : 8;
         };
+
+        SetTileCommand() { full = 0; }
     };
 
     union LoadTileCommand
@@ -116,6 +128,8 @@ namespace hydra::N64
             uint64_t SL   : 12;
             uint64_t      : 8;
         };
+
+        LoadTileCommand() { full = 0; }
     };
 
     union LoadBlockCommand
@@ -132,6 +146,8 @@ namespace hydra::N64
             uint64_t SL   : 12;
             uint64_t      : 8;
         };
+
+        LoadBlockCommand() { full = 0; }
     };
 
     union SetTextureImageCommand
@@ -148,6 +164,8 @@ namespace hydra::N64
             uint64_t format      : 3;
             uint64_t             : 8;
         };
+
+        SetTextureImageCommand() { full = 0; }
     };
 
     union SetOtherModesCommand
@@ -183,6 +201,8 @@ namespace hydra::N64
             uint64_t                  : 2;
             uint64_t command          : 8 = 0x2f;
         };
+
+        SetOtherModesCommand() { full = 0; }
     };
 
     union SetScissorCommand
@@ -200,6 +220,8 @@ namespace hydra::N64
             uint64_t XH            : 12;
             uint64_t command       : 8 = 0x2d;
         };
+
+        SetScissorCommand() { full = 0; }
     };
 
     union SetCombineModeCommand
@@ -226,5 +248,7 @@ namespace hydra::N64
             uint64_t sub_A_RGB_0   : 4;
             uint64_t command       : 8 = 0x3c;
         };
+
+        SetCombineModeCommand() { full = 0; }
     };
 } // namespace hydra::N64
