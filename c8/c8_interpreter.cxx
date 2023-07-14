@@ -1,4 +1,4 @@
-#include <c8/c8_inter.hxx>
+#include <c8/c8_interpreter.hxx>
 #include <bit>
 #include <fstream>
 #include <cstring>
@@ -282,7 +282,7 @@ namespace hydra::c8 {
         mem_.fill(0);
         std::size_t size = filesize(path.c_str());
         std::ifstream is;
-		is.open(path, std::ios::binary);
+        is.open(path, std::ios::binary);
         if (is.is_open()) {
             is.read(reinterpret_cast<char*>(&mem_[0x200]), sizeof(uint8_t) * size);
             is.close();

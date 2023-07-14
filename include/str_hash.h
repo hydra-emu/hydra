@@ -8,7 +8,7 @@
 // at compile time since the cases can't use the same number twice
 constexpr uint32_t str_hash(std::string_view data) noexcept {
     uint32_t hash = 5381;
-	const size_t size = data.size();
+    const size_t size = data.size();
     for(int i = 0; i < size; i++)
         hash = ((hash << 5) + hash) + (unsigned char)data[i];
 

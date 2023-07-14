@@ -1,5 +1,5 @@
-#include <gb/gb_apu.h>
-#include <gb/gb_addresses.h>
+#include <gb/gb_apu.hxx>
+#include <gb/gb_addresses.hxx>
 #include <iostream>
 constexpr int SAMPLE_RATE = 48000;
 constexpr int AMPLITUDE = 8000;

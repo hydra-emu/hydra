@@ -156,65 +156,65 @@ namespace hydra::N64 {
         if (!CP0Status.CP1) {
             return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
         }
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint32_t vaddr = seoffset + rsreg.UW._0;
         set_fpr_reg<uint32_t>(instruction_.FType.ft, load_word(vaddr));
-	}
+    }
     
     void CPU::LWC2() {
-		Logger::Warn("LWC2 not implemented");
-	}
+        Logger::Warn("LWC2 not implemented");
+    }
     
     void CPU::LLD() {
-		Logger::Warn("LLD not implemented");
-	}
+        Logger::Warn("LLD not implemented");
+    }
     
     void CPU::LDC1() {
         if (!CP0Status.CP1) {
             return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
         }
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint32_t vaddr = seoffset + rsreg.UW._0;
         set_fpr_reg<uint64_t>(instruction_.FType.ft, load_doubleword(vaddr));
-	}
+    }
     
     void CPU::LDC2() {
-		Logger::Warn("LDC2 not implemented");
-	}
+        Logger::Warn("LDC2 not implemented");
+    }
     
     void CPU::SWC1() {
         if (!CP0Status.CP1) {
             return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
         }
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint32_t vaddr = seoffset + rsreg.UW._0;
         store_word(vaddr, get_fpr_reg<uint32_t>(instruction_.FType.ft));
-	}
+    }
     
     void CPU::SWC2() {
-		Logger::Warn("SWC2 not implemented");
-	}
+        Logger::Warn("SWC2 not implemented");
+    }
     
     void CPU::SCD() {
-		Logger::Warn("SCD not implemented");
-	}
+        Logger::Warn("SCD not implemented");
+    }
     
     void CPU::SDC1() {
         if (!CP0Status.CP1) {
             return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
         }
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint32_t vaddr = seoffset + rsreg.UW._0;
         store_doubleword(vaddr, get_fpr_reg<uint64_t>(instruction_.FType.ft));
-	}
+    }
     
     void CPU::SDC2() {
-		Logger::Warn("SDC2 not implemented");
-	}
+        Logger::Warn("SDC2 not implemented");
+    }
 
     void CPU::f_CFC1() {
         int32_t val;

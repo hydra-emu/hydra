@@ -17,11 +17,11 @@ namespace hydra::N64 {
 
     void CPU::SPECIAL() {
         (special_table_[instruction_.RType.func])(this);
-	}
+    }
 
     void CPU::REGIMM() {
-		(regimm_table_[instruction_.RType.rt])(this);
-	}
+        (regimm_table_[instruction_.RType.rt])(this);
+    }
 
     void CPU::RDHWR() {
         throw_exception(prev_pc_, ExceptionType::ReservedInstruction);
@@ -111,7 +111,7 @@ namespace hydra::N64 {
                 break;
             }
         }
-	}
+    }
     
     void CPU::MFC2() {
         if (!CP0Status.CP2) {
@@ -169,15 +169,15 @@ namespace hydra::N64 {
                 }
             }
         }
-	}
+    }
 
     void CPU::COP3() {
         throw_exception(prev_pc_, ExceptionType::ReservedInstruction, 0);
     }
 
     void CPU::CACHE() {
-		// TODO: TLB stuff
-	}
+        // TODO: TLB stuff
+    }
 
     void CPU::ANDI() {
         rtreg.UD = rsreg.UD & immval;
@@ -215,7 +215,7 @@ namespace hydra::N64 {
 
     void CPU::DADDIU() {
         rtreg.D = rsreg.D + static_cast<int16_t>(immval);
-	}
+    }
 
     void CPU::LUI() {
         int32_t imm = immval << 16;
@@ -229,16 +229,16 @@ namespace hydra::N64 {
 
     void CPU::XORI() {
         rtreg.UD = rsreg.UD ^ immval;
-	}
+    }
 
     void CPU::SLTI() {
         int64_t seimm = static_cast<int16_t>(immval);
         rtreg.UD = rsreg.D < seimm;
-	}
+    }
     
     void CPU::SLTIU() {
         rtreg.UD = rsreg.UD < seimmval;
-	}
+    }
 
     void CPU::MTC0() {
         set_cp0_register_32(instruction_.RType.rd, rtreg.UW._0);

@@ -5,7 +5,7 @@
 #include <include/emulator_settings.hxx>
 #include <include/emulator_data.hxx>
 #include <include/emulator_user_data.hxx>
-#include <gb/gb_tkpwrapper.h>
+#include <gb/gb_tkpwrapper.hxx>
 #include <n64/n64_tkpwrapper.hxx>
 #include <c8/c8_tkpwrapper.hxx>
 #include <nes/nes_tkpwrapper.hxx>
@@ -63,7 +63,7 @@ namespace hydra {
                 break;
             }
             case EmuType::c8: {
-                emulator = std::make_shared<c8::c8>();
+                emulator = std::make_shared<c8::Chip8_TKPWrapper>();
                 break;
             }
             case EmuType::NES: {

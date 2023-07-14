@@ -1,9 +1,9 @@
 #pragma once
 #ifndef TKP_GB_TIMER_H
 #define TKP_GB_TIMER_H
-#include <gb/gb_bus.h>
-#include <gb/gb_apu_ch.h>
-#include <gb/gb_addresses.h>
+#include <gb/gb_bus.hxx>
+#include <gb/gb_apu_ch.hxx>
+#include <gb/gb_addresses.hxx>
 
 namespace hydra::Gameboy {
     class Timer {

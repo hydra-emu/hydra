@@ -10,7 +10,6 @@
 #include <iomanip>
 #include <boost/stacktrace/stacktrace.hpp>
 #include "utils.hxx"
-#include "n64_sm64_helper.hxx"
 
 namespace hydra::N64 {
 
@@ -767,7 +766,6 @@ namespace hydra::N64 {
             prev_branch_ = was_branch_;
             was_branch_ = false;
             instruction_.full = load_word(pc_);
-            std::optional<std::string> name_func = std::nullopt;// SM64Helper::Probe(pc_);
             if (check_interrupts()) {
                 return;
             }
@@ -775,9 +773,6 @@ namespace hydra::N64 {
             prev_pc_ = pc_;
             pc_ = next_pc_;
             next_pc_ += 4;
-            if (name_func) {
-                std::cout << "Running " << *name_func << std::endl;
-            }
             execute_instruction();
         }
     }
