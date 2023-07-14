@@ -1,4 +1,4 @@
-#include <gb/gb_cpu.h>
+#include <gb/gb_cpu.hxx>
 #include <cmath>
 #include <iostream>
 

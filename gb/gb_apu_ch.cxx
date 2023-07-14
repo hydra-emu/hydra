@@ -1,4 +1,4 @@
-#include <gb/gb_apu_ch.h>
+#include <gb/gb_apu_ch.hxx>
 #include <iostream>
 
 namespace hydra::Gameboy {

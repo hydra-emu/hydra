@@ -22,7 +22,6 @@
         <file>data/n64.json</file>
         <file>data/c8.json</file>
         <file>data/about.html</file>
-        <file>shaders/lottes.fs</file>
         <file>shaders/simple.vs</file>
         <file>shaders/simple.fs</file>
     </qresource>

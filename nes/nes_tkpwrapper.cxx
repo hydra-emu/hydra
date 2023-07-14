@@ -8,9 +8,9 @@ namespace hydra::NES {
         instrs_per_frame_ = 1789773 / 60;
         ppu_.SetNMI(std::bind(&CPU::NMI, &cpu_));
         const EmulatorUserData& user_data = EmulatorSettings::GetEmulatorData(EmuType::NES).UserData;
-		KeyMappings& mappings = EmulatorSettings::GetEmulatorData(EmuType::NES).Mappings;
+        KeyMappings& mappings = EmulatorSettings::GetEmulatorData(EmuType::NES).Mappings;
         std::unordered_map<uint32_t, Button> keymap;
-		if (!mappings.empty()) {
+        if (!mappings.empty()) {
             keymap[std::stoi(mappings["Right"])] = Button::Right;
             keymap[std::stoi(mappings["Left"])] = Button::Left;
             keymap[std::stoi(mappings["Up"])] = Button::Up;
@@ -19,7 +19,7 @@ namespace hydra::NES {
             keymap[std::stoi(mappings["B"])] = Button::B;
             keymap[std::stoi(mappings["Start"])] = Button::Start;
             keymap[std::stoi(mappings["Select"])] = Button::Select;
-		} else {
+        } else {
             Logger::Warn("No key mappings found for NES");
         }
         cpu_.SetKeys(keymap);

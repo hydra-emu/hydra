@@ -94,15 +94,15 @@ usage: ./ntsc -m|o|f|p|r|h|a outwidth outheight noise artifact_hue infile outfil
 sample usage: ./ntsc -op 640 480 24 0 in.ppm out.ppm
 sample usage: ./ntsc - 832 624 0 90 in.ppm out.ppm
 -- NOTE: the - after the program name is required
-	artifact_hue is [0, 359]
+    artifact_hue is [0, 359]
 ------------------------------------------------------------
-	m : monochrome
-	o : do not prompt when overwriting files
-	f : odd field (only meaningful in progressive mode)
-	p : progressive scan (rather than interlaced)
-	r : raw image (needed for images that use artifact colors)
-	a : save analog signal as image instead of decoded image
-	h : print help
+    m : monochrome
+    o : do not prompt when overwriting files
+    f : odd field (only meaningful in progressive mode)
+    p : progressive scan (rather than interlaced)
+    r : raw image (needed for images that use artifact colors)
+    a : save analog signal as image instead of decoded image
+    h : print help
 
 by default, the image will be full color, interlaced, and scaled to the output dimensions
 ```

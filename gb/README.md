@@ -12,15 +12,15 @@ Gameboy backend written in C++ for [hydra](https://github.com/OFFTKP/hydra).
  - Rewind functionality (WIP)
 
 ## Images
-![Legend of Zelda color](./Images/zd_clr.bmp)
-![Yugioh](./Images/yugi.bmp)
-![GTA](./Images/gta.bmp)
-![Pokemon Gold](./Images/gold.bmp)
+![Legend of Zelda color](../data/images/gb/zd_clr.bmp)
+![Yugioh](../data/images/gb/yugi.bmp)
+![GTA](../data/images/gb/gta.bmp)
+![Pokemon Gold](../data/images/gb/gold.bmp)
 <br/>
-![Legend of Zelda](./Images/zd.bmp)
-![Kirby](./Images/krb.bmp)
-![Donkey Kong](./Images/dk.bmp)
-![Pokemon Red](./Images/red.bmp)
+![Legend of Zelda](../data/images/gb/zd.bmp)
+![Kirby](../data/images/gb/krb.bmp)
+![Donkey Kong](../data/images/gb/dk.bmp)
+![Pokemon Red](../data/images/gb/red.bmp)
 
 ## Resources
 This emulator would not be possible without the use of these resources, as acquiring a DMG Gameboy     
@@ -51,9 +51,9 @@ You can generate all tests with `./generate_test_results.sh` script on linux.
 **Graphics tests:**
 | Test            | gb                                              |
 | --------------- | ------------------------------------------------------- |
-| dmg-acid2       | ![dmg-acid2](./Images/dmg-acid2_result.bmp)             |
-| cgb-acid2       | ![cgb-acid2](./Images/acid.bmp)                         |
-| sprite_priority | ![sprite_priority](./Images/sprite_priority_result.bmp) |
+| dmg-acid2       | ![dmg-acid2](../data/images/gb/dmg-acid2_result.bmp)             |
+| cgb-acid2       | ![cgb-acid2](../data/images/gb/acid.bmp)                         |
+| sprite_priority | ![sprite_priority](../data/images/gb/sprite_priority_result.bmp) |
 
 ## License
 hydra is licensed under the MIT license    

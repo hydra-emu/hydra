@@ -1,4 +1,4 @@
-#include <gb/gb_wiiwrapper.h>
+#include <gb/gb_wiiwrapper.hxx>
 #include <wiiuse/wpad.h>
 
 GB_WiiWrapper::GB_WiiWrapper() :

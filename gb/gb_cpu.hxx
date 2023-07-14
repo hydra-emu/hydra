@@ -6,10 +6,10 @@
 #include <array>
 #include <iomanip>
 #include <fstream>
-#include <gb/gb_bus.h>
-#include <gb/gb_ppu.h>
-#include <gb/gb_timer.h>
-#include <gb/gb_addresses.h>
+#include <gb/gb_bus.hxx>
+#include <gb/gb_ppu.hxx>
+#include <gb/gb_timer.hxx>
+#include <gb/gb_addresses.hxx>
 namespace hydra::Gameboy::QA {
     class TestGameboy;
 }

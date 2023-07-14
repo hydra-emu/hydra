@@ -15,13 +15,13 @@ constexpr uint64_t LUT[] = {
 namespace hydra::N64 {
 
     void CPU::LDL() {
-		int16_t offset = immval;
+        int16_t offset = immval;
         uint64_t address = rsreg.D + offset;
         int shift = 8 * ((address ^ 0) & 7);
         uint64_t mask = (uint64_t)0xFFFFFFFFFFFFFFFF << shift;
         uint64_t data = load_doubleword(address & ~7);
         rtreg.UD = (rtreg.UD & ~mask) | (data << shift);
-	}
+    }
     
     void CPU::LDR() {
         int16_t offset = immval;
@@ -30,9 +30,9 @@ namespace hydra::N64 {
         uint64_t mask = (uint64_t)0xFFFFFFFFFFFFFFFF >> shift;
         uint64_t data = load_doubleword(address & ~7);
         rtreg.UD = (rtreg.UD & ~mask) | (data >> shift);
-	}
+    }
 
-	void CPU::LWL() {
+    void CPU::LWL() {
         int16_t offset = immval;
         int32_t seoffset = offset;
         uint64_t address = seoffset + rsreg.UD;
@@ -40,29 +40,29 @@ namespace hydra::N64 {
         uint32_t mask = 0xFFFFFFFF << shift;
         uint32_t data = load_word(address & ~3);
         rtreg.UD = static_cast<int64_t>(static_cast<int32_t>((rtreg.UW._0 & ~mask) | data << shift));
-	}
+    }
     
     void CPU::LWR() {
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint64_t address = seoffset + rsreg.UD;
         uint32_t shift = 8 * ((address ^ 3) & 3);
         uint32_t mask = 0xFFFFFFFF >> shift;
         uint32_t data = load_word(address & ~3);
         rtreg.UD = static_cast<int64_t>(static_cast<int32_t>((rtreg.UW._0 & ~mask) | data >> shift));
-	}
+    }
     
     void CPU::SB() {
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint64_t address = seoffset + rsreg.UD;
         store_byte(address, rtreg.UB._0);
-	}
+    }
     
     void CPU::SWL() {
         constexpr static uint32_t mask[4] = { 0x00000000, 0xFF000000, 0xFFFF0000, 0xFFFFFF00 };
         constexpr static uint32_t shift[4] = { 0, 8, 16, 24 };
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint64_t address = (static_cast<uint32_t>(seoffset) & ~0b11) + rsreg.UD;
         auto addr_off = immval & 0b11;
@@ -70,12 +70,12 @@ namespace hydra::N64 {
         word &= mask[addr_off];
         word |= rtreg.UW._0 >> shift[addr_off];
         store_word(address, word);
-	}
+    }
 
     void CPU::SWR() {
-		constexpr static uint32_t mask[4] = { 0x00FFFFFF, 0x0000FFFF, 0x000000FF, 0x00000000 };
+        constexpr static uint32_t mask[4] = { 0x00FFFFFF, 0x0000FFFF, 0x000000FF, 0x00000000 };
         constexpr static uint32_t shift[4] = { 24, 16, 8, 0 };
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint64_t address = (static_cast<uint32_t>(seoffset) & ~0b11) + rsreg.UD;
         auto addr_off = immval & 0b11;
@@ -83,12 +83,12 @@ namespace hydra::N64 {
         word &= mask[addr_off];
         word |= rtreg.UW._0 << shift[addr_off];
         store_word(address, word);
-	}
+    }
     
     void CPU::SDL() {
-		constexpr static uint64_t mask[8] = { 0, 0xFF00000000000000, 0xFFFF000000000000, 0xFFFFFF0000000000, 0xFFFFFFFF00000000, 0xFFFFFFFFFF000000, 0xFFFFFFFFFFFF0000, 0xFFFFFFFFFFFFFF00 };
+        constexpr static uint64_t mask[8] = { 0, 0xFF00000000000000, 0xFFFF000000000000, 0xFFFFFF0000000000, 0xFFFFFFFF00000000, 0xFFFFFFFFFF000000, 0xFFFFFFFFFFFF0000, 0xFFFFFFFFFFFFFF00 };
         constexpr static uint32_t shift[8] = { 0, 8, 16, 24, 32, 40, 48, 56 };
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint64_t address = (static_cast<uint32_t>(seoffset) & ~0b111) + rsreg.UD;
         auto addr_off = immval & 0b111;
@@ -96,12 +96,12 @@ namespace hydra::N64 {
         doubleword &= mask[addr_off];
         doubleword |= rtreg.UD >> shift[addr_off];
         store_doubleword(address, doubleword);
-	}
+    }
 
-	void CPU::SDR() {
-		constexpr static uint64_t mask[8] = { 0x00FFFFFFFFFFFFFF, 0x0000FFFFFFFFFFFF, 0x000000FFFFFFFFFF, 0x00000000FFFFFFFF, 0x0000000000FFFFFF, 0x000000000000FFFF, 0x00000000000000FF, 0x0000000000000000 };
+    void CPU::SDR() {
+        constexpr static uint64_t mask[8] = { 0x00FFFFFFFFFFFFFF, 0x0000FFFFFFFFFFFF, 0x000000FFFFFFFFFF, 0x00000000FFFFFFFF, 0x0000000000FFFFFF, 0x000000000000FFFF, 0x00000000000000FF, 0x0000000000000000 };
         constexpr static uint32_t shift[8] = { 56, 48, 40, 32, 24, 16, 8, 0 };
-		int16_t offset = immval;
+        int16_t offset = immval;
         int32_t seoffset = offset;
         uint64_t address = (static_cast<uint32_t>(seoffset) & ~0b111) + rsreg.UD;
         auto addr_off = immval & 0b111;
@@ -109,7 +109,7 @@ namespace hydra::N64 {
         doubleword &= mask[addr_off];
         doubleword |= rtreg.UD << shift[addr_off];
         store_doubleword(address, doubleword);
-	}
+    }
 
     void CPU::SD() {
         int16_t offset = immval;
@@ -180,7 +180,7 @@ namespace hydra::N64 {
         } else {
             rtreg.UD = 0;
         }
-	}
+    }
 
     void CPU::LBU() {
         int16_t offset = immval;
@@ -269,9 +269,9 @@ namespace hydra::N64 {
             return;
         }
         rtreg.D = static_cast<int32_t>(load_word(address));
-		llbit_ = true;
+        llbit_ = true;
         lladdr_ = translate_vaddr(address).paddr;
-	}
+    }
 
 
 }

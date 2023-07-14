@@ -11,15 +11,15 @@
 namespace hydra::N64 {
 
     void CPU::BGTZL() {
-		int16_t offset = immval << 2;
+        int16_t offset = immval << 2;
         int32_t seoffset = offset;
         conditional_branch_likely(rsreg.D > 0, pc_ + seoffset);
-	}
+    }
     
     void CPU::BLEZ() {
         int32_t seoffset = static_cast<int16_t>(immval << 2);
         conditional_branch(rsreg.D <= 0, pc_ + seoffset);
-	}
+    }
 
     void CPU::BEQ() {
         int16_t offset = immval << 2;
@@ -98,7 +98,7 @@ namespace hydra::N64 {
     void CPU::r_BLTZ() {
         int16_t offset = immval << 2;
         int32_t seoffset = offset;
-		conditional_branch(rsreg.D < 0, pc_ + seoffset);
+        conditional_branch(rsreg.D < 0, pc_ + seoffset);
     }
     
     void CPU::r_BGEZ() {

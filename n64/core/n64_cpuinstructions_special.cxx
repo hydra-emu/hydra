@@ -20,31 +20,31 @@ namespace hydra::N64 {
 
     void CPU::s_SRA() {
         rdreg.D = static_cast<int32_t>(rtreg.D >> saval);
-	}
+    }
 
     void CPU::s_SLLV() {
         rdreg.D = static_cast<int32_t>(rtreg.UW._0 << (rsreg.UD & 0b111111));
-	}
+    }
 
     void CPU::s_SRLV() {
         rdreg.D = static_cast<int32_t>(rtreg.UW._0 >> (rsreg.UD & 0b111111));
-	}
+    }
     
     void CPU::s_SRAV() {
         rdreg.D = static_cast<int32_t>(rtreg.D >> (rsreg.UD & 0b11111));
-	}
+    }
 
     void CPU::s_DSRL() {
-		rdreg.UD = rtreg.UD >> saval;
-	}
+        rdreg.UD = rtreg.UD >> saval;
+    }
 
     void CPU::s_DSRLV() {
-		rdreg.UD = rtreg.UD >> (rsreg.UD & 0b111111);
-	}
+        rdreg.UD = rtreg.UD >> (rsreg.UD & 0b111111);
+    }
 
     void CPU::s_DSLL() {
         rdreg.UD = rtreg.UD << saval;
-	}
+    }
 
     void CPU::s_DSLLV() {
         rdreg.UD = rtreg.UD << (rsreg.UD & 0b111111);
@@ -56,19 +56,19 @@ namespace hydra::N64 {
 
     void CPU::s_DSRA() {
         rdreg.D = rtreg.D >> saval;
-	}
+    }
 
     void CPU::s_DSRA32() {
         rdreg.D = rtreg.D >> (saval + 32);
     }
 
     void CPU::s_DSRAV() {
-		rdreg.D = rtreg.D >> (rsreg.UD & 0b111111);
-	}
+        rdreg.D = rtreg.D >> (rsreg.UD & 0b111111);
+    }
     
     void CPU::s_DSRL32() {
-		rdreg.UD = rtreg.UD >> (saval + 32);
-	}
+        rdreg.UD = rtreg.UD >> (saval + 32);
+    }
 
     void CPU::s_ADD() {
         int32_t result = 0;
@@ -90,64 +90,64 @@ namespace hydra::N64 {
             return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
         }
         rdreg.D = result;
-	}
+    }
     
     void CPU::s_DADDU() {
-		rdreg.UD = rsreg.UD + rtreg.UD;
-	}
+        rdreg.UD = rsreg.UD + rtreg.UD;
+    }
 
     void CPU::s_SUB() {
-		int32_t result = 0;
-		bool overflow = __builtin_sub_overflow(rsreg.W._0, rtreg.W._0, &result);
+        int32_t result = 0;
+        bool overflow = __builtin_sub_overflow(rsreg.W._0, rtreg.W._0, &result);
         if (overflow) {
             return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
         }
-		rdreg.D = result;
-	}
+        rdreg.D = result;
+    }
     
     void CPU::s_SUBU() {
-		rdreg.D = static_cast<int32_t>(rsreg.UW._0 - rtreg.UW._0);
-	}
+        rdreg.D = static_cast<int32_t>(rsreg.UW._0 - rtreg.UW._0);
+    }
 
     void CPU::s_DSUB() {
-		int64_t result = 0;
-		bool overflow = __builtin_sub_overflow(rsreg.D, rtreg.D, &result);
+        int64_t result = 0;
+        bool overflow = __builtin_sub_overflow(rsreg.D, rtreg.D, &result);
         if (overflow) {
             return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
         }
-		rdreg.D = result;
-	}
+        rdreg.D = result;
+    }
     
     void CPU::s_DSUBU() {
-		rdreg.UD = rsreg.UD - rtreg.UD;
-	}
+        rdreg.UD = rsreg.UD - rtreg.UD;
+    }
     
     void CPU::s_MULT() {
-		uint64_t res = static_cast<int64_t>(rsreg.W._0) * rtreg.W._0;
+        uint64_t res = static_cast<int64_t>(rsreg.W._0) * rtreg.W._0;
         lo_ = static_cast<int64_t>(static_cast<int32_t>(res & 0xFFFF'FFFF));
         hi_ = static_cast<int64_t>(static_cast<int32_t>(res >> 32));
-	}
+    }
     
     void CPU::s_MULTU() {
-		uint64_t res = static_cast<uint64_t>(rsreg.UW._0) * rtreg.UW._0;
+        uint64_t res = static_cast<uint64_t>(rsreg.UW._0) * rtreg.UW._0;
         lo_ = static_cast<int64_t>(static_cast<int32_t>(res & 0xFFFF'FFFF));
         hi_ = static_cast<int64_t>(static_cast<int32_t>(res >> 32));
-	}
+    }
 
     void CPU::s_DMULT() {
-		__uint128_t res = static_cast<__uint128_t>(rsreg.D) * rtreg.D;
+        __uint128_t res = static_cast<__uint128_t>(rsreg.D) * rtreg.D;
         lo_ = static_cast<uint64_t>(res);
         hi_ = res >> 64;
-	}
+    }
     
     void CPU::s_DMULTU() {
-		__uint128_t res = static_cast<__uint128_t>(rsreg.UD) * rtreg.UD;
+        __uint128_t res = static_cast<__uint128_t>(rsreg.UD) * rtreg.UD;
         lo_ = static_cast<uint64_t>(res);
         hi_ = res >> 64;
-	}
+    }
     
     void CPU::s_DIV() {
-		if (rtreg.W._0 == 0) [[unlikely]]
+        if (rtreg.W._0 == 0) [[unlikely]]
         {
             lo_ = rsreg.W._0 < 0 ? 1 : -1;
             hi_ = static_cast<int64_t>(rsreg.W._0);
@@ -161,10 +161,10 @@ namespace hydra::N64 {
         }
         lo_ = rsreg.W._0 / rtreg.W._0;
         hi_ = rsreg.W._0 % rtreg.W._0;
-	}
+    }
     
     void CPU::s_DIVU() {
-		if (rtreg.UW._0 == 0) [[unlikely]]
+        if (rtreg.UW._0 == 0) [[unlikely]]
         {
             lo_ = -1;
             hi_ = rsreg.UD;
@@ -172,10 +172,10 @@ namespace hydra::N64 {
         }
         lo_ = rsreg.UW._0 / rtreg.UW._0;
         hi_ = rsreg.UW._0 % rtreg.UW._0;
-	}
+    }
     
     void CPU::s_DDIV() {
-		if (rtreg.D == 0) [[unlikely]]
+        if (rtreg.D == 0) [[unlikely]]
         {
             bool sign = rsreg.UD >> 63;
             lo_ = sign ? 1 : -1;
@@ -189,10 +189,10 @@ namespace hydra::N64 {
         }
         lo_ = rsreg.D / rtreg.D;
         hi_ = rsreg.D % rtreg.D;
-	}
+    }
     
     void CPU::s_DDIVU() {
-		if (rtreg.UD == 0) [[unlikely]]
+        if (rtreg.UD == 0) [[unlikely]]
         {
             lo_ = -1;
             hi_ = rsreg.UD;
@@ -200,7 +200,7 @@ namespace hydra::N64 {
         }
         lo_ = static_cast<int64_t>(rsreg.UD / rtreg.UD);
         hi_ = static_cast<int64_t>(rsreg.UD % rtreg.UD);
-	}
+    }
 
     void CPU::s_AND() {
         rdreg.UD = rsreg.UD & rtreg.UD;
@@ -208,11 +208,11 @@ namespace hydra::N64 {
 
     void CPU::s_OR() {
         rdreg.UD = rsreg.UD | rtreg.UD;
-	}
+    }
     
     void CPU::s_XOR() {
-		rdreg.UD = rsreg.UD ^ rtreg.UD;
-	}
+        rdreg.UD = rsreg.UD ^ rtreg.UD;
+    }
     
     void CPU::s_NOR() {
         rdreg.UD = ~(rsreg.UD | rtreg.UD);
@@ -225,34 +225,34 @@ namespace hydra::N64 {
     }
 
     void CPU::s_TGEU() {
-		if (rsreg.UD >= rtreg.UD) {
+        if (rsreg.UD >= rtreg.UD) {
             throw_exception(prev_pc_, ExceptionType::Trap);
         }
-	}
+    }
     
     void CPU::s_TLT() {
-		if (rsreg.D < rtreg.D) {
+        if (rsreg.D < rtreg.D) {
             throw_exception(prev_pc_, ExceptionType::Trap);
         }
-	}
+    }
     
     void CPU::s_TLTU() {
-		if (rsreg.UD < rtreg.UD) {
+        if (rsreg.UD < rtreg.UD) {
             throw_exception(prev_pc_, ExceptionType::Trap);
         }
-	}
+    }
     
     void CPU::s_TEQ() {
-		if (rsreg.UD == rtreg.UD) {
+        if (rsreg.UD == rtreg.UD) {
             throw_exception(prev_pc_, ExceptionType::Trap);
         }
-	}
+    }
     
     void CPU::s_TNE() {
-		if (rsreg.UD != rtreg.UD) {
+        if (rsreg.UD != rtreg.UD) {
             throw_exception(prev_pc_, ExceptionType::Trap);
         }
-	}
+    }
 
     void CPU::r_TGEI() {
         if (rsreg.D >= seimmval) {
@@ -299,30 +299,30 @@ namespace hydra::N64 {
     }
 
     void CPU::s_SYSCALL() {
-		throw_exception(prev_pc_, ExceptionType::Syscall);
-	}
+        throw_exception(prev_pc_, ExceptionType::Syscall);
+    }
     
     void CPU::s_BREAK() {
-		throw_exception(prev_pc_, ExceptionType::Breakpoint);
-	}
+        throw_exception(prev_pc_, ExceptionType::Breakpoint);
+    }
 
     void CPU::s_SYNC() {}
     
     void CPU::s_MFHI() {
         rdreg.UD = hi_;
-	}
+    }
     
     void CPU::s_MTHI() {
         hi_ = rsreg.UD;
-	}
+    }
 
     void CPU::s_MFLO() {
-		rdreg.UD = lo_;
-	}
+        rdreg.UD = lo_;
+    }
 
     void CPU::s_MTLO() {
-		lo_ = rsreg.UD;
-	}
+        lo_ = rsreg.UD;
+    }
 
 }
 

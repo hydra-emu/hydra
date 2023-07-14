@@ -1,12 +1,12 @@
 #ifndef GB_WIIWRAPPER_H
 #define GB_WIIWRAPPER_H
-#include <gb/gb_addresses.h>
-#include <gb/gb_cpu.h>
-#include <gb/gb_ppu.h>
-#include <gb/gb_bus.h>
-#include <gb/gb_timer.h>
-#include <gb/gb_apu.h>
-#include <gb/gb_apu_ch.h>
+#include <gb/gb_addresses.hxx>
+#include <gb/gb_cpu.hxx>
+#include <gb/gb_ppu.hxx>
+#include <gb/gb_bus.hxx>
+#include <gb/gb_timer.hxx>
+#include <gb/gb_apu.hxx>
+#include <gb/gb_apu_ch.hxx>
 
 class GB_WiiWrapper {
 public:

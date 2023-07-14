@@ -43,7 +43,7 @@ namespace hydra::N64 {
 
         uint8_t pixel_mode_ = 0;
         std::vector<uint8_t> framebuffer_;
-		uint8_t* framebuffer_ptr_ = nullptr;
+        uint8_t* framebuffer_ptr_ = nullptr;
         uint8_t* memory_ptr_ = nullptr;
 
         inline void set_pixel(int x, int y, uint32_t color);

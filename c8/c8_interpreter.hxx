@@ -6,7 +6,7 @@
 #include <chrono>
 
 namespace hydra::c8 {
-    class c8;
+    class Chip8_TKPWrapper;
     union Opcode {
         uint16_t full;
         struct {
@@ -30,8 +30,8 @@ namespace hydra::c8 {
     private:
         std::array<uint8_t, 16> regs_{};
         std::array<uint64_t, 32> screen_{};
-		std::array<bool, 16> key_pressed_{};
-		std::array<uint8_t, 4 * 64 * 32> screen_color_data_{};
+        std::array<bool, 16> key_pressed_{};
+        std::array<uint8_t, 4 * 64 * 32> screen_color_data_{};
         uint16_t i_ = 0;
         uint8_t dt_ = 0;
         uint8_t st_ = 0;
@@ -57,8 +57,8 @@ namespace hydra::c8 {
         }
         void run(Opcode opcode);
         void check_timers();
-		std::chrono::system_clock::time_point timer = std::chrono::system_clock::now();
-        friend class hydra::c8::c8;
+        std::chrono::system_clock::time_point timer = std::chrono::system_clock::now();
+        friend class hydra::c8::Chip8_TKPWrapper;
     };
 }
 #endif

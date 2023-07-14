@@ -11,20 +11,20 @@
 #include <deque>
 #include <optional>
 #include <unordered_map>
-#include <gb/gb_cartridge.h>
-#include <gb/gb_addresses.h>
-#include <gb/gb_apu.h>
-#include <gb/gb_apu_ch.h>
+#include <gb/gb_cartridge.hxx>
+#include <gb/gb_addresses.hxx>
+#include <gb/gb_apu.hxx>
+#include <gb/gb_apu_ch.hxx>
 namespace hydra::Gameboy {
     class Gameboy_TKPWrapper;
 }
 namespace hydra::Gameboy {
     struct Change {
-		int type = 0;
-		std::optional<std::array<uint16_t, 4>> new_bg_pal = std::nullopt;
+        int type = 0;
+        std::optional<std::array<uint16_t, 4>> new_bg_pal = std::nullopt;
         int new_bg_pal_index = 0;
         std::optional<bool> new_bg_en = std::nullopt;
-	};
+    };
     using PaletteColors = std::array<uint16_t, 4>;
     class PPU;
     class Bus {
@@ -119,7 +119,7 @@ namespace hydra::Gameboy {
 
         void handle_mbc(uint16_t address, uint8_t data);
         void battery_save();
-	    // Take channel input with 1-based index to match the register names (eg. NR14)
+        // Take channel input with 1-based index to match the register names (eg. NR14)
         void handle_nrx4(int channel_no, uint8_t& data);
         void handle_nrx2(int channel_no, uint8_t& data);
         void handle_nrx1(int channel_no, uint8_t& data);

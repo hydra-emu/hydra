@@ -2,7 +2,7 @@
 #ifndef TKP_GB_APU_H
 #define TKP_GB_APU_H
 #include <queue>
-#include <gb/gb_apu_ch.h>
+#include <gb/gb_apu_ch.hxx>
 namespace hydra::Gameboy {
     // This class is solely for sound output and is not needed to pass sound
     // emulation tests.
