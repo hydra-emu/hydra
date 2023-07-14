@@ -5,6 +5,7 @@
 #include <any>
 #include <atomic>
 #include <bitset>
+#include <condition_variable>
 #include <fstream>
 #include <functional>
 #include <iosfwd>
@@ -42,9 +43,11 @@ namespace hydra
         virtual ~Emulator();
         Emulator(const Emulator&) = delete;
         Emulator& operator=(const Emulator&) = delete;
+        // TODO: Do all of these need to be atomic?
         std::atomic_bool Stopped{};
         std::atomic_bool Paused{};
         std::atomic_bool Step{};
+        std::condition_variable StepCV{};
         std::atomic_bool Loaded{};
         bool SkipBoot = false;
         bool FastMode = false;
@@ -93,6 +96,7 @@ namespace hydra
         }
 
         std::mutex ThreadStartedMutex;
+        std::mutex StepMutex;
         std::shared_mutex DataMutex;
 
       protected:

@@ -32,7 +32,7 @@ static inline uint16_t rgba32_to_rgba16(uint32_t color)
 
 namespace hydra::N64
 {
-    constexpr inline std::string get_rdp_command_name(RDPCommandType type)
+    constexpr inline std::string_view get_rdp_command_name(RDPCommandType type)
     {
         switch (type)
         {

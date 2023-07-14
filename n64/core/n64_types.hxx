@@ -264,6 +264,8 @@ namespace hydra::N64
             uint32_t _must_be_one : 1;
             uint32_t cop2         : 6;
         };
+
+        VUInstruction(uint32_t value) : full(value) {}
     };
 
     static_assert(sizeof(VUInstruction) == 4, "VUInstruction is not 4 bytes");
