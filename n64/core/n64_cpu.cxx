@@ -1,7 +1,6 @@
 #include "n64_cpu.hxx"
 #include <bit>
 #include <bitset>
-#include <boost/stacktrace/stacktrace.hpp>
 #include <cassert>
 #include <cmath>
 #include <cstring>

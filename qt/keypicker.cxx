@@ -13,12 +13,13 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
     {
         emulator_picker_->addItem(QString::fromStdString(
             EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).Name));
-        EmulatorData& data = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
+        EmulatorData& emulator_data =
+            EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
         QTableWidget* table = new QTableWidget(this);
         table->setColumnCount(2);
-        table->setRowCount(data.Mappings.size());
+        table->setRowCount(emulator_data.Mappings.size());
         int j = 0;
-        for (auto pair : data.Mappings)
+        for (auto pair : emulator_data.Mappings)
         {
             table->setItem(j, 0, new QTableWidgetItem(QString::fromStdString(pair.first)));
             if (!pair.second.empty())
@@ -32,7 +33,7 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         connect(table, SIGNAL(cellDoubleClicked(int, int)), this,
                 SLOT(onCellDoubleClicked(int, int)));
-        tab_show_->addTab(table, QString::fromStdString(data.Name));
+        tab_show_->addTab(table, QString::fromStdString(emulator_data.Name));
     }
     tab_show_->tabBar()->hide();
     layout_ = new QVBoxLayout(this);

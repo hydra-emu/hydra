@@ -24,7 +24,7 @@ MIPSHighlighter::MIPSHighlighter(QTextDocument* parent) : QSyntaxHighlighter(par
     singleline_comment_format_.setForeground(QBrush(QColor(85, 170, 0)));
     label_format_.setForeground(QBrush(QColor(170, 170, 127)));
     punctuator_format_.setForeground(QBrush(QColor(170, 0, 0)));
-    for (int i = 0; i < hydra::N64::OperationCodes.size(); i++)
+    for (size_t i = 0; i < hydra::N64::OperationCodes.size(); i++)
     {
         HighlightingRule rule;
         rule.pattern = QRegularExpression(QString::fromStdString(
@@ -267,7 +267,7 @@ void N64Disassembler::updateText()
     {
         return;
     }
-    int lines = top_line_ + doc_size / font_height;
+    size_t lines = top_line_ + doc_size / font_height;
     if (lines > instructions_.size())
     {
         lines = instructions_.size();
@@ -275,7 +275,7 @@ void N64Disassembler::updateText()
     std::string text;
     if (lines != 0)
     {
-        for (int i = top_line_; i < lines - 1; i++)
+        for (size_t i = top_line_; i < lines - 1; i++)
         {
             text += instructions_.at(i).disassembly + "\n";
         }
@@ -286,7 +286,7 @@ void N64Disassembler::updateText()
 
 void N64Disassembler::Goto(uint32_t addr)
 {
-    for (int i = 0; i < instructions_.size(); i++)
+    for (size_t i = 0; i < instructions_.size(); i++)
     {
         if (instructions_.at(i).vaddr == addr)
         {

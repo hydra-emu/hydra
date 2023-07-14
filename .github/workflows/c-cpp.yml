@@ -21,7 +21,7 @@ jobs:
     - name: install-deps
       run: |
         sudo apt-get update
-        sudo apt-get install libgl-dev libtbb-dev libboost-all-dev build-essential gcc-12 g++-12 ninja-build qt6-base-dev libfmt-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6
+        sudo apt-get install build-essential libgl-dev gcc-12 g++-12 ninja-build libfmt-dev qt6-base-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6
     - name: configure
       run: |
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12

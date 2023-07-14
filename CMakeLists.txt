@@ -10,11 +10,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-# TODO: don't always compile with -g and boost stacktrace
+# TODO: don't always compile with -g
 set(WARNINGS 
     "-Wno-stringop-overflow" # for some fmt warning
     "-Werror=return-type"
@@ -29,19 +29,15 @@ set(WARNINGS
     "-Werror=unused-parameter"
 )
 string(REPLACE ";" " " WARNINGS_FLAGS "${WARNINGS}")
-set(CMAKE_CXX_FLAGS "-g -O3 -mcrc32 -no-pie -DBOOST_STACKTRACE_USE_ADDR2LINE ${WARNINGS_FLAGS}")
+set(CMAKE_CXX_FLAGS "-O2 -mcrc32 -no-pie ${WARNINGS_FLAGS}")
 set(OpenGL_GL_PREFERENCE GLVND)
 
-find_package(Boost 1.71 REQUIRED)
-find_package(Threads REQUIRED)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(fmt)
-#disable fmt warnings
-set_target_properties(fmt::fmt PROPERTIES INTERFACE_COMPILE_OPTIONS "-w")
 
-add_compile_options(-fsanitize=address)
-add_link_options(-fsanitize=address)
+# add_compile_options(-fsanitize=address)
+# add_link_options(-fsanitize=address)
 
 set(PROJECT_SOURCES
     data/resources.qrc
@@ -124,9 +120,9 @@ add_library(gb STATIC ${GB_FILES})
 add_library(nes STATIC ${NES_FILES})
 add_library(n64 STATIC ${N64_FILES})
 target_link_libraries(hydra PRIVATE src nes gb c8 n64
-    Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL Qt${QT_VERSION_MAJOR}::OpenGLWidgets
-    ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}
-    Threads::Threads fmt::fmt dl)
+    Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
+    Qt${QT_VERSION_MAJOR}::OpenGLWidgets ${CMAKE_DL_LIBS}
+    fmt::fmt dl)
 target_include_directories(hydra PRIVATE include vendored)
 target_include_directories(src PRIVATE include vendored)
 target_include_directories(c8 PRIVATE include vendored)
