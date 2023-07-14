@@ -26,7 +26,8 @@ namespace hydra::Gameboy
                 if (header_.gameboyColor & 0x40)
                 {
                     UseCGB = true;
-                } else
+                }
+                else
                 {
                     // check if force gbc
                     UseCGB = true;
@@ -96,14 +97,18 @@ namespace hydra::Gameboy
             is.close();
             // Empty init the rambanks
             ramBanks.resize(GetRamSize());
-        } else
+        }
+        else
         {
             std::cerr << "Error: Could not open file" << std::endl;
         }
         return true;
     }
 
-    bool Cartridge::UsingBattery() { return using_battery_; }
+    bool Cartridge::UsingBattery()
+    {
+        return using_battery_;
+    }
 
     CartridgeType Cartridge::GetCartridgeType()
     {
@@ -228,7 +233,8 @@ namespace hydra::Gameboy
                 if (header_.gameboyColor & 0x40)
                 {
                     cgb_type = "GBC only";
-                } else
+                }
+                else
                 {
                     cgb_type = "Supports GBC";
                 }
@@ -243,7 +249,8 @@ namespace hydra::Gameboy
                 {
                     licensee = GetLicenseeOld();
                 }
-            } else
+            }
+            else
             {
                 sgb = (header_.sgbFlag == 0x3) ? "Supports SGB" : "No";
             }

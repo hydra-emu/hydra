@@ -15,15 +15,16 @@
 
 namespace hydra::N64
 {
-
     struct cast_bitcast
     {
-        template <typename T> constexpr uint64_t operator()(T x) const
+        template <typename T>
+        constexpr uint64_t operator()(T x) const
         {
             if constexpr (sizeof(T) == 4)
             {
                 return std::bit_cast<uint32_t>(x);
-            } else
+            }
+            else
             {
                 return std::bit_cast<uint64_t>(x);
             }
@@ -32,17 +33,23 @@ namespace hydra::N64
 
     struct cast_nocast
     {
-        template <typename T> constexpr uint64_t operator()(T x) const { return x; }
+        template <typename T>
+        constexpr uint64_t operator()(T x) const
+        {
+            return x;
+        }
     };
 
     struct cast_wcast
     {
-        template <typename T> constexpr uint64_t operator()(T x) const
+        template <typename T>
+        constexpr uint64_t operator()(T x) const
         {
             if constexpr (sizeof(T) == 4)
             {
                 return static_cast<uint32_t>(x);
-            } else
+            }
+            else
             {
                 return static_cast<uint64_t>(x);
             }
@@ -51,67 +58,105 @@ namespace hydra::N64
 
     struct func_sqrt
     {
-        template <typename T> constexpr T operator()(T x) const { return std::sqrt(x); }
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::sqrt(x);
+        }
     };
 
     struct func_abs
     {
-        template <typename T> constexpr T operator()(T x) const { return std::abs(x); }
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::abs(x);
+        }
     };
 
     struct func_round
     {
-        template <typename T> constexpr T operator()(T x) const { return std::nearbyintl(x); }
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::nearbyintl(x);
+        }
     };
 
     struct func_trunc
     {
-        template <typename T> constexpr T operator()(T x) const { return std::trunc(x); }
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::trunc(x);
+        }
     };
 
     struct func_ceil
     {
-        template <typename T> constexpr T operator()(T x) const { return std::ceil(x); }
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::ceil(x);
+        }
     };
 
     struct func_floor
     {
-        template <typename T> constexpr T operator()(T x) const { return std::floor(x); }
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::floor(x);
+        }
     };
 
-    template <> double CPU::get_fpu_reg<double>(int regnum) { return fpr_regs_[regnum].DOUBLE; }
+    template <>
+    double CPU::get_fpu_reg<double>(int regnum)
+    {
+        return fpr_regs_[regnum].DOUBLE;
+    }
 
-    template <> float CPU::get_fpu_reg<float>(int regnum) { return fpr_regs_[regnum].FLOAT._0; }
+    template <>
+    float CPU::get_fpu_reg<float>(int regnum)
+    {
+        return fpr_regs_[regnum].FLOAT._0;
+    }
 
-    template <> void CPU::set_fpu_reg<double>(int regnum, double data)
+    template <>
+    void CPU::set_fpu_reg<double>(int regnum, double data)
     {
         fpr_regs_[regnum].DOUBLE = data;
     }
 
-    template <> void CPU::set_fpu_reg<float>(int regnum, float data)
+    template <>
+    void CPU::set_fpu_reg<float>(int regnum, float data)
     {
         fpr_regs_[regnum].FLOAT._0 = data;
     }
 
-    template <> uint32_t CPU::get_fpr_reg<uint32_t>(int regnum)
+    template <>
+    uint32_t CPU::get_fpr_reg<uint32_t>(int regnum)
     {
         bool _64bit = CP0Status.FR;
         if (_64bit)
         {
             return fpr_regs_[regnum].UW._0;
-        } else
+        }
+        else
         {
             if (regnum & 1)
             {
                 return fpr_regs_[regnum & ~1].UW._1;
-            } else
+            }
+            else
             {
                 return fpr_regs_[regnum].UW._0;
             }
         }
     }
 
-    template <> uint64_t CPU::get_fpr_reg<uint64_t>(int regnum)
+    template <>
+    uint64_t CPU::get_fpr_reg<uint64_t>(int regnum)
     {
         bool _64bit = CP0Status.FR;
         if (!_64bit)
@@ -121,25 +166,29 @@ namespace hydra::N64
         return fpr_regs_[regnum].UD;
     }
 
-    template <> void CPU::set_fpr_reg<uint32_t>(int regnum, uint32_t val)
+    template <>
+    void CPU::set_fpr_reg<uint32_t>(int regnum, uint32_t val)
     {
         bool _64bit = CP0Status.FR;
         if (_64bit)
         {
             fpr_regs_[regnum].UW._0 = val;
-        } else
+        }
+        else
         {
             if (regnum & 1)
             {
                 fpr_regs_[regnum & ~1].UW._1 = val;
-            } else
+            }
+            else
             {
                 fpr_regs_[regnum].UW._0 = val;
             }
         }
     }
 
-    template <> void CPU::set_fpr_reg<uint64_t>(int regnum, uint64_t val)
+    template <>
+    void CPU::set_fpr_reg<uint64_t>(int regnum, uint64_t val)
     {
         bool _64bit = CP0Status.FR;
         if (!_64bit)
@@ -161,9 +210,15 @@ namespace hydra::N64
         set_fpr_reg<uint32_t>(instruction_.FType.ft, load_word(vaddr));
     }
 
-    void CPU::LWC2() { Logger::Warn("LWC2 not implemented"); }
+    void CPU::LWC2()
+    {
+        Logger::Warn("LWC2 not implemented");
+    }
 
-    void CPU::LLD() { Logger::Warn("LLD not implemented"); }
+    void CPU::LLD()
+    {
+        Logger::Warn("LLD not implemented");
+    }
 
     void CPU::LDC1()
     {
@@ -177,7 +232,10 @@ namespace hydra::N64
         set_fpr_reg<uint64_t>(instruction_.FType.ft, load_doubleword(vaddr));
     }
 
-    void CPU::LDC2() { Logger::Warn("LDC2 not implemented"); }
+    void CPU::LDC2()
+    {
+        Logger::Warn("LDC2 not implemented");
+    }
 
     void CPU::SWC1()
     {
@@ -191,9 +249,15 @@ namespace hydra::N64
         store_word(vaddr, get_fpr_reg<uint32_t>(instruction_.FType.ft));
     }
 
-    void CPU::SWC2() { Logger::Warn("SWC2 not implemented"); }
+    void CPU::SWC2()
+    {
+        Logger::Warn("SWC2 not implemented");
+    }
 
-    void CPU::SCD() { Logger::Warn("SCD not implemented"); }
+    void CPU::SCD()
+    {
+        Logger::Warn("SCD not implemented");
+    }
 
     void CPU::SDC1()
     {
@@ -207,7 +271,10 @@ namespace hydra::N64
         store_doubleword(vaddr, get_fpr_reg<uint64_t>(instruction_.FType.ft));
     }
 
-    void CPU::SDC2() { Logger::Warn("SDC2 not implemented"); }
+    void CPU::SDC2()
+    {
+        Logger::Warn("SDC2 not implemented");
+    }
 
     void CPU::f_CFC1()
     {
@@ -296,11 +363,12 @@ namespace hydra::N64
         if (fcr31_.unimplemented)
         {
             fire = true;
-        } else if ((fcr31_.cause_inexact && fcr31_.enable_inexact) ||
-                   (fcr31_.cause_underflow && fcr31_.enable_underflow) ||
-                   (fcr31_.cause_overflow && fcr31_.enable_overflow) ||
-                   (fcr31_.cause_divbyzero && fcr31_.enable_divbyzero) ||
-                   (fcr31_.cause_invalidop && fcr31_.enable_invalidop))
+        }
+        else if ((fcr31_.cause_inexact && fcr31_.enable_inexact) ||
+                 (fcr31_.cause_underflow && fcr31_.enable_underflow) ||
+                 (fcr31_.cause_overflow && fcr31_.enable_overflow) ||
+                 (fcr31_.cause_divbyzero && fcr31_.enable_divbyzero) ||
+                 (fcr31_.cause_invalidop && fcr31_.enable_invalidop))
         {
             fire = true;
         }
@@ -368,7 +436,8 @@ namespace hydra::N64
         if constexpr (std::is_invocable<decltype(op), Type>())
         {
             result = std::invoke(op, fs);
-        } else
+        }
+        else
         {
             result = std::invoke(op, fs, ft);
         }
@@ -450,17 +519,35 @@ namespace hydra::N64
         }
     }
 
-    void CPU::f_ADD() { fpu_operate(std::plus(), cast_bitcast()); }
+    void CPU::f_ADD()
+    {
+        fpu_operate(std::plus(), cast_bitcast());
+    }
 
-    void CPU::f_SUB() { fpu_operate(std::minus(), cast_bitcast()); }
+    void CPU::f_SUB()
+    {
+        fpu_operate(std::minus(), cast_bitcast());
+    }
 
-    void CPU::f_MUL() { fpu_operate(std::multiplies(), cast_bitcast()); }
+    void CPU::f_MUL()
+    {
+        fpu_operate(std::multiplies(), cast_bitcast());
+    }
 
-    void CPU::f_DIV() { fpu_operate(std::divides(), cast_bitcast()); }
+    void CPU::f_DIV()
+    {
+        fpu_operate(std::divides(), cast_bitcast());
+    }
 
-    void CPU::f_SQRT() { fpu_operate(func_sqrt(), cast_bitcast()); }
+    void CPU::f_SQRT()
+    {
+        fpu_operate(func_sqrt(), cast_bitcast());
+    }
 
-    void CPU::f_ABS() { fpu_operate(func_abs(), cast_bitcast()); }
+    void CPU::f_ABS()
+    {
+        fpu_operate(func_abs(), cast_bitcast());
+    }
 
     void CPU::f_MOV()
     {
@@ -493,9 +580,15 @@ namespace hydra::N64
         }
     }
 
-    void CPU::f_NEG() { fpu_operate(std::negate(), cast_bitcast()); }
+    void CPU::f_NEG()
+    {
+        fpu_operate(std::negate(), cast_bitcast());
+    }
 
-    void CPU::f_ROUNDL() { fpu_operate(func_round(), cast_nocast()); }
+    void CPU::f_ROUNDL()
+    {
+        fpu_operate(func_round(), cast_nocast());
+    }
 
     void CPU::f_TRUNCL()
     {
@@ -516,17 +609,35 @@ namespace hydra::N64
         }
     }
 
-    void CPU::f_CEILL() { fpu_operate(func_ceil(), cast_nocast()); }
+    void CPU::f_CEILL()
+    {
+        fpu_operate(func_ceil(), cast_nocast());
+    }
 
-    void CPU::f_FLOORL() { fpu_operate(func_floor(), cast_nocast()); }
+    void CPU::f_FLOORL()
+    {
+        fpu_operate(func_floor(), cast_nocast());
+    }
 
-    void CPU::f_ROUNDW() { fpu_operate(func_round(), cast_wcast()); }
+    void CPU::f_ROUNDW()
+    {
+        fpu_operate(func_round(), cast_wcast());
+    }
 
-    void CPU::f_TRUNCW() { fpu_operate(func_trunc(), cast_wcast()); }
+    void CPU::f_TRUNCW()
+    {
+        fpu_operate(func_trunc(), cast_wcast());
+    }
 
-    void CPU::f_CEILW() { fpu_operate(func_ceil(), cast_wcast()); }
+    void CPU::f_CEILW()
+    {
+        fpu_operate(func_ceil(), cast_wcast());
+    }
 
-    void CPU::f_FLOORW() { fpu_operate(func_floor(), cast_wcast()); }
+    void CPU::f_FLOORW()
+    {
+        fpu_operate(func_floor(), cast_wcast());
+    }
 
     void CPU::f_CVTS()
     {
@@ -624,7 +735,10 @@ namespace hydra::N64
         }
     }
 
-    void CPU::f_CF() { Logger::Warn("f_CF not implemented"); }
+    void CPU::f_CF()
+    {
+        Logger::Warn("f_CF not implemented");
+    }
 
     void CPU::f_CUN()
     {
@@ -664,7 +778,10 @@ namespace hydra::N64
         }
     }
 
-    void CPU::f_CUEQ() { Logger::Warn("f_CUEQ not implemented"); }
+    void CPU::f_CUEQ()
+    {
+        Logger::Warn("f_CUEQ not implemented");
+    }
 
     void CPU::f_COLT()
     {
@@ -706,17 +823,35 @@ namespace hydra::N64
         }
     }
 
-    void CPU::f_COLE() { Logger::Warn("f_COLE not implemented"); }
+    void CPU::f_COLE()
+    {
+        Logger::Warn("f_COLE not implemented");
+    }
 
-    void CPU::f_CULE() { Logger::Warn("f_CULE not implemented"); }
+    void CPU::f_CULE()
+    {
+        Logger::Warn("f_CULE not implemented");
+    }
 
-    void CPU::f_CSF() { Logger::Warn("f_CSF not implemented"); }
+    void CPU::f_CSF()
+    {
+        Logger::Warn("f_CSF not implemented");
+    }
 
-    void CPU::f_CNGLE() { Logger::Warn("f_CNGLE not implemented"); }
+    void CPU::f_CNGLE()
+    {
+        Logger::Warn("f_CNGLE not implemented");
+    }
 
-    void CPU::f_CSEQ() { Logger::Warn("f_CSEQ not implemented"); }
+    void CPU::f_CSEQ()
+    {
+        Logger::Warn("f_CSEQ not implemented");
+    }
 
-    void CPU::f_CNGL() { Logger::Warn("f_CNGL not implemented"); }
+    void CPU::f_CNGL()
+    {
+        Logger::Warn("f_CNGL not implemented");
+    }
 
     void CPU::f_CLT()
     {
@@ -737,7 +872,10 @@ namespace hydra::N64
         }
     }
 
-    void CPU::f_CNGE() { Logger::Warn("f_CNGE not implemented"); }
+    void CPU::f_CNGE()
+    {
+        Logger::Warn("f_CNGE not implemented");
+    }
 
     void CPU::f_CLE()
     {
@@ -758,8 +896,10 @@ namespace hydra::N64
         }
     }
 
-    void CPU::f_CNGT() { Logger::Warn("f_CNGT not implemented"); }
-
+    void CPU::f_CNGT()
+    {
+        Logger::Warn("f_CNGT not implemented");
+    }
 } // namespace hydra::N64
 
 #undef rdreg

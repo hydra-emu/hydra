@@ -34,7 +34,10 @@ namespace hydra::c8
         Interpreter();
         void Update();
 
-        uint8_t* GetScreenData() { return &screen_color_data_[0]; }
+        uint8_t* GetScreenData()
+        {
+            return &screen_color_data_[0];
+        }
 
       private:
         std::array<uint8_t, 16> regs_{};

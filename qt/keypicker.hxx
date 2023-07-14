@@ -1,15 +1,16 @@
 #pragma once
 
+#include <emulator_types.hxx>
 #include <QComboBox>
-#include <QTabWidget>
 #include <QTableWidget>
+#include <QTabWidget>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <emulator_types.hxx>
 
 class KeyPickerPage : public QWidget
 {
     Q_OBJECT
+
   public:
     KeyPickerPage(QWidget* parent = 0);
   private slots:

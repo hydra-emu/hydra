@@ -32,7 +32,10 @@ namespace
 
 namespace hydra::c8
 {
-    Interpreter::Interpreter() { srand(time(NULL)); }
+    Interpreter::Interpreter()
+    {
+        srand(time(NULL));
+    }
 
     void Interpreter::reset()
     {
@@ -60,7 +63,8 @@ namespace hydra::c8
                     break;
                 }
             }
-        } else
+        }
+        else
         {
             hydra::c8::Opcode next_opc = get_next_opcode();
             check_timers();
@@ -77,7 +81,8 @@ namespace hydra::c8
                 if (opcode.full == 0x00E0)
                 {
                     clear_screen();
-                } else if (opcode.full == 0x00EE)
+                }
+                else if (opcode.full == 0x00EE)
                 {
                     pc_ = stack_[sp_--];
                 }
@@ -315,16 +320,22 @@ namespace hydra::c8
         for (std::size_t i = 0; i < screen_color_data_.size(); i++)
         {
             if ((i & 0b11) == 0b11)
+            {
                 screen_color_data_[i] = 255;
+            }
             else
+            {
                 screen_color_data_[i] = 0;
+            }
         }
     }
 
     void Interpreter::redraw(size_t line_start, size_t lines, size_t x_start)
     {
         if (line_start > 32)
+        {
             return;
+        }
         lines = std::min(32 - line_start, lines);
         for (auto j = line_start; j < line_start + lines; j++)
         {
@@ -341,9 +352,15 @@ namespace hydra::c8
         }
     }
 
-    uint8_t Interpreter::read(uint16_t addr) { return mem_[addr]; }
+    uint8_t Interpreter::read(uint16_t addr)
+    {
+        return mem_[addr];
+    }
 
-    void Interpreter::write(uint16_t addr, uint8_t data) { mem_[addr] = data; }
+    void Interpreter::write(uint16_t addr, uint8_t data)
+    {
+        mem_[addr] = data;
+    }
 
     bool Interpreter::load_file(const std::string& path)
     {

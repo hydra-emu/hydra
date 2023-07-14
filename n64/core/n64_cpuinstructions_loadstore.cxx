@@ -14,7 +14,6 @@ constexpr uint64_t LUT[] = {
 
 namespace hydra::N64
 {
-
     void CPU::LDL()
     {
         int16_t offset = immval;
@@ -214,7 +213,8 @@ namespace hydra::N64
         {
             store_word(address, rtreg.UW._0);
             rtreg.UD = 1;
-        } else
+        }
+        else
         {
             rtreg.UD = 0;
         }
@@ -329,7 +329,6 @@ namespace hydra::N64
         llbit_ = true;
         lladdr_ = translate_vaddr(address).paddr;
     }
-
 } // namespace hydra::N64
 
 #undef rdreg

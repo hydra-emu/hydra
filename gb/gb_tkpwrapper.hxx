@@ -45,7 +45,10 @@ namespace hydra::Gameboy
 
       public:
         // Used by automated tests
-        void Update() { update(); }
+        void Update()
+        {
+            update();
+        }
 
       private:
         ChannelArrayPtr channel_array_ptr_;

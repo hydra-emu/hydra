@@ -10,7 +10,10 @@ namespace hydra::N64
         vi_.Reset();
     }
 
-    void RCP::SetPixelMode(uint8_t mode) { vi_.pixel_mode_ = mode; }
+    void RCP::SetPixelMode(uint8_t mode)
+    {
+        vi_.pixel_mode_ = mode;
+    }
 
     void RCP::SetHVideo(uint32_t hvideo)
     {
@@ -25,9 +28,18 @@ namespace hydra::N64
     }
 
     // TODO: offsets
-    void RCP::SetXScale(uint32_t xscale) { vi_.vi_x_scale_ = xscale & 0b1111'1111'1111; }
+    void RCP::SetXScale(uint32_t xscale)
+    {
+        vi_.vi_x_scale_ = xscale & 0b1111'1111'1111;
+    }
 
-    void RCP::SetYScale(uint32_t yscale) { vi_.vi_y_scale_ = yscale & 0b1111'1111'1111; }
+    void RCP::SetYScale(uint32_t yscale)
+    {
+        vi_.vi_y_scale_ = yscale & 0b1111'1111'1111;
+    }
 
-    bool RCP::Redraw() { return vi_.Redraw(); }
+    bool RCP::Redraw()
+    {
+        return vi_.Redraw();
+    }
 } // namespace hydra::N64

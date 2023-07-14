@@ -10,24 +10,50 @@
 
 namespace hydra::N64
 {
+    void RSP::ERROR()
+    {
+        Logger::Warn("Ran ERROR instruction: {:08x}", instruction_.full);
+    }
 
-    void RSP::ERROR() { Logger::Warn("Ran ERROR instruction: {:08x}", instruction_.full); }
+    void RSP::SPECIAL()
+    {
+        (special_table_[instruction_.RType.func])(this);
+    }
 
-    void RSP::SPECIAL() { (special_table_[instruction_.RType.func])(this); }
+    void RSP::REGIMM()
+    {
+        (regimm_table_[instruction_.RType.rt])(this);
+    }
 
-    void RSP::REGIMM() { (regimm_table_[instruction_.RType.rt])(this); }
+    void RSP::s_SLL()
+    {
+        rdreg.UW = rtreg.UW << saval;
+    }
 
-    void RSP::s_SLL() { rdreg.UW = rtreg.UW << saval; }
+    void RSP::s_SLLV()
+    {
+        rdreg.UW = rtreg.UW << (rsreg.UW & 0b11111);
+    }
 
-    void RSP::s_SLLV() { rdreg.UW = rtreg.UW << (rsreg.UW & 0b11111); }
+    void RSP::s_SRL()
+    {
+        rdreg.UW = rtreg.UW >> saval;
+    }
 
-    void RSP::s_SRL() { rdreg.UW = rtreg.UW >> saval; }
+    void RSP::s_SRA()
+    {
+        rdreg.W = rtreg.W >> saval;
+    }
 
-    void RSP::s_SRA() { rdreg.W = rtreg.W >> saval; }
+    void RSP::s_SRAV()
+    {
+        rdreg.W = rtreg.W >> (rsreg.UW & 0b11111);
+    }
 
-    void RSP::s_SRAV() { rdreg.W = rtreg.W >> (rsreg.UW & 0b11111); }
-
-    void RSP::s_SRLV() { rdreg.UW = rtreg.UW >> (rsreg.UW & 0b11111); }
+    void RSP::s_SRLV()
+    {
+        rdreg.UW = rtreg.UW >> (rsreg.UW & 0b11111);
+    }
 
     void RSP::s_JR()
     {
@@ -42,13 +68,25 @@ namespace hydra::N64
         branch_to(jump_addr);
     }
 
-    void RSP::s_ADDU() { rdreg.UW = rtreg.UW + rsreg.UW; }
+    void RSP::s_ADDU()
+    {
+        rdreg.UW = rtreg.UW + rsreg.UW;
+    }
 
-    void RSP::s_SUBU() { rdreg.UW = rsreg.UW - rtreg.UW; }
+    void RSP::s_SUBU()
+    {
+        rdreg.UW = rsreg.UW - rtreg.UW;
+    }
 
-    void RSP::s_SLT() { rdreg.UW = rsreg.W < rtreg.W; }
+    void RSP::s_SLT()
+    {
+        rdreg.UW = rsreg.W < rtreg.W;
+    }
 
-    void RSP::s_SLTU() { rdreg.UW = rsreg.UW < rtreg.UW; }
+    void RSP::s_SLTU()
+    {
+        rdreg.UW = rsreg.UW < rtreg.UW;
+    }
 
     void RSP::s_BREAK()
     {
@@ -61,13 +99,25 @@ namespace hydra::N64
         }
     }
 
-    void RSP::s_AND() { rdreg.UW = rtreg.UW & rsreg.UW; }
+    void RSP::s_AND()
+    {
+        rdreg.UW = rtreg.UW & rsreg.UW;
+    }
 
-    void RSP::s_OR() { rdreg.UW = rtreg.UW | rsreg.UW; }
+    void RSP::s_OR()
+    {
+        rdreg.UW = rtreg.UW | rsreg.UW;
+    }
 
-    void RSP::s_XOR() { rdreg.UW = rtreg.UW ^ rsreg.UW; }
+    void RSP::s_XOR()
+    {
+        rdreg.UW = rtreg.UW ^ rsreg.UW;
+    }
 
-    void RSP::s_NOR() { rdreg.UW = ~(rtreg.UW | rsreg.UW); }
+    void RSP::s_NOR()
+    {
+        rdreg.UW = ~(rtreg.UW | rsreg.UW);
+    }
 
     void RSP::r_BGEZ()
     {
@@ -160,15 +210,30 @@ namespace hydra::N64
         rtreg.UW = result;
     }
 
-    void RSP::SLTI() { rtreg.UW = rsreg.W < seimmval; }
+    void RSP::SLTI()
+    {
+        rtreg.UW = rsreg.W < seimmval;
+    }
 
-    void RSP::SLTIU() { rtreg.UW = rsreg.UW < static_cast<uint16_t>(immval); }
+    void RSP::SLTIU()
+    {
+        rtreg.UW = rsreg.UW < static_cast<uint16_t>(immval);
+    }
 
-    void RSP::ANDI() { rtreg.UW = rsreg.UW & immval; }
+    void RSP::ANDI()
+    {
+        rtreg.UW = rsreg.UW & immval;
+    }
 
-    void RSP::ORI() { rtreg.UW = rsreg.UW | immval; }
+    void RSP::ORI()
+    {
+        rtreg.UW = rsreg.UW | immval;
+    }
 
-    void RSP::XORI() { rtreg.UW = rsreg.UW ^ immval; }
+    void RSP::XORI()
+    {
+        rtreg.UW = rsreg.UW ^ immval;
+    }
 
     void RSP::LUI()
     {
@@ -195,7 +260,10 @@ namespace hydra::N64
         }
     }
 
-    void RSP::COP1() { Logger::Warn("RSP: COP1 not implemented"); }
+    void RSP::COP1()
+    {
+        Logger::Warn("RSP: COP1 not implemented");
+    }
 
     void RSP::COP2()
     {
@@ -305,8 +373,10 @@ namespace hydra::N64
         store_word(address, rtreg.UW);
     }
 
-    void RSP::CACHE() { Logger::Fatal("RSP: CACHE not implemented"); }
-
+    void RSP::CACHE()
+    {
+        Logger::Fatal("RSP: CACHE not implemented");
+    }
 } // namespace hydra::N64
 
 #undef rdreg

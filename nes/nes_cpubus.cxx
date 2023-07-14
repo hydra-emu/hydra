@@ -23,10 +23,14 @@ namespace hydra::NES
             ifs.read(reinterpret_cast<char*>(&header_), sizeof(Header));
             if (!(header_.id[0] == 'N' && header_.id[1] == 'E' && header_.id[2] == 'S' &&
                   header_.id[3] == '\032'))
+            {
                 return false;
+            }
             bool has_trainer = header_.flags_6 & 0b100;
             if (has_trainer)
+            {
                 ifs.read(reinterpret_cast<char*>(trainer_.data()), sizeof(trainer_));
+            }
             // TODO: exponent size
             auto prg_rom_size = ((header_.prg_chr_msb & 0b1111) << 8) | header_.prg_lsb;
             prg_rom_.resize(prg_rom_size * kb16);
@@ -37,7 +41,8 @@ namespace hydra::NES
             if (chr_rom_size == 0)
             {
                 ppu_.chr_rom_.resize(kb8);
-            } else
+            }
+            else
             {
                 ppu_.chr_rom_.resize(chr_rom_size * kb8);
                 ifs.read(reinterpret_cast<char*>(ppu_.chr_rom_.data()), chr_rom_size * kb8);
@@ -46,7 +51,8 @@ namespace hydra::NES
                       ((header_.mapper_msb & 0xF) << 8);
             refill_prg_map();
             ram_.fill(0);
-        } else
+        }
+        else
         {
             return false;
         }
@@ -58,9 +64,13 @@ namespace hydra::NES
         uint8_t* page = fast_map_.at(addr >> 8);
         uint8_t ret;
         if (page)
+        {
             ret = *(page + (addr & 0xFF));
+        }
         else
+        {
             ret = redirect_address_r(addr);
+        }
         last_read_ = ret;
         return ret;
     }
@@ -92,7 +102,8 @@ namespace hydra::NES
                 case 0b111:
                     return ppu_.ppu_data_;
             }
-        } else if (addr >= 0x4000 && addr <= 0x4017)
+        }
+        else if (addr >= 0x4000 && addr <= 0x4017)
         {
             switch (addr)
             {
@@ -110,7 +121,8 @@ namespace hydra::NES
         if (addr >= 0x2000 && addr <= 0x3FFF)
         {
             return ppu_.invalidate(addr & 0b111, data);
-        } else if (addr >= 0x4000 && addr <= 0x4017)
+        }
+        else if (addr >= 0x4000 && addr <= 0x4017)
         {
             switch (addr)
             {
@@ -141,7 +153,8 @@ namespace hydra::NES
         if (page)
         {
             *(page + (addr & 0xFF)) = data;
-        } else
+        }
+        else
         {
             redirect_address_w(addr, data);
         }
@@ -160,15 +173,22 @@ namespace hydra::NES
             case static_cast<int>(Mapper::NROM):
             {
                 for (uint16_t i = 0x80; i <= 0xBF; i++)
+                {
                     fast_map_.at(i) = &prg_rom_.at((i << 8) - 0x8000);
+                }
                 if (prg_rom_.size() == kb16 * 2)
                 {
                     for (uint16_t i = 0xC0; i <= 0xFF; i++)
+                    {
                         fast_map_.at(i) = &prg_rom_.at((i << 8) - 0x8000);
-                } else
+                    }
+                }
+                else
                 {
                     for (uint16_t i = 0xC0; i <= 0xFF; i++)
+                    {
                         fast_map_.at(i) = &prg_rom_.at((i << 8) - 0xC000);
+                    }
                 }
                 break;
             }

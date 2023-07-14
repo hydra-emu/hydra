@@ -19,13 +19,25 @@ namespace hydra::N64
         void Update();
         void Reset();
 
-        void* GetColorData() { return rcp_.vi_.framebuffer_ptr_; }
+        void* GetColorData()
+        {
+            return rcp_.vi_.framebuffer_ptr_;
+        }
 
-        int GetWidth() { return rcp_.vi_.width_; }
+        int GetWidth()
+        {
+            return rcp_.vi_.width_;
+        }
 
-        int GetHeight() { return rcp_.vi_.height_; }
+        int GetHeight()
+        {
+            return rcp_.vi_.height_;
+        }
 
-        void SetKeyState(uint32_t key, bool state) { cpu_.key_state_[key] = state; }
+        void SetKeyState(uint32_t key, bool state)
+        {
+            cpu_.key_state_[key] = state;
+        }
 
       private:
         RCP rcp_;

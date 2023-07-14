@@ -60,7 +60,9 @@ namespace hydra::Gameboy
                 if (get_mode() != MODE_OAM_SCAN)
                 {
                     if (enabled)
+                    {
                         bus_.OAMAccessible = false;
+                    }
                     // Load the 10 sprites for this line
                     cur_scanline_sprites_.clear();
                     mode3_extend = 0;
@@ -85,7 +87,8 @@ namespace hydra::Gameboy
                 }
                 // Scanline changes only matter during pixel draw
                 bus_.ScanlineChanges.clear();
-            } else if (cur_scanline_clocks < (80 + 172 + mode3_extend))
+            }
+            else if (cur_scanline_clocks < (80 + 172 + mode3_extend))
             {
                 // TODO: don't really know why the -12 but it seems to pass mealybug test :)
                 // Investigate? probably not needed if we impl fifo
@@ -98,20 +101,24 @@ namespace hydra::Gameboy
                 {
                     IF |= set_mode(MODE_DRAW_PIXELS);
                 }
-            } else
+            }
+            else
             {
                 if (get_mode() != MODE_HBLANK)
                 {
                     if (enabled)
+                    {
                         bus_.OAMAccessible = true;
+                    }
                     auto mod = SCX % 8;
                     if (mod == 0)
                     {
-
-                    } else if (mod <= 4)
+                    }
+                    else if (mod <= 4)
                     {
                         clock_ += 4;
-                    } else
+                    }
+                    else
                     {
                         clock_ += 8;
                     }
@@ -120,7 +127,8 @@ namespace hydra::Gameboy
                     bus_.ScanlineChanges.clear();
                 }
             }
-        } else
+        }
+        else
         {
             // VBlank scanline
             if (get_mode() != MODE_VBLANK)
@@ -191,7 +199,10 @@ namespace hydra::Gameboy
         clock_target_ = 0;
     }
 
-    uint8_t* PPU::GetScreenData() { return &screen_color_data_[0]; }
+    uint8_t* PPU::GetScreenData()
+    {
+        return &screen_color_data_[0];
+    }
 
     int PPU::set_mode(int mode)
     {
@@ -205,7 +216,10 @@ namespace hydra::Gameboy
         return 0;
     }
 
-    int PPU::get_mode() { return STAT & STATFlag::MODE; }
+    int PPU::get_mode()
+    {
+        return STAT & STATFlag::MODE;
+    }
 
     int PPU::update_lyc()
     {
@@ -216,7 +230,8 @@ namespace hydra::Gameboy
             {
                 return IFInterrupt::LCDSTAT;
             }
-        } else
+        }
+        else
         {
             STAT &= 0b1111'1011;
         }
@@ -231,7 +246,8 @@ namespace hydra::Gameboy
             if (UseCGB)
             {
                 render_tiles();
-            } else if (LCDC & LCDCFlag::BG_ENABLE)
+            }
+            else if (LCDC & LCDCFlag::BG_ENABLE)
             {
                 render_tiles();
             }
@@ -261,7 +277,8 @@ namespace hydra::Gameboy
         if (windowEnabled)
         {
             ++window_internal_temp_;
-        } else if (window_internal_temp_)
+        }
+        else if (window_internal_temp_)
         {
             window_internal_ = window_internal_temp_ - 2;
         }
@@ -285,7 +302,8 @@ namespace hydra::Gameboy
             {
                 tileNumber = bus_.Read(tileAddress);
                 tileLocation += tileNumber * 16;
-            } else
+            }
+            else
             {
                 tileNumber = static_cast<int8_t>(bus_.Read(tileAddress));
                 tileLocation += (tileNumber + 128) * 16;
@@ -316,7 +334,8 @@ namespace hydra::Gameboy
                 red = c(bg_ref[colorNum] & 0b11111);
                 green = c((bg_ref[colorNum] >> 5) & 0b11111);
                 blue = c((bg_ref[colorNum] >> 10) & 0b11111);
-            } else
+            }
+            else
             {
                 red = bus_.Palette[bg_ref[colorNum]][0];
                 green = bus_.Palette[bg_ref[colorNum]][1];
@@ -332,7 +351,8 @@ namespace hydra::Gameboy
                     screen_color_data_second_[idx] = 255;
                     continue;
                 }
-            } else if (!DrawBackground)
+            }
+            else if (!DrawBackground)
             {
                 screen_color_data_second_[idx++] = bus_.Palette[0][0];
                 screen_color_data_second_[idx++] = bus_.Palette[0][1];
@@ -421,7 +441,8 @@ namespace hydra::Gameboy
                 {
                     uint16_t identifierLocationW = (LCDC & LCDCFlag::WND_TILEMAP) ? 0x9C00 : 0x9800;
                     identifierLoc = identifierLocationW;
-                } else
+                }
+                else
                 {
                     uint16_t identifierLocationB = (LCDC & LCDCFlag::BG_TILEMAP) ? 0x9C00 : 0x9800;
                     identifierLoc = identifierLocationB;
@@ -440,7 +461,8 @@ namespace hydra::Gameboy
                     red = c(obj_ref[colorNum] & 0b11111);
                     green = c((obj_ref[colorNum] >> 5) & 0b11111);
                     blue = c((obj_ref[colorNum] >> 10) & 0b11111);
-                } else
+                }
+                else
                 {
                     auto color = obj_ref[colorNum];
                     red = bus_.Palette[color][0];
@@ -480,7 +502,8 @@ namespace hydra::Gameboy
                                 continue;
                             }
                         }
-                    } else
+                    }
+                    else
                     {
                         auto& bg_ref = get_cur_bg_pal(0);
                         if (!(screen_color_data_second_[idx] == bus_.Palette[bg_ref[0]][0] &&
@@ -532,7 +555,8 @@ namespace hydra::Gameboy
         if (UseCGB)
         {
             return bus_.BGPalettes[attributes];
-        } else
+        }
+        else
         {
             return bus_.BGPalettes[0];
         }
@@ -543,7 +567,8 @@ namespace hydra::Gameboy
         if (UseCGB)
         {
             return bus_.OBJPalettes[attributes];
-        } else
+        }
+        else
         {
             return bus_.OBJPalettes[!!(attributes)];
         }

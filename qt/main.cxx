@@ -1,7 +1,7 @@
 #include "mainwindow.hxx"
+#include <log.hxx>
 #include <QApplication>
 #include <QSurfaceFormat>
-#include <log.hxx>
 
 int main(int argc, char* argv[])
 {

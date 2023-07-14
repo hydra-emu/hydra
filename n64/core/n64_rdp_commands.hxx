@@ -2,7 +2,6 @@
 
 namespace hydra::N64
 {
-
     union SetColorImageCommand
     {
         uint64_t full;
@@ -228,5 +227,4 @@ namespace hydra::N64
             uint64_t command       : 8 = 0x3c;
         };
     };
-
 } // namespace hydra::N64

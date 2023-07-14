@@ -17,5 +17,8 @@ struct EmulatorSettings
         return emulator_data_.at(static_cast<int>(type));
     }
 
-    static GeneralSettings& GetGeneralSettings() { return general_settings_; }
+    static GeneralSettings& GetGeneralSettings()
+    {
+        return general_settings_;
+    }
 };

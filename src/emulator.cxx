@@ -66,7 +66,9 @@ namespace hydra
             std::unique_lock lock(DataMutex);
             frame_start_ = std::chrono::system_clock::now();
             for (; cur_instr_ < instrs_per_frame_; cur_instr_++)
+            {
                 update();
+            }
             auto end = std::chrono::system_clock::now();
             auto dur =
                 std::chrono::duration_cast<std::chrono::milliseconds>(end - frame_start_).count();
@@ -107,9 +109,15 @@ namespace hydra
                                                "load_file was not implemented for this emulator");
     }
 
-    bool Emulator::LoadFromFile(std::string path) { return load_file(path); }
+    bool Emulator::LoadFromFile(std::string path)
+    {
+        return load_file(path);
+    }
 
-    void Emulator::Reset() { reset_flag_ = true; }
+    void Emulator::Reset()
+    {
+        reset_flag_ = true;
+    }
 
     void Emulator::CloseAndWait()
     {

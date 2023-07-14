@@ -62,7 +62,8 @@ namespace hydra::Gameboy
                 // timXX_div_trigger behavior
                 // TIMA increased if oscillator reached half or more and DIV is reset
                 TIMA++;
-            } else if (TAC & 0b1)
+            }
+            else if (TAC & 0b1)
             {
                 // weird tim01_div_trigger behavior
                 // incorrect timing makes us need to add this patch
@@ -70,7 +71,8 @@ namespace hydra::Gameboy
                 if ((oscillator_ - 4) == freq / 2)
                 {
                     TIMA++;
-                } else if ((oscillator_ - 16) == freq / 2)
+                }
+                else if ((oscillator_ - 16) == freq / 2)
                 {
                     TIMA++;
                 }
@@ -121,7 +123,8 @@ namespace hydra::Gameboy
                     tima_overflow_ = true;
                     // ret = true;
                     break;
-                } else
+                }
+                else
                 {
                     TIMA++;
                 }

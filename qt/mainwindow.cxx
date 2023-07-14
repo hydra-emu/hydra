@@ -2,6 +2,10 @@
 #include "aboutwindow.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
+#include <emulator_settings.hxx>
+#include <emulator_tool_factory.hxx>
+#include <error_factory.hxx>
+#include <iostream>
 #include <QApplication>
 #include <QClipboard>
 #include <QGridLayout>
@@ -10,10 +14,6 @@
 #include <QMessageBox>
 #include <QSurfaceFormat>
 #include <QTimer>
-#include <emulator_settings.hxx>
-#include <emulator_tool_factory.hxx>
-#include <error_factory.hxx>
-#include <iostream>
 
 #define QT_MAY_THROW(func)                          \
     try                                             \
@@ -59,7 +59,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     enable_emulation_actions(false);
 }
 
-MainWindow::~MainWindow() { stop_emulator(); }
+MainWindow::~MainWindow()
+{
+    stop_emulator();
+}
 
 void MainWindow::create_actions()
 {
@@ -134,13 +137,17 @@ void MainWindow::create_menus()
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
     if (emulator_)
+    {
         emulator_->HandleKeyDown(event->key());
+    }
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
     if (emulator_)
+    {
         emulator_->HandleKeyUp(event->key());
+    }
 }
 
 void MainWindow::open_file()
@@ -171,15 +178,21 @@ void MainWindow::open_file()
     }
     std::string lastpath = "";
     if (EmulatorSettings::GetGeneralSettings().Has("last_path"))
+    {
         lastpath = EmulatorSettings::GetGeneralSettings().Get("last_path");
+    }
     std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"),
                                                     QString::fromStdString(lastpath), extensions)
                            .toStdString();
     if (path.empty())
+    {
         return;
+    }
     std::filesystem::path pathfs(path);
     if (!std::filesystem::is_regular_file(pathfs))
+    {
         return;
+    }
     auto dirpath = pathfs.parent_path();
     EmulatorSettings::GetGeneralSettings().Set("last_path", dirpath);
     QT_MAY_THROW(
@@ -200,7 +213,9 @@ void MainWindow::open_file()
         emulator_thread_.detach(); emulator_type_ = type; enable_emulation_actions(true);
         for (int i = 0; i < emulator_tools_.size(); i++) {
             if (emulator_tools_[i])
+            {
                 delete emulator_tools_[i];
+            }
             emulator_tools_[i] = nullptr;
         } debugger_open_ = false;
         tracelogger_open_ = false;);
@@ -234,7 +249,8 @@ void MainWindow::open_debugger()
                 if (emulator_tools_[0]->isHidden())
                 {
                     emulator_tools_[0]->show();
-                } else
+                }
+                else
                 {
                     emulator_tools_[0]->hide();
                 }
@@ -254,7 +270,8 @@ void MainWindow::open_tracelogger()
             if (emulator_tools_[1]->isHidden())
             {
                 emulator_tools_[1]->show();
-            } else
+            }
+            else
             {
                 emulator_tools_[1]->hide();
             }
@@ -313,7 +330,8 @@ void MainWindow::setup_emulator_specific()
                                                    "Could not open mappings.json");
         }
         data_mappings = f2.readAll();
-    } else
+    }
+    else
     {
         QFile f2(":/mappings.json");
         if (!f2.open(QIODevice::ReadOnly))
@@ -327,7 +345,8 @@ void MainWindow::setup_emulator_specific()
         {
             ofs << data_mappings.toStdString();
             ofs.close();
-        } else
+        }
+        else
         {
             throw ErrorFactory::generate_exception(__func__, __LINE__,
                                                    "Could not open mappings.json");
@@ -370,11 +389,14 @@ void MainWindow::setup_emulator_specific()
             {
                 QFile resource(std::string(":/" + e.SettingsFile).c_str());
                 if (!resource.open(QIODeviceBase::ReadOnly))
+                {
                     throw ErrorFactory::generate_exception(__func__, __LINE__,
                                                            "Could not open resource file");
+                }
                 ofs << resource.readAll().toStdString();
                 ofs.close();
-            } else
+            }
+            else
             {
                 throw ErrorFactory::generate_exception(__func__, __LINE__,
                                                        "Could not create default options file");
@@ -399,7 +421,8 @@ void MainWindow::setup_emulator_specific()
             {
                 user_data.Set(it.key(), it.value());
             }
-        } else
+        }
+        else
         {
             throw ErrorFactory::generate_exception(__func__, __LINE__,
                                                    "Could not open emulator options file");
@@ -421,7 +444,8 @@ void MainWindow::setup_emulator_specific()
                 {
                     temp[it.key()] = it.value();
                 }
-            } else
+            }
+            else
             {
                 throw ErrorFactory::generate_exception(__func__, __LINE__,
                                                        "Could not open options file");
@@ -437,7 +461,8 @@ void MainWindow::pause_emulator()
         emulator_->Paused.store(false);
         emulator_->Step.store(true);
         emulator_->Step.notify_all();
-    } else
+    }
+    else
     {
         emulator_->Paused.store(true);
     }
@@ -464,10 +489,14 @@ void MainWindow::stop_emulator()
 void MainWindow::redraw_screen()
 {
     if (!emulator_)
+    {
         return;
+    }
     std::shared_lock lock(emulator_->DataMutex);
     if (!emulator_->IsReadyToDraw())
+    {
         return;
+    }
     screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(),
                     emulator_->GetScreenData());
     screen_->update();

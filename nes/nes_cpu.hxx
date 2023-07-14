@@ -70,7 +70,8 @@ namespace hydra::NES
 
         // clang-format on
 
-        template <auto AddressingMode, auto Function> static void Opcode(CPU* cpu)
+        template <auto AddressingMode, auto Function>
+        static void Opcode(CPU* cpu)
         {
             (cpu->*AddressingMode)();
             (cpu->*Function)();

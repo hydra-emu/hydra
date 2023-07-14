@@ -279,7 +279,8 @@ namespace hydra::Gameboy
             PC += 1;
             PC += ((temp ^ 0x80) - 0x80);
             tTemp = 12;
-        } else
+        }
+        else
         {
             PC += 1;
             tTemp = 8;
@@ -293,7 +294,8 @@ namespace hydra::Gameboy
             delay();
             PC = bus_.ReadL(PC);
             tTemp = 16;
-        } else
+        }
+        else
         {
             PC += 2;
             tTemp = 12;
@@ -312,7 +314,8 @@ namespace hydra::Gameboy
             write(SP, (PC + 2) & 0xFF);
             PC = temp + temp2;
             tTemp = 24;
-        } else
+        }
+        else
         {
             PC += 2;
             tTemp = 12;
@@ -334,19 +337,40 @@ namespace hydra::Gameboy
         tTemp = 8;
     }
 
-    void CPU::ADDAA() { reg_add(A); }
+    void CPU::ADDAA()
+    {
+        reg_add(A);
+    }
 
-    void CPU::ADDAB() { reg_add(B); }
+    void CPU::ADDAB()
+    {
+        reg_add(B);
+    }
 
-    void CPU::ADDAC() { reg_add(C); }
+    void CPU::ADDAC()
+    {
+        reg_add(C);
+    }
 
-    void CPU::ADDAD() { reg_add(D); }
+    void CPU::ADDAD()
+    {
+        reg_add(D);
+    }
 
-    void CPU::ADDAE() { reg_add(E); }
+    void CPU::ADDAE()
+    {
+        reg_add(E);
+    }
 
-    void CPU::ADDAH() { reg_add(H); }
+    void CPU::ADDAH()
+    {
+        reg_add(H);
+    }
 
-    void CPU::ADDAL() { reg_add(L); }
+    void CPU::ADDAL()
+    {
+        reg_add(L);
+    }
 
     void CPU::ADDAHL()
     {
@@ -380,7 +404,10 @@ namespace hydra::Gameboy
         hl_add(t);
     }
 
-    void CPU::ADDHLSP() { hl_add(SP); }
+    void CPU::ADDHLSP()
+    {
+        hl_add(SP);
+    }
 
     void CPU::ADDSPD()
     {
@@ -396,19 +423,40 @@ namespace hydra::Gameboy
         tTemp = 16;
     }
 
-    void CPU::ADCAA() { reg_adc(A); }
+    void CPU::ADCAA()
+    {
+        reg_adc(A);
+    }
 
-    void CPU::ADCAB() { reg_adc(B); }
+    void CPU::ADCAB()
+    {
+        reg_adc(B);
+    }
 
-    void CPU::ADCAC() { reg_adc(C); }
+    void CPU::ADCAC()
+    {
+        reg_adc(C);
+    }
 
-    void CPU::ADCAD() { reg_adc(D); }
+    void CPU::ADCAD()
+    {
+        reg_adc(D);
+    }
 
-    void CPU::ADCAE() { reg_adc(E); }
+    void CPU::ADCAE()
+    {
+        reg_adc(E);
+    }
 
-    void CPU::ADCAH() { reg_adc(H); }
+    void CPU::ADCAH()
+    {
+        reg_adc(H);
+    }
 
-    void CPU::ADCAL() { reg_adc(L); }
+    void CPU::ADCAL()
+    {
+        reg_adc(L);
+    }
 
     void CPU::ADCAHL()
     {
@@ -424,19 +472,40 @@ namespace hydra::Gameboy
         tTemp = 8;
     }
 
-    void CPU::SUBAA() { reg_sub(A); }
+    void CPU::SUBAA()
+    {
+        reg_sub(A);
+    }
 
-    void CPU::SUBAB() { reg_sub(B); }
+    void CPU::SUBAB()
+    {
+        reg_sub(B);
+    }
 
-    void CPU::SUBAC() { reg_sub(C); }
+    void CPU::SUBAC()
+    {
+        reg_sub(C);
+    }
 
-    void CPU::SUBAD() { reg_sub(D); }
+    void CPU::SUBAD()
+    {
+        reg_sub(D);
+    }
 
-    void CPU::SUBAE() { reg_sub(E); }
+    void CPU::SUBAE()
+    {
+        reg_sub(E);
+    }
 
-    void CPU::SUBAH() { reg_sub(H); }
+    void CPU::SUBAH()
+    {
+        reg_sub(H);
+    }
 
-    void CPU::SUBAL() { reg_sub(L); }
+    void CPU::SUBAL()
+    {
+        reg_sub(L);
+    }
 
     void CPU::SUBAHL()
     {
@@ -452,19 +521,40 @@ namespace hydra::Gameboy
         tTemp = 8;
     }
 
-    void CPU::SBCAA() { reg_sbc(A); }
+    void CPU::SBCAA()
+    {
+        reg_sbc(A);
+    }
 
-    void CPU::SBCAB() { reg_sbc(B); }
+    void CPU::SBCAB()
+    {
+        reg_sbc(B);
+    }
 
-    void CPU::SBCAC() { reg_sbc(C); }
+    void CPU::SBCAC()
+    {
+        reg_sbc(C);
+    }
 
-    void CPU::SBCAD() { reg_sbc(D); }
+    void CPU::SBCAD()
+    {
+        reg_sbc(D);
+    }
 
-    void CPU::SBCAE() { reg_sbc(E); }
+    void CPU::SBCAE()
+    {
+        reg_sbc(E);
+    }
 
-    void CPU::SBCAH() { reg_sbc(H); }
+    void CPU::SBCAH()
+    {
+        reg_sbc(H);
+    }
 
-    void CPU::SBCAL() { reg_sbc(L); }
+    void CPU::SBCAL()
+    {
+        reg_sbc(L);
+    }
 
     void CPU::SBCAHL()
     {
@@ -480,19 +570,40 @@ namespace hydra::Gameboy
         tTemp = 8;
     }
 
-    void CPU::CPAA() { reg_cmp(A); }
+    void CPU::CPAA()
+    {
+        reg_cmp(A);
+    }
 
-    void CPU::CPAB() { reg_cmp(B); }
+    void CPU::CPAB()
+    {
+        reg_cmp(B);
+    }
 
-    void CPU::CPAC() { reg_cmp(C); }
+    void CPU::CPAC()
+    {
+        reg_cmp(C);
+    }
 
-    void CPU::CPAD() { reg_cmp(D); }
+    void CPU::CPAD()
+    {
+        reg_cmp(D);
+    }
 
-    void CPU::CPAE() { reg_cmp(E); }
+    void CPU::CPAE()
+    {
+        reg_cmp(E);
+    }
 
-    void CPU::CPAH() { reg_cmp(H); }
+    void CPU::CPAH()
+    {
+        reg_cmp(H);
+    }
 
-    void CPU::CPAL() { reg_cmp(L); }
+    void CPU::CPAL()
+    {
+        reg_cmp(L);
+    }
 
     void CPU::PUSHBC()
     {
@@ -1070,19 +1181,40 @@ namespace hydra::Gameboy
         tTemp = 20;
     }
 
-    void CPU::INCA() { reg_inc(A); }
+    void CPU::INCA()
+    {
+        reg_inc(A);
+    }
 
-    void CPU::INCB() { reg_inc(B); }
+    void CPU::INCB()
+    {
+        reg_inc(B);
+    }
 
-    void CPU::INCC() { reg_inc(C); }
+    void CPU::INCC()
+    {
+        reg_inc(C);
+    }
 
-    void CPU::INCD() { reg_inc(D); }
+    void CPU::INCD()
+    {
+        reg_inc(D);
+    }
 
-    void CPU::INCE() { reg_inc(E); }
+    void CPU::INCE()
+    {
+        reg_inc(E);
+    }
 
-    void CPU::INCH() { reg_inc(H); }
+    void CPU::INCH()
+    {
+        reg_inc(H);
+    }
 
-    void CPU::INCL() { reg_inc(L); }
+    void CPU::INCL()
+    {
+        reg_inc(L);
+    }
 
     void CPU::INCHLR()
     {
@@ -1092,19 +1224,40 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::DECA() { reg_dec(A); }
+    void CPU::DECA()
+    {
+        reg_dec(A);
+    }
 
-    void CPU::DECB() { reg_dec(B); }
+    void CPU::DECB()
+    {
+        reg_dec(B);
+    }
 
-    void CPU::DECC() { reg_dec(C); }
+    void CPU::DECC()
+    {
+        reg_dec(C);
+    }
 
-    void CPU::DECD() { reg_dec(D); }
+    void CPU::DECD()
+    {
+        reg_dec(D);
+    }
 
-    void CPU::DECE() { reg_dec(E); }
+    void CPU::DECE()
+    {
+        reg_dec(E);
+    }
 
-    void CPU::DECH() { reg_dec(H); }
+    void CPU::DECH()
+    {
+        reg_dec(H);
+    }
 
-    void CPU::DECL() { reg_dec(L); }
+    void CPU::DECL()
+    {
+        reg_dec(L);
+    }
 
     void CPU::DECHLR()
     {
@@ -1114,11 +1267,20 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::INCBC() { big_reg_inc(B, C); }
+    void CPU::INCBC()
+    {
+        big_reg_inc(B, C);
+    }
 
-    void CPU::INCDE() { big_reg_inc(D, E); }
+    void CPU::INCDE()
+    {
+        big_reg_inc(D, E);
+    }
 
-    void CPU::INCHL() { big_reg_inc(H, L); }
+    void CPU::INCHL()
+    {
+        big_reg_inc(H, L);
+    }
 
     void CPU::INCSP()
     {
@@ -1126,11 +1288,20 @@ namespace hydra::Gameboy
         tTemp = 8;
     }
 
-    void CPU::DECBC() { big_reg_dec(B, C); }
+    void CPU::DECBC()
+    {
+        big_reg_dec(B, C);
+    }
 
-    void CPU::DECDE() { big_reg_dec(D, E); }
+    void CPU::DECDE()
+    {
+        big_reg_dec(D, E);
+    }
 
-    void CPU::DECHL() { big_reg_dec(H, L); }
+    void CPU::DECHL()
+    {
+        big_reg_dec(H, L);
+    }
 
     void CPU::DECSP()
     {
@@ -1144,39 +1315,90 @@ namespace hydra::Gameboy
         tTemp = 4;
     }
 
-    void CPU::JP16() { conditional_jump(true); }
+    void CPU::JP16()
+    {
+        conditional_jump(true);
+    }
 
-    void CPU::JPNZ16() { conditional_jump(!(F & FLAG_ZERO_MASK)); }
+    void CPU::JPNZ16()
+    {
+        conditional_jump(!(F & FLAG_ZERO_MASK));
+    }
 
-    void CPU::JPZ16() { conditional_jump(F & FLAG_ZERO_MASK); }
+    void CPU::JPZ16()
+    {
+        conditional_jump(F & FLAG_ZERO_MASK);
+    }
 
-    void CPU::JPNC16() { conditional_jump(!(F & FLAG_CARRY_MASK)); }
+    void CPU::JPNC16()
+    {
+        conditional_jump(!(F & FLAG_CARRY_MASK));
+    }
 
-    void CPU::JPC16() { conditional_jump(F & FLAG_CARRY_MASK); }
+    void CPU::JPC16()
+    {
+        conditional_jump(F & FLAG_CARRY_MASK);
+    }
 
-    void CPU::JR8() { conditional_jump_rel(true); }
+    void CPU::JR8()
+    {
+        conditional_jump_rel(true);
+    }
 
-    void CPU::JRNZ8() { conditional_jump_rel(!(F & FLAG_ZERO_MASK)); }
+    void CPU::JRNZ8()
+    {
+        conditional_jump_rel(!(F & FLAG_ZERO_MASK));
+    }
 
-    void CPU::JRZ8() { conditional_jump_rel(F & FLAG_ZERO_MASK); }
+    void CPU::JRZ8()
+    {
+        conditional_jump_rel(F & FLAG_ZERO_MASK);
+    }
 
-    void CPU::JRNC8() { conditional_jump_rel(!(F & FLAG_CARRY_MASK)); }
+    void CPU::JRNC8()
+    {
+        conditional_jump_rel(!(F & FLAG_CARRY_MASK));
+    }
 
-    void CPU::JRC8() { conditional_jump_rel(F & FLAG_CARRY_MASK); }
+    void CPU::JRC8()
+    {
+        conditional_jump_rel(F & FLAG_CARRY_MASK);
+    }
 
-    void CPU::ANDA() { reg_and(A); }
+    void CPU::ANDA()
+    {
+        reg_and(A);
+    }
 
-    void CPU::ANDB() { reg_and(B); }
+    void CPU::ANDB()
+    {
+        reg_and(B);
+    }
 
-    void CPU::ANDC() { reg_and(C); }
+    void CPU::ANDC()
+    {
+        reg_and(C);
+    }
 
-    void CPU::ANDD() { reg_and(D); }
+    void CPU::ANDD()
+    {
+        reg_and(D);
+    }
 
-    void CPU::ANDE() { reg_and(E); }
+    void CPU::ANDE()
+    {
+        reg_and(E);
+    }
 
-    void CPU::ANDH() { reg_and(H); }
+    void CPU::ANDH()
+    {
+        reg_and(H);
+    }
 
-    void CPU::ANDL() { reg_and(L); }
+    void CPU::ANDL()
+    {
+        reg_and(L);
+    }
 
     void CPU::ANDHL()
     {
@@ -1192,19 +1414,40 @@ namespace hydra::Gameboy
         tTemp = 8;
     }
 
-    void CPU::ORA() { reg_or(A); }
+    void CPU::ORA()
+    {
+        reg_or(A);
+    }
 
-    void CPU::ORB() { reg_or(B); }
+    void CPU::ORB()
+    {
+        reg_or(B);
+    }
 
-    void CPU::ORC() { reg_or(C); }
+    void CPU::ORC()
+    {
+        reg_or(C);
+    }
 
-    void CPU::ORD() { reg_or(D); }
+    void CPU::ORD()
+    {
+        reg_or(D);
+    }
 
-    void CPU::ORE() { reg_or(E); }
+    void CPU::ORE()
+    {
+        reg_or(E);
+    }
 
-    void CPU::ORH() { reg_or(H); }
+    void CPU::ORH()
+    {
+        reg_or(H);
+    }
 
-    void CPU::ORL() { reg_or(L); }
+    void CPU::ORL()
+    {
+        reg_or(L);
+    }
 
     void CPU::ORHL()
     {
@@ -1220,19 +1463,40 @@ namespace hydra::Gameboy
         tTemp = 8;
     }
 
-    void CPU::XORA() { reg_xor(A); }
+    void CPU::XORA()
+    {
+        reg_xor(A);
+    }
 
-    void CPU::XORB() { reg_xor(B); }
+    void CPU::XORB()
+    {
+        reg_xor(B);
+    }
 
-    void CPU::XORC() { reg_xor(C); }
+    void CPU::XORC()
+    {
+        reg_xor(C);
+    }
 
-    void CPU::XORD() { reg_xor(D); }
+    void CPU::XORD()
+    {
+        reg_xor(D);
+    }
 
-    void CPU::XORE() { reg_xor(E); }
+    void CPU::XORE()
+    {
+        reg_xor(E);
+    }
 
-    void CPU::XORH() { reg_xor(H); }
+    void CPU::XORH()
+    {
+        reg_xor(H);
+    }
 
-    void CPU::XORL() { reg_xor(L); }
+    void CPU::XORL()
+    {
+        reg_xor(L);
+    }
 
     void CPU::XORHL()
     {
@@ -1248,7 +1512,10 @@ namespace hydra::Gameboy
         tTemp = 8;
     }
 
-    void CPU::NOP() { tTemp = 4; }
+    void CPU::NOP()
+    {
+        tTemp = 4;
+    }
 
     void CPU::STOP()
     {
@@ -1325,21 +1592,45 @@ namespace hydra::Gameboy
         }
     }
 
-    void CPU::RST0() { rst(0x00); }
+    void CPU::RST0()
+    {
+        rst(0x00);
+    }
 
-    void CPU::RST8() { rst(0x08); }
+    void CPU::RST8()
+    {
+        rst(0x08);
+    }
 
-    void CPU::RST10() { rst(0x10); }
+    void CPU::RST10()
+    {
+        rst(0x10);
+    }
 
-    void CPU::RST18() { rst(0x18); }
+    void CPU::RST18()
+    {
+        rst(0x18);
+    }
 
-    void CPU::RST20() { rst(0x20); }
+    void CPU::RST20()
+    {
+        rst(0x20);
+    }
 
-    void CPU::RST28() { rst(0x28); }
+    void CPU::RST28()
+    {
+        rst(0x28);
+    }
 
-    void CPU::RST30() { rst(0x30); }
+    void CPU::RST30()
+    {
+        rst(0x30);
+    }
 
-    void CPU::RST38() { rst(0x38); }
+    void CPU::RST38()
+    {
+        rst(0x38);
+    }
 
     void CPU::LDSPHL()
     {
@@ -1422,13 +1713,25 @@ namespace hydra::Gameboy
         tTemp = 24;
     }
 
-    void CPU::CALLNZ16() { conditional_call(!(F & FLAG_ZERO_MASK)); }
+    void CPU::CALLNZ16()
+    {
+        conditional_call(!(F & FLAG_ZERO_MASK));
+    }
 
-    void CPU::CALLZ16() { conditional_call(F & FLAG_ZERO_MASK); }
+    void CPU::CALLZ16()
+    {
+        conditional_call(F & FLAG_ZERO_MASK);
+    }
 
-    void CPU::CALLNC16() { conditional_call(!(F & FLAG_CARRY_MASK)); }
+    void CPU::CALLNC16()
+    {
+        conditional_call(!(F & FLAG_CARRY_MASK));
+    }
 
-    void CPU::CALLC16() { conditional_call(F & FLAG_CARRY_MASK); }
+    void CPU::CALLC16()
+    {
+        conditional_call(F & FLAG_CARRY_MASK);
+    }
 
     void CPU::LDSP16()
     {
@@ -1490,7 +1793,8 @@ namespace hydra::Gameboy
         if (F & FLAG_NEG_MASK)
         {
             temp -= corr;
-        } else
+        }
+        else
         {
             corr |= ((temp & 0x0F) > 0x09) ? 0x06 : 0;
             corr |= (temp > 0x99) ? 0x60 : 0;
@@ -1606,7 +1910,10 @@ namespace hydra::Gameboy
         tTemp = 4;
     }
 
-    void CPU::XXX() { stop_ = true; }
+    void CPU::XXX()
+    {
+        stop_ = true;
+    }
 
     void CPU::RLCB()
     {
@@ -1698,19 +2005,40 @@ namespace hydra::Gameboy
         tTemp = 16;
     }
 
-    void CPU::RRCB() { bit_rrc(B); }
+    void CPU::RRCB()
+    {
+        bit_rrc(B);
+    }
 
-    void CPU::RRCC() { bit_rrc(C); }
+    void CPU::RRCC()
+    {
+        bit_rrc(C);
+    }
 
-    void CPU::RRCD() { bit_rrc(D); }
+    void CPU::RRCD()
+    {
+        bit_rrc(D);
+    }
 
-    void CPU::RRCE() { bit_rrc(E); }
+    void CPU::RRCE()
+    {
+        bit_rrc(E);
+    }
 
-    void CPU::RRCH() { bit_rrc(H); }
+    void CPU::RRCH()
+    {
+        bit_rrc(H);
+    }
 
-    void CPU::RRCL() { bit_rrc(L); }
+    void CPU::RRCL()
+    {
+        bit_rrc(L);
+    }
 
-    void CPU::RRCAr() { bit_rrc(A); }
+    void CPU::RRCAr()
+    {
+        bit_rrc(A);
+    }
 
     void CPU::RRCHL()
     {
@@ -1720,19 +2048,40 @@ namespace hydra::Gameboy
         tTemp = 16;
     }
 
-    void CPU::RLB() { bit_rl(B); }
+    void CPU::RLB()
+    {
+        bit_rl(B);
+    }
 
-    void CPU::RLC() { bit_rl(C); }
+    void CPU::RLC()
+    {
+        bit_rl(C);
+    }
 
-    void CPU::RLD() { bit_rl(D); }
+    void CPU::RLD()
+    {
+        bit_rl(D);
+    }
 
-    void CPU::RLE() { bit_rl(E); }
+    void CPU::RLE()
+    {
+        bit_rl(E);
+    }
 
-    void CPU::RLH() { bit_rl(H); }
+    void CPU::RLH()
+    {
+        bit_rl(H);
+    }
 
-    void CPU::RLL() { bit_rl(L); }
+    void CPU::RLL()
+    {
+        bit_rl(L);
+    }
 
-    void CPU::RLAr() { bit_rl(A); }
+    void CPU::RLAr()
+    {
+        bit_rl(A);
+    }
 
     void CPU::RLHL()
     {
@@ -1742,19 +2091,40 @@ namespace hydra::Gameboy
         tTemp = 16;
     }
 
-    void CPU::RRB() { bit_rr(B); }
+    void CPU::RRB()
+    {
+        bit_rr(B);
+    }
 
-    void CPU::RRC() { bit_rr(C); }
+    void CPU::RRC()
+    {
+        bit_rr(C);
+    }
 
-    void CPU::RRD() { bit_rr(D); }
+    void CPU::RRD()
+    {
+        bit_rr(D);
+    }
 
-    void CPU::RRE() { bit_rr(E); }
+    void CPU::RRE()
+    {
+        bit_rr(E);
+    }
 
-    void CPU::RRH() { bit_rr(H); }
+    void CPU::RRH()
+    {
+        bit_rr(H);
+    }
 
-    void CPU::RRL() { bit_rr(L); }
+    void CPU::RRL()
+    {
+        bit_rr(L);
+    }
 
-    void CPU::RRAr() { bit_rr(A); }
+    void CPU::RRAr()
+    {
+        bit_rr(A);
+    }
 
     void CPU::RRHL()
     {
@@ -1764,17 +2134,35 @@ namespace hydra::Gameboy
         tTemp = 16;
     }
 
-    void CPU::SLAB() { bit_sl(B); }
+    void CPU::SLAB()
+    {
+        bit_sl(B);
+    }
 
-    void CPU::SLAC() { bit_sl(C); }
+    void CPU::SLAC()
+    {
+        bit_sl(C);
+    }
 
-    void CPU::SLAD() { bit_sl(D); }
+    void CPU::SLAD()
+    {
+        bit_sl(D);
+    }
 
-    void CPU::SLAE() { bit_sl(E); }
+    void CPU::SLAE()
+    {
+        bit_sl(E);
+    }
 
-    void CPU::SLAH() { bit_sl(H); }
+    void CPU::SLAH()
+    {
+        bit_sl(H);
+    }
 
-    void CPU::SLAL() { bit_sl(L); }
+    void CPU::SLAL()
+    {
+        bit_sl(L);
+    }
 
     void CPU::SLAHL()
     {
@@ -1784,19 +2172,40 @@ namespace hydra::Gameboy
         tTemp = 16;
     }
 
-    void CPU::SLAA() { bit_sl(A); }
+    void CPU::SLAA()
+    {
+        bit_sl(A);
+    }
 
-    void CPU::SRAB() { bit_sr(B); }
+    void CPU::SRAB()
+    {
+        bit_sr(B);
+    }
 
-    void CPU::SRAC() { bit_sr(C); }
+    void CPU::SRAC()
+    {
+        bit_sr(C);
+    }
 
-    void CPU::SRAD() { bit_sr(D); }
+    void CPU::SRAD()
+    {
+        bit_sr(D);
+    }
 
-    void CPU::SRAE() { bit_sr(E); }
+    void CPU::SRAE()
+    {
+        bit_sr(E);
+    }
 
-    void CPU::SRAH() { bit_sr(H); }
+    void CPU::SRAH()
+    {
+        bit_sr(H);
+    }
 
-    void CPU::SRAL() { bit_sr(L); }
+    void CPU::SRAL()
+    {
+        bit_sr(L);
+    }
 
     void CPU::SRAHL()
     {
@@ -1806,19 +2215,40 @@ namespace hydra::Gameboy
         tTemp = 16;
     }
 
-    void CPU::SRAA() { bit_sr(A); }
+    void CPU::SRAA()
+    {
+        bit_sr(A);
+    }
 
-    void CPU::SWAPB() { bit_swap(B); }
+    void CPU::SWAPB()
+    {
+        bit_swap(B);
+    }
 
-    void CPU::SWAPC() { bit_swap(C); }
+    void CPU::SWAPC()
+    {
+        bit_swap(C);
+    }
 
-    void CPU::SWAPD() { bit_swap(D); }
+    void CPU::SWAPD()
+    {
+        bit_swap(D);
+    }
 
-    void CPU::SWAPE() { bit_swap(E); }
+    void CPU::SWAPE()
+    {
+        bit_swap(E);
+    }
 
-    void CPU::SWAPH() { bit_swap(H); }
+    void CPU::SWAPH()
+    {
+        bit_swap(H);
+    }
 
-    void CPU::SWAPL() { bit_swap(L); }
+    void CPU::SWAPL()
+    {
+        bit_swap(L);
+    }
 
     void CPU::SWAPHL()
     {
@@ -1828,19 +2258,40 @@ namespace hydra::Gameboy
         tTemp = 16;
     }
 
-    void CPU::SWAPA() { bit_swap(A); }
+    void CPU::SWAPA()
+    {
+        bit_swap(A);
+    }
 
-    void CPU::SRLB() { bit_srl(B); }
+    void CPU::SRLB()
+    {
+        bit_srl(B);
+    }
 
-    void CPU::SRLC() { bit_srl(C); }
+    void CPU::SRLC()
+    {
+        bit_srl(C);
+    }
 
-    void CPU::SRLD() { bit_srl(D); }
+    void CPU::SRLD()
+    {
+        bit_srl(D);
+    }
 
-    void CPU::SRLE() { bit_srl(E); }
+    void CPU::SRLE()
+    {
+        bit_srl(E);
+    }
 
-    void CPU::SRLH() { bit_srl(H); }
+    void CPU::SRLH()
+    {
+        bit_srl(H);
+    }
 
-    void CPU::SRLL() { bit_srl(L); }
+    void CPU::SRLL()
+    {
+        bit_srl(L);
+    }
 
     void CPU::SRLHL()
     {
@@ -1850,21 +2301,45 @@ namespace hydra::Gameboy
         tTemp = 16;
     }
 
-    void CPU::SRLA() { bit_srl(A); }
+    void CPU::SRLA()
+    {
+        bit_srl(A);
+    }
 
-    void CPU::BIT0B() { bit_ch(B, 0); }
+    void CPU::BIT0B()
+    {
+        bit_ch(B, 0);
+    }
 
-    void CPU::BIT0C() { bit_ch(C, 0); }
+    void CPU::BIT0C()
+    {
+        bit_ch(C, 0);
+    }
 
-    void CPU::BIT0D() { bit_ch(D, 0); }
+    void CPU::BIT0D()
+    {
+        bit_ch(D, 0);
+    }
 
-    void CPU::BIT0E() { bit_ch(E, 0); }
+    void CPU::BIT0E()
+    {
+        bit_ch(E, 0);
+    }
 
-    void CPU::BIT0H() { bit_ch(H, 0); }
+    void CPU::BIT0H()
+    {
+        bit_ch(H, 0);
+    }
 
-    void CPU::BIT0L() { bit_ch(L, 0); }
+    void CPU::BIT0L()
+    {
+        bit_ch(L, 0);
+    }
 
-    void CPU::BIT0A() { bit_ch(A, 0); }
+    void CPU::BIT0A()
+    {
+        bit_ch(A, 0);
+    }
 
     void CPU::BIT0M()
     {
@@ -1872,19 +2347,40 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::BIT1B() { bit_ch(B, 1); }
+    void CPU::BIT1B()
+    {
+        bit_ch(B, 1);
+    }
 
-    void CPU::BIT1C() { bit_ch(C, 1); }
+    void CPU::BIT1C()
+    {
+        bit_ch(C, 1);
+    }
 
-    void CPU::BIT1D() { bit_ch(D, 1); }
+    void CPU::BIT1D()
+    {
+        bit_ch(D, 1);
+    }
 
-    void CPU::BIT1E() { bit_ch(E, 1); }
+    void CPU::BIT1E()
+    {
+        bit_ch(E, 1);
+    }
 
-    void CPU::BIT1H() { bit_ch(H, 1); }
+    void CPU::BIT1H()
+    {
+        bit_ch(H, 1);
+    }
 
-    void CPU::BIT1L() { bit_ch(L, 1); }
+    void CPU::BIT1L()
+    {
+        bit_ch(L, 1);
+    }
 
-    void CPU::BIT1A() { bit_ch(A, 1); }
+    void CPU::BIT1A()
+    {
+        bit_ch(A, 1);
+    }
 
     void CPU::BIT1M()
     {
@@ -1892,19 +2388,40 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::BIT2B() { bit_ch(B, 2); }
+    void CPU::BIT2B()
+    {
+        bit_ch(B, 2);
+    }
 
-    void CPU::BIT2C() { bit_ch(C, 2); }
+    void CPU::BIT2C()
+    {
+        bit_ch(C, 2);
+    }
 
-    void CPU::BIT2D() { bit_ch(D, 2); }
+    void CPU::BIT2D()
+    {
+        bit_ch(D, 2);
+    }
 
-    void CPU::BIT2E() { bit_ch(E, 2); }
+    void CPU::BIT2E()
+    {
+        bit_ch(E, 2);
+    }
 
-    void CPU::BIT2H() { bit_ch(H, 2); }
+    void CPU::BIT2H()
+    {
+        bit_ch(H, 2);
+    }
 
-    void CPU::BIT2L() { bit_ch(L, 2); }
+    void CPU::BIT2L()
+    {
+        bit_ch(L, 2);
+    }
 
-    void CPU::BIT2A() { bit_ch(A, 2); }
+    void CPU::BIT2A()
+    {
+        bit_ch(A, 2);
+    }
 
     void CPU::BIT2M()
     {
@@ -1912,19 +2429,40 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::BIT3B() { bit_ch(B, 3); }
+    void CPU::BIT3B()
+    {
+        bit_ch(B, 3);
+    }
 
-    void CPU::BIT3C() { bit_ch(C, 3); }
+    void CPU::BIT3C()
+    {
+        bit_ch(C, 3);
+    }
 
-    void CPU::BIT3D() { bit_ch(D, 3); }
+    void CPU::BIT3D()
+    {
+        bit_ch(D, 3);
+    }
 
-    void CPU::BIT3E() { bit_ch(E, 3); }
+    void CPU::BIT3E()
+    {
+        bit_ch(E, 3);
+    }
 
-    void CPU::BIT3H() { bit_ch(H, 3); }
+    void CPU::BIT3H()
+    {
+        bit_ch(H, 3);
+    }
 
-    void CPU::BIT3L() { bit_ch(L, 3); }
+    void CPU::BIT3L()
+    {
+        bit_ch(L, 3);
+    }
 
-    void CPU::BIT3A() { bit_ch(A, 3); }
+    void CPU::BIT3A()
+    {
+        bit_ch(A, 3);
+    }
 
     void CPU::BIT3M()
     {
@@ -1932,19 +2470,40 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::BIT4B() { bit_ch(B, 4); }
+    void CPU::BIT4B()
+    {
+        bit_ch(B, 4);
+    }
 
-    void CPU::BIT4C() { bit_ch(C, 4); }
+    void CPU::BIT4C()
+    {
+        bit_ch(C, 4);
+    }
 
-    void CPU::BIT4D() { bit_ch(D, 4); }
+    void CPU::BIT4D()
+    {
+        bit_ch(D, 4);
+    }
 
-    void CPU::BIT4E() { bit_ch(E, 4); }
+    void CPU::BIT4E()
+    {
+        bit_ch(E, 4);
+    }
 
-    void CPU::BIT4H() { bit_ch(H, 4); }
+    void CPU::BIT4H()
+    {
+        bit_ch(H, 4);
+    }
 
-    void CPU::BIT4L() { bit_ch(L, 4); }
+    void CPU::BIT4L()
+    {
+        bit_ch(L, 4);
+    }
 
-    void CPU::BIT4A() { bit_ch(A, 4); }
+    void CPU::BIT4A()
+    {
+        bit_ch(A, 4);
+    }
 
     void CPU::BIT4M()
     {
@@ -1952,19 +2511,40 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::BIT5B() { bit_ch(B, 5); }
+    void CPU::BIT5B()
+    {
+        bit_ch(B, 5);
+    }
 
-    void CPU::BIT5C() { bit_ch(C, 5); }
+    void CPU::BIT5C()
+    {
+        bit_ch(C, 5);
+    }
 
-    void CPU::BIT5D() { bit_ch(D, 5); }
+    void CPU::BIT5D()
+    {
+        bit_ch(D, 5);
+    }
 
-    void CPU::BIT5E() { bit_ch(E, 5); }
+    void CPU::BIT5E()
+    {
+        bit_ch(E, 5);
+    }
 
-    void CPU::BIT5H() { bit_ch(H, 5); }
+    void CPU::BIT5H()
+    {
+        bit_ch(H, 5);
+    }
 
-    void CPU::BIT5L() { bit_ch(L, 5); }
+    void CPU::BIT5L()
+    {
+        bit_ch(L, 5);
+    }
 
-    void CPU::BIT5A() { bit_ch(A, 5); }
+    void CPU::BIT5A()
+    {
+        bit_ch(A, 5);
+    }
 
     void CPU::BIT5M()
     {
@@ -1972,19 +2552,40 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::BIT6B() { bit_ch(B, 6); }
+    void CPU::BIT6B()
+    {
+        bit_ch(B, 6);
+    }
 
-    void CPU::BIT6C() { bit_ch(C, 6); }
+    void CPU::BIT6C()
+    {
+        bit_ch(C, 6);
+    }
 
-    void CPU::BIT6D() { bit_ch(D, 6); }
+    void CPU::BIT6D()
+    {
+        bit_ch(D, 6);
+    }
 
-    void CPU::BIT6E() { bit_ch(E, 6); }
+    void CPU::BIT6E()
+    {
+        bit_ch(E, 6);
+    }
 
-    void CPU::BIT6H() { bit_ch(H, 6); }
+    void CPU::BIT6H()
+    {
+        bit_ch(H, 6);
+    }
 
-    void CPU::BIT6L() { bit_ch(L, 6); }
+    void CPU::BIT6L()
+    {
+        bit_ch(L, 6);
+    }
 
-    void CPU::BIT6A() { bit_ch(A, 6); }
+    void CPU::BIT6A()
+    {
+        bit_ch(A, 6);
+    }
 
     void CPU::BIT6M()
     {
@@ -1992,19 +2593,40 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::BIT7B() { bit_ch(B, 7); }
+    void CPU::BIT7B()
+    {
+        bit_ch(B, 7);
+    }
 
-    void CPU::BIT7C() { bit_ch(C, 7); }
+    void CPU::BIT7C()
+    {
+        bit_ch(C, 7);
+    }
 
-    void CPU::BIT7D() { bit_ch(D, 7); }
+    void CPU::BIT7D()
+    {
+        bit_ch(D, 7);
+    }
 
-    void CPU::BIT7E() { bit_ch(E, 7); }
+    void CPU::BIT7E()
+    {
+        bit_ch(E, 7);
+    }
 
-    void CPU::BIT7H() { bit_ch(H, 7); }
+    void CPU::BIT7H()
+    {
+        bit_ch(H, 7);
+    }
 
-    void CPU::BIT7L() { bit_ch(L, 7); }
+    void CPU::BIT7L()
+    {
+        bit_ch(L, 7);
+    }
 
-    void CPU::BIT7A() { bit_ch(A, 7); }
+    void CPU::BIT7A()
+    {
+        bit_ch(A, 7);
+    }
 
     void CPU::BIT7M()
     {
@@ -2012,17 +2634,35 @@ namespace hydra::Gameboy
         tTemp = 12;
     }
 
-    void CPU::RES0B() { bit_res(B, 0); }
+    void CPU::RES0B()
+    {
+        bit_res(B, 0);
+    }
 
-    void CPU::RES0C() { bit_res(C, 0); }
+    void CPU::RES0C()
+    {
+        bit_res(C, 0);
+    }
 
-    void CPU::RES0D() { bit_res(D, 0); }
+    void CPU::RES0D()
+    {
+        bit_res(D, 0);
+    }
 
-    void CPU::RES0E() { bit_res(E, 0); }
+    void CPU::RES0E()
+    {
+        bit_res(E, 0);
+    }
 
-    void CPU::RES0H() { bit_res(H, 0); }
+    void CPU::RES0H()
+    {
+        bit_res(H, 0);
+    }
 
-    void CPU::RES0L() { bit_res(L, 0); }
+    void CPU::RES0L()
+    {
+        bit_res(L, 0);
+    }
 
     void CPU::RES0HL()
     {
@@ -2032,19 +2672,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::RES0A() { bit_res(A, 0); }
+    void CPU::RES0A()
+    {
+        bit_res(A, 0);
+    }
 
-    void CPU::RES1B() { bit_res(B, 1); }
+    void CPU::RES1B()
+    {
+        bit_res(B, 1);
+    }
 
-    void CPU::RES1C() { bit_res(C, 1); }
+    void CPU::RES1C()
+    {
+        bit_res(C, 1);
+    }
 
-    void CPU::RES1D() { bit_res(D, 1); }
+    void CPU::RES1D()
+    {
+        bit_res(D, 1);
+    }
 
-    void CPU::RES1E() { bit_res(E, 1); }
+    void CPU::RES1E()
+    {
+        bit_res(E, 1);
+    }
 
-    void CPU::RES1H() { bit_res(H, 1); }
+    void CPU::RES1H()
+    {
+        bit_res(H, 1);
+    }
 
-    void CPU::RES1L() { bit_res(L, 1); }
+    void CPU::RES1L()
+    {
+        bit_res(L, 1);
+    }
 
     void CPU::RES1HL()
     {
@@ -2054,19 +2715,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::RES1A() { bit_res(A, 1); }
+    void CPU::RES1A()
+    {
+        bit_res(A, 1);
+    }
 
-    void CPU::RES2B() { bit_res(B, 2); }
+    void CPU::RES2B()
+    {
+        bit_res(B, 2);
+    }
 
-    void CPU::RES2C() { bit_res(C, 2); }
+    void CPU::RES2C()
+    {
+        bit_res(C, 2);
+    }
 
-    void CPU::RES2D() { bit_res(D, 2); }
+    void CPU::RES2D()
+    {
+        bit_res(D, 2);
+    }
 
-    void CPU::RES2E() { bit_res(E, 2); }
+    void CPU::RES2E()
+    {
+        bit_res(E, 2);
+    }
 
-    void CPU::RES2H() { bit_res(H, 2); }
+    void CPU::RES2H()
+    {
+        bit_res(H, 2);
+    }
 
-    void CPU::RES2L() { bit_res(L, 2); }
+    void CPU::RES2L()
+    {
+        bit_res(L, 2);
+    }
 
     void CPU::RES2HL()
     {
@@ -2076,19 +2758,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::RES2A() { bit_res(A, 2); }
+    void CPU::RES2A()
+    {
+        bit_res(A, 2);
+    }
 
-    void CPU::RES3B() { bit_res(B, 3); }
+    void CPU::RES3B()
+    {
+        bit_res(B, 3);
+    }
 
-    void CPU::RES3C() { bit_res(C, 3); }
+    void CPU::RES3C()
+    {
+        bit_res(C, 3);
+    }
 
-    void CPU::RES3D() { bit_res(D, 3); }
+    void CPU::RES3D()
+    {
+        bit_res(D, 3);
+    }
 
-    void CPU::RES3E() { bit_res(E, 3); }
+    void CPU::RES3E()
+    {
+        bit_res(E, 3);
+    }
 
-    void CPU::RES3H() { bit_res(H, 3); }
+    void CPU::RES3H()
+    {
+        bit_res(H, 3);
+    }
 
-    void CPU::RES3L() { bit_res(L, 3); }
+    void CPU::RES3L()
+    {
+        bit_res(L, 3);
+    }
 
     void CPU::RES3HL()
     {
@@ -2098,19 +2801,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::RES3A() { bit_res(A, 3); }
+    void CPU::RES3A()
+    {
+        bit_res(A, 3);
+    }
 
-    void CPU::RES4B() { bit_res(B, 4); }
+    void CPU::RES4B()
+    {
+        bit_res(B, 4);
+    }
 
-    void CPU::RES4C() { bit_res(C, 4); }
+    void CPU::RES4C()
+    {
+        bit_res(C, 4);
+    }
 
-    void CPU::RES4D() { bit_res(D, 4); }
+    void CPU::RES4D()
+    {
+        bit_res(D, 4);
+    }
 
-    void CPU::RES4E() { bit_res(E, 4); }
+    void CPU::RES4E()
+    {
+        bit_res(E, 4);
+    }
 
-    void CPU::RES4H() { bit_res(H, 4); }
+    void CPU::RES4H()
+    {
+        bit_res(H, 4);
+    }
 
-    void CPU::RES4L() { bit_res(L, 4); }
+    void CPU::RES4L()
+    {
+        bit_res(L, 4);
+    }
 
     void CPU::RES4HL()
     {
@@ -2120,19 +2844,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::RES4A() { bit_res(A, 4); }
+    void CPU::RES4A()
+    {
+        bit_res(A, 4);
+    }
 
-    void CPU::RES5B() { bit_res(B, 5); }
+    void CPU::RES5B()
+    {
+        bit_res(B, 5);
+    }
 
-    void CPU::RES5C() { bit_res(C, 5); }
+    void CPU::RES5C()
+    {
+        bit_res(C, 5);
+    }
 
-    void CPU::RES5D() { bit_res(D, 5); }
+    void CPU::RES5D()
+    {
+        bit_res(D, 5);
+    }
 
-    void CPU::RES5E() { bit_res(E, 5); }
+    void CPU::RES5E()
+    {
+        bit_res(E, 5);
+    }
 
-    void CPU::RES5H() { bit_res(H, 5); }
+    void CPU::RES5H()
+    {
+        bit_res(H, 5);
+    }
 
-    void CPU::RES5L() { bit_res(L, 5); }
+    void CPU::RES5L()
+    {
+        bit_res(L, 5);
+    }
 
     void CPU::RES5HL()
     {
@@ -2142,19 +2887,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::RES5A() { bit_res(A, 5); }
+    void CPU::RES5A()
+    {
+        bit_res(A, 5);
+    }
 
-    void CPU::RES6B() { bit_res(B, 6); }
+    void CPU::RES6B()
+    {
+        bit_res(B, 6);
+    }
 
-    void CPU::RES6C() { bit_res(C, 6); }
+    void CPU::RES6C()
+    {
+        bit_res(C, 6);
+    }
 
-    void CPU::RES6D() { bit_res(D, 6); }
+    void CPU::RES6D()
+    {
+        bit_res(D, 6);
+    }
 
-    void CPU::RES6E() { bit_res(E, 6); }
+    void CPU::RES6E()
+    {
+        bit_res(E, 6);
+    }
 
-    void CPU::RES6H() { bit_res(H, 6); }
+    void CPU::RES6H()
+    {
+        bit_res(H, 6);
+    }
 
-    void CPU::RES6L() { bit_res(L, 6); }
+    void CPU::RES6L()
+    {
+        bit_res(L, 6);
+    }
 
     void CPU::RES6HL()
     {
@@ -2164,19 +2930,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::RES6A() { bit_res(A, 6); }
+    void CPU::RES6A()
+    {
+        bit_res(A, 6);
+    }
 
-    void CPU::RES7B() { bit_res(B, 7); }
+    void CPU::RES7B()
+    {
+        bit_res(B, 7);
+    }
 
-    void CPU::RES7C() { bit_res(C, 7); }
+    void CPU::RES7C()
+    {
+        bit_res(C, 7);
+    }
 
-    void CPU::RES7D() { bit_res(D, 7); }
+    void CPU::RES7D()
+    {
+        bit_res(D, 7);
+    }
 
-    void CPU::RES7E() { bit_res(E, 7); }
+    void CPU::RES7E()
+    {
+        bit_res(E, 7);
+    }
 
-    void CPU::RES7H() { bit_res(H, 7); }
+    void CPU::RES7H()
+    {
+        bit_res(H, 7);
+    }
 
-    void CPU::RES7L() { bit_res(L, 7); }
+    void CPU::RES7L()
+    {
+        bit_res(L, 7);
+    }
 
     void CPU::RES7HL()
     {
@@ -2186,19 +2973,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::RES7A() { bit_res(A, 7); }
+    void CPU::RES7A()
+    {
+        bit_res(A, 7);
+    }
 
-    void CPU::SET0B() { bit_set(B, 0); }
+    void CPU::SET0B()
+    {
+        bit_set(B, 0);
+    }
 
-    void CPU::SET0C() { bit_set(C, 0); }
+    void CPU::SET0C()
+    {
+        bit_set(C, 0);
+    }
 
-    void CPU::SET0D() { bit_set(D, 0); }
+    void CPU::SET0D()
+    {
+        bit_set(D, 0);
+    }
 
-    void CPU::SET0E() { bit_set(E, 0); }
+    void CPU::SET0E()
+    {
+        bit_set(E, 0);
+    }
 
-    void CPU::SET0H() { bit_set(H, 0); }
+    void CPU::SET0H()
+    {
+        bit_set(H, 0);
+    }
 
-    void CPU::SET0L() { bit_set(L, 0); }
+    void CPU::SET0L()
+    {
+        bit_set(L, 0);
+    }
 
     void CPU::SET0HL()
     {
@@ -2208,19 +3016,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::SET0A() { bit_set(A, 0); }
+    void CPU::SET0A()
+    {
+        bit_set(A, 0);
+    }
 
-    void CPU::SET1B() { bit_set(B, 1); }
+    void CPU::SET1B()
+    {
+        bit_set(B, 1);
+    }
 
-    void CPU::SET1C() { bit_set(C, 1); }
+    void CPU::SET1C()
+    {
+        bit_set(C, 1);
+    }
 
-    void CPU::SET1D() { bit_set(D, 1); }
+    void CPU::SET1D()
+    {
+        bit_set(D, 1);
+    }
 
-    void CPU::SET1E() { bit_set(E, 1); }
+    void CPU::SET1E()
+    {
+        bit_set(E, 1);
+    }
 
-    void CPU::SET1H() { bit_set(H, 1); }
+    void CPU::SET1H()
+    {
+        bit_set(H, 1);
+    }
 
-    void CPU::SET1L() { bit_set(L, 1); }
+    void CPU::SET1L()
+    {
+        bit_set(L, 1);
+    }
 
     void CPU::SET1HL()
     {
@@ -2230,19 +3059,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::SET1A() { bit_set(A, 1); }
+    void CPU::SET1A()
+    {
+        bit_set(A, 1);
+    }
 
-    void CPU::SET2B() { bit_set(B, 2); }
+    void CPU::SET2B()
+    {
+        bit_set(B, 2);
+    }
 
-    void CPU::SET2C() { bit_set(C, 2); }
+    void CPU::SET2C()
+    {
+        bit_set(C, 2);
+    }
 
-    void CPU::SET2D() { bit_set(D, 2); }
+    void CPU::SET2D()
+    {
+        bit_set(D, 2);
+    }
 
-    void CPU::SET2E() { bit_set(E, 2); }
+    void CPU::SET2E()
+    {
+        bit_set(E, 2);
+    }
 
-    void CPU::SET2H() { bit_set(H, 2); }
+    void CPU::SET2H()
+    {
+        bit_set(H, 2);
+    }
 
-    void CPU::SET2L() { bit_set(L, 2); }
+    void CPU::SET2L()
+    {
+        bit_set(L, 2);
+    }
 
     void CPU::SET2HL()
     {
@@ -2252,19 +3102,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::SET2A() { bit_set(A, 2); }
+    void CPU::SET2A()
+    {
+        bit_set(A, 2);
+    }
 
-    void CPU::SET3B() { bit_set(B, 3); }
+    void CPU::SET3B()
+    {
+        bit_set(B, 3);
+    }
 
-    void CPU::SET3C() { bit_set(C, 3); }
+    void CPU::SET3C()
+    {
+        bit_set(C, 3);
+    }
 
-    void CPU::SET3D() { bit_set(D, 3); }
+    void CPU::SET3D()
+    {
+        bit_set(D, 3);
+    }
 
-    void CPU::SET3E() { bit_set(E, 3); }
+    void CPU::SET3E()
+    {
+        bit_set(E, 3);
+    }
 
-    void CPU::SET3H() { bit_set(H, 3); }
+    void CPU::SET3H()
+    {
+        bit_set(H, 3);
+    }
 
-    void CPU::SET3L() { bit_set(L, 3); }
+    void CPU::SET3L()
+    {
+        bit_set(L, 3);
+    }
 
     void CPU::SET3HL()
     {
@@ -2274,19 +3145,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::SET3A() { bit_set(A, 3); }
+    void CPU::SET3A()
+    {
+        bit_set(A, 3);
+    }
 
-    void CPU::SET4B() { bit_set(B, 4); }
+    void CPU::SET4B()
+    {
+        bit_set(B, 4);
+    }
 
-    void CPU::SET4C() { bit_set(C, 4); }
+    void CPU::SET4C()
+    {
+        bit_set(C, 4);
+    }
 
-    void CPU::SET4D() { bit_set(D, 4); }
+    void CPU::SET4D()
+    {
+        bit_set(D, 4);
+    }
 
-    void CPU::SET4E() { bit_set(E, 4); }
+    void CPU::SET4E()
+    {
+        bit_set(E, 4);
+    }
 
-    void CPU::SET4H() { bit_set(H, 4); }
+    void CPU::SET4H()
+    {
+        bit_set(H, 4);
+    }
 
-    void CPU::SET4L() { bit_set(L, 4); }
+    void CPU::SET4L()
+    {
+        bit_set(L, 4);
+    }
 
     void CPU::SET4HL()
     {
@@ -2296,19 +3188,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::SET4A() { bit_set(A, 4); }
+    void CPU::SET4A()
+    {
+        bit_set(A, 4);
+    }
 
-    void CPU::SET5B() { bit_set(B, 5); }
+    void CPU::SET5B()
+    {
+        bit_set(B, 5);
+    }
 
-    void CPU::SET5C() { bit_set(C, 5); }
+    void CPU::SET5C()
+    {
+        bit_set(C, 5);
+    }
 
-    void CPU::SET5D() { bit_set(D, 5); }
+    void CPU::SET5D()
+    {
+        bit_set(D, 5);
+    }
 
-    void CPU::SET5E() { bit_set(E, 5); }
+    void CPU::SET5E()
+    {
+        bit_set(E, 5);
+    }
 
-    void CPU::SET5H() { bit_set(H, 5); }
+    void CPU::SET5H()
+    {
+        bit_set(H, 5);
+    }
 
-    void CPU::SET5L() { bit_set(L, 5); }
+    void CPU::SET5L()
+    {
+        bit_set(L, 5);
+    }
 
     void CPU::SET5HL()
     {
@@ -2318,19 +3231,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::SET5A() { bit_set(A, 5); }
+    void CPU::SET5A()
+    {
+        bit_set(A, 5);
+    }
 
-    void CPU::SET6B() { bit_set(B, 6); }
+    void CPU::SET6B()
+    {
+        bit_set(B, 6);
+    }
 
-    void CPU::SET6C() { bit_set(C, 6); }
+    void CPU::SET6C()
+    {
+        bit_set(C, 6);
+    }
 
-    void CPU::SET6D() { bit_set(D, 6); }
+    void CPU::SET6D()
+    {
+        bit_set(D, 6);
+    }
 
-    void CPU::SET6E() { bit_set(E, 6); }
+    void CPU::SET6E()
+    {
+        bit_set(E, 6);
+    }
 
-    void CPU::SET6H() { bit_set(H, 6); }
+    void CPU::SET6H()
+    {
+        bit_set(H, 6);
+    }
 
-    void CPU::SET6L() { bit_set(L, 6); }
+    void CPU::SET6L()
+    {
+        bit_set(L, 6);
+    }
 
     void CPU::SET6HL()
     {
@@ -2340,19 +3274,40 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::SET6A() { bit_set(A, 6); }
+    void CPU::SET6A()
+    {
+        bit_set(A, 6);
+    }
 
-    void CPU::SET7B() { bit_set(B, 7); }
+    void CPU::SET7B()
+    {
+        bit_set(B, 7);
+    }
 
-    void CPU::SET7C() { bit_set(C, 7); }
+    void CPU::SET7C()
+    {
+        bit_set(C, 7);
+    }
 
-    void CPU::SET7D() { bit_set(D, 7); }
+    void CPU::SET7D()
+    {
+        bit_set(D, 7);
+    }
 
-    void CPU::SET7E() { bit_set(E, 7); }
+    void CPU::SET7E()
+    {
+        bit_set(E, 7);
+    }
 
-    void CPU::SET7H() { bit_set(H, 7); }
+    void CPU::SET7H()
+    {
+        bit_set(H, 7);
+    }
 
-    void CPU::SET7L() { bit_set(L, 7); }
+    void CPU::SET7L()
+    {
+        bit_set(L, 7);
+    }
 
     void CPU::SET7HL()
     {
@@ -2362,7 +3317,10 @@ namespace hydra::Gameboy
         tTemp += 8;
     }
 
-    void CPU::SET7A() { bit_set(A, 7); }
+    void CPU::SET7A()
+    {
+        bit_set(A, 7);
+    }
 
     void CPU::Reset(bool skip)
     {
@@ -2378,7 +3336,8 @@ namespace hydra::Gameboy
             L = 0;
             SP = 0;
             PC = 0;
-        } else
+        }
+        else
         {
             if (bus_.UseCGB)
             {
@@ -2392,7 +3351,8 @@ namespace hydra::Gameboy
                 L = 0x0D;
                 SP = 0xFFFE;
                 PC = 0x100;
-            } else
+            }
+            else
             {
                 A = 0x01;
                 F = 0xB0;
@@ -2438,7 +3398,8 @@ namespace hydra::Gameboy
         if (tTemp >= tRemove)
         {
             tTemp -= tRemove;
-        } else
+        }
+        else
         {
             tTemp = 0;
         }
@@ -2464,7 +3425,8 @@ namespace hydra::Gameboy
                         return;
                     }
                 }
-            } else
+            }
+            else
             {
                 halt_ = false;
             }

@@ -32,7 +32,6 @@ static inline uint16_t rgba32_to_rgba16(uint32_t color)
 
 namespace hydra::N64
 {
-
     constexpr inline std::string get_rdp_command_name(RDPCommandType type)
     {
         switch (type)
@@ -172,7 +171,10 @@ namespace hydra::N64
         blender_2b_0_ = 0;
     }
 
-    void RDP::SendCommand(const std::vector<uint64_t>& data) { execute_command(data); }
+    void RDP::SendCommand(const std::vector<uint64_t>& data)
+    {
+        execute_command(data);
+    }
 
     void RDP::process_commands()
     {
@@ -202,7 +204,8 @@ namespace hydra::N64
                 // get_rdp_command_name(static_cast<RDPCommandType>(command_type)),
                 // static_cast<int>(command_type));
                 current += length * 8;
-            } else
+            }
+            else
             {
                 current += 8;
             }
@@ -626,7 +629,8 @@ namespace hydra::N64
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
                     framebuffer_color_ = rgba16_to_rgba32(*ptr);
                     *ptr = rgba32_to_rgba16(blender());
-                } else
+                }
+                else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
                     framebuffer_color_ = *ptr;
@@ -650,7 +654,8 @@ namespace hydra::N64
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
                     *ptr = x & 1 ? (fill_color_ & 0xFFFF) : (fill_color_ >> 16);
-                } else
+                }
+                else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
                     *ptr = fill_color_;
@@ -975,7 +980,8 @@ namespace hydra::N64
             if (z_source_sel_)
             {
                 z = primitive_depth_ << 16;
-            } else
+            }
+            else
             {
                 z = data[next_block] >> 32;
             }
@@ -1104,5 +1110,4 @@ namespace hydra::N64
             }
         }
     }
-
 } // namespace hydra::N64

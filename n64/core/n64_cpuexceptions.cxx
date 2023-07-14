@@ -2,7 +2,6 @@
 
 namespace hydra::N64
 {
-
     void CPU::throw_exception(uint32_t address, ExceptionType type, uint8_t processor)
     {
         if (!CP0Status.EXL)
@@ -14,7 +13,8 @@ namespace hydra::N64
             }
             CP0Cause.BD = prev_branch_;
             cp0_regs_[CP0_EPC].UD = new_pc;
-        } else
+        }
+        else
         {
             Logger::Warn("Nested exception");
             exit(1);
@@ -48,5 +48,4 @@ namespace hydra::N64
             }
         }
     }
-
 } // namespace hydra::N64

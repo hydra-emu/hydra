@@ -12,10 +12,13 @@
 
 namespace hydra::N64
 {
+    template <>
+    void CPU::log_cpu_state<false>(bool, uint64_t, uint64_t)
+    {
+    }
 
-    template <> void CPU::log_cpu_state<false>(bool, uint64_t, uint64_t) {}
-
-    template <> void CPU::log_cpu_state<true>(bool use_crc, uint64_t instructions, uint64_t start)
+    template <>
+    void CPU::log_cpu_state<true>(bool use_crc, uint64_t instructions, uint64_t start)
     {
         static uint64_t count = 0;
         count++;
@@ -46,7 +49,8 @@ namespace hydra::N64
             fprcrc ^= 0xFFFF'FFFF;
             pifcrc ^= 0xFFFF'FFFF;
             printf("%08x %08x %08x %08x", pc_, instruction_.full, gprcrc, fprcrc);
-        } else
+        }
+        else
         {
             printf("%08x %08x ", pc_, instruction_.full);
             for (int i = 1; i < 32; i++)
@@ -572,11 +576,13 @@ namespace hydra::N64
                         cpubus_.pif_ram_[i++] = response[j];
                     }
                     pif_channel_++;
-                } else if (tx == 0)
+                }
+                else if (tx == 0)
                 {
                     pif_channel_++;
                     continue;
-                } else if (tx == 0xFE)
+                }
+                else if (tx == 0xFE)
                 {
                     break;
                 }
@@ -664,14 +670,16 @@ namespace hydra::N64
                 if (key_state_[Keys::Up])
                 {
                     y = 127;
-                } else if (key_state_[Keys::Down])
+                }
+                else if (key_state_[Keys::Down])
                 {
                     y = -127;
                 }
                 if (key_state_[Keys::Left])
                 {
                     x = -127;
-                } else if (key_state_[Keys::Right])
+                }
+                else if (key_state_[Keys::Right])
                 {
                     x = 127;
                 }
@@ -786,7 +794,8 @@ namespace hydra::N64
         if (is_kernel_mode()) [[likely]]
         {
             return translate_vaddr_kernel(addr);
-        } else
+        }
+        else
         {
             Logger::Fatal("Non kernel mode :(");
         }
@@ -798,7 +807,8 @@ namespace hydra::N64
         if (addr >= 0x80000000 && addr <= 0xBFFFFFFF) [[likely]]
         {
             return {addr & 0x1FFFFFFF, true, true};
-        } else if (addr >= 0 && addr <= 0x7FFFFFFF)
+        }
+        else if (addr >= 0 && addr <= 0x7FFFFFFF)
         {
             // User segment
             TranslatedAddress paddr = probe_tlb(addr);
@@ -808,11 +818,13 @@ namespace hydra::N64
                 set_cp0_regs_exception(addr);
             }
             return paddr;
-        } else if (addr >= 0xC0000000 && addr <= 0xDFFFFFFF)
+        }
+        else if (addr >= 0xC0000000 && addr <= 0xDFFFFFFF)
         {
             // Supervisor segment
             Logger::Warn("Accessing supervisor segment {:08x}", addr);
-        } else
+        }
+        else
         {
             // Kernel segment TLB
             Logger::Warn("Accessing kernel segment {:08x}", addr);
@@ -849,7 +861,8 @@ namespace hydra::N64
         if (!ptr)
         {
             return read_hwio(paddr.paddr);
-        } else
+        }
+        else
         {
             return __builtin_bswap32(*ptr);
         }
@@ -897,7 +910,8 @@ namespace hydra::N64
         if (!ptr || isviewer)
         {
             write_hwio(paddr.paddr, data);
-        } else
+        }
+        else
         {
             *ptr = __builtin_bswap32(data);
         }
@@ -924,8 +938,6 @@ namespace hydra::N64
             {
                 CP0Cause.IP7 = true;
             }
-            while (scheduler_.size() && cpubus_.time_ >= scheduler_.top().time) [[unlikely]]
-                handle_event();
             gpr_regs_[0].UD = 0;
             prev_branch_ = was_branch_;
             was_branch_ = false;
@@ -983,7 +995,8 @@ namespace hydra::N64
         if (condition)
         {
             branch_to(address);
-        } else
+        }
+        else
         {
             pc_ += 4;
             next_pc_ = pc_ + 4;
@@ -1002,7 +1015,10 @@ namespace hydra::N64
         was_branch_ = true;
     }
 
-    void CPU::execute_instruction() { (instruction_table_[instruction_.IType.op])(this); }
+    void CPU::execute_instruction()
+    {
+        (instruction_table_[instruction_.IType.op])(this);
+    }
 
     void CPU::execute_cp0_instruction()
     {
@@ -1018,7 +1034,8 @@ namespace hydra::N64
                     {
                         pc_ = cp0_regs_[CP0_ERROREPC].UD;
                         CP0Status.ERL = false;
-                    } else
+                    }
+                    else
                     {
                         pc_ = cp0_regs_[CP0_EPC].UD;
                         CP0Status.EXL = false;
@@ -1061,7 +1078,9 @@ namespace hydra::N64
                     {
                         const TLBEntry& entry = tlb_[i];
                         if (!entry.initialized)
+                        {
                             continue;
+                        }
                         EntryHi eh;
                         eh.full = cp0_regs_[CP0_ENTRYHI].UD;
 
@@ -1103,7 +1122,8 @@ namespace hydra::N64
                 default:
                     Logger::Fatal("Invalid CP0 instruction at {:016X}", pc_);
             }
-        } else
+        }
+        else
         {
             switch (func & 0b1111)
             {
@@ -1142,7 +1162,10 @@ namespace hydra::N64
         CP0EntryHi.R = (vaddr >> 62) & 0b11;
     }
 
-    bool CPU::is_kernel_mode() { return (CP0Status.KSU == 0b00) || CP0Status.EXL || CP0Status.ERL; }
+    bool CPU::is_kernel_mode()
+    {
+        return (CP0Status.KSU == 0b00) || CP0Status.EXL || CP0Status.ERL;
+    }
 
     void CPU::dump_tlb()
     {
@@ -1169,7 +1192,9 @@ namespace hydra::N64
         for (const TLBEntry& entry : tlb_)
         {
             if (!entry.initialized)
+            {
                 continue;
+            }
             uint32_t vpn_mask = ~((entry.mask << 13) | 0x1FFF);
             uint64_t current_vpn = vaddr & vpn_mask;
             uint64_t have_vpn = (entry.entry_hi.VPN2 << 13) & vpn_mask;
@@ -1187,7 +1212,8 @@ namespace hydra::N64
                         return {};
                     }
                     elo.full = entry.entry_odd.full;
-                } else
+                }
+                else
                 {
                     if (!entry.entry_even.V)
                     {
@@ -1216,5 +1242,4 @@ namespace hydra::N64
                    cpubus_.rdram_[i + 2], cpubus_.rdram_[i + 3]);
         }
     }
-
 } // namespace hydra::N64

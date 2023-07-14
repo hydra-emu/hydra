@@ -21,7 +21,8 @@ namespace hydra::NES
             keymap[std::stoi(mappings["B"])] = Button::B;
             keymap[std::stoi(mappings["Start"])] = Button::Start;
             keymap[std::stoi(mappings["Select"])] = Button::Select;
-        } else
+        }
+        else
         {
             Logger::Warn("No key mappings found for NES");
         }
@@ -30,11 +31,20 @@ namespace hydra::NES
 
     NES_TKPWrapper::~NES_TKPWrapper() {}
 
-    void NES_TKPWrapper::HandleKeyDown(uint32_t key) { cpu_.HandleKeyDown(key); }
+    void NES_TKPWrapper::HandleKeyDown(uint32_t key)
+    {
+        cpu_.HandleKeyDown(key);
+    }
 
-    void NES_TKPWrapper::HandleKeyUp(uint32_t key) { cpu_.HandleKeyUp(key); }
+    void NES_TKPWrapper::HandleKeyUp(uint32_t key)
+    {
+        cpu_.HandleKeyUp(key);
+    }
 
-    void* NES_TKPWrapper::GetScreenData() { return ppu_.GetScreenData(); }
+    void* NES_TKPWrapper::GetScreenData()
+    {
+        return ppu_.GetScreenData();
+    }
 
     void NES_TKPWrapper::reset()
     {
@@ -42,7 +52,13 @@ namespace hydra::NES
         ppu_.Reset();
     }
 
-    void NES_TKPWrapper::update() { cpu_.Tick(); }
+    void NES_TKPWrapper::update()
+    {
+        cpu_.Tick();
+    }
 
-    bool NES_TKPWrapper::load_file(std::string path) { return cpu_.bus_.LoadCartridge(path); }
+    bool NES_TKPWrapper::load_file(std::string path)
+    {
+        return cpu_.bus_.LoadCartridge(path);
+    }
 } // namespace hydra::NES

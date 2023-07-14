@@ -3,9 +3,15 @@
 
 namespace hydra::N64
 {
-    N64::N64(bool& should_draw) : cpubus_(rcp_), cpu_(cpubus_, rcp_, should_draw) { Reset(); }
+    N64::N64(bool& should_draw) : cpubus_(rcp_), cpu_(cpubus_, rcp_, should_draw)
+    {
+        Reset();
+    }
 
-    bool N64::LoadCartridge(std::string path) { return cpu_.cpubus_.LoadCartridge(path); }
+    bool N64::LoadCartridge(std::string path)
+    {
+        return cpu_.cpubus_.LoadCartridge(path);
+    }
 
     bool N64::LoadIPL(std::string path)
     {
@@ -42,7 +48,8 @@ namespace hydra::N64
                             }
                             cpu_cycles -= 3;
                         }
-                    } else
+                    }
+                    else
                     {
                         cpu_cycles = 0;
                     }

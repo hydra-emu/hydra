@@ -14,7 +14,9 @@ void GB_WiiWrapper::Update()
     uint8_t old_if = interrupt_flag_;
     int clk = 0;
     if (!cpu_.skip_next_)
+    {
         clk = cpu_.Update();
+    }
     cpu_.skip_next_ = false;
     if (timer_.Update(clk, old_if))
     {
@@ -34,7 +36,10 @@ void GB_WiiWrapper::LoadCartridge(void* data)
     ppu_.UseCGB = bus_.UseCGB;
 }
 
-void* GB_WiiWrapper::GetScreenData() { return ppu_.GetScreenData(); }
+void* GB_WiiWrapper::GetScreenData()
+{
+    return ppu_.GetScreenData();
+}
 
 void GB_WiiWrapper::HandleKeyDown(uint32_t key)
 {

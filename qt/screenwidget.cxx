@@ -1,6 +1,6 @@
 #include "screenwidget.hxx"
-#include <QFile>
 #include <iostream>
+#include <QFile>
 
 ScreenWidget::ScreenWidget(QWidget* parent) : QOpenGLWidget(parent) {}
 
@@ -27,14 +27,17 @@ void ScreenWidget::Redraw(int width, int height, int bitdepth, void* data)
 {
     if (initialized_) [[likely]]
     {
-        if (bitdepth ==
-            GL_UNSIGNED_SHORT_5_5_5_1) // n64 (TODO: make a bool in this function that sets this)
+        if (bitdepth == GL_UNSIGNED_SHORT_5_5_5_1)
+        { // n64 (TODO: make a bool in this function that sets this)
             glPixelStorei(GL_UNPACK_SWAP_BYTES, 1);
+        }
         glBindTexture(GL_TEXTURE_2D, texture_);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, bitdepth, data);
         glBindTexture(GL_TEXTURE_2D, 0);
         if (bitdepth == GL_UNSIGNED_SHORT_5_5_5_1)
+        {
             glPixelStorei(GL_UNPACK_SWAP_BYTES, 0);
+        }
     }
 }
 
@@ -45,7 +48,8 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment)
         QFile vfile(":/shaders/simple.vs");
         vfile.open(QIODevice::ReadOnly);
         vshader_source_ = vfile.readAll();
-    } else
+    }
+    else
     {
         vshader_source_ = *vertex;
     }
@@ -54,7 +58,8 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment)
         QFile ffile(":/shaders/simple.fs");
         ffile.open(QIODevice::ReadOnly);
         fshader_source_ = ffile.readAll();
-    } else
+    }
+    else
     {
         fshader_source_ = *fragment;
     }

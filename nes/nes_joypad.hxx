@@ -33,9 +33,15 @@ namespace hydra::NES
             return temp;
         }
 
-        void Press(Button button) { state_ |= static_cast<uint8_t>(button); }
+        void Press(Button button)
+        {
+            state_ |= static_cast<uint8_t>(button);
+        }
 
-        void Release(Button button) { state_ &= ~static_cast<uint8_t>(button); }
+        void Release(Button button)
+        {
+            state_ &= ~static_cast<uint8_t>(button);
+        }
 
       private:
         uint8_t state_;

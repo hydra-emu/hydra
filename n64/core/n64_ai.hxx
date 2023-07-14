@@ -24,15 +24,24 @@ namespace hydra::N64
         ~Ai();
         void Reset();
 
-        void InstallBuses(uint8_t* rdram_ptr) { rdram_ptr_ = rdram_ptr; }
+        void InstallBuses(uint8_t* rdram_ptr)
+        {
+            rdram_ptr_ = rdram_ptr;
+        }
 
-        void SetMIPtr(MIInterrupt* mi_interrupt) { mi_interrupt_ = mi_interrupt; }
+        void SetMIPtr(MIInterrupt* mi_interrupt)
+        {
+            mi_interrupt_ = mi_interrupt;
+        }
 
         void Step();
         uint32_t ReadWord(uint32_t addr);
         void WriteWord(uint32_t addr, uint32_t value);
 
-        bool IsHungry() const { return hungry_; }
+        bool IsHungry() const
+        {
+            return hungry_;
+        }
 
       private:
         uint32_t ai_control_ = 0;

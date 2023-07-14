@@ -3,7 +3,8 @@
 #include <array>
 #include <log.hxx>
 
-template <class T, class X1, class X2> T pclamp(T value, X1 min, X2 max)
+template <class T, class X1, class X2>
+T pclamp(T value, X1 min, X2 max)
 {
     return std::clamp(value, (T)min, (T)max);
 }
@@ -13,7 +14,8 @@ bool is_sign_extension(int16_t high, int16_t low)
     if (high == 0)
     {
         return !(low & 0x8000);
-    } else if (high == -1)
+    }
+    else if (high == -1)
     {
         return (low & 0x8000);
     }
@@ -23,18 +25,26 @@ bool is_sign_extension(int16_t high, int16_t low)
 int16_t clamp_signed(int64_t value)
 {
     if (value < -32768)
+    {
         return -32768;
+    }
     if (value > 32767)
+    {
         return 32767;
+    }
     return value;
 }
 
 int16_t clamp_unsigned(int64_t value)
 {
     if (value < 0)
+    {
         return 0;
+    }
     if (value >= 0x8000)
+    {
         return 0xFFFF;
+    }
     return value;
 }
 
@@ -132,7 +142,6 @@ constexpr std::array<uint16_t, 0x200> RSQ_TABLE = {
 
 namespace hydra::N64
 {
-
 #define vuinstr (static_cast<VUInstruction>(instruction_.full))
 
     using Elements = std::array<uint8_t, 8>;
@@ -154,11 +163,20 @@ namespace hydra::N64
                                           {6, 6, 6, 6, 6, 6, 6, 6},
                                           {7, 7, 7, 7, 7, 7, 7, 7}}};
 
-    VectorRegister& RSP::get_vt() { return vu_regs_[vuinstr.vt]; }
+    VectorRegister& RSP::get_vt()
+    {
+        return vu_regs_[vuinstr.vt];
+    }
 
-    VectorRegister& RSP::get_vs() { return vu_regs_[vuinstr.vs]; }
+    VectorRegister& RSP::get_vs()
+    {
+        return vu_regs_[vuinstr.vs];
+    }
 
-    VectorRegister& RSP::get_vd() { return vu_regs_[vuinstr.vd]; }
+    VectorRegister& RSP::get_vd()
+    {
+        return vu_regs_[vuinstr.vd];
+    }
 
     int16_t RSP::get_lane(int reg, int lane)
     {
@@ -166,10 +184,12 @@ namespace hydra::N64
         if (lane == 15)
         {
             return vu_regs_[reg][7] << 8 | vu_regs_[reg][0] >> 8;
-        } else if (lane & 1)
+        }
+        else if (lane & 1)
         {
             return (vu_regs_[reg][lane >> 1] << 8) | (vu_regs_[reg][(lane >> 1) + 1] >> 8);
-        } else
+        }
+        else
         {
             return vu_regs_[reg][lane >> 1];
         }
@@ -184,12 +204,14 @@ namespace hydra::N64
         if (lane == 15)
         {
             vu_regs_[reg][7] = (vu_regs_[reg][7] & ~0xFF) | ((value >> 8) & 0xFF);
-        } else if (lane & 1)
+        }
+        else if (lane & 1)
         {
             vu_regs_[reg][lane >> 1] = (vu_regs_[reg][lane >> 1] & ~0xFF) | ((value >> 8) & 0xFF);
             vu_regs_[reg][(lane >> 1) + 1] =
                 (vu_regs_[reg][(lane >> 1) + 1] & 0xFF) | ((value << 8) & ~0xFF);
-        } else
+        }
+        else
         {
             vu_regs_[reg][lane >> 1] = value;
         }
@@ -225,7 +247,10 @@ namespace hydra::N64
         }
     }
 
-    void RSP::ERROR2() { Logger::Warn("Ran ERROR2 instruction: {:#x}", instruction_.full); }
+    void RSP::ERROR2()
+    {
+        Logger::Warn("Ran ERROR2 instruction: {:#x}", instruction_.full);
+    }
 
     void RSP::LWC2()
     {
@@ -379,7 +404,8 @@ namespace hydra::N64
             if (((lane + i) & 15) < 8)
             {
                 store_byte(address + i, static_cast<uint16_t>(get_lane(reg, (lane + i) << 1)) >> 8);
-            } else
+            }
+            else
             {
                 store_byte(address + i, static_cast<uint16_t>(get_lane(reg, (lane + i) << 1)) >> 7);
             }
@@ -398,7 +424,8 @@ namespace hydra::N64
             if (((lane + i) & 15) < 8)
             {
                 store_byte(address + i, static_cast<uint16_t>(get_lane(reg, (lane + i) << 1)) >> 7);
-            } else
+            }
+            else
             {
                 store_byte(address + i, static_cast<uint16_t>(get_lane(reg, (lane + i) << 1)) >> 8);
             }
@@ -739,10 +766,12 @@ namespace hydra::N64
             if (is_sign_extension(accumulator_[i].GetHigh(), accumulator_[i].GetMiddle()))
             {
                 vd[i] = accumulator_[i].GetLow();
-            } else if (accumulator_[i].GetHighSigned() < 0)
+            }
+            else if (accumulator_[i].GetHighSigned() < 0)
             {
                 vd[i] = 0;
-            } else
+            }
+            else
             {
                 vd[i] = 0xFFFF;
             }
@@ -861,10 +890,12 @@ namespace hydra::N64
             if (is_sign_extension(accumulator_[i].GetHigh(), accumulator_[i].GetMiddle()))
             {
                 vd[i] = accumulator_[i].GetLow();
-            } else if (accumulator_[i].GetHighSigned() < 0)
+            }
+            else if (accumulator_[i].GetHighSigned() < 0)
             {
                 vd[i] = 0;
-            } else
+            }
+            else
             {
                 vd[i] = 0xFFFF;
             }
@@ -907,10 +938,12 @@ namespace hydra::N64
             if (is_sign_extension(accumulator_[i].GetHigh(), accumulator_[i].GetMiddle()))
             {
                 vd[i] = accumulator_[i].GetLow();
-            } else if (accumulator_[i].GetHighSigned() < 0)
+            }
+            else if (accumulator_[i].GetHighSigned() < 0)
             {
                 vd[i] = 0;
-            } else
+            }
+            else
             {
                 vd[i] = 0xFFFF;
             }
@@ -1128,7 +1161,8 @@ namespace hydra::N64
         if (input == 0)
         {
             return 0x7FFFFFFF;
-        } else if (sinput == INT16_MIN)
+        }
+        else if (sinput == INT16_MIN)
         {
             return 0xFFFF0000;
         }
@@ -1149,10 +1183,12 @@ namespace hydra::N64
         if (input == 0)
         {
             return 0x7FFFFFFF;
-        } else if (input == 0xFFFF8000)
+        }
+        else if (input == 0xFFFF8000)
         {
             return 0xFFFF0000;
-        } else if (input > 0xFFFF8000)
+        }
+        else if (input > 0xFFFF8000)
         {
             input--;
         }
@@ -1184,7 +1220,8 @@ namespace hydra::N64
         if (div_in_ready_)
         {
             input = (static_cast<int32_t>(div_in_) << 16) | vt[se];
-        } else
+        }
+        else
         {
             input = static_cast<int16_t>(vt[se]);
         }
@@ -1257,7 +1294,8 @@ namespace hydra::N64
         if (div_in_ready_)
         {
             input = (static_cast<int32_t>(div_in_) << 16) | vt[se];
-        } else
+        }
+        else
         {
             input = static_cast<int16_t>(vt[se]);
         }
@@ -1369,7 +1407,8 @@ namespace hydra::N64
                 vco_.SetLow(i, true);
                 vco_.SetHigh(i, sum != 0 && (vs[i] != (vt[e[i]] ^ 0xFFFF)));
                 vce_.Set(i, sum == -1);
-            } else
+            }
+            else
             {
                 int16_t dif = vsi - vti;
                 accumulator_[i].SetLow(dif >= 0 ? vti : vsi);
@@ -1434,7 +1473,8 @@ namespace hydra::N64
                 if (vco_.GetHigh(i))
                 {
                     accumulator_[i].SetLow(vcc_.GetLow(i) ? -vt[e[i]] : vs[i]);
-                } else
+                }
+                else
                 {
                     uint16_t result = 0;
                     bool overflow = __builtin_add_overflow(vs[i], vt[e[i]], &result);
@@ -1442,18 +1482,21 @@ namespace hydra::N64
                     {
                         vcc_.SetLow(i, !result || !overflow);
                         accumulator_[i].SetLow(vcc_.GetLow(i) ? -vt[e[i]] : vs[i]);
-                    } else
+                    }
+                    else
                     {
                         vcc_.SetLow(i, !result && !overflow);
                         accumulator_[i].SetLow(vcc_.GetLow(i) ? -vt[e[i]] : vs[i]);
                     }
                 }
-            } else
+            }
+            else
             {
                 if (vco_.GetHigh(i))
                 {
                     accumulator_[i].SetLow(vcc_.GetHigh(i) ? vt[e[i]] : vs[i]);
-                } else
+                }
+                else
                 {
                     vcc_.SetHigh(i, vs[i] >= vt[e[i]]);
                     accumulator_[i].SetLow(vcc_.GetHigh(i) ? vt[e[i]] : vs[i]);
@@ -1488,7 +1531,8 @@ namespace hydra::N64
                     edge_case[i] = true;
                 }
                 data = -vt[e[i]];
-            } else if (static_cast<int16_t>(vs[i]) > 0)
+            }
+            else if (static_cast<int16_t>(vs[i]) > 0)
             {
                 data = vt[e[i]];
             }
@@ -1556,7 +1600,8 @@ namespace hydra::N64
             if (product < 0 && !(product & 1 << 5))
             {
                 product += 32;
-            } else if (product >= 32 && !(product & 1 << 5))
+            }
+            else if (product >= 32 && !(product & 1 << 5))
             {
                 product -= 32;
             }

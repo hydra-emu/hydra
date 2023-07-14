@@ -3,18 +3,19 @@
 #include "../include/emulator.hxx"
 #include "../include/emulator_factory.hxx"
 #include "screenwidget.hxx"
+#include <array>
+#include <memory>
 #include <QFileDialog>
 #include <QLabel>
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QVBoxLayout>
-#include <array>
-#include <memory>
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+
   private:
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;

@@ -68,11 +68,13 @@ namespace hydra::Gameboy
                     }
                 }
                 SkipBoot = !bus_.BiosEnabled;
-            } else
+            }
+            else
             {
                 SkipBoot = true;
             }
-        } else
+        }
+        else
         {
             SkipBoot = true;
         }
@@ -81,7 +83,10 @@ namespace hydra::Gameboy
         instrs_per_frame_ = 70224;
     }
 
-    Gameboy_TKPWrapper::~Gameboy_TKPWrapper() { Stopped.store(true); }
+    Gameboy_TKPWrapper::~Gameboy_TKPWrapper()
+    {
+        Stopped.store(true);
+    }
 
     void Gameboy_TKPWrapper::reset()
     {
@@ -91,7 +96,10 @@ namespace hydra::Gameboy
         ppu_.Reset();
     }
 
-    void Gameboy_TKPWrapper::update() { update_audio_sync(); }
+    void Gameboy_TKPWrapper::update()
+    {
+        update_audio_sync();
+    }
 
     void Gameboy_TKPWrapper::update_audio_sync()
     {
@@ -100,7 +108,9 @@ namespace hydra::Gameboy
             uint8_t old_if = interrupt_flag_;
             int clk = 0;
             if (!cpu_.skip_next_)
+            {
                 clk = cpu_.Update();
+            }
             cpu_.skip_next_ = false;
             if (timer_.Update(clk, old_if))
             {
@@ -112,7 +122,8 @@ namespace hydra::Gameboy
             }
             ppu_.Update(clk);
             apu_.Update(clk);
-        } else
+        }
+        else
         {
             // std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
@@ -159,5 +170,8 @@ namespace hydra::Gameboy
         return loaded;
     }
 
-    void* Gameboy_TKPWrapper::GetScreenData() { return ppu_.GetScreenData(); }
+    void* Gameboy_TKPWrapper::GetScreenData()
+    {
+        return ppu_.GetScreenData();
+    }
 } // namespace hydra::Gameboy

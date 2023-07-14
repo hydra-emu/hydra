@@ -4,7 +4,6 @@
 
 namespace hydra::N64
 {
-
     enum class RSPHWIO {
         Cache = 0,
         DramAddr = 1,
@@ -33,7 +32,10 @@ namespace hydra::N64
 
     struct AccumulatorLane
     {
-        void Set(uint64_t new_value) { value_ = new_value & 0xFFFF'FFFF'FFFF; }
+        void Set(uint64_t new_value)
+        {
+            value_ = new_value & 0xFFFF'FFFF'FFFF;
+        }
 
         void SetHigh(uint16_t new_value)
         {
@@ -45,19 +47,40 @@ namespace hydra::N64
             value_ = (static_cast<uint64_t>(new_value) << 16) | (value_ & 0xFFFF'0000'FFFF);
         }
 
-        void SetLow(uint16_t new_value) { value_ = (value_ & 0xFFFF'FFFF'0000) | new_value; }
+        void SetLow(uint16_t new_value)
+        {
+            value_ = (value_ & 0xFFFF'FFFF'0000) | new_value;
+        }
 
-        uint64_t Get() const { return value_; }
+        uint64_t Get() const
+        {
+            return value_;
+        }
 
-        int64_t GetSigned() const { return static_cast<int64_t>(value_ << 16) >> 16; }
+        int64_t GetSigned() const
+        {
+            return static_cast<int64_t>(value_ << 16) >> 16;
+        }
 
-        uint16_t GetHigh() const { return value_ >> 32; }
+        uint16_t GetHigh() const
+        {
+            return value_ >> 32;
+        }
 
-        uint16_t GetMiddle() const { return (value_ >> 16) & 0xFFFF; }
+        uint16_t GetMiddle() const
+        {
+            return (value_ >> 16) & 0xFFFF;
+        }
 
-        uint16_t GetLow() const { return value_ & 0xFFFF; }
+        uint16_t GetLow() const
+        {
+            return value_ & 0xFFFF;
+        }
 
-        int16_t GetHighSigned() const { return value_ >> 32; }
+        int16_t GetHighSigned() const
+        {
+            return value_ >> 32;
+        }
 
         void Add(int64_t value)
         {
@@ -71,20 +94,35 @@ namespace hydra::N64
 
     struct VUControl16
     {
-        bool GetLow(int index) const { return (full_ >> index) & 1; }
+        bool GetLow(int index) const
+        {
+            return (full_ >> index) & 1;
+        }
 
-        bool GetHigh(int index) const { return (full_ >> (index + 8)) & 1; }
+        bool GetHigh(int index) const
+        {
+            return (full_ >> (index + 8)) & 1;
+        }
 
-        void SetLow(int index, bool value) { full_ = (full_ & ~(1 << index)) | (value << index); }
+        void SetLow(int index, bool value)
+        {
+            full_ = (full_ & ~(1 << index)) | (value << index);
+        }
 
         void SetHigh(int index, bool value)
         {
             full_ = (full_ & ~(1 << (index + 8))) | (value << (index + 8));
         }
 
-        void Clear() { full_ = 0; }
+        void Clear()
+        {
+            full_ = 0;
+        }
 
-        uint16_t& operator*() { return full_; }
+        uint16_t& operator*()
+        {
+            return full_;
+        }
 
       private:
         uint16_t full_ = 0;
@@ -92,13 +130,25 @@ namespace hydra::N64
 
     struct VUControl8
     {
-        bool Get(int index) const { return (full_ >> index) & 1; }
+        bool Get(int index) const
+        {
+            return (full_ >> index) & 1;
+        }
 
-        void Set(int index, bool value) { full_ = (full_ & ~(1 << index)) | (value << index); }
+        void Set(int index, bool value)
+        {
+            full_ = (full_ & ~(1 << index)) | (value << index);
+        }
 
-        void Clear() { full_ = 0; }
+        void Clear()
+        {
+            full_ = 0;
+        }
 
-        uint8_t& operator*() { return full_; }
+        uint8_t& operator*()
+        {
+            return full_;
+        }
 
       private:
         uint8_t full_ = 0;
@@ -168,7 +218,11 @@ namespace hydra::N64
 
     static_assert(sizeof(RSPStatusWrite) == sizeof(uint32_t));
 
-    template <auto MemberFunc> static void lut_wrapper(RSP* cpu) { (cpu->*MemberFunc)(); }
+    template <auto MemberFunc>
+    static void lut_wrapper(RSP* cpu)
+    {
+        (cpu->*MemberFunc)();
+    }
 
     class RSP final
     {
@@ -178,7 +232,10 @@ namespace hydra::N64
         void Tick();
         void Reset();
 
-        bool IsHalted() { return status_.halt; }
+        bool IsHalted()
+        {
+            return status_.halt;
+        }
 
         void InstallBuses(uint8_t* rdram_ptr, RDP* rdp_ptr)
         {
@@ -186,7 +243,10 @@ namespace hydra::N64
             rdp_ptr_ = rdp_ptr;
         }
 
-        void SetMIPtr(MIInterrupt* ptr) { mi_interrupt_ = ptr; }
+        void SetMIPtr(MIInterrupt* ptr)
+        {
+            mi_interrupt_ = ptr;
+        }
 
       private:
         using func_ptr = void (*)(RSP*);
@@ -328,7 +388,8 @@ namespace hydra::N64
         VectorRegister& get_vt();
         VectorRegister& get_vd();
 
-        template <bool DoLog> void log_cpu_state(bool use_crc, uint64_t instructions);
+        template <bool DoLog>
+        void log_cpu_state(bool use_crc, uint64_t instructions);
 
         std::array<uint8_t, 0x2000> mem_{};
         std::array<MemDataUnionW, 32> gpr_regs_;
@@ -358,5 +419,4 @@ namespace hydra::N64
         friend class hydra::N64::CPUBus;
         friend class hydra::N64::RCP;
     };
-
 } // namespace hydra::N64

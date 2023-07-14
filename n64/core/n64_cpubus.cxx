@@ -30,7 +30,8 @@ namespace hydra::N64
             ifs.read(reinterpret_cast<char*>(cart_rom_.data()), size);
             rom_loaded_ = true;
             Reset();
-        } else
+        }
+        else
         {
             return false;
         }
@@ -51,7 +52,8 @@ namespace hydra::N64
                 CPUBus::ipl_.resize(size);
                 ifs.read(reinterpret_cast<char*>(CPUBus::ipl_.data()), size);
             }
-        } else
+        }
+        else
         {
             return false;
         }
@@ -109,7 +111,8 @@ namespace hydra::N64
         {
             ptr += (paddr & static_cast<uint32_t>(0xFFFF));
             return ptr;
-        } else if (paddr - 0x1FC00000u < 1984u)
+        }
+        else if (paddr - 0x1FC00000u < 1984u)
         {
             return &ipl_[paddr - 0x1FC00000u];
         }

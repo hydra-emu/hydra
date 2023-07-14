@@ -41,7 +41,6 @@ class N64Debugger;
 
 namespace hydra::N64
 {
-
     class RSP;
 
     enum class RDPCommandType {
@@ -112,7 +111,10 @@ namespace hydra::N64
         RDP();
         void InstallBuses(uint8_t* rdram_ptr, uint8_t* spmem_ptr);
 
-        void SetMIPtr(MIInterrupt* ptr) { mi_interrupt_ = ptr; }
+        void SetMIPtr(MIInterrupt* ptr)
+        {
+            mi_interrupt_ = ptr;
+        }
 
         uint32_t ReadWord(uint32_t addr);
         void WriteWord(uint32_t addr, uint32_t value);
@@ -208,5 +210,4 @@ namespace hydra::N64
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;
     };
-
 } // namespace hydra::N64

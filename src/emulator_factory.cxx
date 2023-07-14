@@ -32,7 +32,9 @@ namespace hydra
             if (!std::filesystem::create_directories(dir))
             {
                 if (std::filesystem::exists(dir))
+                {
                     return dir;
+                }
                 throw ErrorFactory::generate_exception(__func__, __LINE__,
                                                        "Failed to create directories");
             }

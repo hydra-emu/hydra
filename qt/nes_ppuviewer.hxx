@@ -5,6 +5,7 @@
 class NES_PPUViewer : public QWidget
 {
     Q_OBJECT
+
   private:
     bool& open_;
 
