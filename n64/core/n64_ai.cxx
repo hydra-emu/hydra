@@ -1,6 +1,7 @@
 #include "n64_ai.hxx"
 #include "n64_addresses.hxx"
 #include <algorithm>
+#include <bswap.hxx>
 #include <fmt/format.h>
 #include <fstream>
 #include <miniaudio.h>
@@ -38,7 +39,7 @@ namespace hydra::N64
 
         if (ma_result res = ma_resampler_init(&config, nullptr, &resampler))
         {
-            Logger::Fatal("Failed to create resampler: {}", res);
+            Logger::Fatal("Failed to create resampler: {}", static_cast<int>(res));
         }
         ma_uint64 frames_in = static_cast<float>(frames * ai.ai_frequency_) / HOST_SAMPLE_RATE;
         if (ai.ai_buffer_.size() * sizeof(int16_t) < frames_in * bytes_per_frame * 3)
@@ -60,7 +61,7 @@ namespace hydra::N64
                                                            &frames_in, buffer.data(), &frames_out);
         if (result != MA_SUCCESS)
         {
-            Logger::Fatal("Failed to resample: {}", result);
+            Logger::Fatal("Failed to resample: {}", static_cast<int>(result));
         }
         std::memcpy(out, buffer.data(), frames_out * 2 * 2);
         ai.ai_buffer_.erase(ai.ai_buffer_.begin(), ai.ai_buffer_.begin() + frames_in * 2);
@@ -196,8 +197,8 @@ namespace hydra::N64
             int16_t left = (static_cast<int16_t>(data >> 16));
             int16_t right = (static_cast<int16_t>(data & 0xffff));
             // TODO: Very slow, fix
-            ai_buffer_.push_back(__builtin_bswap16(left));
-            ai_buffer_.push_back(__builtin_bswap16(right));
+            ai_buffer_.push_back(bswap16(left));
+            ai_buffer_.push_back(bswap16(right));
             if (ai_buffer_.size() > 200000)
             {
                 Logger::Fatal("AI buffer overflow");
