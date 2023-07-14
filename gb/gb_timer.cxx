@@ -25,7 +25,7 @@ namespace hydra::Gameboy
 
     bool Timer::Update(uint8_t cycles, uint8_t old_if)
     {
-        bool ret = false;
+        // bool ret = false;
         if (just_overflown_)
         {
             // Passes tima_write_reloading
@@ -119,7 +119,7 @@ namespace hydra::Gameboy
                     // After TIMA overflows, it stays 00 for 1 clock and *then* becomes =TMA
                     TIMA = 0;
                     tima_overflow_ = true;
-                    ret = true;
+                    // ret = true;
                     break;
                 } else
                 {

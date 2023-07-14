@@ -122,13 +122,13 @@ namespace hydra::Gameboy
         switch (header_.romSize)
         {
             // Likely inaccurate according to pandocs, no roms using these are known
-            [[unlikely]] case 0x52:
+            case 0x52:
                 return 0x72;
-            [[unlikely]] case 0x53:
+            case 0x53:
                 return 0x80;
-            [[unlikely]] case 0x54:
+            case 0x54:
                 return 0x96;
-            [[likely]] default:
+            default:
                 return std::pow(2, (header_.romSize + 1));
         }
     }
@@ -219,12 +219,12 @@ namespace hydra::Gameboy
         if (!text_cached_)
         {
             text_cached_ = true;
-            bool cgb = false;
+            // bool cgb = false;
             std::string name = header_.name;
             std::string cgb_type = "No";
             if (header_.gameboyColor & 0x80)
             {
-                cgb = true;
+                // cgb = true;
                 if (header_.gameboyColor & 0x40)
                 {
                     cgb_type = "GBC only";

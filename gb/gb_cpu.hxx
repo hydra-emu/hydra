@@ -182,4 +182,3 @@ namespace hydra::Gameboy
         friend class hydra::Gameboy::QA::TestGameboy;
     };
 } // namespace hydra::Gameboy
-#endif

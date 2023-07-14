@@ -9,8 +9,6 @@ namespace hydra::NES
         using hydra::NES::Button;
         instrs_per_frame_ = 1789773 / 60;
         ppu_.SetNMI(std::bind(&CPU::NMI, &cpu_));
-        const EmulatorUserData& user_data =
-            EmulatorSettings::GetEmulatorData(EmuType::NES).UserData;
         KeyMappings& mappings = EmulatorSettings::GetEmulatorData(EmuType::NES).Mappings;
         std::unordered_map<uint32_t, Button> keymap;
         if (!mappings.empty())

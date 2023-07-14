@@ -3,22 +3,26 @@
 #include <cstdint>
 #include <vector>
 
-namespace hydra::N64 {
+namespace hydra::N64
+{
     class N64;
 }
 
-namespace hydra::N64 {
+namespace hydra::N64
+{
     class RCP;
     class CPU;
     class CPUBus;
 
-    struct Vi {
+    struct Vi
+    {
         void Reset();
         bool Redraw();
         uint8_t* GetFramebufferPtr();
         int GetWidth();
         int GetHeight();
-    private:
+
+      private:
         uint32_t vi_ctrl_ = 0;
         uint32_t vi_origin_ = 0;
         uint32_t vi_width_ = 0;
@@ -52,4 +56,4 @@ namespace hydra::N64 {
         friend class hydra::N64::CPUBus;
         friend class hydra::N64::N64;
     };
-}
+} // namespace hydra::N64

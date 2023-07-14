@@ -58,7 +58,6 @@ namespace hydra::NES
 
     void PPU::Tick()
     {
-        static bool vblank_first = false;
         if (scanline_ <= 239)
         {
             handle_normal_scanline();
@@ -372,7 +371,7 @@ namespace hydra::NES
         if (current_sprite >= scanline_sprite_count_)
             return;
         bool flip_x = attribute_latches_[current_sprite] & 0b0100'0000;
-        bool flip_y = attribute_latches_[current_sprite] & 0b1000'0000;
+        // bool flip_y = attribute_latches_[current_sprite] & 0b1000'0000;
         switch (current_cycle & 0b111)
         {
             case 5:

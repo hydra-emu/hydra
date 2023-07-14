@@ -5,8 +5,8 @@
 
 namespace ErrorFactory
 {
-    static std::runtime_error generate_exception(const std::string& func_name, int line_num,
-                                                 const std::string& desc)
+    [[maybe_unused]] static std::runtime_error
+    generate_exception(const std::string& func_name, int line_num, const std::string& desc)
     {
         std::stringstream ss;
         ss << "ERROR - " << func_name << ", line " << line_num << ":\n";

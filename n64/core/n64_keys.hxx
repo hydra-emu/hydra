@@ -1,6 +1,7 @@
 #pragma once
 
-namespace hydra::N64::Keys {
+namespace hydra::N64::Keys
+{
     enum {
         A = 0,
         B,

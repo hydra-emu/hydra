@@ -35,7 +35,6 @@ namespace hydra::Gameboy
     {
         static constexpr int clock_max = 456 * 144 + 456 * 10;
         static int mode3_extend = 0; // unused for now
-        uint8_t current_mode = STAT & STATFlag::MODE;
         clock_ += cycles;
         clock_ %= clock_max;
         auto true_ly = clock_ / 456;
@@ -165,20 +164,20 @@ namespace hydra::Gameboy
 
     void PPU::Reset()
     {
-        for (int i = 0; i < 4; i++)
+        for (size_t i = 0; i < 4; i++)
         {
             bus_.Palette[i][0] = 0xFF - 64 * i;
             bus_.Palette[i][1] = 0xFF - 64 * i;
             bus_.Palette[i][2] = 0xFF - 64 * i;
         }
-        for (int i = 0; i < (screen_color_data_second_.size() - 4); i += 4)
+        for (size_t i = 0; i < (screen_color_data_second_.size() - 4); i += 4)
         {
             screen_color_data_second_[i + 0] = bus_.Palette[0][0];
             screen_color_data_second_[i + 1] = bus_.Palette[0][1];
             screen_color_data_second_[i + 2] = bus_.Palette[0][2];
             screen_color_data_second_[i + 3] = 255;
         }
-        for (int i = 0; i < (screen_color_data_.size() - 4); i += 4)
+        for (size_t i = 0; i < (screen_color_data_.size() - 4); i += 4)
         {
             screen_color_data_[i + 0] = bus_.Palette[0][0];
             screen_color_data_[i + 1] = bus_.Palette[0][1];
@@ -384,7 +383,6 @@ namespace hydra::Gameboy
             bool xFlip = attributes & 0b100000;
             // if its 8 aligned the sprite cant be between two tiles so we dont
             // need to fetch the attributes every pixel
-            bool is_8_aligned = (positionX % 8) == 0;
             int height = use8x16 ? 16 : 8;
             int line = LY - positionY;
             if (yFlip)

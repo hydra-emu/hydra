@@ -43,8 +43,8 @@ namespace hydra
     // TODO: detect emutype by magic bytes instead of extension
     EmuType EmulatorFactory::GetEmulatorType(std::filesystem::path path)
     {
-        auto ext = path.extension().string();
-        std::transform(ext.begin(), ext.end(), ext.begin(),
+        auto extension = path.extension().string();
+        std::transform(extension.begin(), extension.end(), extension.begin(),
                        [](unsigned char c) { return std::tolower(c); });
         if (extension_mappings_.empty())
         {
@@ -59,7 +59,7 @@ namespace hydra
         }
         try
         {
-            return extension_mappings_.at(ext);
+            return extension_mappings_.at(extension);
         } catch (...)
         {
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Unknown file extension");

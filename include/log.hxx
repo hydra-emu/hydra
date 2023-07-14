@@ -32,7 +32,8 @@ struct Logger
         log_impl<LogInfo, ConsoleNormal>(str);
     }
 
-    template <typename... T> static void Debug(fmt::format_string<T...> fmt, T&&... args)
+    template <typename... T>
+    static void Debug([[maybe_unused]] fmt::format_string<T...> fmt, [[maybe_unused]] T&&... args)
     {
 #if ENABLE_DEBUG == 1
         std::string str = fmt::format(fmt, std::forward<T>(args)...);

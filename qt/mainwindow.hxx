@@ -1,23 +1,23 @@
 #pragma once
 
+#include "../include/emulator.hxx"
+#include "../include/emulator_factory.hxx"
+#include "screenwidget.hxx"
+#include <QFileDialog>
+#include <QLabel>
 #include <QMainWindow>
 #include <QMenuBar>
-#include <QFileDialog>
 #include <QStatusBar>
 #include <QVBoxLayout>
-#include <QLabel>
-#include <memory>
 #include <array>
-#include "../include/emulator_factory.hxx"
-#include "../include/emulator.hxx"
-#include "screenwidget.hxx"
+#include <memory>
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-private:
-    void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
+  private:
+    void keyPressEvent(QKeyEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
 
     // Initialization functions
     void create_actions();
@@ -41,11 +41,11 @@ private:
     void setup_emulator_specific();
     void empty_screen();
 
-private slots:
+  private slots:
     void redraw_screen();
 
-public:
-    MainWindow(QWidget *parent = nullptr);
+  public:
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
     QMenu* file_menu_;
     QMenu* emulation_menu_;
@@ -63,7 +63,7 @@ public:
     QAction* tracelogger_act_;
     ScreenWidget* screen_;
     std::shared_ptr<hydra::Emulator> emulator_;
-    std::array<QWidget*, 2> emulator_tools_ {};
+    std::array<QWidget*, 2> emulator_tools_{};
     hydra::EmuType emulator_type_;
     std::thread emulator_thread_;
     bool settings_open_ = false;

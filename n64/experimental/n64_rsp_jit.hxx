@@ -3,20 +3,23 @@
 
 // Currently not used
 
-#include <xbyak/xbyak.h>
-#include <vector>
-#include <optional>
-#include <array>
 #include "n64_register_allocation.hxx"
 #include "n64_types.hxx"
+#include <array>
+#include <optional>
+#include <vector>
+#include <xbyak/xbyak.h>
 
-namespace hydra::N64 {
-    using block = int(*)();
+namespace hydra::N64
+{
+    using block = int (*)();
 
-    struct RSPJit {
+    struct RSPJit
+    {
         RSPJit() = default;
         void create_block(uint32_t* code);
-    private:
+
+      private:
         std::array<block, 0x400> blocks_;
         std::array<MemDataUnionDW, 32> registers_;
         uint64_t rpc_;
@@ -29,5 +32,5 @@ namespace hydra::N64 {
         std::array<std::optional<Reg64>, 32> register_allocations_;
         int next_allocatable_host_register_ = 0;
     };
-}
+} // namespace hydra::N64
 #endif
