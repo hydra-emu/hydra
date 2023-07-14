@@ -1,6 +1,5 @@
 #pragma once
-#ifndef TKP_N64_COMMON_TYPES_H
-#define TKP_N64_COMMON_TYPES_H
+
 #include <cstdint>
 #include <limits>
 #include <immintrin.h>
@@ -296,4 +295,3 @@ namespace hydra::N64 {
     static_assert(sizeof(MemDataUnionDW) == sizeof(int64_t), "Size of MemDataUnionDW mismatch!");
     static_assert(std::numeric_limits<float>::is_iec559, "float data type is not ISO/IEC/IEEE 60559:2011 compliant!");
 }
-#endif

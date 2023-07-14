@@ -1,11 +1,11 @@
 #pragma once
-#ifndef TKP_TOOLS_GBADDR_H
-#define TKP_TOOLS_GBADDR_H
-#include <cstdint>
+
 #include <array>
+#include <cstdint>
 
 using RegisterType = uint8_t;
 using BigRegisterType = uint16_t;
+
 enum LCDCFlag {
     BG_ENABLE = 1 << 0,
     OBJ_ENABLE = 1 << 1,
@@ -16,6 +16,7 @@ enum LCDCFlag {
     WND_TILEMAP = 1 << 6,
     LCD_ENABLE = 1 << 7
 };
+
 enum STATFlag {
     MODE = 0b11,
     COINCIDENCE = 1 << 2,
@@ -24,6 +25,7 @@ enum STATFlag {
     MODE2_INTER = 1 << 5,
     COINC_INTER = 1 << 6
 };
+
 enum IFInterrupt {
     VBLANK = 1 << 0,
     LCDSTAT = 1 << 1,
@@ -31,24 +33,16 @@ enum IFInterrupt {
     SERIAL = 1 << 3,
     JOYPAD = 1 << 4
 };
+
 constexpr std::array<uint8_t, 0x100> InstrTimes = {
-    0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
-    0, 2, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0,
-    1, 2, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0,
-    1, 2, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 2, 2, 2, 0, 1, 0, 0, 0, 2, 1, 2, 2, 2, 0,
-    0, 0, 2, 0, 2, 0, 1, 0, 0, 0, 2, 0, 2, 0, 1, 1,
-    0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 2,
-    1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0
-};
+    0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0,
+    1, 2, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 2, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 2, 2, 2, 0, 1, 0, 0, 0, 2, 1, 2, 2, 2, 0, 0, 0, 2, 0, 2, 0, 1, 0, 0, 0, 2, 0, 2, 0, 1, 1,
+    0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0};
 constexpr auto cl_white = 0;
 constexpr auto cl_lgray = 1;
 constexpr auto cl_dgray = 2;
@@ -111,7 +105,7 @@ constexpr auto addr_bcpd = 0xFF69;
 constexpr auto addr_ocps = 0xFF6A;
 constexpr auto addr_ocpd = 0xFF6B;
 // CGB bank registers
-constexpr auto addr_vbk  = 0xFF4F;
+constexpr auto addr_vbk = 0xFF4F;
 constexpr auto addr_svbk = 0xFF70;
 
 constexpr auto addr_if = 0xFF0F;
@@ -127,4 +121,3 @@ constexpr uint8_t FLAG_ZERO_SHIFT = 7;
 constexpr uint8_t FLAG_NEG_SHIFT = 6;
 constexpr uint8_t FLAG_HCARRY_SHIFT = 5;
 constexpr uint8_t FLAG_CARRY_SHIFT = 4;
-#endif

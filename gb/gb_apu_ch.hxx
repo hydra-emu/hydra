@@ -1,11 +1,14 @@
 #pragma once
-#ifndef TKP_GB_APU_CH_H
-#define TKP_GB_APU_CH_H
+
 #include <array>
 #include <memory>
-namespace hydra::Gameboy {
-    constexpr int Waveforms[4] = { 0b00000001, 0b00000011, 0b00001111, 0b11111100 };
-    struct APUChannel {
+
+namespace hydra::Gameboy
+{
+    constexpr int Waveforms[4] = {0b00000001, 0b00000011, 0b00001111, 0b11111100};
+
+    struct APUChannel
+    {
         // TODO: some of these variables dont need to be public
         int FrequencyTimer = 0;
         int WaveDutyPattern = 2;
@@ -52,13 +55,16 @@ namespace hydra::Gameboy {
         void ClockVolEnv();
         void ClockSweep();
         void CalculateSweepFreq();
-        inline uint8_t GlobalVolume() {
+
+        inline uint8_t GlobalVolume()
+        {
             return ((LeftEnabled * LeftVolume) || (RightEnabled * RightVolume));
         }
-    private:
+
+      private:
         int new_frequency = 0;
     };
+
     using ChannelArray = std::array<APUChannel, 4>;
     using ChannelArrayPtr = std::shared_ptr<ChannelArray>;
-}
-#endif
+} // namespace hydra::Gameboy

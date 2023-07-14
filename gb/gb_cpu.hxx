@@ -1,26 +1,31 @@
 #pragma once
-#ifndef TKP_GB_CPU_H
-#define TKP_GB_CPU_H
-#include <cstdint>
-#include <string>
+
 #include <array>
-#include <iomanip>
+#include <cstdint>
 #include <fstream>
+#include <gb/gb_addresses.hxx>
 #include <gb/gb_bus.hxx>
 #include <gb/gb_ppu.hxx>
 #include <gb/gb_timer.hxx>
-#include <gb/gb_addresses.hxx>
-namespace hydra::Gameboy::QA {
+#include <iomanip>
+#include <string>
+
+namespace hydra::Gameboy::QA
+{
     class TestGameboy;
 }
-namespace hydra::Gameboy {
-    class CPU {
-    public:
+
+namespace hydra::Gameboy
+{
+    class CPU
+    {
+      public:
         // CPU registers
         RegisterType A, B, C, D, E, H, L, F;
         BigRegisterType PC, SP;
         uint8_t last_instr_ = 0;
-    private:
+
+      private:
         Bus& bus_;
         PPU& ppu_;
         APU& apu_;
@@ -31,6 +36,7 @@ namespace hydra::Gameboy {
         int tRemove = 0;
         bool stop_ = false;
 
+        // clang-format off
         // Instruction functions
         void NOP(); void LDBC16(); void LDBCA(); void INCBC(); void INCB(); void DECB(); void LDB8(); void RLCA(); void LD16SP(); void ADDHLBC(); void LDABC(); void DECBC(); void INCC(); void DECC(); void LDC8(); void RRCA();
         void STOP(); void LDDE16(); void LDDEA(); void INCDE(); void INCD(); void DECD(); void LDD8(); void RLA(); void JR8(); void ADDHLDE(); void LDADE(); void DECDE(); void INCE(); void DECE(); void LDE8(); void RRA();
@@ -66,6 +72,7 @@ namespace hydra::Gameboy {
         void SET2B(); void SET2C(); void SET2D(); void SET2E(); void SET2H(); void SET2L(); void SET2HL(); void SET2A(); void SET3B(); void SET3C(); void SET3D(); void SET3E(); void SET3H(); void SET3L(); void SET3HL(); void SET3A();
         void SET4B(); void SET4C(); void SET4D(); void SET4E(); void SET4H(); void SET4L(); void SET4HL(); void SET4A(); void SET5B(); void SET5C(); void SET5D(); void SET5E(); void SET5H(); void SET5L(); void SET5HL(); void SET5A();
         void SET6B(); void SET6C(); void SET6D(); void SET6E(); void SET6H(); void SET6L(); void SET6HL(); void SET6A(); void SET7B(); void SET7C(); void SET7D(); void SET7E(); void SET7H(); void SET7L(); void SET7HL(); void SET7A();
+        // clang-format on
 
         // Undefined instructions
         void XXX();
@@ -79,7 +86,7 @@ namespace hydra::Gameboy {
         inline void reg_add(RegisterType& reg);
         inline void reg_adc(RegisterType& reg);
         inline void reg_cmp(RegisterType& reg);
-        inline void reg_or (RegisterType& reg);
+        inline void reg_or(RegisterType& reg);
         inline void reg_xor(RegisterType& reg);
         inline void big_reg_inc(RegisterType& big_reg, RegisterType& small_reg);
         inline void big_reg_dec(RegisterType& big_reg, RegisterType& small_reg);
@@ -108,17 +115,21 @@ namespace hydra::Gameboy {
         int get_clk_freq();
         void setup_hwio();
 
-    public:
+      public:
         CPU(Bus& bus, PPU& ppu, APU& apu, Timer& timer);
         bool halt_ = false;
         bool ime_ = false;
         bool skip_next_ = false;
-        struct Instruction {
+
+        struct Instruction
+        {
             std::string name;
-            void(CPU::* op)() = nullptr;
+            void (CPU::*op)() = nullptr;
             // TODO: remove instr times, use the ones in gb_addresses instead
             int skip = 0;
         };
+
+        // clang-format off
         std::array<Instruction, 0x100> Instructions = { {
             { "NOP", &CPU::NOP }, { "LDBC16", &CPU::LDBC16, 2 }, { "LDBCA", &CPU::LDBCA }, { "INCBC", &CPU::INCBC }, { "INCB", &CPU::INCB }, { "DECB", &CPU::DECB }, { "LDB8", &CPU::LDB8, 1 }, { "RLCA", &CPU::RLCA }, { "LD16SP", &CPU::LD16SP, 2 }, { "ADDHLBC", &CPU::ADDHLBC }, { "LDABC", &CPU::LDABC }, { "DECBC", &CPU::DECBC }, { "INCC", &CPU::INCC }, { "DECC", &CPU::DECC }, { "LDC8", &CPU::LDC8, 1 }, { "RRCA", &CPU::RRCA },
             { "STOP", &CPU::STOP }, { "LDDE16", &CPU::LDDE16, 2 }, { "LDDEA", &CPU::LDDEA }, { "INCDE", &CPU::INCDE }, { "INCD", &CPU::INCD }, { "DECD", &CPU::DECD }, { "LDD8", &CPU::LDD8, 1 }, { "RLA", &CPU::RLA }, { "JR8", &CPU::JR8, 1 }, { "ADDHLDE", &CPU::ADDHLDE }, { "LDADE", &CPU::LDADE }, { "DECDE", &CPU::DECDE }, { "INCE", &CPU::INCE }, { "DECE", &CPU::DECE }, { "LDE8", &CPU::LDE8, 1 }, { "RRA", &CPU::RRA },
@@ -137,6 +148,7 @@ namespace hydra::Gameboy {
             { "LDH8A", &CPU::LDH8A }, { "POPHL", &CPU::POPHL }, { "LDHCA", &CPU::LDHCA }, { "???", &CPU::XXX }, { "???", &CPU::XXX }, { "PUSHHL", &CPU::PUSHHL }, { "AND8", &CPU::AND8, 1 }, { "RST20", &CPU::RST20 }, { "ADDSPD", &CPU::ADDSPD, 1 }, { "JPHL", &CPU::JPHL }, { "LD16A", &CPU::LD16A }, { "???", &CPU::XXX }, { "???", &CPU::XXX }, { "???", &CPU::XXX }, { "XOR8", &CPU::XOR8, 1 }, { "RST28", &CPU::RST28 },
             { "LDHA8", &CPU::LDHA8, 1 }, { "POPAF", &CPU::POPAF }, { "LDAMC", &CPU::LDAMC }, { "DI", &CPU::DI }, { "???", &CPU::XXX }, { "PUSHAF", &CPU::PUSHAF }, { "OR8", &CPU::OR8, 1 }, { "RST30", &CPU::RST30 }, { "LDHLSPD", &CPU::LDHLSPD, 1 }, { "LDSPHL", &CPU::LDSPHL }, { "LDA16", &CPU::LDA16, 2 }, { "EI", &CPU::EI }, { "???", &CPU::XXX }, { "???", &CPU::XXX }, { "CP8", &CPU::CP8, 1 }, { "RST38", &CPU::RST38 }
         } };
+
         std::array<Instruction, 0x100> CBInstructions = { {
             { "RLCB", &CPU::RLCB }, { "RLCC", &CPU::RLCC }, { "RLCD", &CPU::RLCD }, { "RLCE", &CPU::RLCE }, { "RLCH", &CPU::RLCH }, { "RLCL", &CPU::RLCL }, { "RLCHL", &CPU::RLCHL }, { "RLCAr", &CPU::RLCAr },  { "RRCB", &CPU::RRCB }, { "RRCC", &CPU::RRCC }, { "RRCD", &CPU::RRCD }, { "RRCE", &CPU::RRCE }, { "RRCH", &CPU::RRCH }, { "RRCL", &CPU::RRCL }, { "RRCHL", &CPU::RRCHL }, { "RRCAr", &CPU::RRCAr },
             { "RLB", &CPU::RLB }, { "RLC", &CPU::RLC }, { "RLD", &CPU::RLD }, { "RLE", &CPU::RLE }, { "RLH", &CPU::RLH }, { "RLL", &CPU::RLL }, { "RLHL", &CPU::RLHL }, { "RLAr", &CPU::RLAr }, { "RRB", &CPU::RRB }, { "RRC", &CPU::RRC },  { "RRD", &CPU::RRD },  { "RRE", &CPU::RRE },  { "RRH", &CPU::RRH },  { "RRL", &CPU::RRL },  { "RRHL", &CPU::RRHL },  { "RRAr", &CPU::RRAr },
@@ -155,6 +167,7 @@ namespace hydra::Gameboy {
             { "SET4B", &CPU::SET4B }, { "SET4C", &CPU::SET4C }, { "SET4D", &CPU::SET4D }, { "SET4E", &CPU::SET4E }, { "SET4H", &CPU::SET4H }, { "SET4L", &CPU::SET4L }, { "SET4HL", &CPU::SET4HL }, { "SET4A", &CPU::SET4A }, { "SET5B", &CPU::SET5B }, { "SET5C", &CPU::SET5C }, { "SET5D", &CPU::SET5D }, { "SET5E", &CPU::SET5E }, { "SET5H", &CPU::SET5H }, { "SET5L", &CPU::SET5L }, { "SET5HL", &CPU::SET5HL }, { "SET5A", &CPU::SET5A },
             { "SET6B", &CPU::SET6B }, { "SET6C", &CPU::SET6C }, { "SET6D", &CPU::SET6D }, { "SET6E", &CPU::SET6E }, { "SET6H", &CPU::SET6H }, { "SET6L", &CPU::SET6L }, { "SET6HL", &CPU::SET6HL }, { "SET6A", &CPU::SET6A }, { "SET7B", &CPU::SET7B }, { "SET7C", &CPU::SET7C }, { "SET7D", &CPU::SET7D }, { "SET7E", &CPU::SET7E }, { "SET7H", &CPU::SET7H }, { "SET7L", &CPU::SET7L }, { "SET7HL", &CPU::SET7HL }, { "SET7A", &CPU::SET7A }
         } };
+        // clang-format on
 
         // Memory mapped registers, they are a reference to a position in memory
         RegisterType &IF, &IE, &LY, &STAT;
@@ -164,8 +177,9 @@ namespace hydra::Gameboy {
         unsigned long TotalClocks = 0;
         void Reset(bool skip);
         int Update();
+
         uint8_t GetLastInstr() { return last_instr_; }
         friend class hydra::Gameboy::QA::TestGameboy;
     };
-}
+} // namespace hydra::Gameboy
 #endif

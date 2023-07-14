@@ -1,16 +1,18 @@
 #pragma once
-#ifndef TKP_GB_PPU_H
-#define TKP_GB_PPU_H
-#include <gb/gb_bus.hxx>
-#include <gb/gb_addresses.hxx>
-#include <mutex>
+
 #include <array>
+#include <gb/gb_addresses.hxx>
+#include <gb/gb_bus.hxx>
+#include <mutex>
 #include <queue>
 
-namespace hydra::Gameboy {
+namespace hydra::Gameboy
+{
     constexpr int FRAME_CYCLES = 70224;
-    class PPU {
-    public:
+
+    class PPU
+    {
+      public:
         bool ReadyToDraw = false;
         bool SpriteDebugColor = false;
         bool DrawBackground = true;
@@ -22,12 +24,13 @@ namespace hydra::Gameboy {
         void Reset();
         uint8_t* GetScreenData();
         void FillTileset(float* pixels, size_t x_off = 0, size_t y_off = 0, uint16_t addr = 0x8000);
-    private:
+
+      private:
         Bus& bus_;
         std::vector<uint8_t> screen_color_data_{};
         std::vector<uint8_t> screen_color_data_second_{};
         // PPU memory mapped registers
-        uint8_t& LCDC, &STAT, &LYC, &LY, &IF, &SCY, &SCX, &WY, &WX;
+        uint8_t &LCDC, &STAT, &LYC, &LY, &IF, &SCY, &SCX, &WY, &WX;
         std::vector<uint8_t> cur_scanline_sprites_;
         uint8_t window_internal_temp_ = 0;
         uint8_t window_internal_ = 0;
@@ -43,5 +46,4 @@ namespace hydra::Gameboy {
         inline void render_tiles();
         inline void render_sprites();
     };
-}
-#endif
+} // namespace hydra::Gameboy

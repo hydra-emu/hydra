@@ -1,5 +1,5 @@
 #include "aboutwindow.hxx"
-#include <include/error_factory.hxx>
+#include <error_factory.hxx>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -9,7 +9,7 @@
 AboutWindow::AboutWindow(bool& open, QWidget* parent) : open_(open), QDialog(parent) {
     static QString html;
     if (html.isEmpty()) {
-        QFile file(":/data/about.html");
+        QFile file(":/about.html");
         if (file.open(QIODevice::ReadOnly))
             html = file.readAll();
         else
@@ -28,8 +28,8 @@ AboutWindow::AboutWindow(bool& open, QWidget* parent) : open_(open), QDialog(par
     top_qgb->setFlat(true);
     bot_qgb->setFlat(true);
     top_qgb->setStyleSheet("border:0;");
-    hydra->setPixmap(QPixmap::fromImage(QImage(":/data/images/hydra.png")));
-    logo->setPixmap(QPixmap::fromImage(QImage(":/data/images/logo.png")));
+    hydra->setPixmap(QPixmap::fromImage(QImage(":/images/hydra.png")));
+    logo->setPixmap(QPixmap::fromImage(QImage(":/images/logo.png")));
     lbl_text->setText(html);
     lbl_text->setTextFormat(Qt::RichText);
     lbl_text->setTextInteractionFlags(Qt::TextBrowserInteraction);

@@ -1,11 +1,11 @@
-#ifndef TKP_KEYPICKER_HXX
-#define TKP_KEYPICKER_HXX
+#pragma once
+
 #include <QWidget>
 #include <QComboBox>
 #include <QTableWidget>
 #include <QTabWidget>
 #include <QVBoxLayout>
-#include <include/emulator_types.hxx>
+#include <emulator_types.hxx>
 
 class KeyPickerPage : public QWidget
 {
@@ -24,4 +24,3 @@ private:
     QVBoxLayout* layout_;
     void saveKeySettings();
 };
-#endif

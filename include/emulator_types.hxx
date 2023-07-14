@@ -1,7 +1,7 @@
 #pragma once
-#ifndef TKP_EMUTYPES_H
-#define TKP_EMUTYPES_H
-namespace hydra {
+
+namespace hydra
+{
     enum class EmuType {
         Gameboy,
         NES,
@@ -12,5 +12,5 @@ namespace hydra {
         Error
     };
 }
+
 constexpr static int EmuTypeSize = static_cast<int>(hydra::EmuType::EmuTypeSize);
-#endif

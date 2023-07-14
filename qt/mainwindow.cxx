@@ -2,9 +2,9 @@
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
 #include "aboutwindow.hxx"
-#include <include/error_factory.hxx>
-#include <include/emulator_settings.hxx>
-#include <qt/emulator_tool_factory.hxx>
+#include <error_factory.hxx>
+#include <emulator_settings.hxx>
+#include <emulator_tool_factory.hxx>
 #include <QMessageBox>
 #include <QTimer>
 #include <QKeyEvent>
@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(160, 160);
     resize(640, 480);
     setWindowTitle("hydra");
-    setWindowIcon(QIcon(":/data/images/hydra.png"));
+    setWindowIcon(QIcon(":/images/hydra.png"));
 
     QTimer *timer = new QTimer(this);
     timer->start(16);
@@ -65,7 +65,7 @@ void MainWindow::create_actions() {
     open_act_ = new QAction(tr("&Open ROM"), this);
     open_act_->setShortcuts(QKeySequence::Open);
     open_act_->setStatusTip(tr("Open a ROM"));
-    open_act_->setIcon(QIcon(":/data/images/open.png"));
+    open_act_->setIcon(QIcon(":/images/open.png"));
     connect(open_act_, &QAction::triggered, this, &MainWindow::open_file);
     settings_act_ = new QAction(tr("&Settings"), this);
     settings_act_->setShortcut(Qt::CTRL | Qt::Key_Comma);
@@ -95,17 +95,17 @@ void MainWindow::create_actions() {
     shaders_act_ = new QAction(tr("&Shaders"), this);
     shaders_act_->setShortcut(Qt::Key_F11);
     shaders_act_->setStatusTip("Open the shader editor");
-    shaders_act_->setIcon(QIcon(":/data/images/shaders.png"));
+    shaders_act_->setIcon(QIcon(":/images/shaders.png"));
     connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
     debugger_act_ = new QAction(tr("&Debugger"), this);
     debugger_act_->setShortcut(Qt::Key_F2);
     debugger_act_->setStatusTip("Open the debugger");
-    debugger_act_->setIcon(QIcon(":/data/images/debugger.png"));
+    debugger_act_->setIcon(QIcon(":/images/debugger.png"));
     connect(debugger_act_, &QAction::triggered, this, &MainWindow::open_debugger);
     tracelogger_act_ = new QAction(tr("&Tracelogger"), this);
     tracelogger_act_->setShortcut(Qt::Key_F3);
     tracelogger_act_->setStatusTip("Open the tracelogger");
-    tracelogger_act_->setIcon(QIcon(":/data/images/tracelogger.png"));
+    tracelogger_act_->setIcon(QIcon(":/images/tracelogger.png"));
     connect(tracelogger_act_, &QAction::triggered, this, &MainWindow::open_tracelogger);
 }
 
@@ -285,7 +285,7 @@ void MainWindow::enable_emulation_actions(bool should) {
 }
 
 void MainWindow::setup_emulator_specific() {
-    QFile f(":/data/emulators.json");
+    QFile f(":/emulators.json");
     if (!f.open(QIODevice::ReadOnly)) {
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open default emulators.json");
     }
@@ -298,7 +298,7 @@ void MainWindow::setup_emulator_specific() {
         }
         data_mappings = f2.readAll();
     } else {
-        QFile f2(":/data/mappings.json");
+        QFile f2(":/mappings.json");
         if (!f2.open(QIODevice::ReadOnly)) {
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open default mappings.json");
         }
@@ -339,7 +339,7 @@ void MainWindow::setup_emulator_specific() {
         if (!std::filesystem::exists(hydra::EmulatorFactory::GetSavePath() + e.SettingsFile)) {
             std::ofstream ofs(hydra::EmulatorFactory::GetSavePath() + e.SettingsFile);
             if (ofs.is_open()) {
-                QFile resource(std::string(":/data/" + e.SettingsFile).c_str());
+                QFile resource(std::string(":/" + e.SettingsFile).c_str());
                 if (!resource.open(QIODeviceBase::ReadOnly))
                     throw ErrorFactory::generate_exception(__func__, __LINE__, "Could not open resource file");
                 ofs << resource.readAll().toStdString();

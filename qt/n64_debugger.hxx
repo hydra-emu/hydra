@@ -7,7 +7,7 @@
 #include <QGridLayout>
 #include <QTabWidget>
 #include <memory>
-#include <include/emulator_types.hxx>
+#include <emulator_types.hxx>
 #include <n64/n64_tkpwrapper.hxx>
 #include <QFontDatabase>
 #include <QSyntaxHighlighter>

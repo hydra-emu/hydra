@@ -1,14 +1,18 @@
-#ifndef TKP_NES_APU_H
-#define TKP_NES_APU_H
+#pragma once
+
 #include <cstdint>
 
-namespace hydra::NES {
+namespace hydra::NES
+{
     class CPUBus;
-    class APU {
-    public:
+
+    class APU
+    {
+      public:
         void Tick();
         void Reset();
-    private:
+
+      private:
         void invalidate(uint8_t addr, uint8_t data);
         __always_inline void tick_impl();
         bool should_tick_ = false;
@@ -17,5 +21,4 @@ namespace hydra::NES {
 
         friend class CPUBus;
     };
-}
-#endif
+} // namespace hydra::NES

@@ -1,6 +1,5 @@
 #pragma once
-#ifndef TKP_N64_RCP_H
-#define TKP_N64_RCP_H
+
 #include <array>
 #include <cstdint>
 #include "n64_vi.hxx"
@@ -39,4 +38,3 @@ namespace hydra::N64 {
         friend class ::N64Debugger;
     };
 }
-#endif

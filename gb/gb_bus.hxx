@@ -1,37 +1,45 @@
 #pragma once
-#ifndef TKP_GB_BUS_H
-#define TKP_GB_BUS_H
-#include <string>
-#include <cstdint>
+
 #include <array>
-#include <vector>
-#include <fstream>
-#include <iterator>
-#include <memory>
+#include <cstdint>
 #include <deque>
-#include <optional>
-#include <unordered_map>
-#include <gb/gb_cartridge.hxx>
+#include <fstream>
 #include <gb/gb_addresses.hxx>
 #include <gb/gb_apu.hxx>
 #include <gb/gb_apu_ch.hxx>
-namespace hydra::Gameboy {
+#include <gb/gb_cartridge.hxx>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+namespace hydra::Gameboy
+{
     class Gameboy_TKPWrapper;
 }
-namespace hydra::Gameboy {
-    struct Change {
+
+namespace hydra::Gameboy
+{
+    struct Change
+    {
         int type = 0;
         std::optional<std::array<uint16_t, 4>> new_bg_pal = std::nullopt;
         int new_bg_pal_index = 0;
         std::optional<bool> new_bg_en = std::nullopt;
     };
+
     using PaletteColors = std::array<uint16_t, 4>;
     class PPU;
-    class Bus {
-    private:
+
+    class Bus
+    {
+      private:
         using RamBank = std::array<uint8_t, 0x2000>;
         using RomBank = std::array<uint8_t, 0x4000>;
-    public:
+
+      public:
         bool BiosEnabled = false;
         Bus(ChannelArrayPtr channel_array_ptr);
         ~Bus();
@@ -67,7 +75,8 @@ namespace hydra::Gameboy {
         uint8_t selected_ram_bank_ = 0;
         uint8_t selected_rom_bank_ = 1;
         uint8_t selected_rom_bank_high_ = 0;
-    private:
+
+      private:
         bool ram_enabled_ = false;
         bool rtc_enabled_ = false;
         bool banking_mode_ = false;
@@ -128,5 +137,4 @@ namespace hydra::Gameboy {
         friend class PPU;
         friend class hydra::Gameboy::Gameboy_TKPWrapper;
     };
-}
-#endif
+} // namespace hydra::Gameboy

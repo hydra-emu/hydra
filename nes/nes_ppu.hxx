@@ -1,28 +1,34 @@
-#ifndef TKP_NES_PPU_H
-#define TKP_NES_PPU_H
-#include <cstdint>
-#include <array>
-#include <mutex>
-#include <functional>
+#pragma once
 
-namespace hydra::NES {
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <mutex>
+
+namespace hydra::NES
+{
     class CPUBus;
-    struct Sprite {
+
+    struct Sprite
+    {
         uint8_t y = 0xFF;
         uint8_t tile_index = 0xFF;
         uint8_t attributes = 0xFF;
         uint8_t x = 0xFF;
     };
-    class PPU {
-    public:
+
+    class PPU
+    {
+      public:
         PPU();
         void Tick();
         void Reset();
         uint8_t* GetScreenData();
         void SetNMI(std::function<void()> func);
-    private:
-        uint8_t ppu_ctrl_ = 0, ppu_mask_ = 0, ppu_status_ = 0, oam_addr_ = 0,
-            oam_data_ = 0, ppu_scroll_ = 0, ppu_data_ = 0, oam_dma_ = 0;
+
+      private:
+        uint8_t ppu_ctrl_ = 0, ppu_mask_ = 0, ppu_status_ = 0, oam_addr_ = 0, oam_data_ = 0,
+                ppu_scroll_ = 0, ppu_data_ = 0, oam_dma_ = 0;
         uint16_t vram_addr_ = 0;
         int scanline_ = 0;
         int scanline_cycle_ = 0;
@@ -45,18 +51,19 @@ namespace hydra::NES {
         bool sprite_size_ = false;
         bool ppu_master_ = false;
         bool nmi_output_ = false;
-        std::array<uint8_t, 0x800> vram_ {};
+        std::array<uint8_t, 0x800> vram_{};
         std::array<uint8_t, 256 * 240 * 4> screen_color_data_;
         std::array<uint8_t, 256 * 240 * 4> screen_color_data_second_;
-        std::array<Sprite, 64> oam_ {};
-        std::array<Sprite, 8> secondary_oam_ {};
-        // Holds the pattern table data for up to 8 sprites, to be rendered on the current scanline. Unused sprites are loaded with an all-transparent set of values
-        std::array<std::pair<uint8_t, uint8_t>, 8> sprite_shift_registers_ {};
+        std::array<Sprite, 64> oam_{};
+        std::array<Sprite, 8> secondary_oam_{};
+        // Holds the pattern table data for up to 8 sprites, to be rendered on the current scanline.
+        // Unused sprites are loaded with an all-transparent set of values
+        std::array<std::pair<uint8_t, uint8_t>, 8> sprite_shift_registers_{};
         // Holds the attribute bytes for up to 8 sprites
-        std::array<uint8_t, 8> attribute_latches_ {};
+        std::array<uint8_t, 8> attribute_latches_{};
         // Holds the X positions for up to 8 sprites on the current scanline
-        std::array<uint8_t, 8> sprite_counters_ {};
-        std::array<bool, 8> sprite_active_ {};
+        std::array<uint8_t, 8> sprite_counters_{};
+        std::array<bool, 8> sprite_active_{};
         uint8_t scanline_sprite_count_ = 0;
         std::array<std::array<uint8_t, 3>, 0x40> master_palette_;
         std::array<uint8_t, 3> universal_bg_;
@@ -64,8 +71,8 @@ namespace hydra::NES {
         bool draw_metatile_grid_ = false;
         bool draw_attribute_grid_ = false;
         using Palettes = std::array<std::array<std::array<uint8_t, 3>, 4>, 4>;
-        Palettes background_palettes_ {};
-        Palettes sprite_palettes_ {};
+        Palettes background_palettes_{};
+        Palettes sprite_palettes_{};
         __always_inline void handle_normal_scanline();
         __always_inline void handle_empty_scanline();
         __always_inline void handle_prerender_scanline();
@@ -86,5 +93,4 @@ namespace hydra::NES {
         uint64_t master_clock_dbg_ = 0;
         friend class CPUBus;
     };
-}
-#endif
+} // namespace hydra::NES

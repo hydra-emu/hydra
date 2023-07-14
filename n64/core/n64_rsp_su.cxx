@@ -1,5 +1,5 @@
 #include "n64_rsp.hxx"
-#include <include/log.hxx>
+#include <log.hxx>
 
 #define rdreg (gpr_regs_[instruction_.RType.rd])
 #define rsreg (gpr_regs_[instruction_.RType.rs])

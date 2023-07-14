@@ -56,7 +56,7 @@ Any contribution is welcome. Fork, open an issue or work on existing ones, or wo
 
 ## License
 hydra is licensed under the MIT license    
-Copyright (C) 2021-2022 Paris Oplopoios
+Copyright (C) 2021-2023 Paris Oplopoios
 
 ## Contributors
 [![GitHub contributors](https://contrib.rocks/image?repo=OFFTKP/hydra)](https://github.com/OFFTKP/hydra/graphs/contributors)

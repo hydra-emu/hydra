@@ -1,5 +1,5 @@
 #include "n64_cpu.hxx"
-#include <include/log.hxx>
+#include <log.hxx>
 #include <functional>
 
 #define rdreg (gpr_regs_[instruction_.RType.rd])

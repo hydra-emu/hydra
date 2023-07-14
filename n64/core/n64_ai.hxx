@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <include/miniaudio.h>
-#include <include/log.hxx>
+#include <miniaudio.h>
+#include <log.hxx>
 #include <array>
 #include <cstring>
 #include <vector>

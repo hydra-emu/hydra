@@ -1,13 +1,14 @@
 #pragma once
-#ifndef TKP_GB_CARTRIDGE_H
-#define TKP_GB_CARTRIDGE_H
+
 // TODO: fix crashes when loading bad roms (utils)
-#include <string>
-#include <vector>
 #include <array>
 #include <cstdint>
+#include <string>
+#include <vector>
 #define ENTRY_POINT 0x100
-namespace hydra::Gameboy {
+
+namespace hydra::Gameboy
+{
     class Bus;
     enum class CartridgeType {
         ERROR = 0x4,
@@ -40,7 +41,9 @@ namespace hydra::Gameboy {
         HuC3 = 0xFE,
         HuC1_RAM_BATTERY = 0xFF
     };
-    struct Header {
+
+    struct Header
+    {
         char unusedData[0x34];
         char name[0xB];
         char manufacturer[0x4];
@@ -56,15 +59,19 @@ namespace hydra::Gameboy {
         char headerChecksum;
         char globalChecksum[2];
     };
-    class Cartridge {
-    private:
-        Header header_ {};
+
+    class Cartridge
+    {
+      private:
+        Header header_{};
         int k = sizeof(header_);
-        static constexpr std::array<int, 6> ram_sizes_ { 0, 0, 1, 4, 16, 8 };
+        static constexpr std::array<int, 6> ram_sizes_{0, 0, 1, 4, 16, 8};
         bool text_cached_ = false;
         bool using_battery_ = false;
-    public:
-        bool Load(const std::string& filename, std::vector<std::array<uint8_t, 0x4000>>& romBanks, std::vector<std::array<uint8_t, 0x2000>>& ramBanks);
+
+      public:
+        bool Load(const std::string& filename, std::vector<std::array<uint8_t, 0x4000>>& romBanks,
+                  std::vector<std::array<uint8_t, 0x2000>>& ramBanks);
         CartridgeType GetCartridgeType();
         int GetRamSize();
         int GetRomSize();
@@ -76,5 +83,4 @@ namespace hydra::Gameboy {
         bool UseCGB = false;
         friend class Bus;
     };
-}
-#endif
+} // namespace hydra::Gameboy

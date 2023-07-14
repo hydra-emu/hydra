@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
+# TODO: don't always compile with -g and boost stacktrace
 set(CMAKE_CXX_FLAGS "-g -O3 -mcrc32 -no-pie -fno-pie -Wno-literal-suffix -Werror=return-type -DBOOST_STACKTRACE_USE_ADDR2LINE")
 set(OpenGL_GL_PREFERENCE GLVND)
 
@@ -27,7 +28,7 @@ add_compile_options(-fsanitize=address)
 add_link_options(-fsanitize=address)
 
 set(PROJECT_SOURCES
-    resources.qrc
+    data/resources.qrc
     qt/main.cxx
     qt/mainwindow.cxx
     qt/screenwidget.cxx
@@ -94,7 +95,7 @@ set(N64_FILES
     n64/core/n64_vi.cxx
     n64/core/n64_ai.cxx
     n64/core/n64_cpudisassemble.cxx
-    src/miniaudio.c
+    vendored/miniaudio.c
 )
 
 qt_add_executable(hydra
@@ -111,7 +112,12 @@ target_link_libraries(hydra PRIVATE src nes gb c8 n64
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL Qt${QT_VERSION_MAJOR}::OpenGLWidgets
     ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}
     Threads::Threads fmt::fmt dl)
-
+target_include_directories(hydra PRIVATE include vendored)
+target_include_directories(src PRIVATE include vendored)
+target_include_directories(c8 PRIVATE include vendored)
+target_include_directories(gb PRIVATE include vendored)
+target_include_directories(nes PRIVATE include vendored)
+target_include_directories(n64 PRIVATE include vendored)
 set_target_properties(hydra PROPERTIES hydra_properties
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.hydra.com
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}

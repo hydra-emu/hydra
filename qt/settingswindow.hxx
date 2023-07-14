@@ -1,6 +1,5 @@
 #pragma once
-#ifndef TKP_SETTINGS_H
-#define TKP_SETTINGS_H
+
 #include <QWidget>
 #include <QGroupBox>
 #include <QListWidget>
@@ -26,4 +25,3 @@ public:
     SettingsWindow(bool& open, QWidget* parent = nullptr);
     ~SettingsWindow();
 };
-#endif

@@ -1,6 +1,5 @@
 #pragma once
-#ifndef TKP_N64_CPU_H
-#define TKP_N64_CPU_H
+
 #include <cstdint>
 #include <limits>
 #include <array>
@@ -12,7 +11,7 @@
 #include <cfloat>
 #include <cfenv>
 #include <queue>
-#include <include/log.hxx>
+#include <log.hxx>
 #include "n64_types.hxx"
 #include "n64_addresses.hxx"
 #include "n64_rcp.hxx"
@@ -303,24 +302,25 @@ namespace hydra::N64 {
         uint32_t read_hwio(uint32_t addr);
         void write_hwio(uint32_t addr, uint32_t data);
 
+        // clang-format off
         void SPECIAL(), REGIMM(), J(), JAL(), BEQ(), BNE(), BLEZ(), BGTZ(),
-        ADDI(), ADDIU(), SLTI(), SLTIU(), ANDI(), ORI(), XORI(), LUI(),
-        COP0(), COP1(), COP2(), COP3(), BEQL(), BNEL(), BLEZL(), BGTZL(),
-        DADDI(), DADDIU(), LDL(), LDR(), ERROR(),
-        LB(), LH(), LWL(), LW(), LBU(), LHU(), LWR(), LWU(),
-        SB(), SH(), SWL(), SW(), SDL(), SDR(), SWR(), CACHE(),
-        LL(), LWC1(), LWC2(), LLD(), LDC1(), LDC2(), LD(),
-        SC(), SWC1(), SWC2(), SCD(), SDC1(), SDC2(), SD(),
-        MTC0(), DMTC0(), MFC0(), DMFC0();
+            ADDI(), ADDIU(), SLTI(), SLTIU(), ANDI(), ORI(), XORI(), LUI(),
+            COP0(), COP1(), COP2(), COP3(), BEQL(), BNEL(), BLEZL(), BGTZL(),
+            DADDI(), DADDIU(), LDL(), LDR(), ERROR(),
+            LB(), LH(), LWL(), LW(), LBU(), LHU(), LWR(), LWU(),
+            SB(), SH(), SWL(), SW(), SDL(), SDR(), SWR(), CACHE(),
+            LL(), LWC1(), LWC2(), LLD(), LDC1(), LDC2(), LD(),
+            SC(), SWC1(), SWC2(), SCD(), SDC1(), SDC2(), SD(),
+            MTC0(), DMTC0(), MFC0(), DMFC0();
 
         void s_SLL(), s_SRL(), s_SRA(), s_SLLV(), s_SRLV(), s_SRAV(),
-        s_JR(), s_JALR(), s_SYSCALL(), s_BREAK(), s_SYNC(),
-        s_MFHI(), s_MTHI(), s_MFLO(), s_MTLO(), s_DSLLV(), s_DSRLV(), s_DSRAV(),
-        s_MULT(), s_MULTU(), s_DIV(), s_DIVU(), s_DMULT(), s_DMULTU(), s_DDIV(), s_DDIVU(),
-        s_ADD(), s_ADDU(), s_SUB(), s_SUBU(), s_AND(), s_OR(), s_XOR(), s_NOR(),
-        s_SLT(), s_SLTU(), s_DADD(), s_DADDU(), s_DSUB(), s_DSUBU(),
-        s_TGE(), s_TGEU(), s_TLT(), s_TLTU(), s_TEQ(), s_TNE(),
-        s_DSLL(), s_DSRL(), s_DSRA(), s_DSLL32(), s_DSRL32(), s_DSRA32();
+            s_JR(), s_JALR(), s_SYSCALL(), s_BREAK(), s_SYNC(),
+            s_MFHI(), s_MTHI(), s_MFLO(), s_MTLO(), s_DSLLV(), s_DSRLV(), s_DSRAV(),
+            s_MULT(), s_MULTU(), s_DIV(), s_DIVU(), s_DMULT(), s_DMULTU(), s_DDIV(), s_DDIVU(),
+            s_ADD(), s_ADDU(), s_SUB(), s_SUBU(), s_AND(), s_OR(), s_XOR(), s_NOR(),
+            s_SLT(), s_SLTU(), s_DADD(), s_DADDU(), s_DSUB(), s_DSUBU(),
+            s_TGE(), s_TGEU(), s_TLT(), s_TLTU(), s_TEQ(), s_TNE(),
+            s_DSLL(), s_DSRL(), s_DSRA(), s_DSLL32(), s_DSRL32(), s_DSRA32();
 
         void r_BLTZ(), r_BGEZ(), r_BLTZL(), r_BGEZL(),
             r_TGEI(), r_TGEIU(), r_TLTI(), r_TLTIU(), r_TEQI(), r_TNEI(),
@@ -336,7 +336,8 @@ namespace hydra::N64 {
         void MFC2(), DMFC2(), MTC2(), DMTC2(), CFC2(), CTC2(), RDHWR();
 
         using func_ptr = void (*)(CPU*);
-        constexpr static std::array<func_ptr, 64> instruction_table_ = {
+        constexpr static std::array<func_ptr, 64> instruction_table_ =
+        {
             &lut_wrapper<&CPU::SPECIAL>, &lut_wrapper<&CPU::REGIMM>, &lut_wrapper<&CPU::J>, &lut_wrapper<&CPU::JAL>, &lut_wrapper<&CPU::BEQ>, &lut_wrapper<&CPU::BNE>, &lut_wrapper<&CPU::BLEZ>, &lut_wrapper<&CPU::BGTZ>,
             &lut_wrapper<&CPU::ADDI>, &lut_wrapper<&CPU::ADDIU>, &lut_wrapper<&CPU::SLTI>, &lut_wrapper<&CPU::SLTIU>, &lut_wrapper<&CPU::ANDI>, &lut_wrapper<&CPU::ORI>, &lut_wrapper<&CPU::XORI>, &lut_wrapper<&CPU::LUI>,
             &lut_wrapper<&CPU::COP0>, &lut_wrapper<&CPU::COP1>, &lut_wrapper<&CPU::COP2>, &lut_wrapper<&CPU::COP3>, &lut_wrapper<&CPU::BEQL>, &lut_wrapper<&CPU::BNEL>, &lut_wrapper<&CPU::BLEZL>, &lut_wrapper<&CPU::BGTZL>,
@@ -346,7 +347,9 @@ namespace hydra::N64 {
             &lut_wrapper<&CPU::LL>, &lut_wrapper<&CPU::LWC1>, &lut_wrapper<&CPU::LWC2>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::LLD>, &lut_wrapper<&CPU::LDC1>, &lut_wrapper<&CPU::LDC2>, &lut_wrapper<&CPU::LD>,
             &lut_wrapper<&CPU::SC>, &lut_wrapper<&CPU::SWC1>, &lut_wrapper<&CPU::SWC2>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::SCD>, &lut_wrapper<&CPU::SDC1>, &lut_wrapper<&CPU::SDC2>, &lut_wrapper<&CPU::SD>,
         };
-        constexpr static std::array<func_ptr, 64> special_table_ = {
+
+        constexpr static std::array<func_ptr, 64> special_table_ =
+        {
             &lut_wrapper<&CPU::s_SLL>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::s_SRL>, &lut_wrapper<&CPU::s_SRA>, &lut_wrapper<&CPU::s_SLLV>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::s_SRLV>, &lut_wrapper<&CPU::s_SRAV>,
             &lut_wrapper<&CPU::s_JR>, &lut_wrapper<&CPU::s_JALR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::s_SYSCALL>, &lut_wrapper<&CPU::s_BREAK>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::s_SYNC>,
             &lut_wrapper<&CPU::s_MFHI>, &lut_wrapper<&CPU::s_MTHI>, &lut_wrapper<&CPU::s_MFLO>, &lut_wrapper<&CPU::s_MTLO>, &lut_wrapper<&CPU::s_DSLLV>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::s_DSRLV>, &lut_wrapper<&CPU::s_DSRAV>,
@@ -356,7 +359,9 @@ namespace hydra::N64 {
             &lut_wrapper<&CPU::s_TGE>, &lut_wrapper<&CPU::s_TGEU>, &lut_wrapper<&CPU::s_TLT>, &lut_wrapper<&CPU::s_TLTU>, &lut_wrapper<&CPU::s_TEQ>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::s_TNE>, &lut_wrapper<&CPU::ERROR>,
             &lut_wrapper<&CPU::s_DSLL>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::s_DSRL>, &lut_wrapper<&CPU::s_DSRA>, &lut_wrapper<&CPU::s_DSLL32>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::s_DSRL32>, &lut_wrapper<&CPU::s_DSRA32>,
         };
-        constexpr static std::array<func_ptr, 64> float_table_ = {
+
+        constexpr static std::array<func_ptr, 64> float_table_ =
+        {
             &lut_wrapper<&CPU::f_ADD>, &lut_wrapper<&CPU::f_SUB>, &lut_wrapper<&CPU::f_MUL>, &lut_wrapper<&CPU::f_DIV>, &lut_wrapper<&CPU::f_SQRT>, &lut_wrapper<&CPU::f_ABS>, &lut_wrapper<&CPU::f_MOV>, &lut_wrapper<&CPU::f_NEG>,
             &lut_wrapper<&CPU::f_ROUNDL>, &lut_wrapper<&CPU::f_TRUNCL>, &lut_wrapper<&CPU::f_CEILL>, &lut_wrapper<&CPU::f_FLOORL>, &lut_wrapper<&CPU::f_ROUNDW>, &lut_wrapper<&CPU::f_TRUNCW>, &lut_wrapper<&CPU::f_CEILW>, &lut_wrapper<&CPU::f_FLOORW>,
             &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>,
@@ -366,12 +371,16 @@ namespace hydra::N64 {
             &lut_wrapper<&CPU::f_CF>, &lut_wrapper<&CPU::f_CUN>, &lut_wrapper<&CPU::f_CEQ>, &lut_wrapper<&CPU::f_CUEQ>, &lut_wrapper<&CPU::f_COLT>, &lut_wrapper<&CPU::f_CULT>, &lut_wrapper<&CPU::f_COLE>, &lut_wrapper<&CPU::f_CULE>,
             &lut_wrapper<&CPU::f_CSF>, &lut_wrapper<&CPU::f_CNGLE>, &lut_wrapper<&CPU::f_CSEQ>, &lut_wrapper<&CPU::f_CNGL>, &lut_wrapper<&CPU::f_CLT>, &lut_wrapper<&CPU::f_CNGE>, &lut_wrapper<&CPU::f_CLE>, &lut_wrapper<&CPU::f_CNGT>,
         };
-        constexpr static std::array<func_ptr, 32> regimm_table_ = {
+
+        constexpr static std::array<func_ptr, 32> regimm_table_ =
+        {
             &lut_wrapper<&CPU::r_BLTZ>, &lut_wrapper<&CPU::r_BGEZ>, &lut_wrapper<&CPU::r_BLTZL>, &lut_wrapper<&CPU::r_BGEZL>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>,
             &lut_wrapper<&CPU::r_TGEI>, &lut_wrapper<&CPU::r_TGEIU>, &lut_wrapper<&CPU::r_TLTI>, &lut_wrapper<&CPU::r_TLTIU>, &lut_wrapper<&CPU::r_TEQI>,  &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::r_TNEI>,  &lut_wrapper<&CPU::ERROR>,
             &lut_wrapper<&CPU::r_BLTZAL>, &lut_wrapper<&CPU::r_BGEZAL>, &lut_wrapper<&CPU::r_BLTZALL>, &lut_wrapper<&CPU::r_BGEZALL>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>,
             &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>, &lut_wrapper<&CPU::ERROR>,
         };
+        // clang-format on
+
         void execute_instruction();
         void execute_cp0_instruction();
 
@@ -534,4 +543,3 @@ namespace hydra::N64 {
         friend class hydra::N64::QA;
     };
 }
-#endif

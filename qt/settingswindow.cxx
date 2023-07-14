@@ -5,9 +5,9 @@
 #include <QFileDialog>
 #include <QPushButton>
 #include <QCheckBox>
-#include <include/emulator_types.hxx>
-#include <include/emulator_factory.h>
-#include <include/emulator_settings.hxx>
+#include <emulator_types.hxx>
+#include <emulator_factory.hxx>
+#include <emulator_settings.hxx>
 #define emu_data(emu_type) EmulatorSettings::GetEmulatorData(emu_type).UserData
 
 SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidget(parent, Qt::Window) {
@@ -18,11 +18,11 @@ SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidg
     right_group_box_ = new QGroupBox;
     {
         tab_list_ = new QListWidget;
-        QListWidgetItem* general = new QListWidgetItem(QPixmap(":/data/images/support.png"), QString("General"));
-        QListWidgetItem* input = new QListWidgetItem(QPixmap(":/data/images/input.png"), QString("Input"));
-        QListWidgetItem* gameboy = new QListWidgetItem(QPixmap(":/data/images/gameboy.png"), QString("Gameboy"));
-        QListWidgetItem* n64 = new QListWidgetItem(QPixmap(":/data/images/n64.png"), QString("Nintendo 64"));
-        QListWidgetItem* c8 = new QListWidgetItem(QPixmap(":/data/images/c8.png"), QString("Chip 8"));
+        QListWidgetItem* general = new QListWidgetItem(QPixmap(":/images/support.png"), QString("General"));
+        QListWidgetItem* input = new QListWidgetItem(QPixmap(":/images/input.png"), QString("Input"));
+        QListWidgetItem* gameboy = new QListWidgetItem(QPixmap(":/images/gameboy.png"), QString("Gameboy"));
+        QListWidgetItem* n64 = new QListWidgetItem(QPixmap(":/images/n64.png"), QString("Nintendo 64"));
+        QListWidgetItem* c8 = new QListWidgetItem(QPixmap(":/images/c8.png"), QString("Chip 8"));
         tab_list_->addItem(general);
         tab_list_->addItem(input);
         tab_list_->addItem(gameboy);

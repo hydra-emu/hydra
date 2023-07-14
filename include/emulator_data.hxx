@@ -1,19 +1,20 @@
 #pragma once
-#ifndef TKP_EMULATOR_DATA_H
-#define TKP_EMULATOR_DATA_H
-#include <string>
-#include <array>
-#include <filesystem>
-#include <memory>
-#include <fstream>
-#include <map>
-#include <include/emulator_user_data.hxx>
+
 #include "emulator_types.hxx"
 #include "error_factory.hxx"
 #include "json.hpp"
+#include <array>
+#include <emulator_user_data.hxx>
+#include <filesystem>
+#include <fstream>
+#include <map>
+#include <memory>
+#include <string>
 using json = nlohmann::json;
 using KeyMappings = std::map<std::string, std::string>;
-struct EmulatorData {
+
+struct EmulatorData
+{
     std::string Name;
     std::string SettingsFile;
     std::vector<std::string> Extensions;
@@ -25,4 +26,3 @@ struct EmulatorData {
     KeyMappings Mappings;
     EmulatorUserData UserData;
 };
-#endif

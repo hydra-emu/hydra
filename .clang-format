@@ -1,0 +1,23 @@
+Language: Cpp
+IndentWidth: 4
+PointerAlignment: Left
+ColumnLimit: 100
+AlignConsecutiveBitFields: AcrossEmptyLines
+AlignEscapedNewlines: Left
+AlignOperands: Align
+AlignTrailingComments: true
+UseTab: Never
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+NamespaceIndentation: All
+SeparateDefinitionBlocks: Always
+BreakBeforeBraces: Custom
+IndentCaseLabels: true
+BraceWrapping:
+  AfterFunction: true
+  AfterClass: true
+  AfterCaseLabel: true
+  AfterControlStatement: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
