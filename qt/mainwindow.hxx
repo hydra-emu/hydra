@@ -1,6 +1,5 @@
 #pragma once
-#ifndef TKP_MAINWINDOW_HXX
-#define TKP_MAINWINDOW_HXX
+
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QFileDialog>
@@ -9,8 +8,8 @@
 #include <QLabel>
 #include <memory>
 #include <array>
-#include "../include/emulator_factory.h"
-#include "../include/emulator.h"
+#include "../include/emulator_factory.hxx"
+#include "../include/emulator.hxx"
 #include "screenwidget.hxx"
 
 class MainWindow : public QMainWindow
@@ -73,4 +72,3 @@ public:
     bool debugger_open_ = false;
     bool tracelogger_open_ = false;
 };
-#endif // MAINWINDOW_HXX

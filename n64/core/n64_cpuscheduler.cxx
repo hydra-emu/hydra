@@ -2,7 +2,7 @@
 #include <iostream>
 #include "utils.hxx"
 #include "n64_addresses.hxx"
-#include <include/log.hxx>
+#include <log.hxx>
 #include <fmt/format.h>
 
 namespace hydra::N64 {

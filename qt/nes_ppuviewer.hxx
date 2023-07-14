@@ -1,6 +1,5 @@
 #pragma once
-#ifndef TKP_NES_PPUVIEWER_H
-#define TKP_NES_PPUVIEWER_H
+
 #include <QWidget>
 
 class NES_PPUViewer : public QWidget {
@@ -11,4 +10,3 @@ public:
     NES_PPUViewer(bool& open, QWidget* parent = nullptr);
     ~NES_PPUViewer();
 };
-#endif

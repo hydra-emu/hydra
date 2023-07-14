@@ -1,5 +1,5 @@
-#ifndef TKP_N64_ADDRESSES_H
-#define TKP_N64_ADDRESSES_H
+#pragma once
+
 #include <cstdint>
 #define addr constexpr uint32_t
 
@@ -108,4 +108,3 @@ addr ISVIEWER_START      = 0x13FF'0020;
 addr ISVIEWER_END        = 0x13FF'FFFF;
 
 #undef addr
-#endif

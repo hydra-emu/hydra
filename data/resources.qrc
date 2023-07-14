@@ -1,0 +1,28 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/support.png</file>
+        <file>images/input.png</file>
+        <file>images/debugger.png</file>
+        <file>images/tracelogger.png</file>
+        <file>images/hydra.png</file>
+        <file>images/logo.png</file>
+        <file>images/gameboy.png</file>
+        <file>images/c8.png</file>
+        <file>images/n64.png</file>
+        <file>images/nes.png</file>
+        <file>images/nes_ppuviewer.png</file>
+        <file>images/shaders.png</file>
+        <file>images/compile.png</file>
+        <file>images/autocompile.png</file>
+        <file>images/open.png</file>
+        <file>emulators.json</file>
+        <file>mappings.json</file>
+        <file>gameboy.json</file>
+        <file>nes.json</file>
+        <file>n64.json</file>
+        <file>c8.json</file>
+        <file>about.html</file>
+        <file>shaders/simple.vs</file>
+        <file>shaders/simple.fs</file>
+    </qresource>
+</RCC>

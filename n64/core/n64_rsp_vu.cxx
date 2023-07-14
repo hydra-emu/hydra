@@ -1,5 +1,5 @@
 #include "n64_rsp.hxx"
-#include <include/log.hxx>
+#include <log.hxx>
 #include <algorithm>
 #include <array>
 

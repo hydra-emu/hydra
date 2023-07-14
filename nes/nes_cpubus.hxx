@@ -1,22 +1,24 @@
 #pragma once
-#ifndef TKP_NES_CPUBUS_H
-#define TKP_NES_CPUBUS_H
-#include "nes_ppu.hxx"
+
 #include "nes_apu.hxx"
 #include "nes_joypad.hxx"
-#include <vector>
+#include "nes_ppu.hxx"
+#include <array>
 #include <cstdint>
 #include <string>
-#include <array>
+#include <vector>
 
-namespace hydra::NES {
+namespace hydra::NES
+{
     enum class Mapper {
         NROM = 0,
 
         MMC3 = 4,
     };
     class CPU;
-    struct Header {
+
+    struct Header
+    {
         char id[4];
         uint8_t prg_lsb;
         uint8_t chr_lsb;
@@ -31,12 +33,15 @@ namespace hydra::NES {
         uint8_t misc_roms;
         uint8_t default_expansion;
     };
-    class CPUBus {
-    public:
+
+    class CPUBus
+    {
+      public:
         CPUBus(PPU& ppu, APU& apu);
         bool LoadCartridge(std::string path);
         void Reset();
-    private:
+
+      private:
         uint8_t read(uint16_t addr);
         __always_inline uint8_t redirect_address_r(uint16_t addr);
         __always_inline void redirect_address_w(uint16_t addr, uint8_t data);
@@ -55,5 +60,4 @@ namespace hydra::NES {
         Joypad joypad1_, joypad2_;
         friend class CPU;
     };
-}
-#endif
+} // namespace hydra::NES

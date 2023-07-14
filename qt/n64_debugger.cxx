@@ -14,7 +14,7 @@
 #include <iostream>
 #include <string>
 #include <fmt/format.h>
-#include <include/log.hxx>
+#include <log.hxx>
 
 MIPSHighlighter::MIPSHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)

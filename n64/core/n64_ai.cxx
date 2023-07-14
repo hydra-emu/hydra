@@ -1,6 +1,6 @@
 #include "n64_ai.hxx"
 #include "n64_addresses.hxx"
-#include <include/miniaudio.h>
+#include <miniaudio.h>
 #include <fmt/format.h>
 #include <algorithm>
 #include <fstream>

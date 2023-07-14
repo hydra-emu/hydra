@@ -1,21 +1,23 @@
 #pragma once
-#ifndef TKP_NES_CPU_H
-#define TKP_NES_CPU_H
-#include <cstdint>
-#include <bitset>
-#include <iostream>
-#include <atomic>
-#include <unordered_map>
+
 #include "nes_cpubus.hxx"
 #include "nes_joypad.hxx"
+#include <atomic>
+#include <bitset>
+#include <cstdint>
+#include <iostream>
+#include <unordered_map>
 
-namespace hydra::NES {
+namespace hydra::NES
+{
     class NES_TKPWrapper;
 }
 
-namespace hydra::NES {
-    class CPU {
-    public:
+namespace hydra::NES
+{
+    class CPU
+    {
+      public:
         CPU(CPUBus& bus, std::atomic_bool& paused);
         void Tick();
         void Reset();
@@ -24,7 +26,8 @@ namespace hydra::NES {
         void HandleKeyDown(uint32_t key);
         void HandleKeyUp(uint32_t key);
         void SetKeys(std::unordered_map<uint32_t, Button> keys);
-    private:
+
+      private:
         CPUBus& bus_;
         __always_inline void delay(uint8_t i);
         uint8_t A = 0, X = 0, Y = 0, SP = 0;
@@ -47,7 +50,9 @@ namespace hydra::NES {
         __always_inline void prefetch();
         __always_inline void execute();
         friend class hydra::NES::NES_TKPWrapper;
-    private:
+
+      private:
+        // clang-format off
         __always_inline void TAY(), TAX(), TYA(), TXA(), JSR(), SEC(), 
             BCC(), CLC(), BEQ(), BNE(), BVS(), BVC(), BMI(), BPL(),
             RTS(), SEI(), SED(), CLD(), PHP(), PLA(), PLP(), PHA(),
@@ -63,8 +68,10 @@ namespace hydra::NES {
             ZeroPage(), ZeroPageX(), ZeroPageY(), Indirect(), IndirectX(),
             IndirectY(), Implied();
 
-        template <auto AddressingMode, auto Function>
-        static void Opcode(CPU* cpu) {
+        // clang-format on
+
+        template <auto AddressingMode, auto Function> static void Opcode(CPU* cpu)
+        {
             (cpu->*AddressingMode)();
             (cpu->*Function)();
         }
@@ -73,5 +80,4 @@ namespace hydra::NES {
         uint16_t addr_;
         std::unordered_map<uint32_t, Button> keys_;
     };
-}
-#endif
+} // namespace hydra::NES

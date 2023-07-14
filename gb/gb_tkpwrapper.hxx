@@ -1,30 +1,37 @@
 #pragma once
-#ifndef TKP_GB_GAMEBOY_H
-#define TKP_GB_GAMEBOY_H
+
 #include <array>
-#include <include/emulator.h>
-#include <gb/gb_breakpoint.hxx>
+#include <emulator.hxx>
 #include <gb/gb_addresses.hxx>
-#include <gb/gb_cpu.hxx>
-#include <gb/gb_ppu.hxx>
-#include <gb/gb_bus.hxx>
-#include <gb/gb_timer.hxx>
 #include <gb/gb_apu.hxx>
 #include <gb/gb_apu_ch.hxx>
+#include <gb/gb_breakpoint.hxx>
+#include <gb/gb_bus.hxx>
+#include <gb/gb_cpu.hxx>
+#include <gb/gb_ppu.hxx>
+#include <gb/gb_timer.hxx>
 
-namespace hydra {
-    namespace Applications {
+namespace hydra
+{
+    namespace Applications
+    {
         class GameboyRomData;
     }
-    namespace Gameboy::QA {
+
+    namespace Gameboy::QA
+    {
         struct TestGameboy;
     }
-}
-namespace hydra::Gameboy {
-    class Gameboy_TKPWrapper : public Emulator {
+} // namespace hydra
+
+namespace hydra::Gameboy
+{
+    class Gameboy_TKPWrapper : public Emulator
+    {
         TKP_EMULATOR(Gameboy_TKPWrapper);
-    private:
-        using GameboyPalettes = std::array<std::array<float, 3>,4>;
+
+      private:
+        using GameboyPalettes = std::array<std::array<float, 3>, 4>;
         using GameboyKeys = std::array<uint32_t, 4>;
         using CPU = hydra::Gameboy::CPU;
         using PPU = hydra::Gameboy::PPU;
@@ -35,10 +42,12 @@ namespace hydra::Gameboy {
         using Timer = hydra::Gameboy::Timer;
         using Cartridge = hydra::Gameboy::Cartridge;
         using GameboyBreakpoint = hydra::Gameboy::Utils::GameboyBreakpoint;
-    public:
+
+      public:
         // Used by automated tests
         void Update() { update(); }
-    private:
+
+      private:
         ChannelArrayPtr channel_array_ptr_;
         Bus bus_;
         APU apu_;
@@ -47,9 +56,8 @@ namespace hydra::Gameboy {
         CPU cpu_;
         GameboyKeys direction_keys_;
         GameboyKeys action_keys_;
-        uint8_t& joypad_, &interrupt_flag_;
+        uint8_t &joypad_, &interrupt_flag_;
         __always_inline void update_audio_sync();
         friend class hydra::Gameboy::QA::TestGameboy;
     };
-}
-#endif
+} // namespace hydra::Gameboy

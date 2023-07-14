@@ -15,6 +15,14 @@ jobs:
     - uses: actions/checkout@v3
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
+    - name: clang-format
+      run: |
+        clang-format --dry-run --Werror -style=file src/*.cxx
+        clang-format --dry-run --Werror -style=file c8/*.hxx c8/*.cxx
+        clang-format --dry-run --Werror -style=file gb/*.hxx gb/*.cxx
+        clang-format --dry-run --Werror -style=file nes/*.hxx nes/*.cxx
+        clang-format --dry-run --Werror -style=file n64/*.hxx n64/*.cxx
+        clang-format --dry-run --Werror -style=file include/*.hxx
     - name: install-deps
       run: |
         sudo apt-get update

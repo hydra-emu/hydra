@@ -1,6 +1,5 @@
 #pragma once
-#ifndef TKP_ABOUT_H
-#define TKP_ABOUT_H
+
 #include <QDialog>
 
 class AboutWindow : public QDialog {
@@ -11,4 +10,3 @@ public:
     AboutWindow(bool& open, QWidget* parent = nullptr);
     ~AboutWindow();
 };
-#endif

@@ -1,6 +1,6 @@
 #include "n64_vi.hxx"
 #include <fmt/format.h>
-#include <include/log.hxx>
+#include <log.hxx>
 
 namespace hydra::N64 {
     void Vi::Reset() {

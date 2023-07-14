@@ -1,3 +1,3 @@
-#include <include/global.hxx>
+#include <global.hxx>
 
 int Global::VerboseLevel = 1;

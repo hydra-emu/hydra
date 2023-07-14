@@ -5,7 +5,7 @@
 #include "n64_cpu.hxx"
 #include "n64_addresses.hxx"
 #include "utils.hxx"
-#include <include/log.hxx>
+#include <log.hxx>
 #include <fmt/format.h>
 
 namespace hydra::N64 {

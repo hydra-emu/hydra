@@ -1,7 +1,7 @@
 #include "n64_rdp.hxx"
 #include "n64_addresses.hxx"
 #include "n64_rdp_commands.hxx"
-#include <include/log.hxx>
+#include <log.hxx>
 #include <cassert>
 #include <sstream>
 #include <iostream>
