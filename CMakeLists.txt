@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
+
 project(hydra VERSION 0.2.0 LANGUAGES CXX)
 project(src)
 project(c8)
@@ -34,7 +35,7 @@ set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
-find_package(fmt)
+find_package(fmt REQUIRED)
 
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)
@@ -107,6 +108,11 @@ set(N64_FILES
     n64/core/n64_ai.cxx
     n64/core/n64_cpudisassemble.cxx
     vendored/miniaudio.c
+)
+
+set(HYDRA_INCLUDE_DIRECTORIES
+    include
+    vendored
 )
 
 qt_add_executable(hydra

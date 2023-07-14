@@ -21,7 +21,7 @@ jobs:
     - name: install-deps
       run: |
         sudo apt-get update
-        sudo apt-get install build-essential libgl-dev gcc-12 g++-12 ninja-build libfmt-dev qt6-base-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6
+        sudo apt-get install build-essential libgl-dev ninja-build libfmt-dev qt6-base-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6
     - name: configure
       run: |
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12
@@ -29,3 +29,8 @@ jobs:
         cmake -S . -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make
       run: cmake --build build
+    - name: upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: Linux executable
+        path: './build/hydra'

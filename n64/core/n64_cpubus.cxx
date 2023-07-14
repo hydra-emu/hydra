@@ -1,5 +1,6 @@
 #include "n64_addresses.hxx"
 #include "n64_cpu.hxx"
+#include <crc32.hxx>
 #include <fmt/format.h>
 #include <fstream>
 #include <iostream>
@@ -69,7 +70,7 @@ namespace hydra::N64
         uint32_t crc = 0xFFFF'FFFF;
         for (int i = 0; i < 0x9c0; i++)
         {
-            crc = _mm_crc32_u8(crc, cart_rom_[i + 0x40]);
+            crc = crc32_u8(crc, cart_rom_[i + 0x40]);
         }
         crc ^= 0xFFFF'FFFF;
 
@@ -95,6 +96,7 @@ namespace hydra::N64
             }
             default:
             {
+                Logger::Warn("Unknown CIC: {:08X}", crc);
                 pif_ram_[0x26] = 0x3F;
                 break;
             }

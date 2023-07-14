@@ -1,8 +1,10 @@
 #include "n64_cpu.hxx"
 #include <bit>
 #include <bitset>
+#include <bswap.hxx>
 #include <cassert>
 #include <cmath>
+#include <crc32.hxx>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -37,12 +39,12 @@ namespace hydra::N64
             uint32_t pifcrc = 0xFFFF'FFFF;
             for (int i = 0; i < 32; i++)
             {
-                gprcrc = _mm_crc32_u64(gprcrc, gpr_regs_[i].UD);
-                fprcrc = _mm_crc32_u64(fprcrc, fpr_regs_[i].UD);
+                gprcrc = crc32_u64(gprcrc, gpr_regs_[i].UD);
+                fprcrc = crc32_u64(fprcrc, fpr_regs_[i].UD);
             }
             for (int i = 0; i < 64; i++)
             {
-                // pifcrc = _mm_crc32_u8(pifcrc, cpubus_.pif_ram_[i]);
+                // pifcrc = crc32_u8(pifcrc, cpubus_.pif_ram_[i]);
             }
             gprcrc ^= 0xFFFF'FFFF;
             fprcrc ^= 0xFFFF'FFFF;
@@ -106,8 +108,8 @@ namespace hydra::N64
             }
             case PI_RD_LEN:
             {
-                // std::memcpy(&cpubus_.rdram_[__builtin_bswap32(cpubus_.pi_cart_addr_)],
-                // cpubus_.redirect_paddress(__builtin_bswap32(cpubus_.pi_dram_addr_)), data + 1);
+                // std::memcpy(&cpubus_.rdram_[bswap32(cpubus_.pi_cart_addr_)],
+                // cpubus_.redirect_paddress(bswap32(cpubus_.pi_dram_addr_)), data + 1);
                 Logger::Warn("PI_RD_LEN write");
                 cpubus_.mi_interrupt_.PI = true;
                 break;
@@ -334,7 +336,7 @@ namespace hydra::N64
             case PIF_START ... PIF_END:
             {
                 uint32_t* ptr = reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[addr - PIF_START]);
-                *ptr = __builtin_bswap32(data);
+                *ptr = bswap32(data);
                 pif_command();
                 break;
             }
@@ -346,7 +348,7 @@ namespace hydra::N64
             }
             case ISVIEWER_START ... ISVIEWER_END:
             {
-                data = __builtin_bswap32(data);
+                data = bswap32(data);
                 for (int i = 0; i < 4; i++)
                 {
                     cpubus_.isviewer_buffer_[addr - ISVIEWER_START + i] = data >> (i * 8);
@@ -479,8 +481,7 @@ namespace hydra::N64
                 return rcp_.rsp_.read_hwio(RSPHWIO::Semaphore);
             case PIF_START ... PIF_END:
             {
-                return __builtin_bswap32(
-                    *reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[paddr - PIF_START]));
+                return bswap32(*reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[paddr - PIF_START]));
             }
                 redir_case(PIF_COMMAND, cpubus_.pif_ram_[63]);
             case RSP_PC:
@@ -850,7 +851,7 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to load halfword from invalid address: {:08x}", vaddr);
         }
-        return __builtin_bswap16(*ptr);
+        return bswap16(*ptr);
     }
 
     uint32_t CPU::load_word(uint64_t vaddr)
@@ -863,7 +864,7 @@ namespace hydra::N64
         }
         else
         {
-            return __builtin_bswap32(*ptr);
+            return bswap32(*ptr);
         }
     }
 
@@ -875,7 +876,7 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to load doubleword from invalid address: {:08x}", vaddr);
         }
-        return __builtin_bswap64(*ptr);
+        return bswap64(*ptr);
     }
 
     void CPU::store_byte(uint64_t vaddr, uint8_t data)
@@ -898,7 +899,7 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to store halfword to invalid address: {:08x}", vaddr);
         }
-        *ptr = __builtin_bswap16(data);
+        *ptr = bswap16(data);
     }
 
     void CPU::store_word(uint64_t vaddr, uint32_t data)
@@ -912,7 +913,7 @@ namespace hydra::N64
         }
         else
         {
-            *ptr = __builtin_bswap32(data);
+            *ptr = bswap32(data);
         }
     }
 
@@ -924,7 +925,7 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to store doubleword to invalid address: {:08x}", vaddr);
         }
-        *ptr = __builtin_bswap64(data);
+        *ptr = bswap64(data);
     }
 
     void CPU::Tick()

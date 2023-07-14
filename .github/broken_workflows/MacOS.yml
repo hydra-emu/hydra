@@ -1,0 +1,24 @@
+name: Build MacOS
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: install-deps
+      run: brew install qt6 fmt
+    - name: configure
+      run: |
+        export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:/usr/local/include"
+        export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:/opt/homebrew/include"
+        cmake -S . -B build 
+    - name: make
+      run: cmake --build build

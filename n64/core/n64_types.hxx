@@ -3,8 +3,6 @@
 #include <array>
 #include <bit>
 #include <cstdint>
-#include <emmintrin.h>
-#include <immintrin.h>
 #include <limits>
 #include <string>
 #ifndef __cpp_lib_endian

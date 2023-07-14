@@ -1,11 +1,31 @@
 #pragma once
 
-__always_inline uint32_t crc32_mem(uint8_t* data, size_t size)
+#ifdef __x86_64__
+#include <x86intrin.h>
+#elif __arm__
+#include <intrin.h>
+#endif
+
+__always_inline uint32_t crc32_u8(uint32_t crc, uint8_t data)
 {
-    uint32_t crc = 0xFFFFFFFF;
-    for (size_t i = 0; i < size; i++)
-    {
-        crc = _mm_crc32_u8(crc, data[i]);
-    }
-    return crc ^ 0xFFFFFFFF;
+    crc = _mm_crc32_u8(crc, data);
+    return crc;
+}
+
+__always_inline uint32_t crc32_u16(uint32_t crc, uint16_t data)
+{
+    crc = _mm_crc32_u16(crc, data);
+    return crc;
+}
+
+__always_inline uint32_t crc32_u32(uint32_t crc, uint32_t data)
+{
+    crc = _mm_crc32_u32(crc, data);
+    return crc;
+}
+
+__always_inline uint32_t crc32_u64(uint32_t crc, uint64_t data)
+{
+    crc = _mm_crc32_u64(crc, data);
+    return crc;
 }
