@@ -60,7 +60,7 @@ namespace hydra::Gameboy
         GameboyKeys direction_keys_;
         GameboyKeys action_keys_;
         uint8_t &joypad_, &interrupt_flag_;
-        __always_inline void update_audio_sync();
+        inline void update_audio_sync();
         friend class hydra::Gameboy::QA::TestGameboy;
     };
 } // namespace hydra::Gameboy

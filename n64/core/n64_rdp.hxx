@@ -192,7 +192,7 @@ namespace hydra::N64
         void process_commands();
         void execute_command(const std::vector<uint64_t>& data);
         void draw_triangle(const std::vector<uint64_t>& data);
-        __always_inline void draw_pixel(int x, int y);
+        inline void draw_pixel(int x, int y);
         void color_combiner();
         uint32_t blender();
 
