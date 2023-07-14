@@ -1,30 +1,28 @@
 #include "shadereditor.hxx"
-#include <QVBoxLayout>
-#include <QOpenGLShader>
 #include <QMessageBox>
+#include <QOpenGLShader>
+#include <QVBoxLayout>
 
-#define QT_MAY_THROW(func) try {\
-    func \
-} catch (std::exception& ex) { \
-    QMessageBox messageBox; \
-    messageBox.critical(0,"Shader compilation error", ex.what()); \
-    messageBox.setFixedSize(500,200); \
-    return; \
-}
+#define QT_MAY_THROW(func)                                             \
+    try                                                                \
+    {                                                                  \
+        func                                                           \
+    } catch (std::exception & ex)                                      \
+    {                                                                  \
+        QMessageBox messageBox;                                        \
+        messageBox.critical(0, "Shader compilation error", ex.what()); \
+        messageBox.setFixedSize(500, 200);                             \
+        return;                                                        \
+    }
 
-ShaderHighlighter::ShaderHighlighter(QTextDocument *parent)
-    : QSyntaxHighlighter(parent) {
+ShaderHighlighter::ShaderHighlighter(QTextDocument* parent) : QSyntaxHighlighter(parent)
+{
     const QString patterns_pink[] = {
-        QStringLiteral("\\bbreak\\b"),
-        QStringLiteral("\\bcontinue\\b"),
-        QStringLiteral("\\bdo\\b"),
-        QStringLiteral("\\bfor\\b"),
-        QStringLiteral("\\bwhile\\b"),
-        QStringLiteral("\\bswitch\\b"),
-        QStringLiteral("\\bcase\\b"),
-        QStringLiteral("\\bdefault\\b"),
-        QStringLiteral("\\bif\\b"),
-        QStringLiteral("\\belse\\b"),
+        QStringLiteral("\\bbreak\\b"), QStringLiteral("\\bcontinue\\b"),
+        QStringLiteral("\\bdo\\b"),    QStringLiteral("\\bfor\\b"),
+        QStringLiteral("\\bwhile\\b"), QStringLiteral("\\bswitch\\b"),
+        QStringLiteral("\\bcase\\b"),  QStringLiteral("\\bdefault\\b"),
+        QStringLiteral("\\bif\\b"),    QStringLiteral("\\belse\\b"),
     };
     const QString patterns_blue[] = {
         QStringLiteral("\\battribute\\b"),
@@ -142,27 +140,33 @@ ShaderHighlighter::ShaderHighlighter(QTextDocument *parent)
     keyword_blue_format_.setFontWeight(QFont::Bold);
     keyword_pink_format_.setForeground(QBrush(QColor(174, 50, 160)));
     keyword_pink_format_.setFontWeight(QFont::Bold);
-    for (const QString& pattern : patterns_blue) {
+    for (const QString& pattern : patterns_blue)
+    {
         highlighting_rules_.append({QRegularExpression(pattern), keyword_blue_format_});
     }
-    for (const QString& pattern : patterns_pink) {
+    for (const QString& pattern : patterns_pink)
+    {
         highlighting_rules_.append({QRegularExpression(pattern), keyword_pink_format_});
     }
     multiline_comment_format_.setForeground(Qt::darkGreen);
     singleline_comment_format_.setForeground(Qt::darkGreen);
     hashtag_format_.setForeground(Qt::lightGray);
-    highlighting_rules_.append({QRegularExpression(QStringLiteral("//[^\n]*")), singleline_comment_format_});
+    highlighting_rules_.append(
+        {QRegularExpression(QStringLiteral("//[^\n]*")), singleline_comment_format_});
     highlighting_rules_.append({QRegularExpression(QStringLiteral("#[^\n]*")), hashtag_format_});
     comment_start_expression_ = QRegularExpression(QStringLiteral("/\\*"));
     comment_end_expression_ = QRegularExpression(QStringLiteral("\\*/"));
 }
 
-void ShaderHighlighter::highlightBlock(const QString& text) {
+void ShaderHighlighter::highlightBlock(const QString& text)
+{
     if (text.isEmpty())
         return;
-    for (const HighlightingRule &rule : qAsConst(highlighting_rules_)) {
+    for (const HighlightingRule& rule : qAsConst(highlighting_rules_))
+    {
         QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
-        while (matchIterator.hasNext()) {
+        while (matchIterator.hasNext())
+        {
             QRegularExpressionMatch match = matchIterator.next();
             setFormat(match.capturedStart(), match.capturedLength(), rule.format);
         }
@@ -172,24 +176,27 @@ void ShaderHighlighter::highlightBlock(const QString& text) {
     if (previousBlockState() != 1)
         startIndex = text.indexOf(comment_start_expression_);
 
-    while (startIndex >= 0) {
+    while (startIndex >= 0)
+    {
         QRegularExpressionMatch match = comment_end_expression_.match(text, startIndex);
         int endIndex = match.capturedStart();
         int commentLength = 0;
-        if (endIndex == -1) {
+        if (endIndex == -1)
+        {
             setCurrentBlockState(1);
             commentLength = text.length() - startIndex;
-        } else {
-            commentLength = endIndex - startIndex
-                            + match.capturedLength();
+        } else
+        {
+            commentLength = endIndex - startIndex + match.capturedLength();
         }
         setFormat(startIndex, commentLength, multiline_comment_format_);
         startIndex = text.indexOf(comment_start_expression_, startIndex + commentLength);
     }
 }
 
-ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback, QWidget *parent) : open_(open),
-    callback_(callback), QWidget(parent, Qt::Window)
+ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback,
+                           QWidget* parent)
+    : open_(open), callback_(callback), QWidget(parent, Qt::Window)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     QFont font;
@@ -223,23 +230,18 @@ ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> c
     open_ = true;
 }
 
-void ShaderEditor::compile() {
-    QT_MAY_THROW(
-        QString src = editor_->toPlainText();
-        callback_(nullptr, &src);
-    );
+void ShaderEditor::compile()
+{
+    QT_MAY_THROW(QString src = editor_->toPlainText(); callback_(nullptr, &src););
 }
 
-void ShaderEditor::open_shader() {
+void ShaderEditor::open_shader() {}
 
-}
-
-void ShaderEditor::autocompile() {
+void ShaderEditor::autocompile()
+{
     autocompile_ ^= true;
     autocompile_act_->setChecked(autocompile_);
     compile_act_->setEnabled(!autocompile_);
 }
 
-ShaderEditor::~ShaderEditor() {
-    open_ = false;
-}
+ShaderEditor::~ShaderEditor() { open_ = false; }

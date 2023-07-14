@@ -1,37 +1,40 @@
 #ifndef N64_DEBUGGER
 #define N64_DEBUGGER
-#include <n64/core/n64_types.hxx>
-#include <QWidget>
-#include <QListWidget>
-#include <QGroupBox>
-#include <QGridLayout>
-#include <QTabWidget>
-#include <memory>
-#include <emulator_types.hxx>
-#include <n64/n64_tkpwrapper.hxx>
 #include <QFontDatabase>
-#include <QSyntaxHighlighter>
+#include <QGridLayout>
+#include <QGroupBox>
+#include <QListWidget>
 #include <QPlainTextEdit>
+#include <QSyntaxHighlighter>
+#include <QTabWidget>
+#include <QWidget>
+#include <emulator_types.hxx>
+#include <memory>
+#include <n64/core/n64_types.hxx>
+#include <n64/n64_tkpwrapper.hxx>
 
 class QLabel;
 class QTextEdit;
 
 #define N64_DEBUGGER_TABS \
-    X(Registers) \
-    X(Disassembler) \
-    X(Settings) \
+    X(Registers)          \
+    X(Disassembler)       \
+    X(Settings)           \
     X(TMem)
 
-class MIPSHighlighter final : public QSyntaxHighlighter {
+class MIPSHighlighter final : public QSyntaxHighlighter
+{
     Q_OBJECT
-public:
-    MIPSHighlighter(QTextDocument *parent = nullptr);
-private:
+  public:
+    MIPSHighlighter(QTextDocument* parent = nullptr);
+
+  private:
     struct HighlightingRule
     {
         QRegularExpression pattern;
         QTextCharFormat format;
     };
+
     void highlightBlock(const QString& text) override;
     QList<HighlightingRule> highlighting_rules_;
     QTextCharFormat singleline_comment_format_;
@@ -42,23 +45,25 @@ private:
     QTextCharFormat label_format_;
 };
 
-class N64Disassembler : public QPlainTextEdit {
+class N64Disassembler : public QPlainTextEdit
+{
     Q_OBJECT
-public:
+  public:
     N64Disassembler(bool& register_names, QWidget* parent = nullptr);
     void setInstructions(const std::vector<hydra::N64::DisassemblerInstruction>& instructions);
     void setGPRs(const std::array<hydra::N64::MemDataUnionDW, 32>& gprs);
-    void wheelEvent(QWheelEvent *e) override;
-    void resizeEvent(QResizeEvent *e) override;
-    void lineNumberAreaPaintEvent(QPaintEvent *event);
+    void wheelEvent(QWheelEvent* e) override;
+    void resizeEvent(QResizeEvent* e) override;
+    void lineNumberAreaPaintEvent(QPaintEvent* event);
     int lineNumberAreaWidth();
-    bool event(QEvent *e) override;
+    bool event(QEvent* e) override;
     void updateText();
     void Goto(uint32_t addr);
-private slots:
+  private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
-    void updateLineNumberArea(const QRect &rect, int dy);
-private:
+    void updateLineNumberArea(const QRect& rect, int dy);
+
+  private:
     std::vector<hydra::N64::DisassemblerInstruction> instructions_;
     std::array<hydra::N64::MemDataUnionDW, 32> gprs_;
     MIPSHighlighter* highlighter_;
@@ -70,40 +75,40 @@ private:
 
 class LineNumberArea : public QWidget
 {
-public:
+  public:
     LineNumberArea(N64Disassembler* debugger) : QWidget(debugger), debugger_(debugger) {}
-    QSize sizeHint() const override
-    {
-        return QSize(debugger_->lineNumberAreaWidth(), 0);
-    }
-protected:
-    void paintEvent(QPaintEvent* event) override
-    {
-        debugger_->lineNumberAreaPaintEvent(event);
-    }
-private:
+
+    QSize sizeHint() const override { return QSize(debugger_->lineNumberAreaWidth(), 0); }
+
+  protected:
+    void paintEvent(QPaintEvent* event) override { debugger_->lineNumberAreaPaintEvent(event); }
+
+  private:
     N64Disassembler* debugger_;
 };
 
-class N64Debugger : public QWidget {
+class N64Debugger : public QWidget
+{
     Q_OBJECT;
-public:
+
+  public:
     N64Debugger(bool& open, QWidget* parent = nullptr);
     ~N64Debugger();
 
     void SetEmulator(hydra::N64::N64_TKPWrapper* emulator);
-private slots:
+  private slots:
     void on_tab_change();
     void update_debugger_tab();
-private:
+
+  private:
     bool open_;
     bool was_paused_ = false;
     hydra::EmuType emulator_type_;
-    hydra::N64::N64_TKPWrapper* emulator_ { nullptr };
+    hydra::N64::N64_TKPWrapper* emulator_{nullptr};
 
     QListWidget* tab_list_;
     QTabWidget* tab_show_;
-    QGroupBox* right_group_box_, *left_group_box_;
+    QGroupBox *right_group_box_, *left_group_box_;
     QLabel* tmem_image_;
     const QFont fixedfont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
@@ -119,14 +124,18 @@ private:
     std::string get_gpr_value(int n);
     void register_changed(const QString&, int reg);
 
-    #define X(name) QWidget* name##_tab; QGridLayout* name##_layout; void create_##name##_tab();
+#define X(name)                 \
+    QWidget* name##_tab;        \
+    QGridLayout* name##_layout; \
+    void create_##name##_tab();
     N64_DEBUGGER_TABS
-    #undef X
+#undef X
 
     enum TabIndex {
-        #define X(name) name##Index,
+
+#define X(name) name##Index,
         N64_DEBUGGER_TABS
-        #undef X
+#undef X
     };
 };
 #endif

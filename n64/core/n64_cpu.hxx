@@ -1,30 +1,29 @@
 #pragma once
 
+#include "n64_addresses.hxx"
+#include "n64_keys.hxx"
+#include "n64_rcp.hxx"
+#include "n64_types.hxx"
+#include <array>
+#include <cfenv>
+#include <cfloat>
+#include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <limits>
-#include <array>
+#include <log.hxx>
+#include <memory>
 #include <queue>
 #include <vector>
-#include <concepts>
-#include <memory>
-#include <cmath>
-#include <cfloat>
-#include <cfenv>
-#include <queue>
-#include <log.hxx>
-#include "n64_types.hxx"
-#include "n64_addresses.hxx"
-#include "n64_rcp.hxx"
-#include "n64_keys.hxx"
 
 #define KB(x) (static_cast<size_t>(x << 10))
 #define check_bit(x, y) ((x) & (1u << y))
 
 constexpr auto INSTRS_PER_SECOND = 93'750'000;
 constexpr uint32_t KSEG0_START = 0x8000'0000;
-constexpr uint32_t KSEG0_END   = 0x9FFF'FFFF;
+constexpr uint32_t KSEG0_END = 0x9FFF'FFFF;
 constexpr uint32_t KSEG1_START = 0xA000'0000;
-constexpr uint32_t KSEG1_END   = 0xBFFF'FFFF;
+constexpr uint32_t KSEG1_END = 0xBFFF'FFFF;
 
 class N64Debugger;
 
@@ -51,15 +50,17 @@ enum class ExceptionType {
     FloatingPoint = 15,
 };
 
-struct SchedulerEvent {
+struct SchedulerEvent
+{
     SchedulerEventType type;
     uint64_t time;
 };
 
 class SchedulerCompare
 {
-public:
-    bool operator() (SchedulerEvent eventl, SchedulerEvent eventr) {
+  public:
+    bool operator()(SchedulerEvent eventl, SchedulerEvent eventr)
+    {
         return eventl.time > eventr.time;
     }
 };
@@ -69,87 +70,107 @@ public:
 #undef X
 
 // TODO: endianess issues, switch to BitField< ... >
-union CP0StatusType {
-    struct {
-        uint64_t IE : 1;
+union CP0StatusType
+{
+    struct
+    {
+        uint64_t IE  : 1;
         uint64_t EXL : 1;
         uint64_t ERL : 1;
         uint64_t KSU : 2;
-        uint64_t UX : 1;
-        uint64_t SX : 1;
-        uint64_t KX : 1;
-        uint64_t IM : 8;
-        unsigned DS : 9;
-        unsigned RE : 1;
-        unsigned FR : 1;
-        unsigned RP : 1;
+        uint64_t UX  : 1;
+        uint64_t SX  : 1;
+        uint64_t KX  : 1;
+        uint64_t IM  : 8;
+        unsigned DS  : 9;
+        unsigned RE  : 1;
+        unsigned FR  : 1;
+        unsigned RP  : 1;
         unsigned CP0 : 1;
         unsigned CP1 : 1;
         unsigned CP2 : 1;
         unsigned CP3 : 1;
-        uint64_t : 32;
+        uint64_t     : 32;
     };
+
     uint64_t full;
 };
+
 static_assert(sizeof(CP0StatusType) == sizeof(uint64_t));
 #define CP0Status (reinterpret_cast<CP0StatusType&>(cp0_regs_[CP0_STATUS]))
 
-union CP0CauseType {
-    struct {
+union CP0CauseType
+{
+    struct
+    {
         uint64_t unused1 : 2;
-        uint64_t ExCode : 5;
+        uint64_t ExCode  : 5;
         uint64_t unused2 : 1;
-        uint64_t IP0 : 1;
-        uint64_t IP1 : 1;
-        uint64_t IP2 : 1;
-        uint64_t IP3 : 1;
-        uint64_t IP4 : 1;
-        uint64_t IP5 : 1;
-        uint64_t IP6 : 1;
-        uint64_t IP7 : 1;
+        uint64_t IP0     : 1;
+        uint64_t IP1     : 1;
+        uint64_t IP2     : 1;
+        uint64_t IP3     : 1;
+        uint64_t IP4     : 1;
+        uint64_t IP5     : 1;
+        uint64_t IP6     : 1;
+        uint64_t IP7     : 1;
         uint64_t unused3 : 12;
-        uint64_t CE : 2;
+        uint64_t CE      : 2;
         uint64_t unused4 : 1;
-        uint64_t BD : 1;
+        uint64_t BD      : 1;
         uint64_t unused5 : 32;
     };
+
     uint64_t full;
 };
+
 static_assert(sizeof(CP0CauseType) == sizeof(uint64_t));
 #define CP0Cause (reinterpret_cast<CP0CauseType&>(cp0_regs_[CP0_CAUSE]))
 
-union CP0ContextType {
-    struct {
-        uint64_t : 4;
+union CP0ContextType
+{
+    struct
+    {
+        uint64_t         : 4;
         uint64_t BadVPN2 : 19;
         uint64_t PTEBase : 41;
     };
+
     uint64_t full;
 };
+
 static_assert(sizeof(CP0ContextType) == sizeof(uint64_t));
 #define CP0Context (reinterpret_cast<CP0ContextType&>(cp0_regs_[CP0_CONTEXT]))
 
-union CP0XContextType {
-    struct {
-        uint64_t : 4;
+union CP0XContextType
+{
+    struct
+    {
+        uint64_t         : 4;
         uint64_t BadVPN2 : 27;
-        uint64_t R : 2;
+        uint64_t R       : 2;
         uint64_t PTEBase : 31;
     };
+
     uint64_t full;
 };
+
 static_assert(sizeof(CP0XContextType) == sizeof(uint64_t));
 #define CP0XContext (reinterpret_cast<CP0XContextType&>(cp0_regs_[CP0_XCONTEXT]))
 #define CP0EntryHi (reinterpret_cast<EntryHi&>(cp0_regs_[CP0_ENTRYHI]))
 
-namespace hydra {
-    namespace N64 {
+namespace hydra
+{
+    namespace N64
+    {
         class N64_TKPWrapper;
         class N64;
         class QA;
-    }
-}
-namespace hydra::N64 {
+    } // namespace N64
+} // namespace hydra
+
+namespace hydra::N64
+{
     enum class CP0Instruction {
         TLBWI = 2,
         TLBP = 8,
@@ -158,69 +179,66 @@ namespace hydra::N64 {
         WAIT = 17,
         TLBWR = 6,
     };
-    // Bit hack to get signum of number (-1, 0 or 1)
-    template <typename T> int sgn(T val) {
-        return (T(0) < val) - (val < T(0));
-    }
-    constexpr static uint64_t OperationMasks[2] = {
-        std::numeric_limits<uint32_t>::max(),
-        std::numeric_limits<uint64_t>::max()
-    };
-    // Only kernel mode is used for (most?) n64 licensed games
-    enum class OperatingMode {
-        User,
-        Supervisor,
-        Kernel
-    };
 
-    struct TranslatedAddress {
+    // Bit hack to get signum of number (-1, 0 or 1)
+    template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
+
+    constexpr static uint64_t OperationMasks[2] = {std::numeric_limits<uint32_t>::max(),
+                                                   std::numeric_limits<uint64_t>::max()};
+    // Only kernel mode is used for (most?) n64 licensed games
+    enum class OperatingMode { User, Supervisor, Kernel };
+
+    struct TranslatedAddress
+    {
         uint32_t paddr;
         bool cached;
         bool success = false;
     };
+
     /**
-        32-bit address bus 
-        
-        @see https://n64brew.dev/wiki/Memory_map     
+        32-bit address bus
+
+        @see https://n64brew.dev/wiki/Memory_map
     */
-    class CPUBus {
-    public:
+    class CPUBus
+    {
+      public:
         CPUBus(RCP& rcp);
         bool LoadCartridge(std::string path);
         bool LoadIPL(std::string path);
-        bool IsEverythingLoaded() {
-            return rom_loaded_ && ipl_loaded_;
-        }
+
+        bool IsEverythingLoaded() { return rom_loaded_ && ipl_loaded_; }
+
         void Reset();
-    private:
-        uint32_t  fetch_instruction(uint32_t paddr);
-        uint8_t*  redirect_paddress         (uint32_t paddr);
-        void      map_direct_addresses();
+
+      private:
+        uint8_t* redirect_paddress(uint32_t paddr);
+        void map_direct_addresses();
 
         static std::vector<uint8_t> ipl_;
         std::vector<uint8_t> cart_rom_;
         bool rom_loaded_ = false;
         bool ipl_loaded_ = false;
-        std::vector<uint8_t> rdram_ {};
-        std::array<char, ISVIEWER_END - ISVIEWER_START> isviewer_buffer_ {};
-        std::array<uint8_t, 64> pif_ram_ {};
-        std::array<uint8_t*, 0x10000> page_table_ {};
+        std::vector<uint8_t> rdram_{};
+        std::array<char, ISVIEWER_END - ISVIEWER_START> isviewer_buffer_{};
+        std::array<uint8_t, 64> pif_ram_{};
+        std::array<uint8_t*, 0x10000> page_table_{};
 
         // MIPS Interface
-        uint32_t mi_mode_         = 0;
-        uint32_t mi_version_      = 0;
-        MIInterrupt mi_interrupt_ {};
-        uint32_t mi_mask_         = 0;
+        uint32_t mi_mode_ = 0;
+        uint32_t mi_version_ = 0;
+        MIInterrupt mi_interrupt_{};
+        uint32_t mi_mask_ = 0;
 
         // Peripheral Interface
-        uint32_t pi_dram_addr_    = 0;
-        uint32_t pi_cart_addr_    = 0;
-        uint32_t pi_rd_len_       = 0;
-        uint32_t pi_wr_len_       = 0;
-        uint32_t pi_status_       = 0;
-        bool dma_error_           = false;
-        bool io_busy_             = false;
-        bool dma_busy_            = false;
+        uint32_t pi_dram_addr_ = 0;
+        uint32_t pi_cart_addr_ = 0;
+        uint32_t pi_rd_len_ = 0;
+        uint32_t pi_wr_len_ = 0;
+        uint32_t pi_status_ = 0;
+        bool dma_error_ = false;
+        bool io_busy_ = false;
+        bool dma_busy_ = false;
         uint32_t pi_bsd_dom1_lat_ = 0;
         uint32_t pi_bsd_dom1_pwd_ = 0;
         uint32_t pi_bsd_dom1_pgs_ = 0;
@@ -231,18 +249,18 @@ namespace hydra::N64 {
         uint32_t pi_bsd_dom2_rls_ = 0;
 
         // RDRAM Interface
-        uint32_t ri_mode_         = 0;
-        uint32_t ri_config_       = 0;
+        uint32_t ri_mode_ = 0;
+        uint32_t ri_config_ = 0;
         uint32_t ri_current_load_ = 0;
-        uint32_t ri_select_       = 0;
-        uint32_t ri_refresh_      = 0;
-        uint32_t ri_latency_      = 0;
+        uint32_t ri_select_ = 0;
+        uint32_t ri_refresh_ = 0;
+        uint32_t ri_latency_ = 0;
 
         // Serial Interface
-        uint32_t si_dram_addr_    = 0;
+        uint32_t si_dram_addr_ = 0;
         uint32_t si_pif_ad_wr64b_ = 0;
         uint32_t si_pif_ad_rd64b_ = 0;
-        uint32_t si_status_       = 0;
+        uint32_t si_status_ = 0;
 
         uint64_t time_ = 0;
 
@@ -251,23 +269,28 @@ namespace hydra::N64 {
         friend class hydra::N64::N64;
         friend class ::N64Debugger;
     };
-    template<auto MemberFunc>
-    static void lut_wrapper(CPU* cpu) {
+
+    template <auto MemberFunc> static void lut_wrapper(CPU* cpu)
+    {
         // Props: calc84maniac
-        // > making it into a template parameter lets the compiler avoid using an actual member function pointer at runtime
+        // > making it into a template parameter lets the compiler avoid using an actual member
+        // function pointer at runtime
         (cpu->*MemberFunc)();
     }
-    class CPU final {
-    public:
+
+    class CPU final
+    {
+      public:
         CPU(CPUBus& cpubus, RCP& rcp, bool& should_draw);
         void Tick();
         void Reset();
-    private:
-        using PipelineStageRet  = void;
+
+      private:
+        using PipelineStageRet = void;
         using PipelineStageArgs = void;
         CPUBus& cpubus_;
         RCP& rcp_;
-        
+
         OperatingMode opmode_ = OperatingMode::Kernel;
         // To be used with OpcodeMasks (OpcodeMasks[mode64_])
         bool mode64_ = false;
@@ -409,94 +432,120 @@ namespace hydra::N64 {
         void set_cp0_register_64(uint8_t reg, uint64_t value);
         void set_cp0_regs_exception(int64_t address);
 
-        template<class T>
-        T get_fpr_reg(int regnum);
+        template <class T> T get_fpr_reg(int regnum);
 
-        template<class T>
-        bool check_nan(T arg) {
-            if constexpr (std::is_same_v<T, float>) {
+        template <class T> bool check_nan(T arg)
+        {
+            if constexpr (std::is_same_v<T, float>)
+            {
                 return (std::bit_cast<uint32_t>(arg) & 0x7FC00000) == 0x7FC00000;
-            } else {
+            } else
+            {
                 return (std::bit_cast<uint64_t>(arg) & 0x7FF8000000000000) == 0x7FF8000000000000;
             }
         }
 
-        template<class T>
-        T get_nan() {
-            if constexpr (std::is_same_v<T, float>) {
+        template <class T> T get_nan()
+        {
+            if constexpr (std::is_same_v<T, float>)
+            {
                 return std::bit_cast<float>(0x7FBF'FFFF);
-            } else {
+            } else
+            {
                 return std::bit_cast<double>(0x7FF7'FFFF'FFFF'FFFFu);
             }
         }
 
-        template<class T>
-        void set_fpr_reg(int regnum, T value);
+        template <class T> void set_fpr_reg(int regnum, T value);
 
         template <class T>
-        requires std::floating_point<T>
-        void check_fpu_arg(T arg) {
-            switch (std::fpclassify(arg)) {
-                case FP_NAN: {
-                    if (check_nan<T>(arg)) {
+            requires std::floating_point<T>
+        void check_fpu_arg(T arg)
+        {
+            switch (std::fpclassify(arg))
+            {
+                case FP_NAN:
+                {
+                    if (check_nan<T>(arg))
+                    {
                         fcr31_.cause_invalidop = 1;
-                        if (!fcr31_.enable_invalidop) {
+                        if (!fcr31_.enable_invalidop)
+                        {
                             fcr31_.flag_invalidop = 1;
                         }
-                    } else {
+                    } else
+                    {
                         fcr31_.unimplemented = 1;
                     }
                     break;
                 }
-                case FP_SUBNORMAL: {
+                case FP_SUBNORMAL:
+                {
                     fcr31_.unimplemented = 1;
                     break;
                 }
-                default: {
+                default:
+                {
                     break;
                 }
             }
         }
 
         template <class T>
-        requires std::floating_point<T>
-        void check_fpu_result(T& arg) {
-            switch (std::fpclassify(arg)) {
-                case FP_NAN: {
+            requires std::floating_point<T>
+        void check_fpu_result(T& arg)
+        {
+            switch (std::fpclassify(arg))
+            {
+                case FP_NAN:
+                {
                     arg = get_nan<T>();
                     break;
                 }
-                case FP_SUBNORMAL: {
-                    if (!fcr31_.flush_subnormals || fcr31_.enable_underflow || fcr31_.enable_inexact) {
+                case FP_SUBNORMAL:
+                {
+                    if (!fcr31_.flush_subnormals || fcr31_.enable_underflow ||
+                        fcr31_.enable_inexact)
+                    {
                         fcr31_.unimplemented = 1;
                         return;
                     }
                     fcr31_.cause_underflow = 1;
-                    if (!fcr31_.enable_underflow) {
+                    if (!fcr31_.enable_underflow)
+                    {
                         fcr31_.flag_underflow = 1;
                     }
                     fcr31_.cause_inexact = 1;
-                    if (!fcr31_.enable_inexact) {
+                    if (!fcr31_.enable_inexact)
+                    {
                         fcr31_.flag_inexact = 1;
                     }
-                    switch (fcr31_.rounding_mode) {
+                    switch (fcr31_.rounding_mode)
+                    {
                         case 0:
-                        case 1: {
+                        case 1:
+                        {
                             arg = std::copysign(0, arg);
                             break;
                         }
-                        case 2: {
-                            if (std::signbit(arg)) {
+                        case 2:
+                        {
+                            if (std::signbit(arg))
+                            {
                                 arg = -static_cast<T>(0);
-                            } else {
+                            } else
+                            {
                                 arg = std::numeric_limits<T>::min();
                             }
                             break;
                         }
-                        case 3: {
-                            if (std::signbit(arg)) {
+                        case 3:
+                        {
+                            if (std::signbit(arg))
+                            {
                                 arg = -std::numeric_limits<T>::min();
-                            } else {
+                            } else
+                            {
                                 arg = 0;
                             }
                             break;
@@ -513,22 +562,22 @@ namespace hydra::N64 {
         template <class Type, class OperatorFunction, class CastFunction>
         void fpu_operate_impl(OperatorFunction op, CastFunction cast);
 
-        template <class Type>
-        Type get_fpu_reg(int regnum);
+        template <class Type> Type get_fpu_reg(int regnum);
 
-        template <class Type>
-        void set_fpu_reg(int regnum, Type value);
+        template <class Type> void set_fpu_reg(int regnum, Type value);
 
         bool check_fpu_exception();
 
-        std::priority_queue<SchedulerEvent, std::vector<SchedulerEvent>, SchedulerCompare> scheduler_;
+        std::priority_queue<SchedulerEvent, std::vector<SchedulerEvent>, SchedulerCompare>
+            scheduler_;
         void queue_event(SchedulerEventType, int);
         void pif_command();
         bool joybus_command(const std::vector<uint8_t>&, std::vector<uint8_t>&);
-        std::array<bool, hydra::N64::Keys::N64KeyCount> key_state_ {};
-        std::vector<DisassemblerInstruction> disassemble(uint64_t start_vaddr, uint64_t end_vaddr, bool register_names);
+        std::array<bool, hydra::N64::Keys::N64KeyCount> key_state_{};
+        std::vector<DisassemblerInstruction> disassemble(uint64_t start_vaddr, uint64_t end_vaddr,
+                                                         bool register_names);
 
-        template<bool DoLog>
+        template <bool DoLog>
         void log_cpu_state(bool use_crc, uint64_t instructions, uint64_t start = 0);
 
         bool is_kernel_mode();
@@ -542,4 +591,4 @@ namespace hydra::N64 {
         friend class hydra::N64::N64;
         friend class hydra::N64::QA;
     };
-}
+} // namespace hydra::N64

@@ -1,16 +1,18 @@
 #include "settingswindow.hxx"
 #include "keypicker.hxx"
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QFileDialog>
-#include <QPushButton>
 #include <QCheckBox>
-#include <emulator_types.hxx>
+#include <QFileDialog>
+#include <QLabel>
+#include <QPushButton>
+#include <QVBoxLayout>
 #include <emulator_factory.hxx>
 #include <emulator_settings.hxx>
+#include <emulator_types.hxx>
 #define emu_data(emu_type) EmulatorSettings::GetEmulatorData(emu_type).UserData
 
-SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidget(parent, Qt::Window) {
+SettingsWindow::SettingsWindow(bool& open, QWidget* parent)
+    : open_(open), QWidget(parent, Qt::Window)
+{
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle("Settings");
     QGridLayout* main_layout = new QGridLayout;
@@ -18,10 +20,14 @@ SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidg
     right_group_box_ = new QGroupBox;
     {
         tab_list_ = new QListWidget;
-        QListWidgetItem* general = new QListWidgetItem(QPixmap(":/images/support.png"), QString("General"));
-        QListWidgetItem* input = new QListWidgetItem(QPixmap(":/images/input.png"), QString("Input"));
-        QListWidgetItem* gameboy = new QListWidgetItem(QPixmap(":/images/gameboy.png"), QString("Gameboy"));
-        QListWidgetItem* n64 = new QListWidgetItem(QPixmap(":/images/n64.png"), QString("Nintendo 64"));
+        QListWidgetItem* general =
+            new QListWidgetItem(QPixmap(":/images/support.png"), QString("General"));
+        QListWidgetItem* input =
+            new QListWidgetItem(QPixmap(":/images/input.png"), QString("Input"));
+        QListWidgetItem* gameboy =
+            new QListWidgetItem(QPixmap(":/images/gameboy.png"), QString("Gameboy"));
+        QListWidgetItem* n64 =
+            new QListWidgetItem(QPixmap(":/images/n64.png"), QString("Nintendo 64"));
         QListWidgetItem* c8 = new QListWidgetItem(QPixmap(":/images/c8.png"), QString("Chip 8"));
         tab_list_->addItem(general);
         tab_list_->addItem(input);
@@ -55,11 +61,10 @@ SettingsWindow::SettingsWindow(bool& open, QWidget* parent) : open_(open), QWidg
     open_ = true;
 }
 
-SettingsWindow::~SettingsWindow() {
-    open_ = false;
-}
+SettingsWindow::~SettingsWindow() { open_ = false; }
 
-void SettingsWindow::create_tabs() {
+void SettingsWindow::create_tabs()
+{
     {
         QGridLayout* general_layout = new QGridLayout;
         QWidget* general_tab = new QWidget;
@@ -110,8 +115,7 @@ void SettingsWindow::create_tabs() {
         // QWidget* nes_tab = new QWidget;
         // nes_tab->setLayout(nes_layout);
         // tab_show_->addTab(nes_tab, "NES");
-    }
-    {
+    } {
         auto ipl_path = emu_data(hydra::EmuType::N64).Get("IPLPath");
         ipl_path_ = new QLineEdit;
         ipl_path_->setReadOnly(true);
@@ -136,29 +140,31 @@ void SettingsWindow::create_tabs() {
     }
 }
 
-void SettingsWindow::on_dmg_click() {
+void SettingsWindow::on_dmg_click()
+{
     auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
     emu_data(hydra::EmuType::Gameboy).Set("dmg_path", path.toStdString());
     dmg_bios_path_->setText(path);
 }
 
-void SettingsWindow::on_cgb_click() {
+void SettingsWindow::on_cgb_click()
+{
     auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
     emu_data(hydra::EmuType::Gameboy).Set("cgb_path", path.toStdString());
     cgb_bios_path_->setText(path);
 }
 
-void SettingsWindow::on_gb_skip_bios_click(int state) {
+void SettingsWindow::on_gb_skip_bios_click(int state)
+{
     auto str = (state == Qt::CheckState::Checked) ? "true" : "false";
     emu_data(hydra::EmuType::Gameboy).Set("skip_bios", str);
 }
 
-void SettingsWindow::on_ipl_click() {
+void SettingsWindow::on_ipl_click()
+{
     auto path = QFileDialog::getOpenFileName(this, tr("Open IPL"), "", "Binary files (*.bin)");
     emu_data(hydra::EmuType::N64).Set("IPLPath", path.toStdString());
     ipl_path_->setText(path);
 }
 
-void SettingsWindow::on_tab_change() {
-    tab_show_->setCurrentIndex(tab_list_->currentRow());
-}
+void SettingsWindow::on_tab_change() { tab_show_->setCurrentIndex(tab_list_->currentRow()); }

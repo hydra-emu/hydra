@@ -41,10 +41,10 @@ namespace hydra
         virtual ~Emulator();
         Emulator(const Emulator&) = delete;
         Emulator& operator=(const Emulator&) = delete;
-        std::atomic_bool Stopped = false;
-        std::atomic_bool Paused = false;
-        std::atomic_bool Step = false;
-        std::atomic_bool Loaded = false;
+        std::atomic_bool Stopped{};
+        std::atomic_bool Paused{};
+        std::atomic_bool Step{};
+        std::atomic_bool Loaded{};
         bool SkipBoot = false;
         bool FastMode = false;
         void Start();

@@ -1,26 +1,29 @@
 #ifndef SHADEREDITOR_H
 #define SHADEREDITOR_H
-#include <QWidget>
-#include <QSyntaxHighlighter>
-#include <QList>
-#include <QString>
-#include <QTextEdit>
 #include <QFile>
-#include <QToolBar>
-#include <QTextCharFormat>
+#include <QList>
 #include <QRegularExpression>
+#include <QString>
+#include <QSyntaxHighlighter>
+#include <QTextCharFormat>
+#include <QTextEdit>
+#include <QToolBar>
+#include <QWidget>
 #include <functional>
 
-class ShaderHighlighter final : public QSyntaxHighlighter {
+class ShaderHighlighter final : public QSyntaxHighlighter
+{
     Q_OBJECT
-public:
-    ShaderHighlighter(QTextDocument *parent = nullptr);
-private:
+  public:
+    ShaderHighlighter(QTextDocument* parent = nullptr);
+
+  private:
     struct HighlightingRule
     {
         QRegularExpression pattern;
         QTextCharFormat format;
     };
+
     void highlightBlock(const QString& text) override;
     QRegularExpression comment_start_expression_;
     QRegularExpression comment_end_expression_;
@@ -32,18 +35,21 @@ private:
     QTextCharFormat keyword_pink_format_;
 };
 
-class ShaderEditor final : public QWidget {
+class ShaderEditor final : public QWidget
+{
     Q_OBJECT
-public:
-    ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback, QWidget* parent = nullptr);
+  public:
+    ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback,
+                 QWidget* parent = nullptr);
     ~ShaderEditor();
     ShaderEditor(const ShaderEditor&) = delete;
     ShaderEditor& operator=(const ShaderEditor&) = delete;
-private slots:
+  private slots:
     void compile();
     void autocompile();
     void open_shader();
-private:
+
+  private:
     QTextEdit* editor_;
     QToolBar* toolbar_;
     QAction* compile_act_;

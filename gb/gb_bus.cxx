@@ -603,7 +603,7 @@ namespace hydra::Gameboy
         {
             s << std::hex << std::setfill('0') << std::setw(2) << m;
         }
-        for (int i = 0; i < oam_.size(); i += 4)
+        for (size_t i = 0; i < oam_.size(); i += 4)
         {
             s << std::hex << std::setfill('0') << std::setw(2) << oam_[i + 3];
             s << std::hex << std::setfill('0') << std::setw(2) << oam_[i + 2];
@@ -937,7 +937,6 @@ namespace hydra::Gameboy
                 case addr_NR12:
                 {
                     handle_nrx2(1, data);
-                    auto& chan = (*channel_array_ptr_)[0];
                     break;
                 }
                 case addr_NR13:
@@ -1068,17 +1067,16 @@ namespace hydra::Gameboy
                 }
                 case addr_NR50:
                 {
-#pragma GCC unroll 4
                     for (int i = 0; i < 4; i++)
                     {
                         auto& ch = (*channel_array_ptr_)[i];
                         ch.RightVolume = data & 0b111;
                         ch.LeftVolume = (data >> 4) & 0b111;
                     }
+                    break;
                 }
                 case addr_NR51:
                 {
-#pragma GCC unroll 4
                     for (int i = 0; i < 4; i++)
                     {
                         auto& ch = (*channel_array_ptr_)[i];
@@ -1256,7 +1254,7 @@ namespace hydra::Gameboy
         cartridge_.header_ = header;
         rom_banks_.resize(cartridge_.GetRomSize());
         ram_banks_.resize(cartridge_.GetRamSize());
-        for (int i = 0; i < rom_banks_.size(); i++)
+        for (size_t i = 0; i < rom_banks_.size(); i++)
         {
             std::memcpy(rom_banks_[i].data(), data + (i * 0x4000), sizeof(uint8_t) * 0x4000);
         }

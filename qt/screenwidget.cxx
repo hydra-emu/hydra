@@ -1,17 +1,20 @@
 #include "screenwidget.hxx"
-#include <iostream>
 #include <QFile>
+#include <iostream>
 
-ScreenWidget::ScreenWidget(QWidget *parent) : QOpenGLWidget(parent) {}
+ScreenWidget::ScreenWidget(QWidget* parent) : QOpenGLWidget(parent) {}
 
-ScreenWidget::~ScreenWidget() {
-    if (initialized_) {
+ScreenWidget::~ScreenWidget()
+{
+    if (initialized_)
+    {
         glDeleteTextures(1, &texture_);
     }
     delete program_;
 }
 
-void ScreenWidget::InitializeTexture(int width, int height, int bitdepth, void* data) {
+void ScreenWidget::InitializeTexture(int width, int height, int bitdepth, void* data)
+{
     glBindTexture(GL_TEXTURE_2D, texture_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, bitdepth, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -20,9 +23,12 @@ void ScreenWidget::InitializeTexture(int width, int height, int bitdepth, void* 
     initialized_ = true;
 }
 
-void ScreenWidget::Redraw(int width, int height, int bitdepth, void* data) {
-    if (initialized_) [[likely]] {
-        if (bitdepth == GL_UNSIGNED_SHORT_5_5_5_1) // n64 (TODO: make a bool in this function that sets this)
+void ScreenWidget::Redraw(int width, int height, int bitdepth, void* data)
+{
+    if (initialized_) [[likely]]
+    {
+        if (bitdepth ==
+            GL_UNSIGNED_SHORT_5_5_5_1) // n64 (TODO: make a bool in this function that sets this)
             glPixelStorei(GL_UNPACK_SWAP_BYTES, 1);
         glBindTexture(GL_TEXTURE_2D, texture_);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, bitdepth, data);
@@ -32,34 +38,44 @@ void ScreenWidget::Redraw(int width, int height, int bitdepth, void* data) {
     }
 }
 
-void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
-    if (!vertex) {
-        QFile vfile(":/shaders/simple.vs"); vfile.open(QIODevice::ReadOnly);
+void ScreenWidget::ResetProgram(QString* vertex, QString* fragment)
+{
+    if (!vertex)
+    {
+        QFile vfile(":/shaders/simple.vs");
+        vfile.open(QIODevice::ReadOnly);
         vshader_source_ = vfile.readAll();
-    } else {
+    } else
+    {
         vshader_source_ = *vertex;
     }
-    if (!fragment) {
-        QFile ffile(":/shaders/simple.fs"); ffile.open(QIODevice::ReadOnly);
+    if (!fragment)
+    {
+        QFile ffile(":/shaders/simple.fs");
+        ffile.open(QIODevice::ReadOnly);
         fshader_source_ = ffile.readAll();
-    } else {
+    } else
+    {
         fshader_source_ = *fragment;
     }
-    QOpenGLShader *vshader = new QOpenGLShader(QOpenGLShader::Vertex, this);
+    QOpenGLShader* vshader = new QOpenGLShader(QOpenGLShader::Vertex, this);
     vshader->compileSourceCode(vshader_source_);
-    if (!vshader->log().isEmpty()) {
+    if (!vshader->log().isEmpty())
+    {
         auto error = vshader->log().toStdString();
         delete vshader;
         throw std::runtime_error(error);
     }
-    QOpenGLShader *fshader = new QOpenGLShader(QOpenGLShader::Fragment, this);
+    QOpenGLShader* fshader = new QOpenGLShader(QOpenGLShader::Fragment, this);
     fshader->compileSourceCode(fshader_source_);
-    if (!fshader->log().isEmpty()) {
+    if (!fshader->log().isEmpty())
+    {
         auto error = fshader->log().toStdString();
         delete fshader;
         throw std::runtime_error(error);
     }
-    if (program_) {
+    if (program_)
+    {
         delete program_;
     }
     program_ = new QOpenGLShaderProgram;
@@ -73,7 +89,8 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment) {
     delete vshader;
 }
 
-void ScreenWidget::initializeGL() {
+void ScreenWidget::initializeGL()
+{
     initializeOpenGLFunctions();
     glGenTextures(1, &texture_);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -82,11 +99,10 @@ void ScreenWidget::initializeGL() {
     hide();
 }
 
-void ScreenWidget::resizeGL(int width, int height) {
-    
-}
+void ScreenWidget::resizeGL(int width, int height) {}
 
-void ScreenWidget::paintGL() {
+void ScreenWidget::paintGL()
+{
     glClear(GL_COLOR_BUFFER_BIT);
     program_->bind();
     if (initialized_)
