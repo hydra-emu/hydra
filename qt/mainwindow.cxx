@@ -461,8 +461,9 @@ void MainWindow::pause_emulator()
     if (emulator_->Paused.load())
     {
         emulator_->Paused.store(false);
+        std::lock_guard lock(emulator_->StepMutex);
         emulator_->Step.store(true);
-        emulator_->Step.notify_all();
+        emulator_->StepCV.notify_all();
     }
     else
     {

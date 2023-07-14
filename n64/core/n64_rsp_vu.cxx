@@ -142,7 +142,7 @@ constexpr std::array<uint16_t, 0x200> RSQ_TABLE = {
 
 namespace hydra::N64
 {
-#define vuinstr (static_cast<VUInstruction>(instruction_.full))
+#define vuinstr (VUInstruction(instruction_.full))
 
     using Elements = std::array<uint8_t, 8>;
 

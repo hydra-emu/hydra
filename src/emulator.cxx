@@ -50,7 +50,6 @@ namespace hydra
             throw ErrorFactory::generate_exception(__func__, __LINE__, "instrs_per_frame_ is 0");
         }
         Loaded = true;
-        Loaded.notify_all();
         Paused = false; // TODO: get from settings
         Stopped = false;
         Step = false;
@@ -91,7 +90,8 @@ namespace hydra
         } while (true);
         CALLGRIND_STOP_INSTRUMENTATION;
     paused:
-        Step.wait(false);
+        std::unique_lock lock(StepMutex);
+        StepCV.wait(lock);
         Step.store(false);
         update();
         goto begin;
@@ -121,16 +121,17 @@ namespace hydra
 
     void Emulator::CloseAndWait()
     {
-        Step.store(true);
-        Paused.store(false);
         stop();
-        Step.notify_all();
         std::lock_guard<std::mutex> lguard(ThreadStartedMutex);
     }
 
     void Emulator::stop()
     {
+        std::lock_guard lock(StepMutex);
+        Step.store(true);
+        Paused.store(false);
         Stopped.store(true);
         cur_instr_ = instrs_per_frame_;
+        StepCV.notify_all();
     }
 } // namespace hydra
