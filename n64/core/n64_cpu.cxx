@@ -1,5 +1,4 @@
 #include "n64_cpu.hxx"
-#include <bit>
 #include <bitset>
 #include <bswap.hxx>
 #include <cassert>
