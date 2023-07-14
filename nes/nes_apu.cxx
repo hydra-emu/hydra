@@ -16,7 +16,10 @@ namespace hydra::NES
         should_tick_ ^= true;
     }
 
-    void APU::tick_impl() { clock_ += 1; }
+    void APU::tick_impl()
+    {
+        clock_ += 1;
+    }
 
     void APU::invalidate(uint8_t addr, uint8_t data)
     {
@@ -24,12 +27,10 @@ namespace hydra::NES
         {
             case SQ1_VOL:
             {
-
                 break;
             }
             case SQ1_SWEEP:
             {
-
                 break;
             }
             case SQ1_LO:

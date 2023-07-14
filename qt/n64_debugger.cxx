@@ -1,4 +1,7 @@
 #include "n64_debugger.hxx"
+#include <fmt/format.h>
+#include <iostream>
+#include <log.hxx>
 #include <QCheckBox>
 #include <QGroupBox>
 #include <QLabel>
@@ -11,9 +14,6 @@
 #include <QTimer>
 #include <QToolTip>
 #include <QVBoxLayout>
-#include <fmt/format.h>
-#include <iostream>
-#include <log.hxx>
 #include <string>
 
 MIPSHighlighter::MIPSHighlighter(QTextDocument* parent) : QSyntaxHighlighter(parent)
@@ -76,7 +76,9 @@ MIPSHighlighter::MIPSHighlighter(QTextDocument* parent) : QSyntaxHighlighter(par
 void MIPSHighlighter::highlightBlock(const QString& text)
 {
     if (text.isEmpty())
+    {
         return;
+    }
     for (const HighlightingRule& rule : qAsConst(highlighting_rules_))
     {
         QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
@@ -136,7 +138,8 @@ bool N64Disassembler::event(QEvent* event)
                             is_reg = true;
                         }
                     }
-                } else
+                }
+                else
                 {
                     for (int i = 0; i < 32; i++)
                     {
@@ -153,11 +156,13 @@ bool N64Disassembler::event(QEvent* event)
             if (is_reg)
             {
                 QToolTip::showText(helpEvent->globalPos(), QString::fromStdString(reg_value));
-            } else
+            }
+            else
             {
                 QToolTip::hideText();
             }
-        } else
+        }
+        else
         {
             QToolTip::hideText();
         }
@@ -191,12 +196,18 @@ void N64Disassembler::setGPRs(const std::array<hydra::N64::MemDataUnionDW, 32>& 
 void N64Disassembler::updateLineNumberArea(const QRect& rect, int dy)
 {
     if (dy)
+    {
         line_number_area_->scroll(0, dy);
+    }
     else
+    {
         line_number_area_->update(0, rect.y(), line_number_area_->width(), rect.height());
+    }
 
     if (rect.contains(viewport()->rect()))
+    {
         updateLineNumberAreaWidth(0);
+    }
 }
 
 void N64Disassembler::resizeEvent(QResizeEvent* e)
@@ -210,7 +221,9 @@ void N64Disassembler::resizeEvent(QResizeEvent* e)
 void N64Disassembler::lineNumberAreaPaintEvent(QPaintEvent* event)
 {
     if (instructions_.empty())
+    {
         return;
+    }
     QPainter painter(line_number_area_);
     painter.fillRect(event->rect(), Qt::lightGray);
     QTextBlock block = firstVisibleBlock();
@@ -239,7 +252,9 @@ void N64Disassembler::wheelEvent(QWheelEvent* e)
 {
     top_line_pixel_ -= e->angleDelta().y();
     if (top_line_pixel_ < 0)
+    {
         top_line_pixel_ = 0;
+    }
     top_line_ = top_line_pixel_ / fontMetrics().height();
     updateText();
 }
@@ -249,10 +264,14 @@ void N64Disassembler::updateText()
     int doc_size = size().height();
     int font_height = fontMetrics().height();
     if (font_height == 0)
+    {
         return;
+    }
     int lines = top_line_ + doc_size / font_height;
     if (lines > instructions_.size())
+    {
         lines = instructions_.size();
+    }
     std::string text;
     if (lines != 0)
     {
@@ -333,9 +352,15 @@ N64Debugger::N64Debugger(bool& open, QWidget* parent)
 
 N64Debugger::~N64Debugger() {}
 
-void N64Debugger::on_tab_change() { tab_show_->setCurrentIndex(tab_list_->currentRow()); }
+void N64Debugger::on_tab_change()
+{
+    tab_show_->setCurrentIndex(tab_list_->currentRow());
+}
 
-void N64Debugger::SetEmulator(hydra::N64::N64_TKPWrapper* emulator) { emulator_ = emulator; }
+void N64Debugger::SetEmulator(hydra::N64::N64_TKPWrapper* emulator)
+{
+    emulator_ = emulator;
+}
 
 void N64Debugger::update_debugger_tab()
 {

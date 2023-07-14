@@ -10,36 +10,80 @@
 
 namespace hydra::N64
 {
+    void CPU::s_SLL()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 << saval);
+    }
 
-    void CPU::s_SLL() { rdreg.D = static_cast<int32_t>(rtreg.UW._0 << saval); }
+    void CPU::s_SRL()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 >> saval);
+    }
 
-    void CPU::s_SRL() { rdreg.D = static_cast<int32_t>(rtreg.UW._0 >> saval); }
+    void CPU::s_SRA()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.D >> saval);
+    }
 
-    void CPU::s_SRA() { rdreg.D = static_cast<int32_t>(rtreg.D >> saval); }
+    void CPU::s_SLLV()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 << (rsreg.UD & 0b111111));
+    }
 
-    void CPU::s_SLLV() { rdreg.D = static_cast<int32_t>(rtreg.UW._0 << (rsreg.UD & 0b111111)); }
+    void CPU::s_SRLV()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 >> (rsreg.UD & 0b111111));
+    }
 
-    void CPU::s_SRLV() { rdreg.D = static_cast<int32_t>(rtreg.UW._0 >> (rsreg.UD & 0b111111)); }
+    void CPU::s_SRAV()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.D >> (rsreg.UD & 0b11111));
+    }
 
-    void CPU::s_SRAV() { rdreg.D = static_cast<int32_t>(rtreg.D >> (rsreg.UD & 0b11111)); }
+    void CPU::s_DSRL()
+    {
+        rdreg.UD = rtreg.UD >> saval;
+    }
 
-    void CPU::s_DSRL() { rdreg.UD = rtreg.UD >> saval; }
+    void CPU::s_DSRLV()
+    {
+        rdreg.UD = rtreg.UD >> (rsreg.UD & 0b111111);
+    }
 
-    void CPU::s_DSRLV() { rdreg.UD = rtreg.UD >> (rsreg.UD & 0b111111); }
+    void CPU::s_DSLL()
+    {
+        rdreg.UD = rtreg.UD << saval;
+    }
 
-    void CPU::s_DSLL() { rdreg.UD = rtreg.UD << saval; }
+    void CPU::s_DSLLV()
+    {
+        rdreg.UD = rtreg.UD << (rsreg.UD & 0b111111);
+    }
 
-    void CPU::s_DSLLV() { rdreg.UD = rtreg.UD << (rsreg.UD & 0b111111); }
+    void CPU::s_DSLL32()
+    {
+        rdreg.UD = rtreg.UD << (saval + 32);
+    }
 
-    void CPU::s_DSLL32() { rdreg.UD = rtreg.UD << (saval + 32); }
+    void CPU::s_DSRA()
+    {
+        rdreg.D = rtreg.D >> saval;
+    }
 
-    void CPU::s_DSRA() { rdreg.D = rtreg.D >> saval; }
+    void CPU::s_DSRA32()
+    {
+        rdreg.D = rtreg.D >> (saval + 32);
+    }
 
-    void CPU::s_DSRA32() { rdreg.D = rtreg.D >> (saval + 32); }
+    void CPU::s_DSRAV()
+    {
+        rdreg.D = rtreg.D >> (rsreg.UD & 0b111111);
+    }
 
-    void CPU::s_DSRAV() { rdreg.D = rtreg.D >> (rsreg.UD & 0b111111); }
-
-    void CPU::s_DSRL32() { rdreg.UD = rtreg.UD >> (saval + 32); }
+    void CPU::s_DSRL32()
+    {
+        rdreg.UD = rtreg.UD >> (saval + 32);
+    }
 
     void CPU::s_ADD()
     {
@@ -52,7 +96,10 @@ namespace hydra::N64
         rdreg.UD = static_cast<int64_t>(result);
     }
 
-    void CPU::s_ADDU() { rdreg.D = static_cast<int32_t>(rsreg.UW._0 + rtreg.UW._0); }
+    void CPU::s_ADDU()
+    {
+        rdreg.D = static_cast<int32_t>(rsreg.UW._0 + rtreg.UW._0);
+    }
 
     void CPU::s_DADD()
     {
@@ -65,7 +112,10 @@ namespace hydra::N64
         rdreg.D = result;
     }
 
-    void CPU::s_DADDU() { rdreg.UD = rsreg.UD + rtreg.UD; }
+    void CPU::s_DADDU()
+    {
+        rdreg.UD = rsreg.UD + rtreg.UD;
+    }
 
     void CPU::s_SUB()
     {
@@ -78,7 +128,10 @@ namespace hydra::N64
         rdreg.D = result;
     }
 
-    void CPU::s_SUBU() { rdreg.D = static_cast<int32_t>(rsreg.UW._0 - rtreg.UW._0); }
+    void CPU::s_SUBU()
+    {
+        rdreg.D = static_cast<int32_t>(rsreg.UW._0 - rtreg.UW._0);
+    }
 
     void CPU::s_DSUB()
     {
@@ -91,7 +144,10 @@ namespace hydra::N64
         rdreg.D = result;
     }
 
-    void CPU::s_DSUBU() { rdreg.UD = rsreg.UD - rtreg.UD; }
+    void CPU::s_DSUBU()
+    {
+        rdreg.UD = rsreg.UD - rtreg.UD;
+    }
 
     void CPU::s_MULT()
     {
@@ -184,13 +240,25 @@ namespace hydra::N64
         hi_ = static_cast<int64_t>(rsreg.UD % rtreg.UD);
     }
 
-    void CPU::s_AND() { rdreg.UD = rsreg.UD & rtreg.UD; }
+    void CPU::s_AND()
+    {
+        rdreg.UD = rsreg.UD & rtreg.UD;
+    }
 
-    void CPU::s_OR() { rdreg.UD = rsreg.UD | rtreg.UD; }
+    void CPU::s_OR()
+    {
+        rdreg.UD = rsreg.UD | rtreg.UD;
+    }
 
-    void CPU::s_XOR() { rdreg.UD = rsreg.UD ^ rtreg.UD; }
+    void CPU::s_XOR()
+    {
+        rdreg.UD = rsreg.UD ^ rtreg.UD;
+    }
 
-    void CPU::s_NOR() { rdreg.UD = ~(rsreg.UD | rtreg.UD); }
+    void CPU::s_NOR()
+    {
+        rdreg.UD = ~(rsreg.UD | rtreg.UD);
+    }
 
     void CPU::s_TGE()
     {
@@ -288,24 +356,47 @@ namespace hydra::N64
         }
     }
 
-    void CPU::s_SLT() { rdreg.UD = rsreg.D < rtreg.D; }
+    void CPU::s_SLT()
+    {
+        rdreg.UD = rsreg.D < rtreg.D;
+    }
 
-    void CPU::s_SLTU() { rdreg.UD = rsreg.UD < rtreg.UD; }
+    void CPU::s_SLTU()
+    {
+        rdreg.UD = rsreg.UD < rtreg.UD;
+    }
 
-    void CPU::s_SYSCALL() { throw_exception(prev_pc_, ExceptionType::Syscall); }
+    void CPU::s_SYSCALL()
+    {
+        throw_exception(prev_pc_, ExceptionType::Syscall);
+    }
 
-    void CPU::s_BREAK() { throw_exception(prev_pc_, ExceptionType::Breakpoint); }
+    void CPU::s_BREAK()
+    {
+        throw_exception(prev_pc_, ExceptionType::Breakpoint);
+    }
 
     void CPU::s_SYNC() {}
 
-    void CPU::s_MFHI() { rdreg.UD = hi_; }
+    void CPU::s_MFHI()
+    {
+        rdreg.UD = hi_;
+    }
 
-    void CPU::s_MTHI() { hi_ = rsreg.UD; }
+    void CPU::s_MTHI()
+    {
+        hi_ = rsreg.UD;
+    }
 
-    void CPU::s_MFLO() { rdreg.UD = lo_; }
+    void CPU::s_MFLO()
+    {
+        rdreg.UD = lo_;
+    }
 
-    void CPU::s_MTLO() { lo_ = rsreg.UD; }
-
+    void CPU::s_MTLO()
+    {
+        lo_ = rsreg.UD;
+    }
 } // namespace hydra::N64
 
 #undef rdreg

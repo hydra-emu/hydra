@@ -1,10 +1,10 @@
 #include "aboutwindow.hxx"
+#include <error_factory.hxx>
 #include <QFile>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <error_factory.hxx>
 
 AboutWindow::AboutWindow(bool& open, QWidget* parent) : open_(open), QDialog(parent)
 {
@@ -13,9 +13,13 @@ AboutWindow::AboutWindow(bool& open, QWidget* parent) : open_(open), QDialog(par
     {
         QFile file(":/about.html");
         if (file.open(QIODevice::ReadOnly))
+        {
             html = file.readAll();
+        }
         else
+        {
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to load about.html");
+        }
     }
     setWindowTitle("About");
     setAttribute(Qt::WA_DeleteOnClose, true);
@@ -52,4 +56,7 @@ AboutWindow::AboutWindow(bool& open, QWidget* parent) : open_(open), QDialog(par
     open_ = true;
 }
 
-AboutWindow::~AboutWindow() { open_ = false; }
+AboutWindow::~AboutWindow()
+{
+    open_ = false;
+}

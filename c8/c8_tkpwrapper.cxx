@@ -8,7 +8,10 @@ namespace hydra::c8
     // Chip8_TKPWrapper::c8(std::unique_ptr<OptionsBase> args) : c8() {
     //     // key_mappings_ = std::any_cast<c8Keys>(args);
     // }
-    Chip8_TKPWrapper::~Chip8_TKPWrapper() { Stopped.store(true); }
+    Chip8_TKPWrapper::~Chip8_TKPWrapper()
+    {
+        Stopped.store(true);
+    }
 
     bool Chip8_TKPWrapper::load_file(std::string path)
     {
@@ -17,9 +20,15 @@ namespace hydra::c8
         return true;
     }
 
-    void Chip8_TKPWrapper::update() { inter_.Update(); }
+    void Chip8_TKPWrapper::update()
+    {
+        inter_.Update();
+    }
 
-    void Chip8_TKPWrapper::reset() { inter_.reset(); }
+    void Chip8_TKPWrapper::reset()
+    {
+        inter_.reset();
+    }
 
     void Chip8_TKPWrapper::HandleKeyDown(uint32_t key)
     {
@@ -45,5 +54,8 @@ namespace hydra::c8
         }
     }
 
-    void* Chip8_TKPWrapper::GetScreenData() { return inter_.GetScreenData(); }
+    void* Chip8_TKPWrapper::GetScreenData()
+    {
+        return inter_.GetScreenData();
+    }
 } // namespace hydra::c8

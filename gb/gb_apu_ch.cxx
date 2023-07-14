@@ -50,7 +50,8 @@ namespace hydra::Gameboy
                     ClockSweep();
                 }
             }
-        } else if (FrameSequencer == 7)
+        }
+        else if (FrameSequencer == 7)
         {
             ClockVolEnv();
         }
@@ -81,7 +82,8 @@ namespace hydra::Gameboy
                     if (EnvelopeCurrentVolume > 0 && !EnvelopeIncrease)
                     {
                         --EnvelopeCurrentVolume;
-                    } else if (EnvelopeCurrentVolume < 0xF && EnvelopeIncrease)
+                    }
+                    else if (EnvelopeCurrentVolume < 0xF && EnvelopeIncrease)
                     {
                         ++EnvelopeCurrentVolume;
                     }
@@ -103,7 +105,8 @@ namespace hydra::Gameboy
             if (SweepPeriod > 0)
             {
                 SweepTimer = SweepPeriod;
-            } else
+            }
+            else
             {
                 SweepTimer = 8;
             }
@@ -127,7 +130,8 @@ namespace hydra::Gameboy
         if (!SweepIncrease)
         {
             new_frequency = ShadowFrequency - new_frequency;
-        } else
+        }
+        else
         {
             new_frequency = ShadowFrequency + new_frequency;
         }

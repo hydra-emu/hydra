@@ -1,9 +1,9 @@
 #include "keypicker.hxx"
-#include <QKeyEvent>
-#include <QTableWidget>
 #include <emulator_factory.hxx>
 #include <emulator_settings.hxx>
 #include <iostream>
+#include <QKeyEvent>
+#include <QTableWidget>
 
 KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
 {
@@ -44,7 +44,10 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
     connect(emulator_picker_, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboBoxChange(int)));
 }
 
-void KeyPickerPage::onComboBoxChange(int index) { tab_show_->setCurrentIndex(index); }
+void KeyPickerPage::onComboBoxChange(int index)
+{
+    tab_show_->setCurrentIndex(index);
+}
 
 void KeyPickerPage::onCellDoubleClicked(int row, int column)
 {

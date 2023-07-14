@@ -1,13 +1,13 @@
 #include "settingswindow.hxx"
 #include "keypicker.hxx"
+#include <emulator_factory.hxx>
+#include <emulator_settings.hxx>
+#include <emulator_types.hxx>
 #include <QCheckBox>
 #include <QFileDialog>
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include <emulator_factory.hxx>
-#include <emulator_settings.hxx>
-#include <emulator_types.hxx>
 #define emu_data(emu_type) EmulatorSettings::GetEmulatorData(emu_type).UserData
 
 SettingsWindow::SettingsWindow(bool& open, QWidget* parent)
@@ -61,7 +61,10 @@ SettingsWindow::SettingsWindow(bool& open, QWidget* parent)
     open_ = true;
 }
 
-SettingsWindow::~SettingsWindow() { open_ = false; }
+SettingsWindow::~SettingsWindow()
+{
+    open_ = false;
+}
 
 void SettingsWindow::create_tabs()
 {
@@ -167,4 +170,7 @@ void SettingsWindow::on_ipl_click()
     ipl_path_->setText(path);
 }
 
-void SettingsWindow::on_tab_change() { tab_show_->setCurrentIndex(tab_list_->currentRow()); }
+void SettingsWindow::on_tab_change()
+{
+    tab_show_->setCurrentIndex(tab_list_->currentRow());
+}

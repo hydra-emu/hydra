@@ -1,5 +1,6 @@
 #ifndef SHADEREDITOR_H
 #define SHADEREDITOR_H
+#include <functional>
 #include <QFile>
 #include <QList>
 #include <QRegularExpression>
@@ -9,11 +10,11 @@
 #include <QTextEdit>
 #include <QToolBar>
 #include <QWidget>
-#include <functional>
 
 class ShaderHighlighter final : public QSyntaxHighlighter
 {
     Q_OBJECT
+
   public:
     ShaderHighlighter(QTextDocument* parent = nullptr);
 
@@ -38,6 +39,7 @@ class ShaderHighlighter final : public QSyntaxHighlighter
 class ShaderEditor final : public QWidget
 {
     Q_OBJECT
+
   public:
     ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback,
                  QWidget* parent = nullptr);

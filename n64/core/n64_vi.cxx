@@ -4,7 +4,10 @@
 
 namespace hydra::N64
 {
-    void Vi::Reset() { vi_v_intr_ = 0x100; }
+    void Vi::Reset()
+    {
+        vi_v_intr_ = 0x100;
+    }
 
     bool Vi::Redraw()
     {

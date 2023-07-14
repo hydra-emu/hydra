@@ -101,7 +101,6 @@ set(N64_FILES
     n64/core/n64_cpuinstructions_float.cxx
     n64/core/n64_cpuinstructions_loadstore.cxx
     n64/core/n64_cpubus.cxx
-    n64/core/n64_cpuscheduler.cxx
     n64/core/n64_cpuexceptions.cxx
     n64/core/n64_rcp.cxx
     n64/core/n64_rsp.cxx

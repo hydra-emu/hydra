@@ -27,15 +27,6 @@ constexpr uint32_t KSEG1_END = 0xBFFF'FFFF;
 
 class N64Debugger;
 
-enum class SchedulerEventType {
-    Interrupt = -1,
-    Si = 1,
-    Vi = 3,
-    Pi = 4,
-    Count = 0x100,
-    PiDmaComplete,
-};
-
 enum class ExceptionType {
     Interrupt = 0,
     TLBMissLoad = 2,
@@ -48,21 +39,6 @@ enum class ExceptionType {
     IntegerOverflow = 12,
     Trap = 13,
     FloatingPoint = 15,
-};
-
-struct SchedulerEvent
-{
-    SchedulerEventType type;
-    uint64_t time;
-};
-
-class SchedulerCompare
-{
-  public:
-    bool operator()(SchedulerEvent eventl, SchedulerEvent eventr)
-    {
-        return eventl.time > eventr.time;
-    }
 };
 
 #define X(name, value) constexpr auto CP0_##name = value;
@@ -181,7 +157,11 @@ namespace hydra::N64
     };
 
     // Bit hack to get signum of number (-1, 0 or 1)
-    template <typename T> int sgn(T val) { return (T(0) < val) - (val < T(0)); }
+    template <typename T>
+    int sgn(T val)
+    {
+        return (T(0) < val) - (val < T(0));
+    }
 
     constexpr static uint64_t OperationMasks[2] = {std::numeric_limits<uint32_t>::max(),
                                                    std::numeric_limits<uint64_t>::max()};
@@ -207,7 +187,10 @@ namespace hydra::N64
         bool LoadCartridge(std::string path);
         bool LoadIPL(std::string path);
 
-        bool IsEverythingLoaded() { return rom_loaded_ && ipl_loaded_; }
+        bool IsEverythingLoaded()
+        {
+            return rom_loaded_ && ipl_loaded_;
+        }
 
         void Reset();
 
@@ -270,7 +253,8 @@ namespace hydra::N64
         friend class ::N64Debugger;
     };
 
-    template <auto MemberFunc> static void lut_wrapper(CPU* cpu)
+    template <auto MemberFunc>
+    static void lut_wrapper(CPU* cpu)
     {
         // Props: calc84maniac
         // > making it into a template parameter lets the compiler avoid using an actual member
@@ -432,34 +416,39 @@ namespace hydra::N64
         void set_cp0_register_64(uint8_t reg, uint64_t value);
         void set_cp0_regs_exception(int64_t address);
 
-        template <class T> T get_fpr_reg(int regnum);
+        template <class T>
+        T get_fpr_reg(int regnum);
 
-        template <class T> bool check_nan(T arg)
+        template <class T>
+        bool check_nan(T arg)
         {
             if constexpr (std::is_same_v<T, float>)
             {
                 return (std::bit_cast<uint32_t>(arg) & 0x7FC00000) == 0x7FC00000;
-            } else
+            }
+            else
             {
                 return (std::bit_cast<uint64_t>(arg) & 0x7FF8000000000000) == 0x7FF8000000000000;
             }
         }
 
-        template <class T> T get_nan()
+        template <class T>
+        T get_nan()
         {
             if constexpr (std::is_same_v<T, float>)
             {
                 return std::bit_cast<float>(0x7FBF'FFFF);
-            } else
+            }
+            else
             {
                 return std::bit_cast<double>(0x7FF7'FFFF'FFFF'FFFFu);
             }
         }
 
-        template <class T> void set_fpr_reg(int regnum, T value);
+        template <class T>
+        void set_fpr_reg(int regnum, T value);
 
         template <class T>
-            requires std::floating_point<T>
         void check_fpu_arg(T arg)
         {
             switch (std::fpclassify(arg))
@@ -473,7 +462,8 @@ namespace hydra::N64
                         {
                             fcr31_.flag_invalidop = 1;
                         }
-                    } else
+                    }
+                    else
                     {
                         fcr31_.unimplemented = 1;
                     }
@@ -492,7 +482,6 @@ namespace hydra::N64
         }
 
         template <class T>
-            requires std::floating_point<T>
         void check_fpu_result(T& arg)
         {
             switch (std::fpclassify(arg))
@@ -533,7 +522,8 @@ namespace hydra::N64
                             if (std::signbit(arg))
                             {
                                 arg = -static_cast<T>(0);
-                            } else
+                            }
+                            else
                             {
                                 arg = std::numeric_limits<T>::min();
                             }
@@ -544,7 +534,8 @@ namespace hydra::N64
                             if (std::signbit(arg))
                             {
                                 arg = -std::numeric_limits<T>::min();
-                            } else
+                            }
+                            else
                             {
                                 arg = 0;
                             }
@@ -562,15 +553,14 @@ namespace hydra::N64
         template <class Type, class OperatorFunction, class CastFunction>
         void fpu_operate_impl(OperatorFunction op, CastFunction cast);
 
-        template <class Type> Type get_fpu_reg(int regnum);
+        template <class Type>
+        Type get_fpu_reg(int regnum);
 
-        template <class Type> void set_fpu_reg(int regnum, Type value);
+        template <class Type>
+        void set_fpu_reg(int regnum, Type value);
 
         bool check_fpu_exception();
 
-        std::priority_queue<SchedulerEvent, std::vector<SchedulerEvent>, SchedulerCompare>
-            scheduler_;
-        void queue_event(SchedulerEventType, int);
         void pif_command();
         bool joybus_command(const std::vector<uint8_t>&, std::vector<uint8_t>&);
         std::array<bool, hydra::N64::Keys::N64KeyCount> key_state_{};

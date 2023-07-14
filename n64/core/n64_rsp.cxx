@@ -11,10 +11,13 @@
 
 namespace hydra::N64
 {
+    template <>
+    void RSP::log_cpu_state<false>(bool, uint64_t)
+    {
+    }
 
-    template <> void RSP::log_cpu_state<false>(bool, uint64_t) {}
-
-    template <> void RSP::log_cpu_state<true>(bool use_crc, uint64_t instructions)
+    template <>
+    void RSP::log_cpu_state<true>(bool use_crc, uint64_t instructions)
     {
         static uint64_t count = 0;
         count++;
@@ -44,7 +47,8 @@ namespace hydra::N64
             gprcrc ^= 0xFFFF'FFFF;
             veccrc ^= 0xFFFF'FFFF;
             printf("RSP: %08x %08x %08x %08x", pc_, instruction_.full, gprcrc, veccrc);
-        } else
+        }
+        else
         {
             printf("%08x %08x", pc_, instruction_.full);
             for (int i = 1; i < 32; i++)
@@ -55,7 +59,10 @@ namespace hydra::N64
         printf("\n");
     }
 
-    RSP::RSP() { status_.halt = true; }
+    RSP::RSP()
+    {
+        status_.halt = true;
+    }
 
     RSP::~RSP() {}
 
@@ -78,7 +85,10 @@ namespace hydra::N64
         execute_instruction();
     }
 
-    void RSP::execute_instruction() { (instruction_table_[instruction_.IType.op])(this); }
+    void RSP::execute_instruction()
+    {
+        (instruction_table_[instruction_.IType.op])(this);
+    }
 
     uint32_t RSP::fetch_instruction()
     {
@@ -86,7 +96,10 @@ namespace hydra::N64
         return __builtin_bswap32(instruction);
     }
 
-    uint8_t RSP::load_byte(uint16_t address) { return mem_[address & 0xFFF]; }
+    uint8_t RSP::load_byte(uint16_t address)
+    {
+        return mem_[address & 0xFFF];
+    }
 
     uint16_t RSP::load_halfword(uint16_t address)
     {
@@ -101,7 +114,10 @@ namespace hydra::N64
         return __builtin_bswap32(data);
     }
 
-    void RSP::store_byte(uint16_t address, uint8_t data) { mem_[address & 0xFFF] = data; }
+    void RSP::store_byte(uint16_t address, uint8_t data)
+    {
+        mem_[address & 0xFFF] = data;
+    }
 
     void RSP::store_halfword(uint16_t address, uint16_t data)
     {
@@ -133,7 +149,10 @@ namespace hydra::N64
         }
     }
 
-    void RSP::link_register(uint8_t reg) { gpr_regs_[reg].UW = pc_ + 4; }
+    void RSP::link_register(uint8_t reg)
+    {
+        gpr_regs_[reg].UW = pc_ + 4;
+    }
 
     void RSP::read_dma()
     {
@@ -266,7 +285,8 @@ namespace hydra::N64
                 if (sp_write.clear_intr && !sp_write.set_intr)
                 {
                     mi_interrupt_->SP = false;
-                } else if (!sp_write.clear_intr && sp_write.set_intr)
+                }
+                else if (!sp_write.clear_intr && sp_write.set_intr)
                 {
                     Logger::Debug("Raising SP interrupt");
                     mi_interrupt_->SP = true;
@@ -388,5 +408,4 @@ namespace hydra::N64
             }
         }
     }
-
 } // namespace hydra::N64

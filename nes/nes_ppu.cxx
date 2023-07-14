@@ -54,7 +54,10 @@ namespace hydra::NES
         crt.scanlines = 1;
     }
 
-    void PPU::SetNMI(std::function<void(void)> func) { fire_nmi = std::move(func); }
+    void PPU::SetNMI(std::function<void(void)> func)
+    {
+        fire_nmi = std::move(func);
+    }
 
     void PPU::Tick()
     {
@@ -62,11 +65,13 @@ namespace hydra::NES
         {
             handle_normal_scanline();
             scanline_cycle_++;
-        } else if (scanline_ == 240)
+        }
+        else if (scanline_ == 240)
         {
             handle_empty_scanline();
             scanline_cycle_++;
-        } else if (scanline_ <= 260)
+        }
+        else if (scanline_ <= 260)
         {
             if (scanline_ == 241 && scanline_cycle_ == 9)
             {
@@ -97,7 +102,8 @@ namespace hydra::NES
             }
             handle_empty_scanline();
             scanline_cycle_++;
-        } else if (scanline_ == 261)
+        }
+        else if (scanline_ == 261)
         {
             handle_prerender_scanline();
             scanline_cycle_++;
@@ -110,7 +116,8 @@ namespace hydra::NES
         if (scanline_cycle_ == 0)
         {
             cur_x_ = 0;
-        } else if (scanline_cycle_ <= 256)
+        }
+        else if (scanline_cycle_ <= 256)
         {
             fetch_x_ = 2 + (scanline_cycle_ - 1) / 8;
             fetch_y_ = cur_y_ / 8;
@@ -118,8 +125,11 @@ namespace hydra::NES
             execute_pipeline();
             pixel_cycle_++;
             if (pixel_cycle_ == 8)
+            {
                 pixel_cycle_ = 0;
-        } else if (scanline_cycle_ <= 320)
+            }
+        }
+        else if (scanline_cycle_ <= 320)
         {
             oam_addr_ = 0;
             if (scanline_cycle_ == 257)
@@ -132,7 +142,8 @@ namespace hydra::NES
                 fetch_secondary_oam();
             }
             fetch_sprite_data();
-        } else if (scanline_cycle_ <= 336)
+        }
+        else if (scanline_cycle_ <= 336)
         {
             oam_addr_ = 0;
             fetch_y_ = cur_y_ / 8;
@@ -148,10 +159,12 @@ namespace hydra::NES
                     piso_bg_low_ <<= 8;
                 }
             }
-        } else if (scanline_cycle_ <= 340)
+        }
+        else if (scanline_cycle_ <= 340)
         {
             oam_addr_ = 0;
-        } else
+        }
+        else
         {
             oam_addr_ = 0;
             scanline_cycle_ = -1;
@@ -174,7 +187,8 @@ namespace hydra::NES
         {
             // Clear sprite 0 and vblank
             ppu_status_ &= ~0b1100'0000;
-        } else if (scanline_cycle_ >= 321 && scanline_cycle_ <= 336)
+        }
+        else if (scanline_cycle_ >= 321 && scanline_cycle_ <= 336)
         {
             fetch_x_ = 0;
             fetch_y_ = 0;
@@ -192,7 +206,8 @@ namespace hydra::NES
                     piso_bg_low_ <<= 8;
                 }
             }
-        } else if (scanline_cycle_ == 340)
+        }
+        else if (scanline_cycle_ == 340)
         {
             scanline_ = 0;
             cur_y_ = 0;
@@ -200,7 +215,10 @@ namespace hydra::NES
         }
     }
 
-    uint8_t* PPU::GetScreenData() { return screen_color_data_.data(); }
+    uint8_t* PPU::GetScreenData()
+    {
+        return screen_color_data_.data();
+    }
 
     void PPU::execute_pipeline()
     {
@@ -369,7 +387,9 @@ namespace hydra::NES
         auto current_cycle = scanline_cycle_ - 257;
         auto current_sprite = current_cycle / 8;
         if (current_sprite >= scanline_sprite_count_)
+        {
             return;
+        }
         bool flip_x = attribute_latches_[current_sprite] & 0b0100'0000;
         // bool flip_y = attribute_latches_[current_sprite] & 0b1000'0000;
         switch (current_cycle & 0b111)
@@ -380,8 +400,10 @@ namespace hydra::NES
                     read(sprite_pattern_address_ + secondary_oam_[current_sprite].tile_index * 16 +
                          (scanline_ - secondary_oam_[current_sprite].y));
                 if (flip_x)
+                {
                     sprite_shift_registers_[current_sprite].first =
                         reverse(sprite_shift_registers_[current_sprite].first);
+                }
                 break;
             }
             case 7:
@@ -390,8 +412,10 @@ namespace hydra::NES
                     read(sprite_pattern_address_ + secondary_oam_[current_sprite].tile_index * 16 +
                          (scanline_ - secondary_oam_[current_sprite].y) + 8);
                 if (flip_x)
+                {
                     sprite_shift_registers_[current_sprite].second =
                         reverse(sprite_shift_registers_[current_sprite].second);
+                }
                 break;
             }
             case 3:
@@ -425,7 +449,9 @@ namespace hydra::NES
         for (int i = 0; i < 8; i++)
         {
             if (sprite_counters_[i] != 0)
+            {
                 sprite_counters_[i]--;
+            }
             if (sprite_counters_[i] == 0)
             {
                 sprite_active_[i] = true;
@@ -485,9 +511,13 @@ namespace hydra::NES
     uint8_t PPU::read(uint16_t addr)
     {
         if (addr < 0x2000)
+        {
             return chr_rom_.at(addr & 0x1FFF);
+        }
         else if (addr < 0x3000)
+        {
             return vram_.at(addr & 0x7FF);
+        }
         else if (addr > 0x3F00 && addr < 0x3F20)
         {
             switch (addr & 0xFF)
@@ -554,10 +584,12 @@ namespace hydra::NES
         if (addr < 0x2000)
         {
             chr_rom_.at(addr) = data;
-        } else if (addr < 0x3000)
+        }
+        else if (addr < 0x3000)
         {
             vram_.at(addr & 0x7FF) = data;
-        } else if (addr >= 0x3F00 && addr < 0x3F20)
+        }
+        else if (addr >= 0x3F00 && addr < 0x3F20)
         {
             data &= 0x3F;
             addr &= 0xFF;

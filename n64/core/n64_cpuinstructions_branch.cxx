@@ -10,7 +10,6 @@
 
 namespace hydra::N64
 {
-
     void CPU::BGTZL()
     {
         int16_t offset = immval << 2;
@@ -138,7 +137,10 @@ namespace hydra::N64
         conditional_branch_likely(rsreg.W._0 >= 0, pc_ + seoffset);
     }
 
-    void CPU::r_BLTZAL() { Logger::Warn("r_BLTZAL not implemented"); }
+    void CPU::r_BLTZAL()
+    {
+        Logger::Warn("r_BLTZAL not implemented");
+    }
 
     void CPU::r_BGEZAL()
     {
@@ -148,7 +150,10 @@ namespace hydra::N64
         link_register(31);
     }
 
-    void CPU::r_BLTZALL() { Logger::Warn("r_BLTZALL not implemented"); }
+    void CPU::r_BLTZALL()
+    {
+        Logger::Warn("r_BLTZALL not implemented");
+    }
 
     void CPU::r_BGEZALL()
     {
@@ -157,7 +162,6 @@ namespace hydra::N64
         link_register(31);
         conditional_branch_likely(rsreg.D >= 0, pc_ + seoffset);
     }
-
 } // namespace hydra::N64
 
 #undef rdreg

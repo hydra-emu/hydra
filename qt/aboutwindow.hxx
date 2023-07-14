@@ -5,6 +5,7 @@
 class AboutWindow : public QDialog
 {
     Q_OBJECT
+
   private:
     bool& open_;
 

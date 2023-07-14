@@ -12,6 +12,7 @@
 class ScreenWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
+
   public:
     ScreenWidget(QWidget* parent = nullptr);
     ~ScreenWidget();

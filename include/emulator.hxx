@@ -20,6 +20,7 @@ namespace
 
 // Macro that adds the essential functions that every emulator have
 #define TKP_EMULATOR(emulator)                 \
+                                               \
   public:                                      \
     emulator();                                \
     ~emulator() override;                      \
@@ -54,21 +55,42 @@ namespace hydra
         bool LoadFromFile(std::string path);
         void CloseAndWait();
 
-        virtual int GetWidth() { return width_; }
+        virtual int GetWidth()
+        {
+            return width_;
+        }
 
-        virtual int GetHeight() { return height_; }
+        virtual int GetHeight()
+        {
+            return height_;
+        }
 
-        void SetWidth(int width) { width_ = width; }
+        void SetWidth(int width)
+        {
+            width_ = width;
+        }
 
-        void SetHeight(int height) { height_ = height; }
+        void SetHeight(int height)
+        {
+            height_ = height;
+        }
 
         virtual void* GetScreenData();
 
-        bool& IsReadyToDraw() { return should_draw_; };
+        bool& IsReadyToDraw()
+        {
+            return should_draw_;
+        };
 
-        virtual bool& IsResized() { return always_false_; };
+        virtual bool& IsResized()
+        {
+            return always_false_;
+        };
 
-        virtual int GetBitdepth() { return 0x1401; /* GL_UNSIGNED_BYTE */ }
+        virtual int GetBitdepth()
+        {
+            return 0x1401; /* GL_UNSIGNED_BYTE */
+        }
 
         std::mutex ThreadStartedMutex;
         std::shared_mutex DataMutex;

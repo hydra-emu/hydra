@@ -13,20 +13,23 @@
 
 struct Logger
 {
-    template <typename... T> static void Fatal(fmt::format_string<T...> fmt, T&&... args)
+    template <typename... T>
+    static void Fatal(fmt::format_string<T...> fmt, T&&... args)
     {
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
         printf("%s\n", str.c_str());
         exit(1);
     }
 
-    template <typename... T> static void Warn(fmt::format_string<T...> fmt, T&&... args)
+    template <typename... T>
+    static void Warn(fmt::format_string<T...> fmt, T&&... args)
     {
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
         log_impl<LogWarning, ConsoleNormal>(str);
     }
 
-    template <typename... T> static void Info(fmt::format_string<T...> fmt, T&&... args)
+    template <typename... T>
+    static void Info(fmt::format_string<T...> fmt, T&&... args)
     {
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
         log_impl<LogInfo, ConsoleNormal>(str);
@@ -42,18 +45,30 @@ struct Logger
     }
 
   private:
-    static inline std::string LogInfo() { return fmt::format(fg(fmt::color::green), "[INFO]"); }
+    static inline std::string LogInfo()
+    {
+        return fmt::format(fg(fmt::color::green), "[INFO]");
+    }
 
     static inline std::string LogWarning()
     {
         return fmt::format(fg(fmt::color::yellow), "[WARNING]");
     }
 
-    static inline std::string LogFatal() { return fmt::format(fg(fmt::color::red), "[FATAL]"); }
+    static inline std::string LogFatal()
+    {
+        return fmt::format(fg(fmt::color::red), "[FATAL]");
+    }
 
-    static inline std::string LogDebug() { return fmt::format(fg(fmt::color::magenta), "[DEBUG]"); }
+    static inline std::string LogDebug()
+    {
+        return fmt::format(fg(fmt::color::magenta), "[DEBUG]");
+    }
 
-    static inline void ConsoleNormal(std::string message) { fmt::print("{}", message); }
+    static inline void ConsoleNormal(std::string message)
+    {
+        fmt::print("{}", message);
+    }
 
     template <auto PrefixFunction, auto OutputFunction>
     static inline void log_impl(std::string message)
@@ -61,7 +76,9 @@ struct Logger
 #if ENABLE_LOGGING == 1
         std::string prefix = PrefixFunction();
         if (prefix.empty())
+        {
             return;
+        }
         std::string messagef = fmt::format(" {}\n", message);
         OutputFunction(prefix + messagef);
 #endif

@@ -113,7 +113,8 @@ namespace hydra::N64
                 {
                     ret += fmt::format("{}, ({})", gpr_get_name(instr.IType.rt, register_names),
                                        gpr_get_name(instr.IType.rs, register_names));
-                } else
+                }
+                else
                 {
                     ret += fmt::format("{}, 0x{:04x}({})",
                                        gpr_get_name(instr.IType.rt, register_names),

@@ -8,6 +8,7 @@
 class SettingsWindow : public QWidget
 {
     Q_OBJECT
+
   private:
     bool& open_;
     QListWidget* tab_list_;

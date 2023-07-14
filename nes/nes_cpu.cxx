@@ -17,14 +17,20 @@ namespace hydra::NES
 {
     CPU::CPU(CPUBus& bus, std::atomic_bool& paused) : bus_(bus), paused_(paused){};
 
-    void CPU::SetKeys(std::unordered_map<uint32_t, Button> keys) { keys_ = keys; }
+    void CPU::SetKeys(std::unordered_map<uint32_t, Button> keys)
+    {
+        keys_ = keys;
+    }
 
     void CPU::Implied()
     {
         // Do nothing
     }
 
-    void CPU::Immediate() { data_ = read(PC++); }
+    void CPU::Immediate()
+    {
+        data_ = read(PC++);
+    }
 
     void CPU::Indirect()
     {
@@ -178,7 +184,10 @@ namespace hydra::NES
         ADC();
     }
 
-    void CPU::JMP() { PC = addr_; }
+    void CPU::JMP()
+    {
+        PC = addr_;
+    }
 
     void CPU::BIT()
     {
@@ -192,13 +201,25 @@ namespace hydra::NES
         // Do nothing
     }
 
-    void CPU::STX() { write(addr_, X); }
+    void CPU::STX()
+    {
+        write(addr_, X);
+    }
 
-    void CPU::STY() { write(addr_, Y); }
+    void CPU::STY()
+    {
+        write(addr_, Y);
+    }
 
-    void CPU::STA() { write(addr_, A); }
+    void CPU::STA()
+    {
+        write(addr_, A);
+    }
 
-    void CPU::SAX() { write(addr_, A & X); }
+    void CPU::SAX()
+    {
+        write(addr_, A & X);
+    }
 
     void CPU::LSR()
     {
@@ -448,7 +469,9 @@ namespace hydra::NES
             PC += int8_t(b1);
             delay(1);
             if ((old_pc & 0xFF00) != (PC & 0xFF00))
+            {
                 delay(1); // page cross penalty
+            }
         }
     }
 
@@ -461,7 +484,9 @@ namespace hydra::NES
             PC += int8_t(b1);
             delay(1);
             if ((old_pc & 0xFF00) != (PC & 0xFF00))
+            {
                 delay(1); // page cross penalty
+            }
         }
     }
 
@@ -474,7 +499,9 @@ namespace hydra::NES
             PC += int8_t(b1);
             delay(1);
             if ((old_pc & 0xFF00) != (PC & 0xFF00))
+            {
                 delay(1); // page cross penalty
+            }
         }
     }
 
@@ -487,7 +514,9 @@ namespace hydra::NES
             PC += int8_t(b1);
             delay(1);
             if ((old_pc & 0xFF00) != (PC & 0xFF00))
+            {
                 delay(1); // page cross penalty
+            }
         }
     }
 
@@ -500,7 +529,9 @@ namespace hydra::NES
             PC += int8_t(b1);
             delay(1);
             if ((old_pc & 0xFF00) != (PC & 0xFF00))
+            {
                 delay(1); // page cross penalty
+            }
         }
     }
 
@@ -513,7 +544,9 @@ namespace hydra::NES
             PC += int8_t(b1);
             delay(1);
             if ((old_pc & 0xFF00) != (PC & 0xFF00))
+            {
                 delay(1); // page cross penalty
+            }
         }
     }
 
@@ -526,7 +559,9 @@ namespace hydra::NES
             PC += int8_t(b1);
             delay(1);
             if ((old_pc & 0xFF00) != (PC & 0xFF00))
+            {
                 delay(1); // page cross penalty
+            }
         }
     }
 
@@ -539,7 +574,9 @@ namespace hydra::NES
             PC += int8_t(b1);
             delay(1);
             if ((old_pc & 0xFF00) != (PC & 0xFF00))
+            {
                 delay(1); // page cross penalty
+            }
         }
     }
 
@@ -584,7 +621,10 @@ namespace hydra::NES
         was_prefetched_ = false;
     }
 
-    void CPU::NMI() { nmi_queued_ = true; }
+    void CPU::NMI()
+    {
+        nmi_queued_ = true;
+    }
 
     void CPU::BRK()
     {
@@ -656,7 +696,10 @@ namespace hydra::NES
         }
     }
 
-    uint8_t CPU::read_no_d(uint16_t addr) { return bus_.read(addr); }
+    uint8_t CPU::read_no_d(uint16_t addr)
+    {
+        return bus_.read(addr);
+    }
 
     uint8_t CPU::read(uint16_t addr)
     {
@@ -671,9 +714,15 @@ namespace hydra::NES
         delay(1);
     }
 
-    void CPU::push(uint8_t data) { write(0x0100 | SP--, data); }
+    void CPU::push(uint8_t data)
+    {
+        write(0x0100 | SP--, data);
+    }
 
-    uint8_t CPU::pull() { return read(0x0100 | ++SP); }
+    uint8_t CPU::pull()
+    {
+        return read(0x0100 | ++SP);
+    }
 
     void CPU::execute()
     {
@@ -1383,7 +1432,9 @@ namespace hydra::NES
     {
         execute();
         if (nmi_queued_)
+        {
             NMI_impl();
+        }
     }
 
     void CPU::Reset()
@@ -1408,7 +1459,13 @@ namespace hydra::NES
         bus_.Reset();
     }
 
-    void CPU::HandleKeyDown(uint32_t key) { bus_.joypad1_.Press(keys_[key]); }
+    void CPU::HandleKeyDown(uint32_t key)
+    {
+        bus_.joypad1_.Press(keys_[key]);
+    }
 
-    void CPU::HandleKeyUp(uint32_t key) { bus_.joypad1_.Release(keys_[key]); }
+    void CPU::HandleKeyUp(uint32_t key)
+    {
+        bus_.joypad1_.Release(keys_[key]);
+    }
 } // namespace hydra::NES

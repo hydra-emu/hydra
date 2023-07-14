@@ -178,7 +178,10 @@ namespace hydra::Gameboy
         void Reset(bool skip);
         int Update();
 
-        uint8_t GetLastInstr() { return last_instr_; }
+        uint8_t GetLastInstr()
+        {
+            return last_instr_;
+        }
         friend class hydra::Gameboy::QA::TestGameboy;
     };
 } // namespace hydra::Gameboy

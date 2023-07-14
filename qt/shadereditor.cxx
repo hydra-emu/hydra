@@ -161,7 +161,9 @@ ShaderHighlighter::ShaderHighlighter(QTextDocument* parent) : QSyntaxHighlighter
 void ShaderHighlighter::highlightBlock(const QString& text)
 {
     if (text.isEmpty())
+    {
         return;
+    }
     for (const HighlightingRule& rule : qAsConst(highlighting_rules_))
     {
         QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
@@ -174,7 +176,9 @@ void ShaderHighlighter::highlightBlock(const QString& text)
     setCurrentBlockState(0);
     int startIndex = 0;
     if (previousBlockState() != 1)
+    {
         startIndex = text.indexOf(comment_start_expression_);
+    }
 
     while (startIndex >= 0)
     {
@@ -185,7 +189,8 @@ void ShaderHighlighter::highlightBlock(const QString& text)
         {
             setCurrentBlockState(1);
             commentLength = text.length() - startIndex;
-        } else
+        }
+        else
         {
             commentLength = endIndex - startIndex + match.capturedLength();
         }
@@ -209,7 +214,9 @@ ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> c
     highlighter_ = new ShaderHighlighter(editor_->document());
     QFile file(":/shaders/simple.fs");
     if (file.open(QFile::ReadOnly | QFile::Text))
+    {
         editor_->setPlainText(file.readAll());
+    }
     toolbar_ = new QToolBar;
     open_act_ = toolbar_->addAction(QIcon(":/images/open.png"), "Open shader");
     connect(open_act_, SIGNAL(triggered()), this, SLOT(open_shader()));
@@ -244,4 +251,7 @@ void ShaderEditor::autocompile()
     compile_act_->setEnabled(!autocompile_);
 }
 
-ShaderEditor::~ShaderEditor() { open_ = false; }
+ShaderEditor::~ShaderEditor()
+{
+    open_ = false;
+}

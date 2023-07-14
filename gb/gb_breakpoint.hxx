@@ -46,9 +46,15 @@ namespace hydra::Gameboy::Utils
         GameboyBreakpoint(GameboyBreakpoint&&) = default;
         GameboyBreakpoint& operator=(GameboyBreakpoint&&) = default;
 
-        void SetChecks(BreakFunction func) { checks = std::move(func); }
+        void SetChecks(BreakFunction func)
+        {
+            checks = std::move(func);
+        }
 
-        bool Check() const { return checks(); }
+        bool Check() const
+        {
+            return checks();
+        }
 
         const std::string& GetName()
         {

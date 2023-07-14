@@ -15,10 +15,15 @@ namespace hydra::Gameboy
     Bus::Bus(ChannelArrayPtr channel_array_ptr) : channel_array_ptr_(channel_array_ptr)
     {
         if (channel_array_ptr)
+        {
             (*channel_array_ptr_)[2].LengthInit = 256;
+        }
     }
 
-    Bus::~Bus() { battery_save(); }
+    Bus::~Bus()
+    {
+        battery_save();
+    }
 
     void Bus::handle_mbc(uint16_t address, uint8_t data)
     {
@@ -34,18 +39,21 @@ namespace hydra::Gameboy
                     if ((data & 0b1111) == 0b1010)
                     {
                         ram_enabled_ = true;
-                    } else
+                    }
+                    else
                     {
                         ram_enabled_ = false;
                     }
-                } else if (address <= 0x3FFF)
+                }
+                else if (address <= 0x3FFF)
                 {
                     // BANK register 1 (TODO: this doesnt happen on mbc0?)
                     selected_rom_bank_ &= 0b1100000;
                     selected_rom_bank_ |= data & 0b11111;
                     selected_rom_bank_ %= rom_banks_size_;
                     refill_fast_map_rom();
-                } else if (address <= 0x5FFF)
+                }
+                else if (address <= 0x5FFF)
                 {
                     // BANK register 2
                     selected_rom_bank_ &= 0b11111;
@@ -53,7 +61,8 @@ namespace hydra::Gameboy
                     selected_rom_bank_ %= rom_banks_size_;
                     selected_ram_bank_ = data & 0b11;
                     refill_fast_map_rom();
-                } else
+                }
+                else
                 {
                     // MODE register
                     banking_mode_ = data & 0b1;
@@ -72,12 +81,14 @@ namespace hydra::Gameboy
                     {
                         selected_rom_bank_ = data;
                         refill_fast_map_rom();
-                    } else
+                    }
+                    else
                     {
                         if ((data & 0b1111) == 0b1010)
                         {
                             ram_enabled_ = true;
-                        } else
+                        }
+                        else
                         {
                             ram_enabled_ = false;
                         }
@@ -97,11 +108,13 @@ namespace hydra::Gameboy
                     {
                         ram_enabled_ = true;
                         // TODO: enable writing to RTC mbc3 registers
-                    } else
+                    }
+                    else
                     {
                         ram_enabled_ = false;
                     }
-                } else if (address <= 0x3FFF)
+                }
+                else if (address <= 0x3FFF)
                 {
                     selected_rom_bank_ = data & 0b0111'1111;
                     if (selected_rom_bank_ == 0)
@@ -109,16 +122,19 @@ namespace hydra::Gameboy
                         selected_rom_bank_ = 1;
                     }
                     refill_fast_map_rom();
-                } else if (address <= 0x5FFF)
+                }
+                else if (address <= 0x5FFF)
                 {
                     if (data <= 0b11)
                     {
                         selected_ram_bank_ = data;
-                    } else
+                    }
+                    else
                     {
                         // TODO: mbc3 rtc
                     }
-                } else
+                }
+                else
                 {
                     // MODE register
                     banking_mode_ = data & 0b1;
@@ -138,19 +154,23 @@ namespace hydra::Gameboy
                     if ((data & 0b1111) == 0b1010)
                     {
                         ram_enabled_ = true;
-                    } else
+                    }
+                    else
                     {
                         ram_enabled_ = false;
                     }
-                } else if (address <= 0x2FFF)
+                }
+                else if (address <= 0x2FFF)
                 {
                     selected_rom_bank_ = data;
                     refill_fast_map_rom();
-                } else if (address <= 0x3FFF)
+                }
+                else if (address <= 0x3FFF)
                 {
                     selected_rom_bank_high_ = data & 0b1;
                     refill_fast_map_rom();
-                } else if (address <= 0x5FFF)
+                }
+                else if (address <= 0x5FFF)
                 {
                     if (data <= 0xF)
                     {
@@ -326,7 +346,8 @@ namespace hydra::Gameboy
         if (paddr)
         {
             return *(paddr + (address & 0xFF));
-        } else
+        }
+        else
         {
             return redirect_address(address);
         }
@@ -350,12 +371,17 @@ namespace hydra::Gameboy
                         {
                             return dmg_bios_[address];
                         }
-                    } else if (UseCGB && cgb_bios_loaded_)
+                    }
+                    else if (UseCGB && cgb_bios_loaded_)
                     {
                         if (address < 0x100)
+                        {
                             return cgb_bios_[address];
+                        }
                         else if (address >= 0x200 && address < 0x900)
+                        {
                             return cgb_bios_[address];
+                        }
                     }
                 }
                 [[fallthrough]]; // This avoids a compiler warning. Fallthrough is intentional
@@ -385,7 +411,8 @@ namespace hydra::Gameboy
                             auto sel = (banking_mode_ ? selected_rom_bank_ & 0b1100000 : 0) %
                                        cartridge_.GetRomSize();
                             return (rom_banks_[sel])[address % 0x4000];
-                        } else
+                        }
+                        else
                         {
                             auto sel = selected_rom_bank_ % cartridge_.GetRomSize();
                             if ((sel & 0b11111) == 0)
@@ -405,7 +432,8 @@ namespace hydra::Gameboy
                         if (address <= 0x3FFF)
                         {
                             return (rom_banks_[0])[address % 0x4000];
-                        } else
+                        }
+                        else
                         {
                             if ((selected_rom_bank_ & 0b1111) == 0)
                             {
@@ -425,7 +453,8 @@ namespace hydra::Gameboy
                         if (address <= 0x3FFF)
                         {
                             return (rom_banks_[0])[address % 0x4000];
-                        } else
+                        }
+                        else
                         {
                             auto sel = selected_rom_bank_ % cartridge_.GetRomSize();
                             return (rom_banks_[sel])[address % 0x4000];
@@ -444,7 +473,8 @@ namespace hydra::Gameboy
                             auto sel = (banking_mode_ ? selected_rom_bank_ & 0b1100000 : 0) %
                                        cartridge_.GetRomSize();
                             return (rom_banks_[sel])[address % 0x4000];
-                        } else
+                        }
+                        else
                         {
                             auto sel = selected_rom_bank_ % cartridge_.GetRomSize();
                             sel = sel | (selected_rom_bank_high_ << 8);
@@ -468,7 +498,8 @@ namespace hydra::Gameboy
                 if (UseCGB)
                 {
                     return vram_banks_[vram_sel_bank_][address % 0x2000];
-                } else
+                }
+                else
                 {
                     return vram_banks_[0][address % 0x2000];
                 }
@@ -488,7 +519,8 @@ namespace hydra::Gameboy
                                 (banking_mode_ ? selected_ram_bank_ : 0) % cartridge_.GetRamSize();
                             (ram_banks_[sel])[address % 0x200] |= 0b1111'0000;
                             return (ram_banks_[sel])[address % 0x200];
-                        } else
+                        }
+                        else
                         {
                             unused_mem_area_ = 0xFF;
                             return unused_mem_area_;
@@ -500,11 +532,14 @@ namespace hydra::Gameboy
                         if (ram_enabled_)
                         {
                             if (cartridge_.GetRamSize() == 0)
+                            {
                                 return eram_default_[address % 0x2000];
+                            }
                             auto sel =
                                 (banking_mode_ ? selected_ram_bank_ : 0) % cartridge_.GetRamSize();
                             return (ram_banks_[sel])[address % 0x2000];
-                        } else
+                        }
+                        else
                         {
                             unused_mem_area_ = 0xFF;
                             return unused_mem_area_;
@@ -530,22 +565,26 @@ namespace hydra::Gameboy
                 if (address <= 0xFDFF)
                 {
                     return redirect_address(address - 0x2000);
-                } else if (address <= 0xFE9F)
+                }
+                else if (address <= 0xFE9F)
                 {
                     // OAM
                     if (dma_transfer_ && dma_index_ == 0 && dma_fresh_bug_)
                     {
                         return oam_[address & 0xFF];
-                    } else if (dma_transfer_ || !OAMAccessible)
+                    }
+                    else if (dma_transfer_ || !OAMAccessible)
                     {
                         unused_mem_area_ = 0xFF;
                         return unused_mem_area_;
                     }
                     return oam_[address & 0xFF];
-                } else if (address <= 0xFEFF)
+                }
+                else if (address <= 0xFEFF)
                 {
                     return unused_mem_area_;
-                } else
+                }
+                else
                 {
                     switch (address)
                     {
@@ -562,7 +601,10 @@ namespace hydra::Gameboy
                             return hdma_remaining_;
                         }
                         default:
-                            [[likely]] { return hram_[address % 0xFF00]; }
+                            [[likely]]
+                            {
+                                return hram_[address % 0xFF00];
+                            }
                     }
                 }
             }
@@ -590,11 +632,20 @@ namespace hydra::Gameboy
         return read;
     }
 
-    uint16_t Bus::ReadL(uint16_t address) { return Read(address) + (Read(address + 1) << 8); }
+    uint16_t Bus::ReadL(uint16_t address)
+    {
+        return Read(address) + (Read(address + 1) << 8);
+    }
 
-    uint8_t& Bus::GetReference(uint16_t address) { return redirect_address(address); }
+    uint8_t& Bus::GetReference(uint16_t address)
+    {
+        return redirect_address(address);
+    }
 
-    std::vector<RamBank>& Bus::GetRamBanks() { return ram_banks_; }
+    std::vector<RamBank>& Bus::GetRamBanks()
+    {
+        return ram_banks_;
+    }
 
     std::string Bus::GetVramDump()
     {
@@ -618,7 +669,8 @@ namespace hydra::Gameboy
         if (address <= 0x7FFF)
         {
             handle_mbc(address, data);
-        } else
+        }
+        else
         {
             TIMAChanged = false;
             TMAChanged = false;
@@ -642,8 +694,8 @@ namespace hydra::Gameboy
                     Change& ch = ScanlineChanges[CurScanlineX];
                     if (UseCGB)
                     {
-
-                    } else
+                    }
+                    else
                     {
                         for (int i = 0; i < 4; i++)
                         {
@@ -659,7 +711,8 @@ namespace hydra::Gameboy
                     {
                         // this is free ram in this mode
                         // TODO: they are actually registers in cgb-dmg mode
-                    } else
+                    }
+                    else
                     {
                         for (int i = 0; i < 4; i++)
                         {
@@ -674,7 +727,8 @@ namespace hydra::Gameboy
                     {
                         // this is free ram in this mode
                         // TODO: they are actually registers in cgb-dmg mode
-                    } else
+                    }
+                    else
                     {
                         for (int i = 0; i < 4; i++)
                         {
@@ -688,7 +742,8 @@ namespace hydra::Gameboy
                     if (!dma_transfer_)
                     {
                         dma_fresh_bug_ = true;
-                    } else
+                    }
+                    else
                     {
                         dma_fresh_bug_ = false;
                     }
@@ -739,7 +794,8 @@ namespace hydra::Gameboy
                     {
                         bg_palette_auto_increment_ = data & 0b1000'0000;
                         bg_palette_index_ = data & 0b11'1111;
-                    } else
+                    }
+                    else
                     {
                         data |= 0b1111'1111;
                     }
@@ -756,7 +812,8 @@ namespace hydra::Gameboy
                         {
                             BGPalettes[pal_index][color_index] &= 0xFF00;
                             BGPalettes[pal_index][color_index] |= data;
-                        } else
+                        }
+                        else
                         {
                             BGPalettes[pal_index][color_index] &= 0x00FF;
                             BGPalettes[pal_index][color_index] |= data << 8;
@@ -769,7 +826,8 @@ namespace hydra::Gameboy
                                 bg_palette_index_ = 0;
                             }
                         }
-                    } else
+                    }
+                    else
                     {
                         data |= 0b1111'1111;
                     }
@@ -781,7 +839,8 @@ namespace hydra::Gameboy
                     {
                         obj_palette_auto_increment_ = data & 0b1000'0000;
                         obj_palette_index_ = data & 0b11'1111;
-                    } else
+                    }
+                    else
                     {
                         data |= 0b1111'1111;
                     }
@@ -798,7 +857,8 @@ namespace hydra::Gameboy
                         {
                             OBJPalettes[pal_index][color_index] &= 0xFF00;
                             OBJPalettes[pal_index][color_index] |= data;
-                        } else
+                        }
+                        else
                         {
                             OBJPalettes[pal_index][color_index] &= 0x00FF;
                             OBJPalettes[pal_index][color_index] |= data << 8;
@@ -811,7 +871,8 @@ namespace hydra::Gameboy
                                 obj_palette_index_ = 0;
                             }
                         }
-                    } else
+                    }
+                    else
                     {
                         data |= 0b1111'1111;
                     }
@@ -857,7 +918,8 @@ namespace hydra::Gameboy
                     if (!UseCGB)
                     {
                         data |= 0b1111'1111;
-                    } else
+                    }
+                    else
                     {
                         if (data != 0)
                         {
@@ -872,7 +934,8 @@ namespace hydra::Gameboy
                                     TransferHDMA();
                                 }
                             }
-                        } else
+                        }
+                        else
                         {
                             hdma_transfer_ = false;
                         }
@@ -996,7 +1059,8 @@ namespace hydra::Gameboy
                     if (!(data & 0b1000'0000))
                     {
                         disable_dac(2);
-                    } else
+                    }
+                    else
                     {
                         (*channel_array_ptr_)[2].DACEnabled = true;
                     }
@@ -1176,7 +1240,10 @@ namespace hydra::Gameboy
         Write(address + 1, data >> 8);
     }
 
-    void Bus::ClearNR52Bit(uint8_t bit) { redirect_address(addr_NR52) &= ~(1 << bit); }
+    void Bus::ClearNR52Bit(uint8_t bit)
+    {
+        redirect_address(addr_NR52) &= ~(1 << bit);
+    }
 
     void Bus::Reset()
     {
@@ -1207,7 +1274,10 @@ namespace hydra::Gameboy
         BiosEnabled = true;
     }
 
-    Cartridge& Bus::GetCartridge() { return cartridge_; }
+    Cartridge& Bus::GetCartridge()
+    {
+        return cartridge_;
+    }
 
     bool Bus::LoadCartridge(std::string filename)
     {
@@ -1281,7 +1351,8 @@ namespace hydra::Gameboy
                     OAMAccessible = true;
                     oam_[index] = Read(source);
                     OAMAccessible = old;
-                } else
+                }
+                else
                 {
                     dma_transfer_ = false;
                     dma_fresh_bug_ = false;
@@ -1312,7 +1383,8 @@ namespace hydra::Gameboy
                 }
                 hdma_index_++;
                 hdma_remaining_--;
-            } else
+            }
+            else
             {
                 hdma_transfer_ = false;
             }
@@ -1330,7 +1402,8 @@ namespace hydra::Gameboy
                 {
                     of.write(reinterpret_cast<char*>(&ram_banks_[i]), sizeof(uint8_t) * 0x2000);
                 }
-            } else
+            }
+            else
             {
                 of.write(reinterpret_cast<char*>(&ram_banks_[0]), sizeof(uint8_t) * 0x2000);
             }
@@ -1398,7 +1471,8 @@ namespace hydra::Gameboy
         if ((data >> 3) == 0)
         {
             disable_dac(channel_no);
-        } else
+        }
+        else
         {
             chan.DACEnabled = true;
         }

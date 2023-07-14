@@ -17,7 +17,7 @@ jobs:
       uses: hendrikmuhs/ccache-action@v1.2
     - name: clang-format
       run: |
-        find -name "*.cxx" -o -name "*.hxx" -not -path "./vendored/*" | xargs clang-format --dry-run --Werror -style=file
+        ./scripts/check_clang_format.sh
     - name: install-deps
       run: |
         sudo apt-get update

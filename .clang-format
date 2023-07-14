@@ -1,6 +1,10 @@
 Language: Cpp
 IndentWidth: 4
 PointerAlignment: Left
+ReferenceAlignment: Left
+QualifierAlignment: Left
+ReflowComments: true
+AllowShortFunctionsOnASingleLine: Empty
 ColumnLimit: 100
 AlignConsecutiveBitFields: AcrossEmptyLines
 AlignEscapedNewlines: Left
@@ -9,10 +13,18 @@ AlignTrailingComments: true
 UseTab: Never
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
 NamespaceIndentation: All
 SeparateDefinitionBlocks: Always
+KeepEmptyLinesAtTheStartOfBlocks: false
+SortIncludes: CaseInsensitive
+SpaceBeforeParens: ControlStatements
+SortUsingDeclarations: true
 BreakBeforeBraces: Custom
 IndentCaseLabels: true
+SpacesBeforeTrailingComments: 1
+EmptyLineBeforeAccessModifier: Always
+BreakStringLiterals: true
 BraceWrapping:
   AfterFunction: true
   AfterClass: true
@@ -21,3 +33,4 @@ BraceWrapping:
   AfterNamespace: true
   AfterStruct: true
   AfterUnion: true
+  BeforeElse: true

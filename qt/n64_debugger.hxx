@@ -1,5 +1,9 @@
 #ifndef N64_DEBUGGER
 #define N64_DEBUGGER
+#include <emulator_types.hxx>
+#include <memory>
+#include <n64/core/n64_types.hxx>
+#include <n64/n64_tkpwrapper.hxx>
 #include <QFontDatabase>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -8,10 +12,6 @@
 #include <QSyntaxHighlighter>
 #include <QTabWidget>
 #include <QWidget>
-#include <emulator_types.hxx>
-#include <memory>
-#include <n64/core/n64_types.hxx>
-#include <n64/n64_tkpwrapper.hxx>
 
 class QLabel;
 class QTextEdit;
@@ -25,6 +25,7 @@ class QTextEdit;
 class MIPSHighlighter final : public QSyntaxHighlighter
 {
     Q_OBJECT
+
   public:
     MIPSHighlighter(QTextDocument* parent = nullptr);
 
@@ -48,6 +49,7 @@ class MIPSHighlighter final : public QSyntaxHighlighter
 class N64Disassembler : public QPlainTextEdit
 {
     Q_OBJECT
+
   public:
     N64Disassembler(bool& register_names, QWidget* parent = nullptr);
     void setInstructions(const std::vector<hydra::N64::DisassemblerInstruction>& instructions);
@@ -78,10 +80,16 @@ class LineNumberArea : public QWidget
   public:
     LineNumberArea(N64Disassembler* debugger) : QWidget(debugger), debugger_(debugger) {}
 
-    QSize sizeHint() const override { return QSize(debugger_->lineNumberAreaWidth(), 0); }
+    QSize sizeHint() const override
+    {
+        return QSize(debugger_->lineNumberAreaWidth(), 0);
+    }
 
   protected:
-    void paintEvent(QPaintEvent* event) override { debugger_->lineNumberAreaPaintEvent(event); }
+    void paintEvent(QPaintEvent* event) override
+    {
+        debugger_->lineNumberAreaPaintEvent(event);
+    }
 
   private:
     N64Disassembler* debugger_;

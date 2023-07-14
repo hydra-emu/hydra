@@ -7,12 +7,13 @@
 
 namespace hydra::N64
 {
-
     void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
     {
         auto& ai = *static_cast<Ai*>(device->pUserData);
         if (ai.ai_frequency_ == 0)
+        {
             return;
+        }
         // frame: 2 channels * 2 bytes per sample
         auto bytes_per_frame =
             ma_get_bytes_per_frame(device->playback.format, device->playback.channels);
@@ -26,7 +27,10 @@ namespace hydra::N64
         {
             Deleter(ma_resampler& resampler) : resampler_(resampler){};
 
-            ~Deleter() { ma_resampler_uninit(&resampler_, nullptr); };
+            ~Deleter()
+            {
+                ma_resampler_uninit(&resampler_, nullptr);
+            };
 
           private:
             ma_resampler& resampler_;
@@ -41,8 +45,11 @@ namespace hydra::N64
         {
             ai.hungry_ = true;
             if (ai.ai_buffer_.size() * sizeof(int16_t) < frames_in * bytes_per_frame)
+            {
                 return;
-        } else
+            }
+        }
+        else
         {
             ai.hungry_ = false;
         }
@@ -75,9 +82,15 @@ namespace hydra::N64
         ma_device_start(&ai_device_);
     }
 
-    Ai::~Ai() { ma_device_uninit(&ai_device_); }
+    Ai::~Ai()
+    {
+        ma_device_uninit(&ai_device_);
+    }
 
-    void Ai::Reset() { ai_dma_count_ = 0; }
+    void Ai::Reset()
+    {
+        ai_dma_count_ = 0;
+    }
 
     void Ai::WriteWord(uint32_t addr, uint32_t data)
     {
@@ -113,7 +126,8 @@ namespace hydra::N64
                 if (ai_enabled_)
                 {
                     ma_device_start(&ai_device_);
-                } else
+                }
+                else
                 {
                     ma_device_stop(&ai_device_);
                 }
@@ -201,5 +215,4 @@ namespace hydra::N64
             }
         }
     }
-
 } // namespace hydra::N64

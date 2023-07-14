@@ -127,7 +127,8 @@ namespace hydra::N64
             cg.mov(host_reg, ptr[RegisterPointer + guest_reg * 8]);
             register_allocations_[guest_reg] = host_reg;
             return host_reg;
-        } else
+        }
+        else
         {
             return host_reg_opt.value();
         }
