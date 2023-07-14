@@ -29,7 +29,7 @@ namespace hydra::NES
 
       private:
         CPUBus& bus_;
-        __always_inline void delay(uint8_t i);
+        inline void delay(uint8_t i);
         uint8_t A = 0, X = 0, Y = 0, SP = 0;
         std::bitset<8> P = 0;
         uint16_t PC = 0;
@@ -46,14 +46,14 @@ namespace hydra::NES
         void write(uint16_t addr, uint8_t data);
         void NMI_impl();
 
-        __always_inline void fetch();
-        __always_inline void prefetch();
-        __always_inline void execute();
+        inline void fetch();
+        inline void prefetch();
+        inline void execute();
         friend class hydra::NES::NES_TKPWrapper;
 
       private:
         // clang-format off
-        __always_inline void TAY(), TAX(), TYA(), TXA(), JSR(), SEC(), 
+        inline void TAY(), TAX(), TYA(), TXA(), JSR(), SEC(), 
             BCC(), CLC(), BEQ(), BNE(), BVS(), BVC(), BMI(), BPL(),
             RTS(), SEI(), SED(), CLD(), PHP(), PLA(), PLP(), PHA(),
             CLV(), INY(), INX(), DEY(), DEX(), BCS(), TSX(), TXS(),
@@ -64,7 +64,7 @@ namespace hydra::NES
             SAX(), DCP(), ISC(), SLO(), RLA(), RRA(), SRE(),
             LSR_a(), ASL_a(), ROR_a(), ROL_a();
 
-        __always_inline void Immediate(), Absolute(), AbsoluteX(), AbsoluteY(),
+        inline void Immediate(), Absolute(), AbsoluteX(), AbsoluteY(),
             ZeroPage(), ZeroPageX(), ZeroPageY(), Indirect(), IndirectX(),
             IndirectY(), Implied();
 

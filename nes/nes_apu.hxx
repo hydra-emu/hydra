@@ -14,7 +14,7 @@ namespace hydra::NES
 
       private:
         void invalidate(uint8_t addr, uint8_t data);
-        __always_inline void tick_impl();
+        inline void tick_impl();
         bool should_tick_ = false;
         uint32_t clock_ = 0;
         uint16_t sq1_timer_ = 0;

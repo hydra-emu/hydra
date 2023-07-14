@@ -43,8 +43,8 @@ namespace hydra::NES
 
       private:
         uint8_t read(uint16_t addr);
-        __always_inline uint8_t redirect_address_r(uint16_t addr);
-        __always_inline void redirect_address_w(uint16_t addr, uint8_t data);
+        inline uint8_t redirect_address_r(uint16_t addr);
+        inline void redirect_address_w(uint16_t addr, uint8_t data);
         void write(uint16_t addr, uint8_t data);
         void refill_prg_map();
 
