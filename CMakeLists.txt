@@ -30,7 +30,12 @@ set(WARNINGS
     "-Werror=unused-parameter"
 )
 string(REPLACE ";" " " WARNINGS_FLAGS "${WARNINGS}")
-set(CMAKE_CXX_FLAGS "-O2 -mcrc32 -no-pie ${WARNINGS_FLAGS}")
+set(CMAKE_CXX_FLAGS "-O2 -no-pie")
+if (APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcrc32 ${WARNINGS_FLAGS}")
+endif()
 set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)

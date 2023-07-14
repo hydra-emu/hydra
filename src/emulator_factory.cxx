@@ -24,6 +24,7 @@ namespace hydra
 #elif defined(_WIN32)
             dir = getenv("APPDATA") + std::string("/hydra/");
 #endif
+            // TODO: MacOS
             if (dir.empty())
             {
                 throw ErrorFactory::generate_exception(

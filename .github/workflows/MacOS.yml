@@ -17,8 +17,6 @@ jobs:
       run: brew install qt6 fmt
     - name: configure
       run: |
-        export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:/usr/local/include"
-        export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:/opt/homebrew/include"
         cmake -S . -B build 
     - name: make
       run: cmake --build build
