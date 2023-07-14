@@ -1,4 +1,5 @@
 #include "n64_cpu.hxx"
+#include <bit_cast.hxx>
 #include <functional>
 #include <log.hxx>
 
@@ -22,11 +23,11 @@ namespace hydra::N64
         {
             if constexpr (sizeof(T) == 4)
             {
-                return std::bit_cast<uint32_t>(x);
+                return hydra::bit_cast<uint32_t>(x);
             }
             else
             {
-                return std::bit_cast<uint64_t>(x);
+                return hydra::bit_cast<uint64_t>(x);
             }
         }
     };
@@ -597,13 +598,13 @@ namespace hydra::N64
             case FMT_S:
             {
                 uint64_t data = std::trunc(fsreg.FLOAT._0);
-                fdreg.UD = std::bit_cast<uint64_t>(data);
+                fdreg.UD = hydra::bit_cast<uint64_t>(data);
                 break;
             }
             case FMT_D:
             {
                 uint64_t data = std::trunc(fsreg.DOUBLE);
-                fdreg.UD = std::bit_cast<uint64_t>(data);
+                fdreg.UD = hydra::bit_cast<uint64_t>(data);
                 break;
             }
         }
@@ -646,19 +647,19 @@ namespace hydra::N64
             case FMT_L:
             {
                 int64_t data = fsreg.D;
-                fdreg.UD = std::bit_cast<uint32_t>(static_cast<float>(data));
+                fdreg.UD = hydra::bit_cast<uint32_t>(static_cast<float>(data));
                 break;
             }
             case FMT_W:
             {
                 int32_t data = fsreg.W._0;
-                fdreg.UD = std::bit_cast<uint32_t>(static_cast<float>(data));
+                fdreg.UD = hydra::bit_cast<uint32_t>(static_cast<float>(data));
                 break;
             }
             case FMT_D:
             {
                 double data = fsreg.DOUBLE;
-                fdreg.UD = std::bit_cast<uint32_t>(static_cast<float>(data));
+                fdreg.UD = hydra::bit_cast<uint32_t>(static_cast<float>(data));
                 break;
             }
             default:
@@ -673,19 +674,19 @@ namespace hydra::N64
             case FMT_L:
             {
                 int64_t data = fsreg.D;
-                fdreg.UD = std::bit_cast<uint64_t>(static_cast<double>(data));
+                fdreg.UD = hydra::bit_cast<uint64_t>(static_cast<double>(data));
                 break;
             }
             case FMT_W:
             {
                 int32_t data = fsreg.W._0;
-                fdreg.UD = std::bit_cast<uint64_t>(static_cast<double>(data));
+                fdreg.UD = hydra::bit_cast<uint64_t>(static_cast<double>(data));
                 break;
             }
             case FMT_S:
             {
                 float data = fsreg.FLOAT._0;
-                fdreg.UD = std::bit_cast<uint64_t>(static_cast<double>(data));
+                fdreg.UD = hydra::bit_cast<uint64_t>(static_cast<double>(data));
                 break;
             }
             default:

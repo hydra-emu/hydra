@@ -1,4 +1,3 @@
-#include <bit>
 #include <c8/c8_interpreter.hxx>
 #include <cstring>
 #include <fstream>

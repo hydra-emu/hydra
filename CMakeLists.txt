@@ -115,6 +115,10 @@ set(HYDRA_INCLUDE_DIRECTORIES
     vendored
 )
 
+if (APPLE)
+    include_directories(/usr/local/include /opt/homebrew/include)
+endif()
+
 qt_add_executable(hydra
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}

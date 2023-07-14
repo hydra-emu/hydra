@@ -5,6 +5,7 @@
 #include "n64_rcp.hxx"
 #include "n64_types.hxx"
 #include <array>
+#include <bit_cast.hxx>
 #include <cfenv>
 #include <cfloat>
 #include <cmath>
@@ -424,11 +425,11 @@ namespace hydra::N64
         {
             if constexpr (std::is_same_v<T, float>)
             {
-                return (std::bit_cast<uint32_t>(arg) & 0x7FC00000) == 0x7FC00000;
+                return (hydra::bit_cast<uint32_t>(arg) & 0x7FC00000) == 0x7FC00000;
             }
             else
             {
-                return (std::bit_cast<uint64_t>(arg) & 0x7FF8000000000000) == 0x7FF8000000000000;
+                return (hydra::bit_cast<uint64_t>(arg) & 0x7FF8000000000000) == 0x7FF8000000000000;
             }
         }
 
@@ -437,11 +438,11 @@ namespace hydra::N64
         {
             if constexpr (std::is_same_v<T, float>)
             {
-                return std::bit_cast<float>(0x7FBF'FFFF);
+                return hydra::bit_cast<float>(0x7FBF'FFFF);
             }
             else
             {
-                return std::bit_cast<double>(0x7FF7'FFFF'FFFF'FFFFu);
+                return hydra::bit_cast<double>(0x7FF7'FFFF'FFFF'FFFFu);
             }
         }
 
