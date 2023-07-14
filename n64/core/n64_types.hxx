@@ -4,9 +4,6 @@
 #include <cstdint>
 #include <limits>
 #include <string>
-#ifndef __cpp_lib_endian
-static_assert(false && "std::endian not found");
-#endif
 
 namespace hydra::N64
 {
@@ -470,8 +467,6 @@ namespace hydra::N64
     constexpr static uint32_t CPz_TO_GPR = 0b00010;
     using Instruction = InstructionBase;
     using GPRRegister = MemDataUnionDW;
-    static_assert(std::endian::native == std::endian::little,
-                  "This emulator does not work on big endian systems!");
     static_assert(sizeof(Instruction) == sizeof(uint32_t), "N64 instruction should be 4 bytes!");
     static_assert(sizeof(double) == 8, "double data type is not 8 bytes!");
     static_assert(sizeof(MemDataUnionDW) == sizeof(int64_t), "Size of MemDataUnionDW mismatch!");

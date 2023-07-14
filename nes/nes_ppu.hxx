@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <mutex>
+#include <vector>
 
 namespace hydra::NES
 {

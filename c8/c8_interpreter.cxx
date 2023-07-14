@@ -1,8 +1,9 @@
+#include <bit>
 #include <c8/c8_interpreter.hxx>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <stdlib.h>
 
 namespace
 {

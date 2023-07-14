@@ -1,6 +1,7 @@
 #include "n64_rdp.hxx"
 #include "n64_addresses.hxx"
 #include "n64_rdp_commands.hxx"
+#include <bit>
 #include <bitset>
 #include <bswap.hxx>
 #include <cassert>

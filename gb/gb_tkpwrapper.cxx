@@ -5,7 +5,6 @@
 #include <filesystem>
 #include <gb/gb_tkpwrapper.hxx>
 #include <iostream>
-#include <syncstream>
 
 namespace hydra::Gameboy
 {
