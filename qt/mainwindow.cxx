@@ -159,10 +159,11 @@ void MainWindow::open_file()
         extensions = "All supported types (";
         for (int i = 0; i < EmuTypeSize; i++)
         {
-            const auto& data = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
-            indep += data.Name.c_str();
+            const auto& emulator_data =
+                EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
+            indep += emulator_data.Name.c_str();
             indep += " (";
-            for (const auto& str : data.Extensions)
+            for (const auto& str : emulator_data.Extensions)
             {
                 extensions += "*";
                 extensions += str.c_str();
@@ -211,7 +212,7 @@ void MainWindow::open_file()
         screen_->show(); emulator_->Paused = pause_act_->isChecked();
         auto func = [&]() { emulator_->Start(); }; emulator_thread_ = std::thread(func);
         emulator_thread_.detach(); emulator_type_ = type; enable_emulation_actions(true);
-        for (int i = 0; i < emulator_tools_.size(); i++) {
+        for (size_t i = 0; i < emulator_tools_.size(); i++) {
             if (emulator_tools_[i])
             {
                 delete emulator_tools_[i];
@@ -225,7 +226,7 @@ void MainWindow::open_settings()
 {
     if (!settings_open_)
     {
-        QT_MAY_THROW(auto* qw = new SettingsWindow(settings_open_, this););
+        QT_MAY_THROW(new SettingsWindow(settings_open_, this););
     }
 }
 
@@ -236,7 +237,7 @@ void MainWindow::open_shaders()
         using namespace std::placeholders;
         QT_MAY_THROW(std::function<void(QString*, QString*)> callback =
                          std::bind(&ScreenWidget::ResetProgram, screen_, _1, _2);
-                     auto* qw = new ShaderEditor(shaders_open_, callback, this););
+                     new ShaderEditor(shaders_open_, callback, this););
     }
 }
 
@@ -292,7 +293,7 @@ void MainWindow::open_about()
 {
     if (!about_open_)
     {
-        QT_MAY_THROW(auto* qw = new AboutWindow(about_open_, this););
+        QT_MAY_THROW(new AboutWindow(about_open_, this););
     }
 }
 
@@ -305,9 +306,9 @@ void MainWindow::enable_emulation_actions(bool should)
     tracelogger_act_->setEnabled(false);
     if (should)
     {
-        const auto& data = EmulatorSettings::GetEmulatorData(emulator_type_);
-        debugger_act_->setEnabled(data.HasDebugger);
-        tracelogger_act_->setEnabled(data.HasTracelogger);
+        const auto& emulator_data = EmulatorSettings::GetEmulatorData(emulator_type_);
+        debugger_act_->setEnabled(emulator_data.HasDebugger);
+        tracelogger_act_->setEnabled(emulator_data.HasTracelogger);
     }
 }
 
@@ -352,10 +353,10 @@ void MainWindow::setup_emulator_specific()
                                                    "Could not open mappings.json");
         }
     }
-    QString data = f.readAll();
-    json j = json::parse(data.toStdString());
-    json j_mappings = json::parse(data_mappings.toStdString());
-    for (auto it = j.begin(); it != j.end(); ++it)
+    QString options_str = f.readAll();
+    json json_options = json::parse(options_str.toStdString());
+    json json_mappings = json::parse(data_mappings.toStdString());
+    for (auto it = json_options.begin(); it != json_options.end(); ++it)
     {
         EmulatorData d;
         json& o = it.value();
@@ -367,11 +368,12 @@ void MainWindow::setup_emulator_specific()
         o.at("HasDebugger").get_to(d.HasDebugger);
         o.at("HasTracelogger").get_to(d.HasTracelogger);
         o.at("LoggingOptions").get_to(d.LoggingOptions);
+        d.UserData = EmulatorUserData(hydra::EmulatorFactory::GetSavePath() + d.SettingsFile);
         EmulatorData& constant_settings =
             EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(std::stoi(it.key())));
         constant_settings = d;
     }
-    for (auto it = j_mappings.begin(); it != j_mappings.end(); ++it)
+    for (auto it = json_mappings.begin(); it != json_mappings.end(); ++it)
     {
         auto& d =
             EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(std::stoi(it.key())));
@@ -439,8 +441,8 @@ void MainWindow::setup_emulator_specific()
             {
                 std::stringstream buf;
                 buf << ifs.rdbuf();
-                json j = json::parse(buf.str());
-                for (auto it = j.begin(); it != j.end(); ++it)
+                json json_general = json::parse(buf.str());
+                for (auto it = json_general.begin(); it != json_general.end(); ++it)
                 {
                     temp[it.key()] = it.value();
                 }

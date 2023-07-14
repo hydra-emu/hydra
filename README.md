@@ -16,34 +16,26 @@
 - NES (WIP)
 - Nintendo 64 (WIP)
 
-## Dependencies 
-Compiler: The `c++20` features used need at least `gcc-11` and `g++11` or latest `msvc`.   
-Dependencies: `cmake git `    
-Libraries: `sdl2 tbb qt`. See `Installation` for an easy installation guide
-
-## Installation
+## Building
 
 <details>
  <summary>Archlinux</summary>
-<pre><code>pacman -S --needed git cmake sdl2 glfw-x11 ninja qt
+<pre><code>pacman -S --needed git cmake ninja qt 
 git clone https://github.com/OFFTKP/hydra.git
 cd hydra
-cmake -S hydra -B hydra/build -G Ninja
-cmake --build hydra/build
+cmake -S . -B build -GNinja
+cmake --build build
 </code></pre>
 </details>
 <details>
 <summary>Ubuntu</summary><br>
-TODO: wrong and old, fix
 These commands are used to install on a fresh ubuntu environment and some can be omitted.
 <pre><code>sudo apt-get update
-sudo apt-get install libsdl2-dev libtbb-dev libboost-all-dev build-essential gcc-11 g++-11 ninja-build
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11
-sudo update-alternatives --set gcc /usr/bin/gcc-11
+sudo apt-get install build-essential libgl-dev gcc-12 g++-12 ninja-build libfmt-dev qt6-base-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6
 git clone https://github.com/OFFTKP/hydra.git
 cd hydra
-cmake -S hydra -B hydra/build
-cmake --build hydra/build
+cmake -S . -B build -GNinja
+cmake --build build
 </code></pre>
 </details>
 <details>

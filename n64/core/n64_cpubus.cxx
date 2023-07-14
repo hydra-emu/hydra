@@ -1,6 +1,5 @@
 #include "n64_addresses.hxx"
 #include "n64_cpu.hxx"
-#include <boost/stacktrace.hpp>
 #include <fmt/format.h>
 #include <fstream>
 #include <iostream>

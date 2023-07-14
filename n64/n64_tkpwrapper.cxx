@@ -1,6 +1,5 @@
 #include "n64_tkpwrapper.hxx"
 #include "core/n64_keys.hxx"
-#include <boost/stacktrace.hpp>
 #include <emulator_factory.hxx>
 #include <emulator_settings.hxx>
 #include <fmt/format.h>
@@ -144,8 +143,7 @@ namespace hydra::N64
             n64_impl_.Update();
         } catch (std::exception& ex)
         {
-            fmt::print("{}\n{}\n", ex.what(),
-                       boost::stacktrace::to_string(boost::stacktrace::stacktrace()));
+            fmt::print("{}\n", ex.what());
             fmt::print("Current pc: {:#x}\n", n64_impl_.cpu_.pc_);
             stop();
         }

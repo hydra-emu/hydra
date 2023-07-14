@@ -195,6 +195,7 @@ namespace hydra::N64
             uint32_t data = *reinterpret_cast<uint32_t*>(rdram_ptr_ + address);
             int16_t left = (static_cast<int16_t>(data >> 16));
             int16_t right = (static_cast<int16_t>(data & 0xffff));
+            // TODO: Very slow, fix
             ai_buffer_.push_back(__builtin_bswap16(left));
             ai_buffer_.push_back(__builtin_bswap16(right));
             if (ai_buffer_.size() > 200000)
