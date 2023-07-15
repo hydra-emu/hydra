@@ -9,7 +9,7 @@
 // upon access and has a save function that saves as a json to file
 class EmulatorUserData
 {
-  public:
+public:
     EmulatorUserData(){};
     EmulatorUserData(std::string save_path);
     std::string Get(const std::string& key) const;
@@ -17,7 +17,7 @@ class EmulatorUserData
     void Set(const std::string& key, const std::string& value);
     bool IsEmpty() const;
 
-  private:
+private:
     std::map<std::string, std::string> map_;
     std::string save_path_;
     std::shared_ptr<std::mutex> mutex_;

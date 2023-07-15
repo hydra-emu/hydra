@@ -8,6 +8,7 @@
 #include <bit_cast.hxx>
 #include <cfenv>
 #include <cfloat>
+#include <chrono>
 #include <cmath>
 #include <concepts>
 #include <cstdint>
@@ -183,7 +184,7 @@ namespace hydra::N64
     */
     class CPUBus
     {
-      public:
+    public:
         CPUBus(RCP& rcp);
         bool LoadCartridge(std::string path);
         bool LoadIPL(std::string path);
@@ -195,7 +196,7 @@ namespace hydra::N64
 
         void Reset();
 
-      private:
+    private:
         uint8_t* redirect_paddress(uint32_t paddr);
         void map_direct_addresses();
 
@@ -265,12 +266,12 @@ namespace hydra::N64
 
     class CPU final
     {
-      public:
+    public:
         CPU(CPUBus& cpubus, RCP& rcp, bool& should_draw);
         void Tick();
         void Reset();
 
-      private:
+    private:
         using PipelineStageRet = void;
         using PipelineStageArgs = void;
         CPUBus& cpubus_;
@@ -302,6 +303,8 @@ namespace hydra::N64
         bool prev_branch_ = false, was_branch_ = false;
         uint32_t tlb_offset_mask_ = 0;
         int pif_channel_ = 0;
+        int vis_per_second_ = 0;
+        std::chrono::time_point<std::chrono::high_resolution_clock> last_second_time_;
 
         TranslatedAddress translate_vaddr(uint32_t vaddr);
         TranslatedAddress translate_vaddr_kernel(uint32_t vaddr);

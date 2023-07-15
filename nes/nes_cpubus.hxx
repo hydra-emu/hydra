@@ -36,12 +36,12 @@ namespace hydra::NES
 
     class CPUBus
     {
-      public:
+    public:
         CPUBus(PPU& ppu, APU& apu);
         bool LoadCartridge(std::string path);
         void Reset();
 
-      private:
+    private:
         uint8_t read(uint16_t addr);
         inline uint8_t redirect_address_r(uint16_t addr);
         inline void redirect_address_w(uint16_t addr, uint8_t data);

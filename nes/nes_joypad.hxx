@@ -43,7 +43,7 @@ namespace hydra::NES
             state_ &= ~static_cast<uint8_t>(button);
         }
 
-      private:
+    private:
         uint8_t state_;
         bool strobe_ = false;
         uint8_t state_ptr_ = 0;

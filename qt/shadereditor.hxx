@@ -15,10 +15,10 @@ class ShaderHighlighter final : public QSyntaxHighlighter
 {
     Q_OBJECT
 
-  public:
+public:
     ShaderHighlighter(QTextDocument* parent = nullptr);
 
-  private:
+private:
     struct HighlightingRule
     {
         QRegularExpression pattern;
@@ -40,18 +40,18 @@ class ShaderEditor final : public QWidget
 {
     Q_OBJECT
 
-  public:
+public:
     ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback,
                  QWidget* parent = nullptr);
     ~ShaderEditor();
     ShaderEditor(const ShaderEditor&) = delete;
     ShaderEditor& operator=(const ShaderEditor&) = delete;
-  private slots:
+private slots:
     void compile();
     void autocompile();
     void open_shader();
 
-  private:
+private:
     QTextEdit* editor_;
     QToolBar* toolbar_;
     QAction* compile_act_;

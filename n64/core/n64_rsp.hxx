@@ -88,7 +88,7 @@ namespace hydra::N64
             value_ &= 0xFFFF'FFFF'FFFF;
         }
 
-      private:
+    private:
         uint64_t value_ = 0;
     };
 
@@ -124,7 +124,7 @@ namespace hydra::N64
             return full_;
         }
 
-      private:
+    private:
         uint16_t full_ = 0;
     };
 
@@ -150,7 +150,7 @@ namespace hydra::N64
             return full_;
         }
 
-      private:
+    private:
         uint8_t full_ = 0;
     };
 
@@ -226,7 +226,7 @@ namespace hydra::N64
 
     class RSP final
     {
-      public:
+    public:
         RSP();
         ~RSP();
         void Tick();
@@ -248,7 +248,7 @@ namespace hydra::N64
             mi_interrupt_ = ptr;
         }
 
-      private:
+    private:
         using func_ptr = void (*)(RSP*);
 
         void VMULF(), VMULU(), VMUDL(), VMUDM(), VMUDN(), VMUDH(), VMACF(), VMACU(), VMADL(),

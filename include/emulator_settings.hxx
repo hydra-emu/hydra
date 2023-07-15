@@ -7,11 +7,11 @@ using GeneralSettings = EmulatorUserData;
 
 struct EmulatorSettings
 {
-  private:
+private:
     static EmulatorDataMap emulator_data_;
     static GeneralSettings general_settings_;
 
-  public:
+public:
     static EmulatorData& GetEmulatorData(hydra::EmuType type)
     {
         return emulator_data_.at(static_cast<int>(type));

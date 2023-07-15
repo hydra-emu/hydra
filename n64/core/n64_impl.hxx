@@ -12,7 +12,7 @@ namespace hydra::N64
 
     class N64
     {
-      public:
+    public:
         N64(bool& should_draw);
         bool LoadCartridge(std::string path);
         bool LoadIPL(std::string path);
@@ -39,7 +39,7 @@ namespace hydra::N64
             cpu_.key_state_[key] = state;
         }
 
-      private:
+    private:
         RCP rcp_;
         CPUBus cpubus_;
         CPU cpu_;

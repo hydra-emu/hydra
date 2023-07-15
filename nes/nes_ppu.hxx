@@ -20,14 +20,14 @@ namespace hydra::NES
 
     class PPU
     {
-      public:
+    public:
         PPU();
         void Tick();
         void Reset();
         uint8_t* GetScreenData();
         void SetNMI(std::function<void()> func);
 
-      private:
+    private:
         uint8_t ppu_ctrl_ = 0, ppu_mask_ = 0, ppu_status_ = 0, oam_addr_ = 0, oam_data_ = 0,
                 ppu_scroll_ = 0, ppu_data_ = 0, oam_dma_ = 0;
         uint16_t vram_addr_ = 0;
@@ -57,8 +57,8 @@ namespace hydra::NES
         std::array<uint8_t, 256 * 240 * 4> screen_color_data_second_;
         std::array<Sprite, 64> oam_{};
         std::array<Sprite, 8> secondary_oam_{};
-        // Holds the pattern table data for up to 8 sprites, to be rendered on the current scanline.
-        // Unused sprites are loaded with an all-transparent set of values
+        // Holds the pattern table data for up to 8 sprites, to be rendered on the current
+        // scanline. Unused sprites are loaded with an all-transparent set of values
         std::array<std::pair<uint8_t, uint8_t>, 8> sprite_shift_registers_{};
         // Holds the attribute bytes for up to 8 sprites
         std::array<uint8_t, 8> attribute_latches_{};

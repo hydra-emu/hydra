@@ -35,11 +35,11 @@ namespace hydra::Gameboy
 
     class Bus
     {
-      private:
+    private:
         using RamBank = std::array<uint8_t, 0x2000>;
         using RomBank = std::array<uint8_t, 0x4000>;
 
-      public:
+    public:
         bool BiosEnabled = false;
         Bus(ChannelArrayPtr channel_array_ptr);
         ~Bus();
@@ -76,7 +76,7 @@ namespace hydra::Gameboy
         uint8_t selected_rom_bank_ = 1;
         uint8_t selected_rom_bank_high_ = 0;
 
-      private:
+    private:
         bool ram_enabled_ = false;
         bool rtc_enabled_ = false;
         bool banking_mode_ = false;

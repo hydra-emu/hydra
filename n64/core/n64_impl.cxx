@@ -1,4 +1,5 @@
 #include "n64_impl.hxx"
+#include <chrono>
 #include <iostream>
 
 namespace hydra::N64
@@ -58,6 +59,15 @@ namespace hydra::N64
                 cycles -= cpu_.rcp_.vi_.cycles_per_halfline_;
             }
             cpu_.check_vi_interrupt();
+        }
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::high_resolution_clock::now() - cpu_.last_second_time_)
+                .count() >= 1000)
+        {
+            cpu_.last_second_time_ = std::chrono::high_resolution_clock::now();
+            cpu_.vis_per_second_ = rcp_.vi_.vis_counter_;
+            // printf("VIs: %d\n", cpu_.vis_per_second_);
+            rcp_.vi_.vis_counter_ = 0;
         }
         cpu_.should_draw_ = rcp_.Redraw();
     }

@@ -26,10 +26,10 @@ class MIPSHighlighter final : public QSyntaxHighlighter
 {
     Q_OBJECT
 
-  public:
+public:
     MIPSHighlighter(QTextDocument* parent = nullptr);
 
-  private:
+private:
     struct HighlightingRule
     {
         QRegularExpression pattern;
@@ -50,7 +50,7 @@ class N64Disassembler : public QPlainTextEdit
 {
     Q_OBJECT
 
-  public:
+public:
     N64Disassembler(bool& register_names, QWidget* parent = nullptr);
     void setInstructions(const std::vector<hydra::N64::DisassemblerInstruction>& instructions);
     void setGPRs(const std::array<hydra::N64::MemDataUnionDW, 32>& gprs);
@@ -61,11 +61,11 @@ class N64Disassembler : public QPlainTextEdit
     bool event(QEvent* e) override;
     void updateText();
     void Goto(uint32_t addr);
-  private slots:
+private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void updateLineNumberArea(const QRect& rect, int dy);
 
-  private:
+private:
     std::vector<hydra::N64::DisassemblerInstruction> instructions_;
     std::array<hydra::N64::MemDataUnionDW, 32> gprs_;
     MIPSHighlighter* highlighter_;
@@ -77,7 +77,7 @@ class N64Disassembler : public QPlainTextEdit
 
 class LineNumberArea : public QWidget
 {
-  public:
+public:
     LineNumberArea(N64Disassembler* debugger) : QWidget(debugger), debugger_(debugger) {}
 
     QSize sizeHint() const override
@@ -85,13 +85,13 @@ class LineNumberArea : public QWidget
         return QSize(debugger_->lineNumberAreaWidth(), 0);
     }
 
-  protected:
+protected:
     void paintEvent(QPaintEvent* event) override
     {
         debugger_->lineNumberAreaPaintEvent(event);
     }
 
-  private:
+private:
     N64Disassembler* debugger_;
 };
 
@@ -99,16 +99,16 @@ class N64Debugger : public QWidget
 {
     Q_OBJECT;
 
-  public:
+public:
     N64Debugger(bool& open, QWidget* parent = nullptr);
     ~N64Debugger();
 
     void SetEmulator(hydra::N64::N64_TKPWrapper* emulator);
-  private slots:
+private slots:
     void on_tab_change();
     void update_debugger_tab();
 
-  private:
+private:
     bool open_;
     bool was_paused_ = false;
     hydra::EmuType emulator_type_;

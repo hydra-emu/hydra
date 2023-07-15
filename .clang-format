@@ -24,6 +24,8 @@ BreakBeforeBraces: Custom
 IndentCaseLabels: true
 SpacesBeforeTrailingComments: 1
 EmptyLineBeforeAccessModifier: Always
+IndentAccessModifiers: false
+AccessModifierOffset: -4
 BreakStringLiterals: true
 BraceWrapping:
   AfterFunction: true

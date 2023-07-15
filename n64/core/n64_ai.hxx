@@ -6,6 +6,7 @@
 #include <cstring>
 #include <log.hxx>
 #include <miniaudio.h>
+#include <ringbuffer.hpp>
 #include <vector>
 
 namespace hydra::N64
@@ -19,7 +20,7 @@ namespace hydra::N64
 
     class Ai
     {
-      public:
+    public:
         Ai();
         ~Ai();
         void Reset();
@@ -36,14 +37,14 @@ namespace hydra::N64
 
         void Step();
         uint32_t ReadWord(uint32_t addr);
-        void WriteWord(uint32_t addr, uint32_t value);
+        void WriteWord(uint32_t addr, uint32_t data);
 
         bool IsHungry() const
         {
             return hungry_;
         }
 
-      private:
+    private:
         uint32_t ai_control_ = 0;
         uint32_t ai_bitrate_ = 0;
         uint32_t ai_frequency_ = 0;
@@ -60,7 +61,8 @@ namespace hydra::N64
 
         ma_device ai_device_{};
         MIInterrupt* mi_interrupt_ = nullptr;
-        std::vector<int16_t> ai_buffer_{};
+        // Cacheline may not be 64, but this is to ignore a warning
+        jnk0le::Ringbuffer<int16_t, 65536, false, 64> ai_buffer_;
 
         friend class hydra::N64::RCP;
         friend class hydra::N64::CPU;

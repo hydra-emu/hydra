@@ -27,10 +27,9 @@ set(WARNINGS
     "-Werror=sign-compare"
     "-Werror=shadow"
     "-Werror=deprecated-declarations"
-    "-Werror=unused-parameter"
 )
 string(REPLACE ";" " " WARNINGS_FLAGS "${WARNINGS}")
-set(CMAKE_CXX_FLAGS "-O2")
+set(CMAKE_CXX_FLAGS "-g -O2")
 if (APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
 else()

@@ -11,7 +11,7 @@ namespace hydra::c8
     {
         TKP_EMULATOR(Chip8_TKPWrapper);
 
-      private:
+    private:
         Interpreter inter_;
         c8Keys key_mappings_;
     };

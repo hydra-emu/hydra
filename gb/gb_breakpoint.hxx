@@ -35,7 +35,7 @@ namespace hydra::Gameboy::Utils
 
     struct GameboyBreakpoint
     {
-      public:
+    public:
         using BreakFunction = std::function<bool()>;
         bool Loaded = false;
         bool BPFromTable = true;
@@ -129,7 +129,7 @@ namespace hydra::Gameboy::Utils
             return name;
         }
 
-      private:
+    private:
         std::string name = "error-breakpoint";
         BreakFunction checks;
     };

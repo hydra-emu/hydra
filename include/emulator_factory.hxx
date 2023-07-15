@@ -12,10 +12,10 @@ namespace hydra
 {
     class EmulatorFactory
     {
-      private:
+    private:
         static ExtensionMappings extension_mappings_;
 
-      public:
+    public:
         static std::string GetSavePath();
         static std::shared_ptr<Emulator> Create(EmuType type);
         static EmuType GetEmulatorType(std::filesystem::path path);

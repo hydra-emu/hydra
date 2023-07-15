@@ -6,10 +6,10 @@ class NES_PPUViewer : public QWidget
 {
     Q_OBJECT
 
-  private:
+private:
     bool& open_;
 
-  public:
+public:
     NES_PPUViewer(bool& open, QWidget* parent = nullptr);
     ~NES_PPUViewer();
 };

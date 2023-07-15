@@ -8,11 +8,11 @@ namespace hydra::NES
 
     class APU
     {
-      public:
+    public:
         void Tick();
         void Reset();
 
-      private:
+    private:
         void invalidate(uint8_t addr, uint8_t data);
         inline void tick_impl();
         bool should_tick_ = false;

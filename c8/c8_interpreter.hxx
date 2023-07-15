@@ -30,7 +30,7 @@ namespace hydra::c8
 
     class Interpreter
     {
-      public:
+    public:
         Interpreter();
         void Update();
 
@@ -39,7 +39,7 @@ namespace hydra::c8
             return &screen_color_data_[0];
         }
 
-      private:
+    private:
         std::array<uint8_t, 16> regs_{};
         std::array<uint64_t, 32> screen_{};
         std::array<bool, 16> key_pressed_{};

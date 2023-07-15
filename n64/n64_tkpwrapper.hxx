@@ -13,9 +13,9 @@ namespace hydra::N64
     {
         TKP_EMULATOR(N64_TKPWrapper);
 
-      public:
+    public:
 
-      private:
+    private:
         N64 n64_impl_;
         static bool ipl_loaded_;
 

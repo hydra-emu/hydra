@@ -33,7 +33,7 @@ namespace hydra::N64
                 ma_resampler_uninit(&resampler_, nullptr);
             };
 
-          private:
+        private:
             ma_resampler& resampler_;
         } deleter(resampler);
 
@@ -42,29 +42,35 @@ namespace hydra::N64
             Logger::Fatal("Failed to create resampler: {}", static_cast<int>(res));
         }
         ma_uint64 frames_in = static_cast<float>(frames * ai.ai_frequency_) / HOST_SAMPLE_RATE;
-        if (ai.ai_buffer_.size() * sizeof(int16_t) < frames_in * bytes_per_frame * 3)
+        if (ai.ai_buffer_.readAvailable() < frames_in * bytes_per_frame)
         {
             ai.hungry_ = true;
-            if (ai.ai_buffer_.size() * sizeof(int16_t) < frames_in * bytes_per_frame)
-            {
-                return;
-            }
+            return;
         }
         else
         {
             ai.hungry_ = false;
         }
         ma_uint64 frames_out = frames;
-        std::vector<int16_t> buffer;
-        buffer.resize(frames_out * 2);
-        ma_result result = ma_resampler_process_pcm_frames(&resampler, ai.ai_buffer_.data(),
-                                                           &frames_in, buffer.data(), &frames_out);
+        static std::vector<int16_t> out_buffer;
+        static std::vector<int16_t> in_buffer;
+        if (out_buffer.size() < frames_out * 2)
+        {
+            out_buffer.resize(frames_out * 2);
+        }
+        if (in_buffer.size() < frames_in * 2)
+        {
+            in_buffer.resize(frames_in * 2);
+        }
+        ai.ai_buffer_.readBuff(in_buffer.data(), frames_in * 2);
+        ma_result result = ma_resampler_process_pcm_frames(&resampler, in_buffer.data(), &frames_in,
+                                                           out_buffer.data(), &frames_out);
         if (result != MA_SUCCESS)
         {
             Logger::Fatal("Failed to resample: {}", static_cast<int>(result));
         }
-        std::memcpy(out, buffer.data(), frames_out * 2 * 2);
-        ai.ai_buffer_.erase(ai.ai_buffer_.begin(), ai.ai_buffer_.begin() + frames_in * 2);
+        std::memcpy(out, out_buffer.data(), frames_out * 2 * 2);
+        ai.ai_buffer_.remove(frames_in * 2);
     }
 
     Ai::Ai()
@@ -196,10 +202,9 @@ namespace hydra::N64
             uint32_t data = *reinterpret_cast<uint32_t*>(rdram_ptr_ + address);
             int16_t left = (static_cast<int16_t>(data >> 16));
             int16_t right = (static_cast<int16_t>(data & 0xffff));
-            // TODO: Very slow, fix
-            ai_buffer_.push_back(bswap16(left));
-            ai_buffer_.push_back(bswap16(right));
-            if (ai_buffer_.size() > 200000)
+            bool insert_a = ai_buffer_.insert(bswap16(left));
+            bool insert_b = ai_buffer_.insert(bswap16(right));
+            if (!insert_a || !insert_b) [[unlikely]]
             {
                 Logger::Fatal("AI buffer overflow");
             }

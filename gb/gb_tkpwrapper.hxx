@@ -30,7 +30,7 @@ namespace hydra::Gameboy
     {
         TKP_EMULATOR(Gameboy_TKPWrapper);
 
-      private:
+    private:
         using GameboyPalettes = std::array<std::array<float, 3>, 4>;
         using GameboyKeys = std::array<uint32_t, 4>;
         using CPU = hydra::Gameboy::CPU;
@@ -43,14 +43,14 @@ namespace hydra::Gameboy
         using Cartridge = hydra::Gameboy::Cartridge;
         using GameboyBreakpoint = hydra::Gameboy::Utils::GameboyBreakpoint;
 
-      public:
+    public:
         // Used by automated tests
         void Update()
         {
             update();
         }
 
-      private:
+    private:
         ChannelArrayPtr channel_array_ptr_;
         Bus bus_;
         APU apu_;

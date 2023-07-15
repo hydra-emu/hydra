@@ -16,7 +16,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-  private:
+private:
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
 
@@ -43,10 +43,10 @@ class MainWindow : public QMainWindow
     void setup_emulator_specific();
     void empty_screen();
 
-  private slots:
+private slots:
     void redraw_screen();
 
-  public:
+public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
     void OpenFile(const std::string& file);

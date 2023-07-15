@@ -23,16 +23,11 @@ namespace hydra::N64
 {
     class RCP
     {
-      public:
+    public:
         void Reset();
-        void SetPixelMode(uint8_t mode);
-        void SetHVideo(uint32_t hvideo);
-        void SetVVideo(uint32_t vvideo);
-        void SetXScale(uint32_t xscale);
-        void SetYScale(uint32_t yscale);
         bool Redraw();
 
-      private:
+    private:
         Vi vi_;
         Ai ai_;
         RSP rsp_;
