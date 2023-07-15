@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Run the clang checker script
+./scripts/check_clang_format.sh
+
+exit_code=$?
+
+# Check the exit code
+if [ $exit_code -ne 0 ]; then
+    echo "Checker script failed. Commit aborted."
+    exit 1
+fi
