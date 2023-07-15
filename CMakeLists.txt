@@ -137,12 +137,12 @@ target_link_libraries(hydra PRIVATE src nes gb c8 n64
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
     Qt${QT_VERSION_MAJOR}::OpenGLWidgets ${CMAKE_DL_LIBS}
     fmt::fmt dl)
-target_include_directories(hydra PRIVATE include vendored)
-target_include_directories(src PRIVATE include vendored)
-target_include_directories(c8 PRIVATE include vendored)
-target_include_directories(gb PRIVATE include vendored)
-target_include_directories(nes PRIVATE include vendored)
-target_include_directories(n64 PRIVATE include vendored)
+target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
+target_include_directories(src PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
+target_include_directories(c8 PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
+target_include_directories(gb PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
+target_include_directories(nes PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
+target_include_directories(n64 PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 set_target_properties(hydra PROPERTIES hydra_properties
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.hydra.com
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -152,3 +152,25 @@ set_target_properties(hydra PROPERTIES hydra_properties
 )
 
 qt_finalize_executable(hydra)
+
+# Testing
+
+enable_testing()
+project(n64_qa)
+find_package(GTest REQUIRED)
+add_library(alp-core STATIC
+    vendored/angrylion-rdp-plus/common.h
+    vendored/angrylion-rdp-plus/msg.h
+    vendored/angrylion-rdp-plus/n64video.c
+    vendored/angrylion-rdp-plus/n64video.h
+    vendored/angrylion-rdp-plus/parallel.cpp
+    vendored/angrylion-rdp-plus/parallel.h
+    vendored/angrylion-rdp-plus/screen.h
+    vendored/angrylion-rdp-plus/vdac.h
+)
+target_include_directories(alp-core PUBLIC vendored/angrylion-rdp-plus/)
+target_link_libraries(alp-core PUBLIC -pthread)
+add_executable(n64_qa n64/qa/n64_rdp_qa.cxx n64/core/n64_rdp.cxx n64/qa/n64_angrylion_replayer.cxx)
+target_include_directories(n64_qa PRIVATE ${HYDRA_INCLUDE_DIRECTORIES} vendored/angrylion-rdp-plus/)
+target_link_libraries(n64_qa PUBLIC gtest fmt::fmt alp-core)
+add_test(NAME n64_qa COMMAND n64_qa WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
