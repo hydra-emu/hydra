@@ -35,9 +35,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     QVBoxLayout* layout = new QVBoxLayout;
     layout->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     layout->setContentsMargins(5, 5, 5, 5);
-    QSurfaceFormat format;
-    format.setDepthBufferSize(24);
-    QSurfaceFormat::setDefaultFormat(format);
     screen_ = new ScreenWidget(this);
     screen_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     screen_->setVisible(true);
