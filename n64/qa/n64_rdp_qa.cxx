@@ -1,7 +1,7 @@
-#include <core/n64_rdp.hxx>
-#include <core/n64_rdp_commands.hxx>
 #include <filesystem>
 #include <gtest/gtest.h>
+#include <n64/core/n64_rdp.hxx>
+#include <n64/core/n64_rdp_commands.hxx>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -62,7 +62,7 @@ protected:
             FAIL();
         }
 
-        for (int i = 0; i < framebuffer.size(); i++)
+        for (size_t i = 0; i < framebuffer.size(); i++)
         {
             if (data[i] != framebuffer[i])
             {

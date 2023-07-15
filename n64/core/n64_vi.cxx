@@ -22,6 +22,11 @@ namespace hydra::N64
             framebuffer_ptr_ = nullptr;
             return false;
         }
+        if (pixel_mode_ == 0)
+        {
+            framebuffer_ptr_ = nullptr;
+            return false;
+        }
         width_ >>= 10;
         height_ >>= 10;
         size_t new_size = width_ * height_ * 4;
@@ -159,6 +164,7 @@ namespace hydra::N64
                 {
                     Logger::Warn("Interlacing enabled");
                 }
+                vi_ctrl_ = data;
                 break;
             }
             case VI_ORIGIN:
