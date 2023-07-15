@@ -1,6 +1,8 @@
 #include "screenwidget.hxx"
 #include <iostream>
+#include <log.hxx>
 #include <QFile>
+#include <QSurfaceFormat>
 
 ScreenWidget::ScreenWidget(QWidget* parent) : QOpenGLWidget(parent) {}
 
@@ -97,6 +99,8 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment)
 void ScreenWidget::initializeGL()
 {
     initializeOpenGLFunctions();
+    const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    Logger::Info("OpenGL version: {}", version);
     glGenTextures(1, &texture_);
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_TEXTURE_2D);

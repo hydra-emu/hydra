@@ -23,6 +23,8 @@ namespace hydra
             dir = getenv("HOME") + std::string("/.config/hydra/");
 #elif defined(_WIN32)
             dir = getenv("APPDATA") + std::string("/hydra/");
+#elif defined(__APPLE__)
+            dir = getenv("HOME") + std::string("/Library/Application Support/hydra/");
 #endif
             // TODO: MacOS
             if (dir.empty())

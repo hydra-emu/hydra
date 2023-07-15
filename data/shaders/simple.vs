@@ -1,4 +1,4 @@
-#version 150 core
+#version 330 core
 in vec2 in_Vertex;
 in vec2 vertTexCoord;
 out vec2 fragTexCoord;
