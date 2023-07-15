@@ -11,7 +11,7 @@ using namespace hydra::N64;
 
 class RDPTest : public testing::Test
 {
-  protected:
+protected:
     void SetUp() override
     {
         std::fill(framebuffer.begin(), framebuffer.end(), 0);

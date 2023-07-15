@@ -19,13 +19,13 @@ namespace hydra::Gameboy
 {
     class CPU
     {
-      public:
+    public:
         // CPU registers
         RegisterType A, B, C, D, E, H, L, F;
         BigRegisterType PC, SP;
         uint8_t last_instr_ = 0;
 
-      private:
+    private:
         Bus& bus_;
         PPU& ppu_;
         APU& apu_;
@@ -115,7 +115,7 @@ namespace hydra::Gameboy
         int get_clk_freq();
         void setup_hwio();
 
-      public:
+    public:
         CPU(Bus& bus, PPU& ppu, APU& apu, Timer& timer);
         bool halt_ = false;
         bool ime_ = false;

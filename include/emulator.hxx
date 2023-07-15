@@ -22,14 +22,14 @@ namespace
 // Macro that adds the essential functions that every emulator have
 #define TKP_EMULATOR(emulator)                 \
                                                \
-  public:                                      \
+public:                                        \
     emulator();                                \
     ~emulator() override;                      \
     void* GetScreenData() override;            \
     void HandleKeyDown(uint32_t key) override; \
     void HandleKeyUp(uint32_t key) override;   \
                                                \
-  private:                                     \
+private:                                       \
     void update() override;                    \
     void reset() override;                     \
     bool load_file(std::string path) override;
@@ -38,7 +38,7 @@ namespace hydra
 {
     class Emulator
     {
-      public:
+    public:
         Emulator(){};
         virtual ~Emulator();
         Emulator(const Emulator&) = delete;
@@ -99,12 +99,12 @@ namespace hydra
         std::mutex StepMutex;
         std::shared_mutex DataMutex;
 
-      protected:
+    protected:
         void stop();
         int instrs_per_frame_ = 0;
         bool should_draw_ = false;
 
-      private:
+    private:
         virtual void update() = 0;
         virtual void reset();
         virtual bool load_file(std::string);

@@ -11,13 +11,13 @@ class KeyPickerPage : public QWidget
 {
     Q_OBJECT
 
-  public:
+public:
     KeyPickerPage(QWidget* parent = 0);
-  private slots:
+private slots:
     void onComboBoxChange(int index);
     void onCellDoubleClicked(int row, int column);
 
-  private:
+private:
     void keyPressEvent(QKeyEvent* event) override;
     bool waiting_input_ = false;
     int row_waiting_ = 0;

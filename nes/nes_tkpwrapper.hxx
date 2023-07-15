@@ -12,7 +12,7 @@ namespace hydra::NES
     {
         TKP_EMULATOR(NES_TKPWrapper);
 
-      private:
+    private:
         PPU ppu_{};
         APU apu_{};
         CPUBus cpubus_{ppu_, apu_};

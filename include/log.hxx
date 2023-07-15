@@ -44,7 +44,7 @@ struct Logger
 #endif
     }
 
-  private:
+private:
     static inline std::string LogInfo()
     {
         return fmt::format(fg(fmt::color::green), "[INFO]");

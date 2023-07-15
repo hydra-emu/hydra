@@ -61,7 +61,7 @@ namespace hydra::Gameboy
             return ((LeftEnabled * LeftVolume) || (RightEnabled * RightVolume));
         }
 
-      private:
+    private:
         int new_frequency = 0;
     };
 

@@ -62,14 +62,14 @@ namespace hydra::Gameboy
 
     class Cartridge
     {
-      private:
+    private:
         Header header_{};
         int k = sizeof(header_);
         static constexpr std::array<int, 6> ram_sizes_{0, 0, 1, 4, 16, 8};
         bool text_cached_ = false;
         bool using_battery_ = false;
 
-      public:
+    public:
         bool Load(const std::string& filename, std::vector<std::array<uint8_t, 0x4000>>& romBanks,
                   std::vector<std::array<uint8_t, 0x2000>>& ramBanks);
         CartridgeType GetCartridgeType();

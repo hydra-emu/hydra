@@ -98,7 +98,7 @@ namespace hydra::N64
         }
     }
 
-    void RDP::WriteWord(uint32_t addr, uint32_t value)
+    void RDP::WriteWord(uint32_t addr, uint32_t data)
     {
         switch (addr)
         {
@@ -106,7 +106,7 @@ namespace hydra::N64
             {
                 if (!status_.start_pending)
                 {
-                    start_address_ = value & 0xFFFFF8;
+                    start_address_ = data & 0xFFFFF8;
                 }
                 status_.start_pending = 1;
                 break;
@@ -121,7 +121,7 @@ namespace hydra::N64
                     // status_.dma_busy = 1;
                     current_address_ = start_address_;
                 }
-                end_address_ = value & 0xFFFFF8;
+                end_address_ = data & 0xFFFFF8;
                 status_.pipe_busy = 1;
                 status_.start_gclk = 1;
                 process_commands();
@@ -131,7 +131,7 @@ namespace hydra::N64
             case DP_STATUS:
             {
                 RDPStatusWrite write;
-                write.full = value;
+                write.full = data;
 #define flag(x)                                 \
     if (write.clear_##x && !write.set_##x)      \
         status_.x = 0;                          \

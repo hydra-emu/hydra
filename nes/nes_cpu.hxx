@@ -17,7 +17,7 @@ namespace hydra::NES
 {
     class CPU
     {
-      public:
+    public:
         CPU(CPUBus& bus, std::atomic_bool& paused);
         void Tick();
         void Reset();
@@ -27,7 +27,7 @@ namespace hydra::NES
         void HandleKeyUp(uint32_t key);
         void SetKeys(std::unordered_map<uint32_t, Button> keys);
 
-      private:
+    private:
         CPUBus& bus_;
         inline void delay(uint8_t i);
         uint8_t A = 0, X = 0, Y = 0, SP = 0;
@@ -51,7 +51,7 @@ namespace hydra::NES
         inline void execute();
         friend class hydra::NES::NES_TKPWrapper;
 
-      private:
+    private:
         // clang-format off
         inline void TAY(), TAX(), TYA(), TXA(), JSR(), SEC(), 
             BCC(), CLC(), BEQ(), BNE(), BVS(), BVC(), BMI(), BPL(),

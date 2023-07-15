@@ -48,6 +48,9 @@ addr VI_Y_SCALE = 0x0440'0034;
 addr VI_TEST_ADDR = 0x0440'0038;
 addr VI_STAGED_DATA = 0x0440'003C;
 
+addr VI_AREA_START = 0x0440'0000;
+addr VI_AREA_END = 0x044F'FFFF;
+
 // Audio Interface
 addr AI_DRAM_ADDR = 0x0450'0000;
 addr AI_LEN = 0x0450'0004;

@@ -10,7 +10,7 @@
 
 class GB_WiiWrapper
 {
-  public:
+public:
     GB_WiiWrapper();
     void Update();
     void* GetScreenData();

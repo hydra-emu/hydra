@@ -12,7 +12,7 @@ namespace hydra::Gameboy
 
     class PPU
     {
-      public:
+    public:
         bool ReadyToDraw = false;
         bool SpriteDebugColor = false;
         bool DrawBackground = true;
@@ -25,7 +25,7 @@ namespace hydra::Gameboy
         uint8_t* GetScreenData();
         void FillTileset(float* pixels, size_t x_off = 0, size_t y_off = 0, uint16_t addr = 0x8000);
 
-      private:
+    private:
         Bus& bus_;
         std::vector<uint8_t> screen_color_data_{};
         std::vector<uint8_t> screen_color_data_second_{};

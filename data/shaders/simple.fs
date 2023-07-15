@@ -6,6 +6,7 @@ uniform sampler2D tex;
 
 in vec2 frag_uv;
 
-void main() {
+void main()
+{
     color = texture(tex, frag_uv);
 }

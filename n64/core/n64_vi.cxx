@@ -1,4 +1,6 @@
 #include "n64_vi.hxx"
+#include "n64_addresses.hxx"
+#include "n64_types.hxx"
 #include <fmt/format.h>
 #include <log.hxx>
 
@@ -67,6 +69,158 @@ namespace hydra::N64
         }
         framebuffer_ptr_ = framebuffer_.data();
         return true;
+    }
+
+    uint32_t Vi::ReadWord(uint32_t addr)
+    {
+        switch (addr)
+        {
+            case VI_CTRL:
+            {
+                return vi_ctrl_;
+            }
+            case VI_ORIGIN:
+            {
+                return vi_origin_;
+            }
+            case VI_WIDTH:
+            {
+                return vi_width_;
+            }
+            case VI_V_INTR:
+            {
+                return vi_v_intr_;
+            }
+            case VI_V_CURRENT:
+            {
+                return vi_v_current_;
+            }
+            case VI_BURST:
+            {
+                return vi_burst_;
+            }
+            case VI_V_SYNC:
+            {
+                return vi_v_sync_;
+            }
+            case VI_H_SYNC:
+            {
+                return vi_h_sync_;
+            }
+            case VI_H_SYNC_LEAP:
+            {
+                return vi_h_sync_leap_;
+            }
+            case VI_H_VIDEO:
+            {
+                return vi_h_end_ | (vi_h_start_ << 16);
+            }
+            case VI_V_VIDEO:
+            {
+                return vi_v_end_ | (vi_v_start_ << 16);
+            }
+            case VI_V_BURST:
+            {
+                return vi_v_burst_;
+            }
+            case VI_X_SCALE:
+            {
+                return vi_x_scale_;
+            }
+            case VI_Y_SCALE:
+            {
+                return vi_y_scale_;
+            }
+            case VI_TEST_ADDR:
+            {
+                return vi_test_addr_;
+            }
+            case VI_STAGED_DATA:
+            {
+                return vi_staged_data_;
+            }
+            default:
+            {
+                Logger::Warn("VI: Unhandled read from {:08x}", addr);
+                return 0;
+            }
+        }
+    }
+
+    void Vi::WriteWord(uint32_t addr, uint32_t data)
+    {
+        switch (addr)
+        {
+            case VI_CTRL:
+            {
+                auto format = data & 0b11;
+                pixel_mode_ = format;
+                if ((data >> 6) & 0b1)
+                {
+                    Logger::Warn("Interlacing enabled");
+                }
+                break;
+            }
+            case VI_ORIGIN:
+            {
+                data &= 0x00FFFFFF;
+                memory_ptr_ = &rdram_ptr_[data];
+                vis_counter_ += mi_interrupt_->VI;
+                break;
+            }
+            case VI_WIDTH:
+            {
+                vi_width_ = data;
+                break;
+            }
+            case VI_V_CURRENT:
+            {
+                mi_interrupt_->VI = false;
+                break;
+            }
+            case VI_H_SYNC:
+            case VI_H_SYNC_LEAP:
+            case VI_V_BURST:
+            case VI_TEST_ADDR:
+            case VI_STAGED_DATA:
+            case VI_BURST:
+            {
+                break;
+            }
+            case VI_V_INTR:
+            {
+                vi_v_intr_ = data & 0x3ff;
+                break;
+            }
+            case VI_V_SYNC:
+            {
+                num_halflines_ = data >> 1;
+                cycles_per_halfline_ = (93750000 / 60) / num_halflines_;
+                break;
+            }
+            case VI_H_VIDEO:
+            {
+                vi_h_end_ = data & 0b11'1111'1111;
+                vi_h_start_ = (data >> 16) & 0b11'1111'1111;
+                break;
+            }
+            case VI_V_VIDEO:
+            {
+                vi_v_end_ = data & 0b11'1111'1111;
+                vi_v_start_ = (data >> 16) & 0b11'1111'1111;
+                break;
+            }
+            case VI_X_SCALE:
+            {
+                vi_x_scale_ = data & 0b1111'1111'1111;
+                break;
+            }
+            case VI_Y_SCALE:
+            {
+                vi_y_scale_ = data & 0b1111'1111'1111;
+                break;
+            }
+        }
     }
 
     void Vi::set_pixel(int x, int y, uint32_t color)

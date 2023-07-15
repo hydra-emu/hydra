@@ -184,76 +184,14 @@ namespace hydra::N64
                 cpubus_.pi_bsd_dom2_rls_ = data & 0xFF;
                 break;
             }
-            case VI_CTRL:
+
+            // Video interface
+            case VI_AREA_START ... VI_AREA_END:
             {
-                auto format = data & 0b11;
-                rcp_.SetPixelMode(format);
-                if ((data >> 6) & 0b1)
-                {
-                    Logger::Warn("Interlacing enabled");
-                }
-                break;
+                return rcp_.vi_.WriteWord(addr, data);
             }
-            case VI_ORIGIN:
-            {
-                data &= 0x00FFFFFF;
-                if (data > cpubus_.rdram_.size())
-                {
-                    Logger::Fatal("VI_ORIGIN out of bounds: {:#x}", data);
-                }
-                rcp_.vi_.memory_ptr_ = &cpubus_.rdram_[data];
-                break;
-            }
-            case VI_WIDTH:
-            {
-                rcp_.vi_.vi_width_ = data;
-                break;
-            }
-            case VI_V_CURRENT:
-            {
-                cpubus_.mi_interrupt_.VI = false;
-                break;
-            }
-            case VI_H_SYNC:
-            case VI_H_SYNC_LEAP:
-            case VI_V_BURST:
-            case VI_TEST_ADDR:
-            case VI_STAGED_DATA:
-            case VI_BURST:
-            {
-                break;
-            }
-            case VI_V_INTR:
-            {
-                rcp_.vi_.vi_v_intr_ = data & 0x3ff;
-                break;
-            }
-            case VI_V_SYNC:
-            {
-                rcp_.vi_.num_halflines_ = data >> 1;
-                rcp_.vi_.cycles_per_halfline_ = (93750000 / 60) / rcp_.vi_.num_halflines_;
-                break;
-            }
-            case VI_H_VIDEO:
-            {
-                rcp_.SetHVideo(data);
-                break;
-            }
-            case VI_V_VIDEO:
-            {
-                rcp_.SetVVideo(data);
-                break;
-            }
-            case VI_X_SCALE:
-            {
-                rcp_.SetXScale(data);
-                break;
-            }
-            case VI_Y_SCALE:
-            {
-                rcp_.SetYScale(data);
-                break;
-            }
+
+            // Audio interface
             case AI_AREA_START ... AI_AREA_END:
             {
                 return rcp_.ai_.WriteWord(addr, data);
@@ -398,29 +336,11 @@ namespace hydra::N64
                 redir_case(MI_INTERRUPT, cpubus_.mi_interrupt_.full);
                 redir_case(MI_MASK, cpubus_.mi_mask_);
 
-                // Video Interface
-                redir_case(VI_CTRL, rcp_.vi_.vi_ctrl_);
-                redir_case(VI_ORIGIN, rcp_.vi_.vi_origin_);
-                redir_case(VI_WIDTH, rcp_.vi_.vi_width_);
-                redir_case(VI_V_INTR, rcp_.vi_.vi_v_intr_);
-                redir_case(VI_V_CURRENT, rcp_.vi_.vi_v_current_);
-                redir_case(VI_BURST, rcp_.vi_.vi_burst_);
-                redir_case(VI_V_SYNC, rcp_.vi_.vi_v_sync_);
-                redir_case(VI_H_SYNC, rcp_.vi_.vi_h_sync_);
-                redir_case(VI_H_SYNC_LEAP, rcp_.vi_.vi_h_sync_leap_);
-            case VI_H_VIDEO:
+            // Video interface
+            case VI_AREA_START ... VI_AREA_END:
             {
-                return rcp_.vi_.vi_h_end_ | (rcp_.vi_.vi_h_start_ << 16);
+                return rcp_.vi_.ReadWord(paddr);
             }
-            case VI_V_VIDEO:
-            {
-                return rcp_.vi_.vi_v_end_ | (rcp_.vi_.vi_v_start_ << 16);
-            }
-                redir_case(VI_V_BURST, rcp_.vi_.vi_v_burst_);
-                redir_case(VI_X_SCALE, rcp_.vi_.vi_x_scale_)
-                    redir_case(VI_Y_SCALE, rcp_.vi_.vi_y_scale_);
-                redir_case(VI_TEST_ADDR, rcp_.vi_.vi_test_addr_);
-                redir_case(VI_STAGED_DATA, rcp_.vi_.vi_staged_data_);
 
             // Audio Interface
             case AI_AREA_START ... AI_AREA_END:
@@ -709,9 +629,11 @@ namespace hydra::N64
           rcp_(rcp), should_draw_(should_draw)
     {
         rcp_.ai_.InstallBuses(&cpubus_.rdram_[0]);
+        rcp_.vi_.InstallBuses(&cpubus_.rdram_[0]);
         rcp_.rsp_.InstallBuses(&cpubus_.rdram_[0], &rcp_.rdp_);
         rcp_.rdp_.InstallBuses(&cpubus_.rdram_[0], &rcp_.rsp_.mem_[0]);
         rcp_.ai_.SetMIPtr(&cpubus_.mi_interrupt_);
+        rcp_.vi_.SetMIPtr(&cpubus_.mi_interrupt_);
         rcp_.rsp_.SetMIPtr(&cpubus_.mi_interrupt_);
         rcp_.rdp_.SetMIPtr(&cpubus_.mi_interrupt_);
     }

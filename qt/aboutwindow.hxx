@@ -6,10 +6,10 @@ class AboutWindow : public QDialog
 {
     Q_OBJECT
 
-  private:
+private:
     bool& open_;
 
-  public:
+public:
     AboutWindow(bool& open, QWidget* parent = nullptr);
     ~AboutWindow();
 };

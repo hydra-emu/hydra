@@ -10,7 +10,7 @@ namespace hydra::Gameboy
     // All computation for this class happens in gb_bus and gb_apu_ch
     class APU
     {
-      public:
+    public:
         APU(ChannelArrayPtr channel_array_ptr, uint8_t& NR52);
         ~APU();
         void InitSound();
@@ -28,7 +28,7 @@ namespace hydra::Gameboy
 
         bool UseSound = false;
 
-      private:
+    private:
         // QAudioSink* audio_sink_;
         std::array<int16_t, 512> samples_;
         size_t sample_index_ = 0;

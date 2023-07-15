@@ -19,7 +19,7 @@ namespace hydra::N64
         RSPJit() = default;
         void create_block(uint32_t* code);
 
-      private:
+    private:
         std::array<block, 0x400> blocks_;
         std::array<MemDataUnionDW, 32> registers_;
         uint64_t rpc_;

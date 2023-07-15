@@ -8,12 +8,12 @@ namespace hydra::Gameboy
 {
     class Timer
     {
-      public:
+    public:
         Timer(ChannelArrayPtr channel_array_ptr, Bus& bus);
         void Reset();
         bool Update(uint8_t cycles, uint8_t old_if);
 
-      private:
+    private:
         ChannelArrayPtr channel_array_ptr_;
         Bus& bus_;
         RegisterType &DIV, &TIMA, &TAC, &TMA, &IF;

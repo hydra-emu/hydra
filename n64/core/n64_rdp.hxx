@@ -107,7 +107,7 @@ namespace hydra::N64
 
     class RDP final
     {
-      public:
+    public:
         RDP();
         void InstallBuses(uint8_t* rdram_ptr, uint8_t* spmem_ptr);
 
@@ -117,13 +117,13 @@ namespace hydra::N64
         }
 
         uint32_t ReadWord(uint32_t addr);
-        void WriteWord(uint32_t addr, uint32_t value);
+        void WriteWord(uint32_t addr, uint32_t data);
         void Reset();
 
         // Used for QA
         void SendCommand(const std::vector<uint64_t>& command);
 
-      private:
+    private:
         RDPStatus status_;
         uint8_t* rdram_ptr_ = nullptr;
         uint8_t* spmem_ptr_ = nullptr;

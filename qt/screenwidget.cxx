@@ -13,7 +13,7 @@ static constexpr float vertices_uvs[] =
    1, -1, 1, 0,
    1, -1, 1, 0,
   -1, -1, 0, 0,
-  -1,  1, 0, 1
+  -1,  1, 0, 1,
 };
 
 // clang-format on
