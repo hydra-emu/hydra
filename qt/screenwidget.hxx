@@ -5,6 +5,7 @@
 #include <QOpenGLShader>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 #include <QResizeEvent>
 #include <QString>
@@ -28,6 +29,8 @@ class ScreenWidget : public QOpenGLWidget, protected QOpenGLFunctions
     QOpenGLShaderProgram* program_ = nullptr;
     QString vshader_source_;
     QString fshader_source_;
+    QOpenGLVertexArrayObject vao_;
+    QOpenGLBuffer vbo_;
     bool initialized_ = false;
 };
 #endif

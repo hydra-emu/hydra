@@ -4,7 +4,24 @@
 #include <QFile>
 #include <QSurfaceFormat>
 
-ScreenWidget::ScreenWidget(QWidget* parent) : QOpenGLWidget(parent) {}
+// clang-format off
+
+static constexpr float vertices_uvs[] =
+{
+  -1,  1, 0, 1,
+   1,  1, 1, 1,
+   1, -1, 1, 0,
+   1, -1, 1, 0,
+  -1, -1, 0, 0,
+  -1,  1, 0, 1
+};
+
+// clang-format on
+
+ScreenWidget::ScreenWidget(QWidget* parent)
+    : QOpenGLWidget(parent), vbo_(QOpenGLBuffer::Type::VertexBuffer)
+{
+}
 
 ScreenWidget::~ScreenWidget()
 {
@@ -91,7 +108,12 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment)
     program_->link();
     program_->bind();
     glActiveTexture(GL_TEXTURE0);
-    program_->setUniformValue("tex", 0);
+    GLint tex = glGetUniformLocation(program_->programId(), "tex");
+    if (tex == -1)
+    {
+        Logger::Fatal("Could not find uniform tex");
+    }
+    glUniform1i(tex, 0);
     delete fshader;
     delete vshader;
 }
@@ -101,9 +123,20 @@ void ScreenWidget::initializeGL()
     initializeOpenGLFunctions();
     const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
     Logger::Info("OpenGL version: {}", version);
-    glGenTextures(1, &texture_);
-    glClear(GL_COLOR_BUFFER_BIT);
+    vao_.create();
+    vao_.bind();
+    vbo_.create();
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_.bufferId());
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_uvs), vertices_uvs, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(0));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                          reinterpret_cast<void*>(2 * sizeof(float)));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
     glEnable(GL_TEXTURE_2D);
+    glGenTextures(1, &texture_);
+    glClearColor(0.1, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
     ResetProgram();
     hide();
 }
@@ -116,19 +149,9 @@ void ScreenWidget::paintGL()
     program_->bind();
     if (initialized_)
     {
-        float vertices[] = {-1.0, 1.0, 1.0, 1.0, 1, -1, -1, -1};
-        float coordTexture[] = {0, 0, 1, 0, 1, 1, 0, 1};
-        GLint vertexLocation = glGetAttribLocation(program_->programId(), "in_Vertex");
-        GLint texcoordLocation = glGetAttribLocation(program_->programId(), "vertTexCoord");
-        glVertexAttribPointer(vertexLocation, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-        glEnableVertexAttribArray(vertexLocation);
-        glVertexAttribPointer(texcoordLocation, 2, GL_FLOAT, GL_FALSE, 0, coordTexture);
-        glEnableVertexAttribArray(texcoordLocation);
         glBindTexture(GL_TEXTURE_2D, texture_);
-        glDrawArrays(GL_QUADS, 0, 4);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindTexture(GL_TEXTURE_2D, 0);
-        glDisableVertexAttribArray(texcoordLocation);
-        glDisableVertexAttribArray(vertexLocation);
     }
     program_->release();
 }
