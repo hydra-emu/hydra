@@ -103,7 +103,7 @@ namespace hydra
                                                "reset was not implemented for this emulator");
     }
 
-    bool Emulator::load_file(std::string)
+    bool Emulator::load_file(const std::string&)
     {
         throw ErrorFactory::generate_exception(__func__, __LINE__,
                                                "load_file was not implemented for this emulator");

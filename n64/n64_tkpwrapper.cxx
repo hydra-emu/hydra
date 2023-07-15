@@ -113,7 +113,7 @@ namespace hydra::N64
 
     N64_TKPWrapper::~N64_TKPWrapper() {}
 
-    bool N64_TKPWrapper::load_file(std::string path)
+    bool N64_TKPWrapper::load_file(const std::string& path)
     {
         bool ipl_loaded = ipl_loaded_;
         if (!ipl_loaded)
