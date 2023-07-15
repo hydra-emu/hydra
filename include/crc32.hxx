@@ -6,6 +6,8 @@
 #include <intrin.h>
 #endif
 
+#include <cstdint>
+
 inline uint32_t crc32_u8(uint32_t crc, uint8_t data)
 {
     crc = _mm_crc32_u8(crc, data);

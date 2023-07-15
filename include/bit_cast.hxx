@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 namespace hydra
 {
     template <class To, class From>

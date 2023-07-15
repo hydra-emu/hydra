@@ -32,7 +32,7 @@ public:                                        \
 private:                                       \
     void update() override;                    \
     void reset() override;                     \
-    bool load_file(std::string path) override;
+    bool load_file(const std::string& path) override;
 
 namespace hydra
 {
@@ -107,7 +107,7 @@ namespace hydra
     private:
         virtual void update() = 0;
         virtual void reset();
-        virtual bool load_file(std::string);
+        virtual bool load_file(const std::string&);
         int width_, height_;
         int64_t last_frame_time_ms_;
         int cur_instr_ = 0;

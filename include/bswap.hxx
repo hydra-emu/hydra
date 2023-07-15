@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 inline uint16_t bswap16(uint16_t x)
 {
     return (x >> 8) | (x << 8);

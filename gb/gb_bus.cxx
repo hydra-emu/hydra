@@ -1279,7 +1279,7 @@ namespace hydra::Gameboy
         return cartridge_;
     }
 
-    bool Bus::LoadCartridge(std::string filename)
+    bool Bus::LoadCartridge(const std::string& filename)
     {
         Reset();
         bool ret = cartridge_.Load(filename, rom_banks_, ram_banks_);

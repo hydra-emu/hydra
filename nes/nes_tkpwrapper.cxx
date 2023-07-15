@@ -57,7 +57,7 @@ namespace hydra::NES
         cpu_.Tick();
     }
 
-    bool NES_TKPWrapper::load_file(std::string path)
+    bool NES_TKPWrapper::load_file(const std::string& path)
     {
         return cpu_.bus_.LoadCartridge(path);
     }

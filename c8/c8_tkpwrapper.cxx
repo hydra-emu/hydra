@@ -13,7 +13,7 @@ namespace hydra::c8
         Stopped.store(true);
     }
 
-    bool Chip8_TKPWrapper::load_file(std::string path)
+    bool Chip8_TKPWrapper::load_file(const std::string& path)
     {
         inter_.load_file(path);
         Loaded = true;

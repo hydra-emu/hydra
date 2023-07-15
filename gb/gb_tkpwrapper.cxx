@@ -162,9 +162,9 @@ namespace hydra::Gameboy
         }
     }
 
-    bool Gameboy_TKPWrapper::load_file(std::string path)
+    bool Gameboy_TKPWrapper::load_file(const std::string& path)
     {
-        auto loaded = bus_.LoadCartridge(std::forward<std::string>(path));
+        auto loaded = bus_.LoadCartridge(path);
         ppu_.UseCGB = bus_.UseCGB;
         return loaded;
     }
