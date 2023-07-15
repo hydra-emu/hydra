@@ -1,8 +1,8 @@
-#include "n64_vi.hxx"
-#include "n64_addresses.hxx"
-#include "n64_types.hxx"
 #include <fmt/format.h>
 #include <log.hxx>
+#include <n64/core/n64_addresses.hxx>
+#include <n64/core/n64_types.hxx>
+#include <n64/core/n64_vi.hxx>
 
 namespace hydra::N64
 {

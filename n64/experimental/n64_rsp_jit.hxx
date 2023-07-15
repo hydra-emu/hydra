@@ -3,9 +3,9 @@
 
 // Currently not used
 
-#include "n64_register_allocation.hxx"
-#include "n64_types.hxx"
 #include <array>
+#include <n64/core/n64_register_allocation.hxx>
+#include <n64/core/n64_types.hxx>
 #include <optional>
 #include <vector>
 #include <xbyak/xbyak.h>

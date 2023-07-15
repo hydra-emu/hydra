@@ -1,4 +1,4 @@
-#include "n64_cpu.hxx"
+#include <n64/core/n64_cpu.hxx>
 
 namespace hydra::N64
 {

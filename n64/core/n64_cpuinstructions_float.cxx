@@ -1,7 +1,7 @@
-#include "n64_cpu.hxx"
 #include <bit_cast.hxx>
 #include <functional>
 #include <log.hxx>
+#include <n64/core/n64_cpu.hxx>
 
 #define rdreg (gpr_regs_[instruction_.RType.rd])
 #define rsreg (gpr_regs_[instruction_.RType.rs])

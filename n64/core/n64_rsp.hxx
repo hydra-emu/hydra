@@ -1,6 +1,6 @@
 #pragma once
 
-#include "n64_types.hxx"
+#include <n64/core/n64_types.hxx>
 
 namespace hydra::N64
 {

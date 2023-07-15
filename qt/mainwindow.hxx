@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../include/emulator.hxx"
-#include "../include/emulator_factory.hxx"
 #include "screenwidget.hxx"
 #include <array>
+#include <emulator.hxx>
+#include <emulator_factory.hxx>
 #include <memory>
 #include <QFileDialog>
 #include <QLabel>

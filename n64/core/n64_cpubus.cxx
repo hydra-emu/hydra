@@ -1,10 +1,10 @@
-#include "n64_addresses.hxx"
-#include "n64_cpu.hxx"
 #include <crc32.hxx>
 #include <fmt/format.h>
 #include <fstream>
 #include <iostream>
 #include <log.hxx>
+#include <n64/core/n64_addresses.hxx>
+#include <n64/core/n64_cpu.hxx>
 #include <sstream>
 
 namespace hydra::N64

@@ -1,7 +1,7 @@
-#include "n64_rsp.hxx"
 #include <algorithm>
 #include <array>
 #include <log.hxx>
+#include <n64/core/n64_rsp.hxx>
 
 template <class T, class X1, class X2>
 T pclamp(T value, X1 min, X2 max)

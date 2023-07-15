@@ -1,9 +1,5 @@
 #pragma once
 
-#include "n64_addresses.hxx"
-#include "n64_keys.hxx"
-#include "n64_rcp.hxx"
-#include "n64_types.hxx"
 #include <array>
 #include <bit_cast.hxx>
 #include <cfenv>
@@ -15,6 +11,10 @@
 #include <limits>
 #include <log.hxx>
 #include <memory>
+#include <n64/core/n64_addresses.hxx>
+#include <n64/core/n64_keys.hxx>
+#include <n64/core/n64_rcp.hxx>
+#include <n64/core/n64_types.hxx>
 #include <queue>
 #include <vector>
 

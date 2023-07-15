@@ -1,6 +1,6 @@
-#include "n64_cpu.hxx"
 #include <bswap.hxx>
 #include <fmt/format.h>
+#include <n64/core/n64_cpu.hxx>
 
 namespace hydra::N64
 {

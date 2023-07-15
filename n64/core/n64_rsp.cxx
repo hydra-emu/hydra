@@ -1,6 +1,3 @@
-#include "n64_rsp.hxx"
-#include "n64_addresses.hxx"
-#include "n64_rdp.hxx"
 #include <bswap.hxx>
 #include <crc32.hxx>
 #include <fmt/format.h>
@@ -8,6 +5,9 @@
 #include <iomanip>
 #include <iostream>
 #include <log.hxx>
+#include <n64/core/n64_addresses.hxx>
+#include <n64/core/n64_rdp.hxx>
+#include <n64/core/n64_rsp.hxx>
 #include <sstream>
 
 namespace hydra::N64

@@ -1,8 +1,8 @@
-#include "keypicker.hxx"
 #include <emulator_factory.hxx>
 #include <emulator_settings.hxx>
 #include <iostream>
 #include <QKeyEvent>
+#include <qt/keypicker.hxx>
 #include <QTableWidget>
 
 KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)

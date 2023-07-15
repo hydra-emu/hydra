@@ -1,4 +1,4 @@
-#include "n64_rcp.hxx"
+#include <n64/core/n64_rcp.hxx>
 
 namespace hydra::N64
 {

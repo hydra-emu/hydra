@@ -1,6 +1,3 @@
-#include "n64_rdp.hxx"
-#include "n64_addresses.hxx"
-#include "n64_rdp_commands.hxx"
 #include <bit>
 #include <bitset>
 #include <bswap.hxx>
@@ -9,6 +6,9 @@
 #include <functional>
 #include <iostream>
 #include <log.hxx>
+#include <n64/core/n64_addresses.hxx>
+#include <n64/core/n64_rdp.hxx>
+#include <n64/core/n64_rdp_commands.hxx>
 #include <sstream>
 
 static inline uint32_t rgba16_to_rgba32(uint16_t color)
