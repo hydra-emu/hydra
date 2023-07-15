@@ -30,11 +30,11 @@ set(WARNINGS
     "-Werror=unused-parameter"
 )
 string(REPLACE ";" " " WARNINGS_FLAGS "${WARNINGS}")
-set(CMAKE_CXX_FLAGS "-O2 -no-pie")
+set(CMAKE_CXX_FLAGS "-O2")
 if (APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcrc32 ${WARNINGS_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcrc32 -no-pie ${WARNINGS_FLAGS}")
 endif()
 set(OpenGL_GL_PREFERENCE GLVND)
 

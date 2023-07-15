@@ -1069,12 +1069,12 @@ namespace hydra::N64
                         {
                             if ((w_line >> 15) != 0)
                             {
-                                s_line /= w_line >> 15;
-                                t_line /= w_line >> 15;
-                                s_line >>= 5;
-                                t_line >>= 5;
+                                // s_line /= w_line >> 15;
+                                // t_line /= w_line >> 15;
+                                // s_line >>= 5;
+                                // t_line >>= 5;
                             }
-                            fetch_texels(tile, s_line, t_line);
+                            fetch_texels(tile, s_line / w_line, t_line / w_line);
                         }
                         draw_pixel(x, y);
                     }
