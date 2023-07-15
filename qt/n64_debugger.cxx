@@ -1,4 +1,3 @@
-#include "n64_debugger.hxx"
 #include <fmt/format.h>
 #include <iostream>
 #include <log.hxx>
@@ -10,6 +9,7 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QPushButton>
+#include <qt/n64_debugger.hxx>
 #include <QTextEdit>
 #include <QTimer>
 #include <QToolTip>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../include/emulator.hxx"
 #include "core/n64_impl.hxx"
 #include <chrono>
+#include <emulator.hxx>
 #include <map>
 
 class N64Debugger;

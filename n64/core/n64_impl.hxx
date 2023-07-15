@@ -1,7 +1,7 @@
 #pragma once
 
-#include "n64_cpu.hxx"
-#include "n64_rcp.hxx"
+#include <n64/core/n64_cpu.hxx>
+#include <n64/core/n64_rcp.hxx>
 #include <string>
 
 class N64Debugger;

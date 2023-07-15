@@ -1,4 +1,4 @@
-#include "n64_rsp_jit.hxx"
+#include <n64/core/n64_rsp_jit.hxx>
 
 uint64_t se64(uint16_t imm)
 {

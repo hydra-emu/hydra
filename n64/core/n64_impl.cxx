@@ -1,6 +1,6 @@
-#include "n64_impl.hxx"
 #include <chrono>
 #include <iostream>
+#include <n64/core/n64_impl.hxx>
 
 namespace hydra::N64
 {

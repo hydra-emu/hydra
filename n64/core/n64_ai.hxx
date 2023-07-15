@@ -1,11 +1,11 @@
 #pragma once
 
-#include "n64_types.hxx"
 #include <array>
 #include <cstdint>
 #include <cstring>
 #include <log.hxx>
 #include <miniaudio.h>
+#include <n64/core/n64_types.hxx>
 #include <ringbuffer.hpp>
 #include <vector>
 

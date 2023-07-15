@@ -1,9 +1,9 @@
-#include "n64_tkpwrapper.hxx"
 #include "core/n64_keys.hxx"
 #include <emulator_factory.hxx>
 #include <emulator_settings.hxx>
 #include <fmt/format.h>
 #include <iostream>
+#include <n64/n64_tkpwrapper.hxx>
 
 bool is_number(const std::string& s)
 {

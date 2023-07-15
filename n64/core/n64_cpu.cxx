@@ -1,4 +1,3 @@
-#include "n64_cpu.hxx"
 #include <bitset>
 #include <bswap.hxx>
 #include <cassert>
@@ -8,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <n64/core/n64_cpu.hxx>
 #include <sstream>
 
 namespace hydra::N64
