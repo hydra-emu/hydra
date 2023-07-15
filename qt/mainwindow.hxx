@@ -26,6 +26,7 @@ class MainWindow : public QMainWindow
 
     // Menu bar actions
     void open_file();
+    void open_file_impl(const std::string& file);
     void open_settings();
     void open_about();
     void open_shaders();
@@ -48,6 +49,7 @@ class MainWindow : public QMainWindow
   public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
+    void OpenFile(const std::string& file);
     QMenu* file_menu_;
     QMenu* emulation_menu_;
     QMenu* tools_menu_;

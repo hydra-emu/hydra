@@ -61,6 +61,11 @@ MainWindow::~MainWindow()
     stop_emulator();
 }
 
+void MainWindow::OpenFile(const std::string& file)
+{
+    open_file_impl(file);
+}
+
 void MainWindow::create_actions()
 {
     open_act_ = new QAction(tr("&Open ROM"), this);
@@ -186,6 +191,11 @@ void MainWindow::open_file()
     {
         return;
     }
+    open_file_impl(path);
+}
+
+void MainWindow::open_file_impl(const std::string& path)
+{
     std::filesystem::path pathfs(path);
     if (!std::filesystem::is_regular_file(pathfs))
     {
