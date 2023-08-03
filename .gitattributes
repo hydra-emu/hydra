@@ -1,4 +1,4 @@
 * text=auto
 
-vendored/* linguist-vendored
-nes/NTSC_CRT/* linguist-vendored
+vendored/**/* linguist-vendored
+nes/NTSC_CRT/**/* linguist-vendored

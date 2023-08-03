@@ -41,6 +41,7 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(fmt REQUIRED)
+find_package(GTest REQUIRED)
 
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)
@@ -56,6 +57,7 @@ set(PROJECT_SOURCES
     qt/keypicker.cxx
     qt/n64_debugger.cxx
     qt/nes_ppuviewer.cxx
+    qt/mmioviewer.cxx
     src/emulator.cxx
     src/global.cxx
 )
