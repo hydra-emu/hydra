@@ -1,5 +1,6 @@
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
+#include "qthelper.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
 #include <emulator_settings.hxx>
@@ -14,18 +15,6 @@
 #include <QMessageBox>
 #include <QSurfaceFormat>
 #include <QTimer>
-
-#define QT_MAY_THROW(func)                          \
-    try                                             \
-    {                                               \
-        func                                        \
-    } catch (std::exception & ex)                   \
-    {                                               \
-        QMessageBox messageBox;                     \
-        messageBox.critical(0, "Error", ex.what()); \
-        messageBox.setFixedSize(500, 200);          \
-        return;                                     \
-    }
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
@@ -203,57 +192,68 @@ void MainWindow::open_file_impl(const std::string& path)
     }
     auto dirpath = pathfs.parent_path();
     EmulatorSettings::GetGeneralSettings().Set("last_path", dirpath);
-    QT_MAY_THROW(
-        close_tools(); auto type = hydra::EmulatorFactory::GetEmulatorType(path); {
-            stop_emulator();
-            auto emulator = hydra::EmulatorFactory::Create(type);
-            std::swap(emulator, emulator_);
-            // Old emulator is destroyed here
-        } if (!emulator_
-                   ->LoadFromFile(
-                       path)) throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                                     "Failed to open ROM");
-        screen_->setMinimumSize(emulator_->GetWidth(), emulator_->GetHeight());
-        screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(),
-                                   emulator_->GetBitdepth(), emulator_->GetScreenData());
-        screen_->show(); emulator_->Paused = pause_act_->isChecked();
-        auto func = [&]() { emulator_->Start(); }; emulator_thread_ = std::thread(func);
-        emulator_thread_.detach(); emulator_type_ = type; enable_emulation_actions(true);
-        for (size_t i = 0; i < emulator_tools_.size(); i++) {
-            if (emulator_tools_[i])
-            {
-                delete emulator_tools_[i];
-            }
-            emulator_tools_[i] = nullptr;
-        } debugger_open_ = false;
-        tracelogger_open_ = false;);
+    close_tools();
+    auto type = hydra::EmulatorFactory::GetEmulatorType(path);
+    {
+        stop_emulator();
+        auto emulator = hydra::EmulatorFactory::Create(type);
+        std::swap(emulator, emulator_);
+        // Old emulator is destroyed here
+    }
+    if (!emulator_->LoadFromFile(path))
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
+    screen_->setMinimumSize(emulator_->GetWidth(), emulator_->GetHeight());
+    screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), GL_UNSIGNED_BYTE,
+                               emulator_->GetScreenData());
+    screen_->show();
+    emulator_->Paused = pause_act_->isChecked();
+    auto func = [&]() { emulator_->Start(); };
+    emulator_thread_ = std::thread(func);
+    emulator_thread_.detach();
+    emulator_type_ = type;
+    enable_emulation_actions(true);
+    for (size_t i = 0; i < emulator_tools_.size(); i++)
+    {
+        if (emulator_tools_[i])
+        {
+            delete emulator_tools_[i];
+        }
+        emulator_tools_[i] = nullptr;
+    }
+    debugger_open_ = false;
+    tracelogger_open_ = false;
 }
 
 void MainWindow::open_settings()
 {
-    if (!settings_open_)
-    {
-        QT_MAY_THROW(new SettingsWindow(settings_open_, this););
-    }
+    qt_may_throw([this]() {
+        if (!settings_open_)
+        {
+            new SettingsWindow(settings_open_, this);
+        }
+    });
 }
 
 void MainWindow::open_shaders()
 {
-    if (!shaders_open_)
-    {
-        using namespace std::placeholders;
-        QT_MAY_THROW(std::function<void(QString*, QString*)> callback =
-                         std::bind(&ScreenWidget::ResetProgram, screen_, _1, _2);
-                     new ShaderEditor(shaders_open_, callback, this););
-    }
+    qt_may_throw([this]() {
+        if (!shaders_open_)
+        {
+            using namespace std::placeholders;
+            std::function<void(QString*, QString*)> callback =
+                std::bind(&ScreenWidget::ResetProgram, screen_, _1, _2);
+            new ShaderEditor(shaders_open_, callback, this);
+        }
+    });
 }
 
 void MainWindow::open_debugger()
 {
-    if (!debugger_open_)
-    {
-        QT_MAY_THROW(
-            if (emulator_tools_[0]) {
+    qt_may_throw([this]() {
+        if (!debugger_open_)
+        {
+            if (emulator_tools_[0])
+            {
                 if (emulator_tools_[0]->isHidden())
                 {
                     emulator_tools_[0]->show();
@@ -262,31 +262,39 @@ void MainWindow::open_debugger()
                 {
                     emulator_tools_[0]->hide();
                 }
-            } else {
+            }
+            else
+            {
                 auto qw = EmulatorToolFactory::CreateDebugger(debugger_open_, emulator_type_, this,
                                                               emulator_.get());
                 emulator_tools_[0] = qw;
-            });
-    }
+            }
+        }
+    });
 }
 
 void MainWindow::open_tracelogger()
 {
-    if (!tracelogger_open_)
-    {
-        QT_MAY_THROW(if (emulator_tools_[1]) {
-            if (emulator_tools_[1]->isHidden())
+    qt_may_throw([this]() {
+        if (!tracelogger_open_)
+        {
+            if (emulator_tools_[1])
             {
-                emulator_tools_[1]->show();
+                if (emulator_tools_[1]->isHidden())
+                {
+                    emulator_tools_[1]->show();
+                }
+                else
+                {
+                    emulator_tools_[1]->hide();
+                }
             }
             else
             {
-                emulator_tools_[1]->hide();
+                // todo: EmulatorToolFactory
             }
-        } else {
-            // todo: EmulatorToolFactory
-        });
-    }
+        }
+    });
 }
 
 void MainWindow::screenshot()
@@ -298,10 +306,12 @@ void MainWindow::close_tools() {}
 
 void MainWindow::open_about()
 {
-    if (!about_open_)
-    {
-        QT_MAY_THROW(new AboutWindow(about_open_, this););
-    }
+    qt_may_throw([this]() {
+        if (!about_open_)
+        {
+            new AboutWindow(about_open_, this);
+        }
+    });
 }
 
 void MainWindow::enable_emulation_actions(bool should)
@@ -370,8 +380,6 @@ void MainWindow::setup_emulator_specific()
         o.at("Name").get_to(d.Name);
         o.at("SettingsFile").get_to(d.SettingsFile);
         o.at("Extensions").get_to(d.Extensions);
-        o.at("DefaultWidth").get_to(d.DefaultWidth);
-        o.at("DefaultHeight").get_to(d.DefaultHeight);
         o.at("HasDebugger").get_to(d.HasDebugger);
         o.at("HasTracelogger").get_to(d.HasTracelogger);
         o.at("LoggingOptions").get_to(d.LoggingOptions);
@@ -507,7 +515,7 @@ void MainWindow::redraw_screen()
     {
         return;
     }
-    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(),
+    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), GL_UNSIGNED_BYTE,
                     emulator_->GetScreenData());
     screen_->update();
     emulator_->IsReadyToDraw() = false;
@@ -518,7 +526,7 @@ void MainWindow::empty_screen()
     std::vector<uint8_t> empty_screen;
     empty_screen.resize(emulator_->GetWidth() * emulator_->GetHeight() * 4);
     std::fill(empty_screen.begin(), empty_screen.end(), 0);
-    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), emulator_->GetBitdepth(),
+    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), GL_UNSIGNED_BYTE,
                     empty_screen.data());
     screen_->update();
 }

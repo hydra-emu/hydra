@@ -3,7 +3,11 @@
 
 namespace hydra::c8
 {
-    Chip8_TKPWrapper::Chip8_TKPWrapper() {}
+    Chip8_TKPWrapper::Chip8_TKPWrapper()
+    {
+        width_ = 64;
+        height_ = 32;
+    }
 
     // Chip8_TKPWrapper::c8(std::unique_ptr<OptionsBase> args) : c8() {
     //     // key_mappings_ = std::any_cast<c8Keys>(args);

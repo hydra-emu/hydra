@@ -73,7 +73,6 @@ namespace hydra
 
     std::shared_ptr<Emulator> EmulatorFactory::Create(EmuType type)
     {
-        const auto& data = EmulatorSettings::GetEmulatorData(type);
         std::shared_ptr<Emulator> emulator;
         switch (type)
         {
@@ -103,8 +102,6 @@ namespace hydra
                                                        "EmulatorFactory::Create failed");
             }
         }
-        emulator->SetWidth(data.DefaultWidth);
-        emulator->SetHeight(data.DefaultHeight);
         return emulator;
     }
 } // namespace hydra

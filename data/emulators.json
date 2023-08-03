@@ -6,8 +6,6 @@
             ".gb",
             ".gbc"
         ],
-        "DefaultWidth": 160,
-        "DefaultHeight": 144,
         "HasDebugger": false,
         "HasTracelogger": true,
         "LoggingOptions": [
@@ -20,8 +18,6 @@
         "Extensions": [
             ".nes"
         ],
-        "DefaultWidth": 256,
-        "DefaultHeight": 240,
         "HasDebugger": false,
         "HasTracelogger": true,
         "LoggingOptions": [
@@ -36,8 +32,6 @@
             ".n64",
             ".z64"
         ],
-        "DefaultWidth": 320,
-        "DefaultHeight": 240,
         "HasDebugger": true,
         "HasTracelogger": false,
         "LoggingOptions": [
@@ -50,8 +44,6 @@
         "Extensions": [
             ".ch8"
         ],
-        "DefaultWidth": 64,
-        "DefaultHeight": 32,
         "HasDebugger": false,
         "HasTracelogger": true,
         "LoggingOptions": [

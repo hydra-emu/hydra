@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 class AngrylionReplayerImpl;
 class frame_buffer;
@@ -16,6 +16,7 @@ struct Framebuffer
         uint8_t b;
         uint8_t a;
     };
+
     std::vector<rgba> pixels;
     uint32_t width;
     uint32_t height;

@@ -7,12 +7,12 @@ extern "C" {
 void rdp_cmd(uint32_t wid, const uint32_t* args);
 }
 #include <array>
-#include <cstdint>
 #include <cstdarg>
-#include <vector>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 
 class AngrylionReplayerImpl
 {

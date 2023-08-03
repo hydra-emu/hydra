@@ -109,6 +109,9 @@ namespace hydra::N64
                 key_mappings_[value_n] = key_n;
             }
         }
+
+        width_ = 640;
+        height_ = 480;
     }
 
     N64_TKPWrapper::~N64_TKPWrapper() {}
