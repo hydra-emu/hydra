@@ -1,27 +1,33 @@
 #pragma once
 
-extern "C" {
-#include "msg.h"
-#include "n64video.h"
-#include "vdac.h"
-}
-#include <array>
-#include <cstdint>
 #include <vector>
+#include <cstdint>
+#include <memory>
 
-class AngrylionReplayer
+class AngrylionReplayerImpl;
+class frame_buffer;
+
+struct Framebuffer
 {
-public:
-    AngrylionReplayer();
-    ~AngrylionReplayer();
+    struct rgba
+    {
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+        uint8_t a;
+    };
+    std::vector<rgba> pixels;
+    uint32_t width;
+    uint32_t height;
+};
 
-    static AngrylionReplayer* Current();
-    void WriteFramebuffer(const void* pixels, uint32_t width, uint32_t height, uint32_t pitch);
+struct AngrylionReplayer
+{
+    static void Init();
+    static void RunCommand(const std::vector<uint64_t>& command);
+    static Framebuffer GetFramebuffer();
+    static void Cleanup();
 
-private:
-    n64video_config config_ = {};
-    std::vector<uint8_t> rdram_;
-    std::array<uint32_t*, VI_NUM_REG> vi_regs_ = {};
-    std::array<uint32_t*, DP_NUM_REG> dp_regs_ = {};
-    uint32_t mi_interrupt_ = 0;
+    static std::unique_ptr<AngrylionReplayerImpl> impl_;
+    static Framebuffer framebuffer_;
 };
