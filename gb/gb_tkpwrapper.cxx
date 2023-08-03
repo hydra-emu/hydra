@@ -80,6 +80,9 @@ namespace hydra::Gameboy
         apu_.UseSound = true;
         apu_.InitSound();
         instrs_per_frame_ = 70224;
+
+        width_ = 160;
+        height_ = 144;
     }
 
     Gameboy_TKPWrapper::~Gameboy_TKPWrapper()

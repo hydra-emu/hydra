@@ -18,8 +18,6 @@ struct EmulatorData
     std::string Name;
     std::string SettingsFile;
     std::vector<std::string> Extensions;
-    int DefaultWidth;
-    int DefaultHeight;
     bool HasDebugger;
     bool HasTracelogger;
     std::vector<std::string> LoggingOptions;

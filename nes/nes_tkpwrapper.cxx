@@ -27,6 +27,9 @@ namespace hydra::NES
             Logger::Warn("No key mappings found for NES");
         }
         cpu_.SetKeys(keymap);
+
+        width_ = 256;
+        height_ = 240;
     }
 
     NES_TKPWrapper::~NES_TKPWrapper() {}

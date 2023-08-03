@@ -14,12 +14,7 @@
 #include <thread>
 #include <vector>
 
-namespace
-{
-    bool always_false_ = false;
-}
-
-// Macro that adds the essential functions that every emulator have
+// Macro that adds the essential functions that every emulator must override
 #define TKP_EMULATOR(emulator)                 \
                                                \
 public:                                        \
@@ -68,32 +63,12 @@ namespace hydra
             return height_;
         }
 
-        void SetWidth(int width)
-        {
-            width_ = width;
-        }
-
-        void SetHeight(int height)
-        {
-            height_ = height;
-        }
-
         virtual void* GetScreenData();
 
         bool& IsReadyToDraw()
         {
             return should_draw_;
         };
-
-        virtual bool& IsResized()
-        {
-            return always_false_;
-        };
-
-        virtual int GetBitdepth()
-        {
-            return 0x1401; /* GL_UNSIGNED_BYTE */
-        }
 
         std::mutex ThreadStartedMutex;
         std::mutex StepMutex;
@@ -103,12 +78,12 @@ namespace hydra
         void stop();
         int instrs_per_frame_ = 0;
         bool should_draw_ = false;
+        int width_, height_;
 
     private:
         virtual void update() = 0;
         virtual void reset();
         virtual bool load_file(const std::string&);
-        int width_, height_;
         int64_t last_frame_time_ms_;
         int cur_instr_ = 0;
         bool reset_flag_ = false;
