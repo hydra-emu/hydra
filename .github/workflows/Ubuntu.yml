@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: install-qt
+      uses: jurplel/install-qt-action@v3.2.1
+      with:
+        version: '6.2.*'
     - uses: actions/checkout@v3
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
@@ -21,7 +25,7 @@ jobs:
     - name: install-deps
       run: |
         sudo apt-get update
-        sudo apt-get install build-essential libgl-dev ninja-build libfmt-dev qt6-base-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6 libgtest-dev
+        sudo apt-get install build-essential libgl-dev ninja-build libfmt-dev libgtest-dev
     - name: configure
       run: |
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12
