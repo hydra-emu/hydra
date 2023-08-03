@@ -13,9 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
     - name: install-deps
       run: brew install qt6 fmt googletest
     - name: configure
-      run: cmake -B build 
+      run: cmake -B build -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make
       run: cmake --build build

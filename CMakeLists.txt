@@ -16,18 +16,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 # TODO: don't always compile with -g
-set(WARNINGS 
-    "-Wno-stringop-overflow" # for some fmt warning
-    "-Werror=return-type"
-    "-Werror=unused-variable"
-    "-Werror=unused-but-set-variable"
-    "-Werror=unused-function"
-    "-Werror=uninitialized"
-    "-Werror=implicit-fallthrough"
-    "-Werror=sign-compare"
-    "-Werror=shadow"
-    "-Werror=deprecated-declarations"
-)
+# TODO: compiler based
+if (LINUX)
+    set(WARNINGS 
+        "-Wno-stringop-overflow" # for some fmt warning
+        "-Werror=return-type"
+        "-Werror=unused-variable"
+        "-Werror=unused-but-set-variable"
+        "-Werror=unused-function"
+        "-Werror=uninitialized"
+        "-Werror=implicit-fallthrough"
+        "-Werror=sign-compare"
+        "-Werror=shadow"
+        "-Werror=deprecated-declarations"
+    )
+endif()
 string(REPLACE ";" " " WARNINGS_FLAGS "${WARNINGS}")
 set(CMAKE_CXX_FLAGS "-g -O2")
 set(CMAKE_C_FLAGS "-g -O0")
