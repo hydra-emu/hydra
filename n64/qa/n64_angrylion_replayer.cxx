@@ -88,7 +88,7 @@ void msg_error(const char* err, ...)
     char buffer[16 * 1024];
     vsnprintf(buffer, sizeof(buffer), err, va);
     va_end(va);
-    printf(buffer);
+    printf("%s\n", buffer);
 }
 
 void msg_warning(const char* err, ...)
@@ -98,7 +98,7 @@ void msg_warning(const char* err, ...)
     char buffer[16 * 1024];
     vsnprintf(buffer, sizeof(buffer), err, va);
     va_end(va);
-    printf(buffer);
+    printf("%s\n", buffer);
 }
 
 void msg_debug(const char* err, ...)
@@ -108,7 +108,7 @@ void msg_debug(const char* err, ...)
     char buffer[16 * 1024];
     vsnprintf(buffer, sizeof(buffer), err, va);
     va_end(va);
-    printf(buffer);
+    printf("%s\n", buffer);
 }
 
 AngrylionReplayerImpl::AngrylionReplayerImpl()
