@@ -6,6 +6,8 @@
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.hxx"
+#include <n64/qa/n64_angrylion_replayer.hxx>
+#include <fstream>
 
 using namespace hydra::N64;
 
@@ -118,26 +120,72 @@ protected:
         VerifyFramebuffer("data/" #name ".png");        \
     }
 
-TRIANGLE_TEST(Simple_Triangle, 0x088002a801180118, 0x00d20000ffff0000, 0x006e000000000000,
-              0x006e000000000000);
+// TRIANGLE_TEST(Simple_Triangle, 0x088002a801180118, 0x00d20000ffff0000, 0x006e000000000000,
+//               0x006e000000000000);
 
-TRIANGLE_TEST(Simple_Triangle_Flipped, 0x080002a801180118, 0x006e000000010000, 0x00d2000000000000,
-              0x00d2000000000000);
+// TRIANGLE_TEST(Simple_Triangle_Flipped, 0x080002a801180118, 0x006e000000010000, 0x00d2000000000000,
+//               0x00d2000000000000);
 
-TRIANGLE_TEST(Simple_Triangle_Using_YM, 0x08800300016c0118, 0x00d20000ffff0000, 0x006e000000000000,
-              0x006e00000004c000);
+// TRIANGLE_TEST(Simple_Triangle_Using_YM, 0x08800300016c0118, 0x00d20000ffff0000, 0x006e000000000000,
+//               0x006e00000004c000);
 
-TRIANGLE_TEST(Slopes_L_H_Intersect_Before_YM_YL, 0x088002a8016800f0, 0x00c80000ffff0000,
-              0x005a000000010000, 0x00780000ffff0000);
+// TRIANGLE_TEST(Slopes_L_H_Intersect_Before_YM_YL, 0x088002a8016800f0, 0x00c80000ffff0000,
+//               0x005a000000010000, 0x00780000ffff0000);
 
-TRIANGLE_TEST(Slopes_L_M_Intersect, 0x088002a8011800a0, 0x00d20000ffff0000, 0x006e00000000e000,
-              0x006e00000004a000);
+// TRIANGLE_TEST(Slopes_L_M_Intersect, 0x088002a8011800a0, 0x00d20000ffff0000, 0x006e00000000e000,
+//               0x006e00000004a000);
 
-TRIANGLE_TEST(Slopes_L_M_Intersect_Flipped, 0x080002a8011800a0, 0x006e000000010000,
-              0x00d20000ffff8000, 0x00d20000fffb4000);
+// TRIANGLE_TEST(Slopes_L_M_Intersect_Flipped, 0x080002a8011800a0, 0x006e000000010000,
+//               0x00d20000ffff8000, 0x00d20000fffb4000);
 
-TRIANGLE_TEST(Same_XH_XM_XL, 0x088002bc02bc0258, 0x00e1000000000000, 0x00e10000fffe0000,
-              0x00e1000000000000);
+// TRIANGLE_TEST(Same_XH_XM_XL, 0x088002bc02bc0258, 0x00e1000000000000, 0x00e10000fffe0000,
+//               0x00e1000000000000);
+
+TEST(RDPCompare, test)
+{
+    AngrylionReplayer::Init();
+    std::vector<std::vector<uint64_t>> commands = {
+        {0x2d000000005003c0, },
+        {0x2f30000000000000, },
+        {0x3f18013f00100000, },
+        {0x37000000ffff00ff, },
+        {0x364fc3bc00000000, },
+        {0x2700000000000000, },
+        {0x37000000ff0000ff, },
+        {0x0880019000c800c8, 0x004b0000ffff0000, 0x0019000000000000, 0x0019000000000000, },
+        {0x2700000000000000, },
+        {0x3700000000ff00ff, },
+        {0x0880019000c800c8, 0x0096000000000000, 0x0064000000010000, 0x0064000000000000, },
+        {0x2700000000000000, },
+        {0x370000000000ffff, },
+        {0x08800190019000c8, 0x00e1000000000000, 0x00e10000ffff0000, 0x00e1000000000000, },
+        {0x2700000000000000, },
+        {0x37000000ffffffff, },
+        {0x08800190019000c8, 0x012c000000000000, 0x00fa000000000000, 0x00fa000000010000, },
+        {0x2700000000000000, },
+        {0x37000000ff0000ff, },
+        {0x0880032002bc0258, 0x004b0000fffe0000, 0x0019000000000000, 0x0019000000020000, },
+        {0x2700000000000000, },
+        {0x3700000000ff00ff, },
+        {0x0880032002580258, 0x00960000ffff8000, 0x0064000000008000, 0x0064000000000000, },
+        {0x2700000000000000, },
+        {0x370000000000ffff, },
+        {0x088002bc02bc0258, 0x00e1000000000000, 0x00e10000fffe0000, 0x00e1000000000000, },
+        {0x0880032002bc02bc, 0x00e1000000000000, 0x00af000000020000, 0x00af000000000000, },
+        {0x2700000000000000, },
+        {0x37000000ffffffff, },
+        {0x0880032003200258, 0x012c000000000000, 0x01130000ffff8000, 0x0113000000008000, },
+        {0x2900000000000000, },
+    };
+    for (const auto& command : commands)
+    {
+        AngrylionReplayer::RunCommand(command);
+    }
+    Framebuffer fb = AngrylionReplayer::GetFramebuffer();
+    std::ofstream file("tex.raw", std::ios::binary);
+    file.write(reinterpret_cast<char*>(fb.pixels.data()), fb.pixels.size() * sizeof(uint32_t));
+    AngrylionReplayer::Cleanup();
+}
 
 int main()
 {

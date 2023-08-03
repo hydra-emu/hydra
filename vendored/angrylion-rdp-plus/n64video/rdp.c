@@ -575,10 +575,12 @@ void rdp_init(uint32_t wid, uint32_t num_workers)
 
 void rdp_invalid(uint32_t wid, const uint32_t* args)
 {
+    printf("RDP: invalid command %08x\n", args[0]);
 }
 
 void rdp_noop(uint32_t wid, const uint32_t* args)
 {
+    printf("RDP: invalid command %08x\n", args[0]);
 }
 
 void rdp_sync_load(uint32_t wid, const uint32_t* args)

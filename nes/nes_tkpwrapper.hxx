@@ -17,5 +17,7 @@ namespace hydra::NES
         APU apu_{};
         CPUBus cpubus_{ppu_, apu_};
         CPU cpu_{cpubus_, Paused};
+
+        std::chrono::time_point<std::chrono::high_resolution_clock> start_frame_time_{};
     };
 } // namespace hydra::NES

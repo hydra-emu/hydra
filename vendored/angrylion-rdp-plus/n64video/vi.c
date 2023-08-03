@@ -619,11 +619,15 @@ void n64video_update_screen(void)
     v_start = (*vi_reg_ptr[VI_V_START] >> 16) & 0x3ff;
     h_start = (*vi_reg_ptr[VI_H_START] >> 16) & 0x3ff;
 
+    printf("v_start: %d, h_start: %d\n", v_start, h_start);
+
     int32_t v_end = *vi_reg_ptr[VI_V_START] & 0x3ff;
     int32_t h_end = *vi_reg_ptr[VI_H_START] & 0x3ff;
 
     hres =  h_end - h_start;
     vres = (v_end - v_start) >> 1; // vertical is measured in half-lines
+
+    printf("hres: %d, vres: %d\n", hres, vres);
 
     x_add = *vi_reg_ptr[VI_X_SCALE] & 0xfff;
     x_start = (*vi_reg_ptr[VI_X_SCALE] >> 16) & 0xfff;

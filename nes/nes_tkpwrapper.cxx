@@ -54,7 +54,19 @@ namespace hydra::NES
 
     void NES_TKPWrapper::update()
     {
+        static int ticks = 0;
+        ticks++;
         cpu_.Tick();
+        if (ticks > instrs_per_frame_)
+        {
+            auto elapsed = std::chrono::high_resolution_clock::now() - start_frame_time_;
+            if (elapsed < std::chrono::milliseconds(16))
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(16) - elapsed);
+            }
+            start_frame_time_ = std::chrono::high_resolution_clock::now();
+            ticks = 0;
+        }
     }
 
     bool NES_TKPWrapper::load_file(const std::string& path)

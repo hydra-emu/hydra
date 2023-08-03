@@ -25,7 +25,7 @@ unsigned char reverse(unsigned char b)
 static struct CRT crt;
 static struct NTSC_SETTINGS ntsc;
 static int color = 1;
-static int noise = 10;
+// static int noise = 10;
 static int field = 0;
 static int raw = 0;
 static int hue = 0;
@@ -90,8 +90,8 @@ namespace hydra::NES
                 {
                     ntsc.frame ^= 1;
                 }
-                crt_modulate(&crt, &ntsc);
-                crt_demodulate(&crt, noise);
+                // crt_modulate(&crt, &ntsc);
+                // crt_demodulate(&crt, noise);
                 field ^= 1;
                 std::swap(screen_color_data_, screen_color_data_second_);
             }
