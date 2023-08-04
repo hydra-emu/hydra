@@ -54,7 +54,6 @@ namespace hydra::c8
     {
         if (wait_keypress_)
         {
-#pragma GCC unroll 16
             for (size_t i = 0; i < 16; i++)
             {
                 if (key_pressed_[i])

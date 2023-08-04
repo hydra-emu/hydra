@@ -20,7 +20,7 @@ jobs:
       with:
         submodules: 'true'
     - name: install-deps
-      run: vcpkg install --triplet x64-windows fmt gtest 
+      run: vcpkg install --triplet x64-windows gtest 
     - name: configure
       run: cmake -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
     - name: make

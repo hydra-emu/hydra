@@ -60,14 +60,14 @@ union CP0StatusType
         uint64_t SX  : 1;
         uint64_t KX  : 1;
         uint64_t IM  : 8;
-        unsigned DS  : 9;
-        unsigned RE  : 1;
-        unsigned FR  : 1;
-        unsigned RP  : 1;
-        unsigned CP0 : 1;
-        unsigned CP1 : 1;
-        unsigned CP2 : 1;
-        unsigned CP3 : 1;
+        uint64_t DS  : 9;
+        uint64_t RE  : 1;
+        uint64_t FR  : 1;
+        uint64_t RP  : 1;
+        uint64_t CP0 : 1;
+        uint64_t CP1 : 1;
+        uint64_t CP2 : 1;
+        uint64_t CP3 : 1;
         uint64_t     : 32;
     };
 
