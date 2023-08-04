@@ -12,6 +12,7 @@
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QMessageBox>
 #include <QSurfaceFormat>
 #include <QTimer>
@@ -394,6 +395,15 @@ void MainWindow::setup_emulator_specific()
             EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(std::stoi(it.key())));
         json& o = it.value();
         o.get_to(d.Mappings);
+    }
+    for (int i = 0; i < static_cast<int>(hydra::EmuType::EmuTypeSize); i++)
+    {
+        auto& d = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
+        for (auto& mapping : d.Mappings)
+        {
+            mapping.second =
+                std::to_string((QKeySequence::fromString(mapping.second.c_str()))[0].key());
+        }
     }
     // Write default emulator options if they dont exist
     for (int i = 0; i < EmuTypeSize; i++)

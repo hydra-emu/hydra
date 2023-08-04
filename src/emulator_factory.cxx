@@ -26,7 +26,6 @@ namespace hydra
 #elif defined(__APPLE__)
             dir = getenv("HOME") + std::string("/Library/Application Support/hydra/");
 #endif
-            // TODO: MacOS
             if (dir.empty())
             {
                 throw ErrorFactory::generate_exception(
