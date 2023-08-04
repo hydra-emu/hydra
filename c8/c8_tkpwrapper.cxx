@@ -7,6 +7,8 @@ namespace hydra::c8
     {
         width_ = 64;
         height_ = 32;
+
+        instrs_per_frame_ = 10;
     }
 
     // Chip8_TKPWrapper::c8(std::unique_ptr<OptionsBase> args) : c8() {
