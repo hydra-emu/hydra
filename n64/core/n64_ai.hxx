@@ -67,6 +67,7 @@ namespace hydra::N64
         friend class hydra::N64::RCP;
         friend class hydra::N64::CPU;
         friend class hydra::N64::CPUBus;
+        friend class MmioViewer;
         friend void hydra::N64::hungry_for_more(ma_device*, void*, const void*, ma_uint32);
     };
 } // namespace hydra::N64

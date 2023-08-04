@@ -4,6 +4,7 @@
 #include <array>
 #include <emulator.hxx>
 #include <emulator_factory.hxx>
+#include <emulator_tool_factory.hxx>
 #include <memory>
 #include <QFileDialog>
 #include <QLabel>
@@ -30,8 +31,7 @@ private:
     void open_settings();
     void open_about();
     void open_shaders();
-    void open_debugger();
-    void open_tracelogger();
+    void open_tool(EmulatorTool tool);
     void screenshot();
     void close_tools();
 
@@ -62,16 +62,15 @@ public:
     QAction* settings_act_;
     QAction* screenshot_act_;
     QAction* shaders_act_;
-    QAction* debugger_act_;
-    QAction* tracelogger_act_;
     ScreenWidget* screen_;
     std::shared_ptr<hydra::Emulator> emulator_;
-    std::array<QWidget*, 2> emulator_tools_{};
     hydra::EmuType emulator_type_;
     std::thread emulator_thread_;
     bool settings_open_ = false;
     bool about_open_ = false;
     bool shaders_open_ = false;
-    bool debugger_open_ = false;
-    bool tracelogger_open_ = false;
+
+    std::array<QWidget*, EmulatorToolsSize> tools_;
+    std::array<bool, EmulatorToolsSize> tools_open_;
+    std::array<QAction*, EmulatorToolsSize> tools_actions_;
 };

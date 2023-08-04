@@ -5,7 +5,7 @@
 #include <emulator.hxx>
 #include <map>
 
-class N64Debugger;
+class MmioViewer;
 
 namespace hydra::N64
 {
@@ -28,8 +28,10 @@ namespace hydra::N64
         {
             return n64_impl_.GetHeight();
         }
-        friend class ::N64Debugger;
 
         std::map<uint32_t, uint32_t> key_mappings_;
+
+        friend class ::N64Debugger;
+        friend class ::MmioViewer;
     };
 } // namespace hydra::N64

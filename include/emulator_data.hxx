@@ -19,6 +19,7 @@ struct EmulatorData
     std::string SettingsFile;
     std::vector<std::string> Extensions;
     bool HasDebugger;
+    // TODO: remove HasTracelogger, should be active for every emulator
     bool HasTracelogger;
     std::vector<std::string> LoggingOptions;
     KeyMappings Mappings;

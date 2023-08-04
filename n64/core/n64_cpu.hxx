@@ -27,8 +27,6 @@ constexpr uint32_t KSEG0_END = 0x9FFF'FFFF;
 constexpr uint32_t KSEG1_START = 0xA000'0000;
 constexpr uint32_t KSEG1_END = 0xBFFF'FFFF;
 
-class N64Debugger;
-
 enum class ExceptionType {
     Interrupt = 0,
     TLBMissLoad = 2,
@@ -147,6 +145,9 @@ namespace hydra
     } // namespace N64
 } // namespace hydra
 
+class N64Debugger;
+class MmioViewer;
+
 namespace hydra::N64
 {
     enum class CP0Instruction {
@@ -253,6 +254,7 @@ namespace hydra::N64
         friend class CPU;
         friend class hydra::N64::N64;
         friend class ::N64Debugger;
+        friend class ::MmioViewer;
     };
 
     template <auto MemberFunc>
@@ -581,8 +583,8 @@ namespace hydra::N64
         uint32_t get_dram_crc();
 
         friend class ::N64Debugger;
-        friend class hydra::N64::N64_TKPWrapper;
+        friend class ::MmioViewer;
         friend class hydra::N64::N64;
-        friend class hydra::N64::QA;
+        friend class N64_TKPWrapper;
     };
 } // namespace hydra::N64
