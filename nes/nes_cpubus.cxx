@@ -17,8 +17,6 @@ namespace hydra::NES
         if (ifs.is_open())
         {
             ifs.unsetf(std::ios::skipws);
-            ifs.seekg(0, std::ios::end);
-            std::streampos size = ifs.tellg();
             ifs.seekg(0, std::ios::beg);
             ifs.read(reinterpret_cast<char*>(&header_), sizeof(Header));
             if (!(header_.id[0] == 'N' && header_.id[1] == 'E' && header_.id[2] == 'S' &&

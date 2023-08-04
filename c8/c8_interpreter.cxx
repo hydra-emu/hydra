@@ -4,6 +4,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <overflow.hxx>
 
 namespace
 {
@@ -284,7 +285,7 @@ namespace hydra::c8
             case 4:
             {
                 regs_[0xF] =
-                    __builtin_add_overflow(regs_[opcode._2], regs_[opcode._3], &regs_[opcode._2]);
+                    hydra::add_overflow(regs_[opcode._2], regs_[opcode._3], regs_[opcode._2]);
                 break;
             }
             case 5:

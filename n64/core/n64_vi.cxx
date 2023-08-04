@@ -68,6 +68,7 @@ namespace hydra::N64
                         set_pixel(x, y, color);
                     }
                 }
+                break;
             }
             default:
                 break;

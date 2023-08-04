@@ -35,7 +35,7 @@ namespace hydra::N64
         {
             uint32_t gprcrc = 0xFFFF'FFFF;
             uint32_t fprcrc = 0xFFFF'FFFF;
-            uint32_t pifcrc = 0xFFFF'FFFF;
+            // uint32_t pifcrc = 0xFFFF'FFFF;
             for (int i = 0; i < 32; i++)
             {
                 gprcrc = crc32_u64(gprcrc, gpr_regs_[i].UD);
@@ -47,7 +47,7 @@ namespace hydra::N64
             }
             gprcrc ^= 0xFFFF'FFFF;
             fprcrc ^= 0xFFFF'FFFF;
-            pifcrc ^= 0xFFFF'FFFF;
+            // pifcrc ^= 0xFFFF'FFFF;
             printf("%08x %08x %08x %08x", pc_, instruction_.full, gprcrc, fprcrc);
         }
         else
@@ -501,7 +501,7 @@ namespace hydra::N64
                     pif_channel_++;
                     continue;
                 }
-                else if (tx == 0xFE)
+                else if (static_cast<uint8_t>(tx) == 0xFE)
                 {
                     break;
                 }

@@ -892,7 +892,8 @@ namespace hydra::N64
 
         int32_t r, g, b, a;
         int32_t DrDx, DgDx, DbDx, DaDx;
-        int32_t DrDy, DgDy, DbDy, DaDy;
+        int32_t DrDy [[maybe_unused]], DgDy [[maybe_unused]], DbDy [[maybe_unused]],
+            DaDy [[maybe_unused]];
         int32_t DrDe, DgDe, DbDe, DaDe;
 
         if constexpr (Shade)
@@ -935,9 +936,9 @@ namespace hydra::N64
             next_block += 8;
         }
 
-        int32_t s, t, w;
+        int32_t s = 0, t = 0, w = 0;
         int32_t DsDx, DtDx, DwDx;
-        int32_t DsDy, DtDy, DwDy;
+        int32_t DsDy [[maybe_unused]], DtDy [[maybe_unused]], DwDy [[maybe_unused]];
         int32_t DsDe, DtDe, DwDe;
 
         if constexpr (Texture)
@@ -973,7 +974,7 @@ namespace hydra::N64
             next_block += 8;
         }
 
-        int32_t z, DzDx, DzDy, DzDe;
+        int32_t z = 0, DzDx, DzDy [[maybe_unused]], DzDe;
 
         if constexpr (Depth)
         {
