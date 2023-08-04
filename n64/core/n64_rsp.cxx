@@ -166,14 +166,11 @@ namespace hydra::N64
         uint8_t* dest = dma_imem_ ? &mem_[0x1000] : &mem_[0];
         uint8_t* source = rdram_ptr_;
 
-        int copy = 0;
-
         for (uint32_t i = 0; i < row_count + 1; i++)
         {
             for (uint32_t j = 0; j < bytes_per_row; j++)
             {
                 dest[rsp_index++] = source[rdram_index++];
-                copy++;
             }
             rdram_index += row_stride;
             rdram_index &= 0xFFFFF8;

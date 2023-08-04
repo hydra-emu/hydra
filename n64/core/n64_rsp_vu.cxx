@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <array>
+#include <bit.hxx>
 #include <log.hxx>
 #include <n64/core/n64_rsp.hxx>
+#include <overflow.hxx>
 
 template <class T, class X1, class X2>
 T pclamp(T value, X1 min, X2 max)
@@ -1167,7 +1169,7 @@ namespace hydra::N64
             return 0xFFFF0000;
         }
 
-        uint32_t shift = __builtin_clz(input);
+        uint32_t shift = hydra::clz<uint32_t>(input);
         uint64_t dinput = (uint64_t)input;
         uint32_t index = ((dinput << shift) & 0x7FC00000) >> 22;
 
@@ -1197,7 +1199,7 @@ namespace hydra::N64
         int32_t mask = sinput >> 31;
         input ^= mask;
 
-        int shift = __builtin_clz(input) + 1;
+        int shift = hydra::clz(input) + 1;
 
         int index = (((input << shift) >> 24) | ((shift & 1) << 8));
         uint32_t rom = (((uint32_t)RSQ_TABLE[index]) << 14);
@@ -1477,7 +1479,7 @@ namespace hydra::N64
                 else
                 {
                     uint16_t result = 0;
-                    bool overflow = __builtin_add_overflow(vs[i], vt[e[i]], &result);
+                    bool overflow = hydra::add_overflow(vs[i], vt[e[i]], result);
                     if (vce_.Get(i))
                     {
                         vcc_.SetLow(i, !result || !overflow);

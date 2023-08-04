@@ -1,5 +1,6 @@
 #include <log.hxx>
 #include <n64/core/n64_cpu.hxx>
+#include <overflow.hxx>
 #include <random>
 
 #define rdreg (gpr_regs_[instruction_.RType.rd])
@@ -231,7 +232,7 @@ namespace hydra::N64
     {
         int32_t seimm = static_cast<int16_t>(immval);
         int32_t result = 0;
-        bool overflow = __builtin_add_overflow(rsreg.W._0, seimm, &result);
+        bool overflow = hydra::add_overflow(rsreg.W._0, seimm, result);
         if (overflow)
         {
             // An integer overflow exception occurs if carries out of bits 30 and 31 differ (2’s
@@ -251,7 +252,7 @@ namespace hydra::N64
     {
         int64_t seimm = static_cast<int16_t>(immval);
         int64_t result = 0;
-        bool overflow = __builtin_add_overflow(rsreg.D, seimm, &result);
+        bool overflow = hydra::add_overflow(rsreg.D, seimm, result);
         if (overflow)
         {
             // An integer overflow exception occurs if carries out of bits 30 and 31 differ (2’s

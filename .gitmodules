@@ -1,0 +1,3 @@
+[submodule "fmt"]
+	path = vendored/fmt
+	url = https://github.com/fmtlib/fmt

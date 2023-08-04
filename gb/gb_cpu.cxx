@@ -689,7 +689,6 @@ namespace hydra::Gameboy
 
     void CPU::LDAA()
     {
-        A = A;
         tTemp = 4;
     }
 
@@ -737,7 +736,6 @@ namespace hydra::Gameboy
 
     void CPU::LDBB()
     {
-        B = B;
         tTemp = 4;
     }
 
@@ -785,7 +783,6 @@ namespace hydra::Gameboy
 
     void CPU::LDCC()
     {
-        C = C;
         tTemp = 4;
     }
 
@@ -833,7 +830,6 @@ namespace hydra::Gameboy
 
     void CPU::LDDD()
     {
-        D = D;
         tTemp = 4;
     }
 
@@ -881,7 +877,6 @@ namespace hydra::Gameboy
 
     void CPU::LDEE()
     {
-        E = E;
         tTemp = 4;
     }
 
@@ -929,7 +924,6 @@ namespace hydra::Gameboy
 
     void CPU::LDHH()
     {
-        H = H;
         tTemp = 4;
     }
 
@@ -977,7 +971,6 @@ namespace hydra::Gameboy
 
     void CPU::LDLL()
     {
-        L = L;
         tTemp = 4;
     }
 

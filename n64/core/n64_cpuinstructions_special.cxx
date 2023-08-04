@@ -1,5 +1,6 @@
 #include <log.hxx>
 #include <n64/core/n64_cpu.hxx>
+#include <overflow.hxx>
 
 #define rdreg (gpr_regs_[instruction_.RType.rd])
 #define rsreg (gpr_regs_[instruction_.RType.rs])
@@ -88,7 +89,7 @@ namespace hydra::N64
     void CPU::s_ADD()
     {
         int32_t result = 0;
-        bool overflow = __builtin_add_overflow(rtreg.W._0, rsreg.W._0, &result);
+        bool overflow = hydra::add_overflow(rtreg.W._0, rsreg.W._0, result);
         if (overflow)
         {
             return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
@@ -104,7 +105,7 @@ namespace hydra::N64
     void CPU::s_DADD()
     {
         int64_t result = 0;
-        bool overflow = __builtin_add_overflow(rtreg.D, rsreg.D, &result);
+        bool overflow = hydra::add_overflow(rtreg.D, rsreg.D, result);
         if (overflow)
         {
             return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
@@ -120,7 +121,7 @@ namespace hydra::N64
     void CPU::s_SUB()
     {
         int32_t result = 0;
-        bool overflow = __builtin_sub_overflow(rsreg.W._0, rtreg.W._0, &result);
+        bool overflow = hydra::add_overflow(rsreg.W._0, -rtreg.W._0, result);
         if (overflow)
         {
             return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
@@ -136,7 +137,7 @@ namespace hydra::N64
     void CPU::s_DSUB()
     {
         int64_t result = 0;
-        bool overflow = __builtin_sub_overflow(rsreg.D, rtreg.D, &result);
+        bool overflow = hydra::add_overflow(rsreg.D, rtreg.D, result);
         if (overflow)
         {
             return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);

@@ -1,5 +1,6 @@
 #include <log.hxx>
 #include <n64/core/n64_rsp.hxx>
+#include <overflow.hxx>
 
 #define rdreg (gpr_regs_[instruction_.RType.rd])
 #define rsreg (gpr_regs_[instruction_.RType.rs])
@@ -193,7 +194,7 @@ namespace hydra::N64
     {
         int32_t seimm = static_cast<int16_t>(immval);
         int32_t result = 0;
-        bool overflow = __builtin_add_overflow(rsreg.W, seimm, &result);
+        bool overflow = hydra::add_overflow(rsreg.W, seimm, result);
         rtreg.W = result;
 
         if (overflow)
@@ -205,8 +206,7 @@ namespace hydra::N64
     void RSP::ADDIU()
     {
         int32_t seimm = static_cast<int16_t>(immval);
-        int32_t result = 0;
-        __builtin_add_overflow(rsreg.W, seimm, &result);
+        int32_t result = rsreg.W + seimm;
         rtreg.UW = result;
     }
 

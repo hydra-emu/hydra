@@ -19,13 +19,12 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 # TODO: compiler based
 if (LINUX)
     set(WARNINGS 
-        "-Wno-stringop-overflow" # for some fmt warning
         "-Werror=return-type"
         "-Werror=unused-variable"
         "-Werror=unused-but-set-variable"
         "-Werror=unused-function"
         "-Werror=uninitialized"
-        "-Werror=implicit-fallthrough"
+        "-Wimplicit-fallthrough"
         "-Werror=sign-compare"
         "-Werror=shadow"
         "-Werror=deprecated-declarations"
@@ -43,8 +42,9 @@ set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
-find_package(fmt REQUIRED)
 find_package(GTest REQUIRED)
+
+add_subdirectory(vendored/fmt)
 
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)
@@ -123,6 +123,7 @@ set(N64_FILES
 set(HYDRA_INCLUDE_DIRECTORIES
     include
     vendored
+    vendored/fmt/include
 )
 
 if (APPLE)
@@ -142,7 +143,7 @@ add_library(n64 STATIC ${N64_FILES})
 target_link_libraries(hydra PRIVATE src nes gb c8 n64
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
     Qt${QT_VERSION_MAJOR}::OpenGLWidgets ${CMAKE_DL_LIBS}
-    fmt::fmt dl)
+    fmt::fmt)
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 target_include_directories(src PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 target_include_directories(c8 PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
@@ -163,7 +164,6 @@ qt_finalize_executable(hydra)
 
 enable_testing()
 project(n64_qa)
-find_package(GTest REQUIRED)
 add_library(alp-core STATIC
     vendored/angrylion-rdp-plus/common.h
     vendored/angrylion-rdp-plus/msg.h
