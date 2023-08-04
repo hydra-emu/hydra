@@ -1,10 +1,10 @@
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
+#include "emulator_tool_factory.hxx"
 #include "qthelper.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
 #include <emulator_settings.hxx>
-#include <emulator_tool_factory.hxx>
 #include <error_factory.hxx>
 #include <iostream>
 #include <QApplication>
@@ -17,7 +17,7 @@
 #include <QSurfaceFormat>
 #include <QTimer>
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), tools_{}, tools_open_{}
 {
     setup_emulator_specific();
     QWidget* widget = new QWidget;
@@ -93,16 +93,24 @@ void MainWindow::create_actions()
     shaders_act_->setStatusTip("Open the shader editor");
     shaders_act_->setIcon(QIcon(":/images/shaders.png"));
     connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
-    debugger_act_ = new QAction(tr("&Debugger"), this);
-    debugger_act_->setShortcut(Qt::Key_F2);
-    debugger_act_->setStatusTip("Open the debugger");
-    debugger_act_->setIcon(QIcon(":/images/debugger.png"));
-    connect(debugger_act_, &QAction::triggered, this, &MainWindow::open_debugger);
-    tracelogger_act_ = new QAction(tr("&Tracelogger"), this);
-    tracelogger_act_->setShortcut(Qt::Key_F3);
-    tracelogger_act_->setStatusTip("Open the tracelogger");
-    tracelogger_act_->setIcon(QIcon(":/images/tracelogger.png"));
-    connect(tracelogger_act_, &QAction::triggered, this, &MainWindow::open_tracelogger);
+    tools_actions_[ET_Debugger] = new QAction(tr("&Debugger"), this);
+    tools_actions_[ET_Debugger]->setShortcut(Qt::Key_F2);
+    tools_actions_[ET_Debugger]->setStatusTip("Open the debugger");
+    tools_actions_[ET_Debugger]->setIcon(QIcon(":/images/debugger.png"));
+    connect(tools_actions_[ET_Debugger], &QAction::triggered, this,
+            std::bind(&MainWindow::open_tool, this, ET_Debugger));
+    tools_actions_[ET_Tracelogger] = new QAction(tr("&Tracelogger"), this);
+    tools_actions_[ET_Tracelogger]->setShortcut(Qt::Key_F3);
+    tools_actions_[ET_Tracelogger]->setStatusTip("Open the tracelogger");
+    tools_actions_[ET_Tracelogger]->setIcon(QIcon(":/images/tracelogger.png"));
+    connect(tools_actions_[ET_Tracelogger], &QAction::triggered, this,
+            std::bind(&MainWindow::open_tool, this, ET_Tracelogger));
+    tools_actions_[ET_MmioViewer] = new QAction(tr("&Mmio Viewer"), this);
+    tools_actions_[ET_MmioViewer]->setShortcut(Qt::Key_F4);
+    tools_actions_[ET_MmioViewer]->setStatusTip("Open the MMIO viewer");
+    tools_actions_[ET_MmioViewer]->setIcon(QIcon(":/images/mmioviewer.png"));
+    connect(tools_actions_[ET_MmioViewer], &QAction::triggered, this,
+            std::bind(&MainWindow::open_tool, this, ET_MmioViewer));
 }
 
 void MainWindow::create_menus()
@@ -120,8 +128,10 @@ void MainWindow::create_menus()
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
     tools_menu_->addAction(shaders_act_);
     tools_menu_->addSeparator();
-    tools_menu_->addAction(debugger_act_);
-    tools_menu_->addAction(tracelogger_act_);
+    for (size_t i = 0; i < EmulatorToolsSize; i++)
+    {
+        tools_menu_->addAction(tools_actions_[i]);
+    }
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
 }
@@ -213,16 +223,16 @@ void MainWindow::open_file_impl(const std::string& path)
     emulator_thread_.detach();
     emulator_type_ = type;
     enable_emulation_actions(true);
-    for (size_t i = 0; i < emulator_tools_.size(); i++)
+    for (size_t i = 0; i < tools_.size(); i++)
     {
-        if (emulator_tools_[i])
+        if (tools_[i])
         {
-            delete emulator_tools_[i];
+            delete tools_[i];
         }
-        emulator_tools_[i] = nullptr;
+        tools_[i] = nullptr;
     }
-    debugger_open_ = false;
-    tracelogger_open_ = false;
+
+    std::fill(std::begin(tools_open_), std::end(tools_open_), false);
 }
 
 void MainWindow::open_settings()
@@ -248,51 +258,27 @@ void MainWindow::open_shaders()
     });
 }
 
-void MainWindow::open_debugger()
+void MainWindow::open_tool(EmulatorTool tool)
 {
-    qt_may_throw([this]() {
-        if (!debugger_open_)
+    qt_may_throw([this, tool]() {
+        if (!tools_open_[tool])
         {
-            if (emulator_tools_[0])
+            if (tools_[tool])
             {
-                if (emulator_tools_[0]->isHidden())
+                if (tools_[tool]->isHidden())
                 {
-                    emulator_tools_[0]->show();
+                    tools_[tool]->show();
                 }
                 else
                 {
-                    emulator_tools_[0]->hide();
+                    tools_[tool]->hide();
                 }
             }
             else
             {
-                auto qw = EmulatorToolFactory::CreateDebugger(debugger_open_, emulator_type_, this,
-                                                              emulator_.get());
-                emulator_tools_[0] = qw;
-            }
-        }
-    });
-}
-
-void MainWindow::open_tracelogger()
-{
-    qt_may_throw([this]() {
-        if (!tracelogger_open_)
-        {
-            if (emulator_tools_[1])
-            {
-                if (emulator_tools_[1]->isHidden())
-                {
-                    emulator_tools_[1]->show();
-                }
-                else
-                {
-                    emulator_tools_[1]->hide();
-                }
-            }
-            else
-            {
-                // todo: EmulatorToolFactory
+                auto qw = EmulatorToolFactory::CreateTool(tool, tools_open_[tool], emulator_type_,
+                                                          emulator_.get());
+                tools_[tool] = qw;
             }
         }
     });
@@ -320,13 +306,13 @@ void MainWindow::enable_emulation_actions(bool should)
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
-    debugger_act_->setEnabled(false);
-    tracelogger_act_->setEnabled(false);
+    std::fill(std::begin(tools_open_), std::end(tools_open_), false);
     if (should)
     {
         const auto& emulator_data = EmulatorSettings::GetEmulatorData(emulator_type_);
-        debugger_act_->setEnabled(emulator_data.HasDebugger);
-        tracelogger_act_->setEnabled(emulator_data.HasTracelogger);
+        tools_actions_[ET_Debugger]->setEnabled(emulator_data.HasDebugger);
+        tools_actions_[ET_Tracelogger]->setEnabled(emulator_data.HasTracelogger);
+        tools_actions_[ET_MmioViewer]->setEnabled(true);
     }
 }
 

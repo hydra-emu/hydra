@@ -12,7 +12,8 @@ class MmioViewer : public QWidget
     Q_OBJECT
 
 public:
-    MmioViewer(hydra::Emulator* emulator, hydra::EmuType type, QWidget* parent = nullptr);
+    MmioViewer(bool& open_, hydra::Emulator* emulator, hydra::EmuType type,
+               QWidget* parent = nullptr);
 
 private slots:
     void on_tab_change();
@@ -25,6 +26,10 @@ private:
     hydra::Emulator* emulator_;
     RegisteredMmio::ConsoleComponents components_;
 
+    bool& open_;
+
     void initialize_n64();
     void initialize_tab_list();
+
+    QWidget* create_item(RegisteredMmio::MmioWrapper& mmiowrapper);
 };

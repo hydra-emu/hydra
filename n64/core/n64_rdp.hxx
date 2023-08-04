@@ -38,6 +38,7 @@
     X(SetFogColor, 0x38, 1)
 
 class N64Debugger;
+class MmioViewer;
 
 namespace hydra::N64
 {
@@ -209,5 +210,6 @@ namespace hydra::N64
 
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;
+        friend class ::MmioViewer;
     };
 } // namespace hydra::N64

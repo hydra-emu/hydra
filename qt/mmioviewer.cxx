@@ -1,16 +1,22 @@
 #include "mmioviewer.hxx"
 #include "emulator_types.hxx"
+#include "n64/n64_tkpwrapper.hxx"
 #include "registered_mmio.hxx"
 
-#include <qgridlayout.h>
+#include <QBoxLayout>
 #include <QGridLayout>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListWidgetItem>
+#include <QScrollArea>
 #include <QVBoxLayout>
 
-MmioViewer::MmioViewer(hydra::Emulator* emulator, hydra::EmuType type, QWidget* parent)
-    : emulator_(emulator), QWidget(parent, Qt::Window)
+#include <log.hxx>
+
+MmioViewer::MmioViewer(bool& open, hydra::Emulator* emulator, hydra::EmuType type, QWidget* parent)
+    : open_(open), emulator_(emulator), QWidget(parent, Qt::Window)
 {
+    // TODO: thread safety - mutex locking
     switch (type)
     {
         case hydra::EmuType::N64:
@@ -28,10 +34,23 @@ MmioViewer::MmioViewer(hydra::Emulator* emulator, hydra::EmuType type, QWidget* 
 
 void MmioViewer::initialize_n64()
 {
-    static uint8_t myreg = 0x78;
-    components_["Test"] = {};
-    components_["Test"]["MyRegister"] =
-        RegisteredMmio::Register("name", myreg, "xxxxxxxx", {"Full"});
+    hydra::N64::N64_TKPWrapper* emulator = dynamic_cast<hydra::N64::N64_TKPWrapper*>(emulator_);
+#define REGISTER(group, name, value, mask, ...) \
+    components_[group].push_back(RegisteredMmio::Register(name, value, mask, __VA_ARGS__))
+#define FREGISTER(group, name, value, mask) REGISTER(group, name, value, mask, {"Full"})
+#define FREGISTER64(group, name, value) \
+    FREGISTER(group, name, value,       \
+              "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    // components_["CPU"] = {};
+    // components_["RSP"] = {};
+    // components_["RDP"] = {};
+    // components_["VI"] = {};
+    // components_["AI"] = {};
+    // components_["PI"] = {};
+    for (size_t i = 0; i < 32; i++)
+    {
+        FREGISTER64("CPU", "r" + std::to_string(i), emulator->n64_impl_.cpu_.gpr_regs_[i].UD);
+    }
 }
 
 void MmioViewer::initialize_tab_list()
@@ -59,7 +78,7 @@ void MmioViewer::initialize_tab_list()
         right_group_box_->setMinimumHeight(400);
     }
 
-    for (auto [component_name, component] : components_)
+    for (auto& [component_name, component] : components_)
     {
         QListWidgetItem* name = new QListWidgetItem(component_name.c_str());
         tab_list_->addItem(name);
@@ -67,8 +86,26 @@ void MmioViewer::initialize_tab_list()
         QWidget* tab = new QWidget;
         tab_show_->addTab(tab, component_name.c_str());
 
-        QGridLayout* layout = new QGridLayout;
+        QVBoxLayout* layout = new QVBoxLayout;
         tab->setLayout(layout);
+
+        QScrollArea* scroll_area = new QScrollArea;
+        layout->addWidget(scroll_area);
+
+        QWidget* parent_widget = new QWidget;
+        parent_widget->setLayout(new QVBoxLayout(parent_widget));
+        parent_widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+        scroll_area->setBackgroundRole(QPalette::Dark);
+        scroll_area->setWidget(parent_widget);
+        scroll_area->setWidgetResizable(true);
+        scroll_area->setFrameShape(QFrame::NoFrame);
+        scroll_area->setFrameShadow(QFrame::Plain);
+
+        for (auto& mmiowrapper : component)
+        {
+            QWidget* item = create_item(mmiowrapper);
+            parent_widget->layout()->addWidget(item);
+        }
     }
 
     main_layout->addWidget(left_group_box_, 0, 0, 1, 1);
@@ -80,4 +117,26 @@ void MmioViewer::initialize_tab_list()
     show();
 }
 
-void MmioViewer::on_tab_change() {}
+void MmioViewer::on_tab_change()
+{
+    tab_show_->setCurrentIndex(tab_list_->currentRow());
+}
+
+QWidget* MmioViewer::create_item(RegisteredMmio::MmioWrapper& mmiowrapper)
+{
+    QWidget* item = new QWidget;
+    QVBoxLayout* layout = new QVBoxLayout;
+    item->setLayout(layout);
+
+    layout->addWidget(new QLabel((mmiowrapper.GetName() + ":").c_str()));
+
+    if (mmiowrapper.GetRangeCount() == 1)
+    {
+        QLineEdit* line_edit = new QLineEdit;
+        line_edit->setReadOnly(true);
+        line_edit->setText(QString::number(mmiowrapper.GetValue()));
+        layout->addWidget(line_edit);
+    }
+
+    return item;
+}

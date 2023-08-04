@@ -1,16 +1,6 @@
 # gb
 Gameboy backend written in C++ for [hydra](https://github.com/OFFTKP/hydra).
 
-## Features with hydra
- - Customizable palette
- - Customizable controls
- - Disassembler/Debugger
- - Advanced breakpoints
- - Tracelogger
- - Save states
- - Web server (check profile)
- - Rewind functionality (WIP)
-
 ## Images
 ![Legend of Zelda color](../data/images/gb/zd_clr.bmp)
 ![Yugioh](../data/images/gb/yugi.bmp)

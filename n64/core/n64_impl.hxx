@@ -4,12 +4,10 @@
 #include <n64/core/n64_rcp.hxx>
 #include <string>
 
-class N64Debugger;
+class MmioViewer;
 
 namespace hydra::N64
 {
-    class N64_TKPWrapper;
-
     class N64
     {
     public:
@@ -45,5 +43,6 @@ namespace hydra::N64
         CPU cpu_;
         friend class N64_TKPWrapper;
         friend class ::N64Debugger;
+        friend class ::MmioViewer;
     };
 } // namespace hydra::N64
