@@ -1291,9 +1291,9 @@ namespace hydra::Gameboy
         if (cartridge_.UsingBattery())
         {
             auto path = static_cast<std::filesystem::path>(filename);
-            std::string path_save = path.parent_path();
+            std::string path_save = path.parent_path().string();
             path_save += "/";
-            path_save += path.stem();
+            path_save += path.stem().string();
             path_save += ".sav";
             curr_save_file_ = path_save;
             if (std::filesystem::exists(path_save))

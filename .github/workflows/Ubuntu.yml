@@ -27,12 +27,9 @@ jobs:
     - name: install-deps
       run: |
         sudo apt-get update
-        sudo apt-get install build-essential libgl-dev ninja-build libfmt-dev libgtest-dev
+        sudo apt-get install build-essential libgl-dev ninja-build libgtest-dev
     - name: configure
-      run: |
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100 --slave /usr/bin/g++ g++ /usr/bin/g++-12
-        sudo update-alternatives --set gcc /usr/bin/gcc-12
-        cmake -S . -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: CC=/usr/bin/gcc-12 CXX=/usr/bin/g++-12 cmake -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make
       run: cmake --build build
     - name: upload

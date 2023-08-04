@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace hydra::N64
 {
     union SetColorImageCommand
@@ -14,7 +16,7 @@ namespace hydra::N64
             uint64_t              : 9;
             uint64_t size         : 2;
             uint64_t format       : 3;
-            uint64_t command      : 8 = 0x3f;
+            uint64_t command      : 8;
         };
 
         SetColorImageCommand()
@@ -31,7 +33,7 @@ namespace hydra::N64
         {
             uint64_t color   : 32;
             uint64_t         : 24;
-            uint64_t command : 8 = 0x37;
+            uint64_t command : 8;
         };
 
         SetFillColorCommand()
@@ -226,7 +228,7 @@ namespace hydra::N64
             uint64_t                  : 16;
             uint64_t cycle_type       : 2;
             uint64_t                  : 2;
-            uint64_t command          : 8 = 0x2f;
+            uint64_t command          : 8;
         };
 
         SetOtherModesCommand()
@@ -248,7 +250,7 @@ namespace hydra::N64
             uint64_t               : 6;
             uint64_t YH            : 12;
             uint64_t XH            : 12;
-            uint64_t command       : 8 = 0x2d;
+            uint64_t command       : 8;
         };
 
         SetScissorCommand()
@@ -279,7 +281,7 @@ namespace hydra::N64
             uint64_t sub_A_Alpha_0 : 3;
             uint64_t mul_RGB_0     : 5;
             uint64_t sub_A_RGB_0   : 4;
-            uint64_t command       : 8 = 0x3c;
+            uint64_t command       : 8;
         };
 
         SetCombineModeCommand()
