@@ -205,7 +205,7 @@ namespace hydra::N64
         bool rom_loaded_ = false;
         bool ipl_loaded_ = false;
         std::vector<uint8_t> rdram_{};
-        std::array<char, ISVIEWER_END - ISVIEWER_START> isviewer_buffer_{};
+        std::array<char, ISVIEWER_AREA_END - ISVIEWER_AREA_START> isviewer_buffer_{};
         std::array<uint8_t, 64> pif_ram_{};
         std::array<uint8_t*, 0x10000> page_table_{};
 

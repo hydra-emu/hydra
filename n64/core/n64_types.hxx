@@ -430,17 +430,37 @@ namespace hydra::N64
                     return "zero";
                 case 1:
                     return "at";
-                case 2 ... 3:
+                case 2:
+                case 3:
                     return "v" + std::to_string(n - 2);
-                case 4 ... 7:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
                     return "a" + std::to_string(n - 4);
-                case 8 ... 15:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                case 15:
                     return "t" + std::to_string(n - 8);
-                case 16 ... 23:
+                case 16:
+                case 17:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
                     return "s" + std::to_string(n - 16);
-                case 24 ... 25:
+                case 24:
+                case 25:
                     return "t" + std::to_string(n - 16);
-                case 26 ... 27:
+                case 26:
+                case 27:
                     return "k" + std::to_string(n - 26);
                 case 28:
                     return "gp";

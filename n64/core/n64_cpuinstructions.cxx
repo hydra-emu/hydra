@@ -121,7 +121,13 @@ namespace hydra::N64
                 fcr31_.unimplemented = 1;
                 return throw_exception(prev_pc_, ExceptionType::FloatingPoint, 0);
             }
-            case 0x9 ... 0xF:
+            case 0x9:
+            case 0xA:
+            case 0xB:
+            case 0xC:
+            case 0xD:
+            case 0xE:
+            case 0xF:
                 return throw_exception(prev_pc_, ExceptionType::ReservedInstruction);
             default:
             {
@@ -354,7 +360,11 @@ namespace hydra::N64
                 return generated_number;
             }
             case 7:
-            case 21 ... 25:
+            case 21:
+            case 22:
+            case 23:
+            case 24:
+            case 25:
             case 31:
                 return cp0_weirdness_;
             default:
