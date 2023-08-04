@@ -227,7 +227,8 @@ namespace hydra::N64
                 return *vco_;
             case 1:
                 return *vcc_;
-            case 2 ... 3:
+            case 2:
+            case 3:
                 return *vce_;
         }
         return 0;
@@ -243,7 +244,8 @@ namespace hydra::N64
             case 1:
                 *vcc_ = value;
                 break;
-            case 2 ... 3:
+            case 2:
+            case 3:
                 *vce_ = value;
                 break;
         }
@@ -1345,16 +1347,21 @@ namespace hydra::N64
 
         switch (element)
         {
-            case 0 ... 1:
+            case 0:
+            case 1:
                 se = (element & 0b000) | (vuinstr.vs & 0b111);
                 break;
-            case 2 ... 3:
+            case 2:
+            case 3:
                 se = (element & 0b001) | (vuinstr.vs & 0b110);
                 break;
-            case 4 ... 7:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
                 se = (element & 0b011) | (vuinstr.vs & 0b100);
                 break;
-            case 8 ... 15:
+            default: // 8 ... 15
                 se = (element & 0b111) | (vuinstr.vs & 0b000);
                 break;
         }

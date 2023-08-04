@@ -1,3 +1,4 @@
+#include "n64/core/n64_addresses.hxx"
 #include <bitset>
 #include <bswap.hxx>
 #include <cassert>
@@ -63,47 +64,26 @@ namespace hydra::N64
 
     void CPU::write_hwio(uint32_t addr, uint32_t data)
     {
+        // TODO: remove switch, turn into if chain
         switch (addr)
         {
-            case RSP_DMA_SPADDR:
-                return rcp_.rsp_.write_hwio(RSPHWIO::Cache, data);
-            case RSP_DMA_RAMADDR:
-                return rcp_.rsp_.write_hwio(RSPHWIO::DramAddr, data);
-            case RSP_DMA_RDLEN:
-                return rcp_.rsp_.write_hwio(RSPHWIO::RdLen, data);
-            case RSP_DMA_WRLEN:
-                return rcp_.rsp_.write_hwio(RSPHWIO::WrLen, data);
-            case RSP_STATUS:
-                return rcp_.rsp_.write_hwio(RSPHWIO::Status, data);
-            case RSP_SEMAPHORE:
-                return rcp_.rsp_.write_hwio(RSPHWIO::Semaphore, data);
-            case RSP_PC:
-            {
-                if (!rcp_.rsp_.status_.halt)
-                {
-                    Logger::Warn("RSP PC write while not halted");
-                }
-                rcp_.rsp_.pc_ = data & 0xffc;
-                rcp_.rsp_.next_pc_ = rcp_.rsp_.pc_ + 4;
-                break;
-            }
             case PI_STATUS:
             {
                 if (data & 0b10)
                 {
                     cpubus_.mi_interrupt_.PI = false;
                 }
-                break;
+                return;
             }
             case PI_DRAM_ADDR:
             {
                 cpubus_.pi_dram_addr_ = data;
-                break;
+                return;
             }
             case PI_CART_ADDR:
             {
                 cpubus_.pi_cart_addr_ = data;
-                break;
+                return;
             }
             case PI_RD_LEN:
             {
@@ -111,7 +91,7 @@ namespace hydra::N64
                 // cpubus_.redirect_paddress(bswap32(cpubus_.pi_dram_addr_)), data + 1);
                 Logger::Warn("PI_RD_LEN write");
                 cpubus_.mi_interrupt_.PI = true;
-                break;
+                return;
             }
             case PI_WR_LEN:
             {
@@ -142,59 +122,47 @@ namespace hydra::N64
                 cpubus_.dma_busy_ = false;
                 cpubus_.mi_interrupt_.PI = true;
                 Logger::Debug("Raising PI interrupt");
-                break;
+                return;
             }
             case PI_BSD_DOM1_PWD:
             {
                 cpubus_.pi_bsd_dom1_pwd_ = data & 0xFF;
-                break;
+                return;
             }
             case PI_BSD_DOM2_PWD:
             {
                 cpubus_.pi_bsd_dom2_lat_ = data & 0xFF;
-                break;
+                return;
             }
             case PI_BSD_DOM1_PGS:
             {
                 cpubus_.pi_bsd_dom1_pgs_ = data & 0xFF;
-                break;
+                return;
             }
             case PI_BSD_DOM2_PGS:
             {
                 cpubus_.pi_bsd_dom2_pgs_ = data & 0xFF;
-                break;
+                return;
             }
             case PI_BSD_DOM1_LAT:
             {
                 cpubus_.pi_bsd_dom1_lat_ = data & 0xFF;
-                break;
+                return;
             }
             case PI_BSD_DOM2_LAT:
             {
                 cpubus_.pi_bsd_dom2_lat_ = data & 0xFF;
-                break;
+                return;
             }
             case PI_BSD_DOM1_RLS:
             {
                 cpubus_.pi_bsd_dom1_rls_ = data & 0xFF;
-                break;
+                return;
             }
             case PI_BSD_DOM2_RLS:
             {
                 cpubus_.pi_bsd_dom2_rls_ = data & 0xFF;
-                break;
-            }
-
-            // Video interface
-            case VI_AREA_START ... VI_AREA_END:
-            {
-                return rcp_.vi_.WriteWord(addr, data);
-            }
-
-            // Audio interface
-            case AI_AREA_START ... AI_AREA_END:
-            {
-                return rcp_.ai_.WriteWord(addr, data);
+                return;
             }
             case MI_MODE:
             {
@@ -205,7 +173,7 @@ namespace hydra::N64
                 {
                     cpubus_.mi_interrupt_.DP = false;
                 }
-                break;
+                return;
             }
             case MI_MASK:
             {
@@ -225,12 +193,12 @@ namespace hydra::N64
                     }
                     j <<= 2;
                 }
-                break;
+                return;
             }
             case SI_DRAM_ADDR:
             {
                 cpubus_.si_dram_addr_ = data;
-                break;
+                return;
             }
             case SI_PIF_AD_WR64B:
             {
@@ -239,7 +207,7 @@ namespace hydra::N64
                 pif_command();
                 cpubus_.mi_interrupt_.SI = true;
                 Logger::Debug("Raising SI interrupt");
-                break;
+                return;
             }
             case SI_PIF_AD_RD64B:
             {
@@ -248,84 +216,108 @@ namespace hydra::N64
                             cpubus_.pif_ram_.data(), 64);
                 cpubus_.mi_interrupt_.SI = true;
                 Logger::Debug("Raising SI interrupt");
-                break;
+                return;
             }
             case SI_STATUS:
             {
                 cpubus_.mi_interrupt_.SI = false;
-                break;
+                return;
             }
-            case RI_MODE:
-            case RI_CONFIG:
-            case RI_CURRENT_LOAD:
-            case RI_SELECT:
-            case RI_REFRESH:
-            case RI_LATENCY:
+        }
+        // Video interface
+        if (addr >= VI_AREA_START && addr <= VI_AREA_END)
+        {
+            return rcp_.vi_.WriteWord(addr, data);
+        }
+        // Audio interface
+        else if (addr >= AI_AREA_START && addr <= AI_AREA_END)
+        {
+            return rcp_.ai_.WriteWord(addr, data);
+        }
+        else if (addr >= RSP_AREA_START && addr <= RSP_AREA_END)
+        {
+            switch (addr)
             {
-                Logger::Warn("Write to RI register {:x} with data {:x}", addr, data);
-                break;
-            }
-            case RDP_AREA_START ... RDP_AREA_END:
-            {
-                rcp_.rdp_.WriteWord(addr, data);
-                break;
-            }
-            case PIF_START ... PIF_END:
-            {
-                uint32_t* ptr = reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[addr - PIF_START]);
-                *ptr = bswap32(data);
-                pif_command();
-                break;
-            }
-            case PIF_COMMAND:
-            {
-                cpubus_.pif_ram_[63] = data;
-                pif_command();
-                break;
-            }
-            case ISVIEWER_START ... ISVIEWER_END:
-            {
-                data = bswap32(data);
-                for (int i = 0; i < 4; i++)
+                case RSP_DMA_SPADDR:
+                    return rcp_.rsp_.write_hwio(RSPHWIO::Cache, data);
+                case RSP_DMA_RAMADDR:
+                    return rcp_.rsp_.write_hwio(RSPHWIO::DramAddr, data);
+                case RSP_DMA_RDLEN:
+                    return rcp_.rsp_.write_hwio(RSPHWIO::RdLen, data);
+                case RSP_DMA_WRLEN:
+                    return rcp_.rsp_.write_hwio(RSPHWIO::WrLen, data);
+                case RSP_STATUS:
+                    return rcp_.rsp_.write_hwio(RSPHWIO::Status, data);
+                case RSP_SEMAPHORE:
+                    return rcp_.rsp_.write_hwio(RSPHWIO::Semaphore, data);
+                case RSP_PC:
                 {
-                    cpubus_.isviewer_buffer_[addr - ISVIEWER_START + i] = data >> (i * 8);
+                    if (!rcp_.rsp_.status_.halt)
+                    {
+                        Logger::Warn("RSP PC write while not halted");
+                    }
+                    rcp_.rsp_.pc_ = data & 0xffc;
+                    rcp_.rsp_.next_pc_ = rcp_.rsp_.pc_ + 4;
+                    return;
                 }
-                break;
             }
-            case ISVIEWER_FLUSH:
+        }
+        else if (addr >= RDP_AREA_START && addr <= RDP_AREA_END)
+        {
+            rcp_.rdp_.WriteWord(addr, data);
+        }
+        else if (addr >= PIF_START && addr <= PIF_END)
+        {
+            uint32_t* ptr = reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[addr - PIF_START]);
+            *ptr = bswap32(data);
+            pif_command();
+        }
+        else if (addr == PIF_COMMAND)
+        {
+            cpubus_.pif_ram_[63] = data;
+            pif_command();
+        }
+        else if (addr == ISVIEWER_FLUSH)
+        {
+            std::stringstream ss;
+            for (uint32_t i = 0; i < data; i++)
             {
-                std::stringstream ss;
-                for (uint32_t i = 0; i < data; i++)
-                {
-                    ss << cpubus_.isviewer_buffer_[i];
-                }
-                std::cout << ss.str();
-                break;
+                ss << cpubus_.isviewer_buffer_[i];
             }
-            case RDRAM_REGISTERS_START ... RDRAM_REGISTERS_END:
+            std::cout << ss.str();
+        }
+        else if (addr >= ISVIEWER_AREA_START && addr <= ISVIEWER_AREA_END)
+        {
+            data = bswap32(data);
+            for (int i = 0; i < 4; i++)
             {
-                Logger::Warn("Write to RDRAM register {:x} with data {:x}", addr, data);
-                break;
+                cpubus_.isviewer_buffer_[addr - ISVIEWER_AREA_START + i] = data >> (i * 8);
             }
-            case RDRAM_BROADCAST_START ... RDRAM_BROADCAST_END:
-            {
-                Logger::Warn("Write to RDRAM broadcast register {:x} with data {:x}", addr, data);
-                break;
-            }
-            default:
-            {
-                Logger::Warn("Unhandled write_hwio to address: {:08x} {:08x}", addr, data);
-                break;
-            }
+        }
+        else if (addr >= RI_AREA_START && addr <= RI_AREA_END)
+        {
+            Logger::Warn("Write to RI register {:x} with data {:x}", addr, data);
+        }
+        else if (addr >= RDRAM_REGISTERS_START && addr <= RDRAM_REGISTERS_END)
+        {
+            Logger::Warn("Write to RDRAM register {:x} with data {:x}", addr, data);
+        }
+        else if (addr >= RDRAM_BROADCAST_START && addr <= RDRAM_BROADCAST_END)
+        {
+            Logger::Warn("Write to RDRAM broadcast register {:x} with data {:x}", addr, data);
+        }
+        else
+        {
+            Logger::Warn("Unhandled write_hwio to address: {:08x} {:08x}", addr, data);
         }
     }
 
-    uint32_t CPU::read_hwio(uint32_t paddr)
+    uint32_t CPU::read_hwio(uint32_t addr)
     {
 #define redir_case(addr, data) \
     case addr:                 \
         return data;
-        switch (paddr)
+        switch (addr)
         {
             // MIPS Interface
             redir_case(MI_MODE, cpubus_.mi_mode_);
@@ -335,19 +327,6 @@ namespace hydra::N64
             }
                 redir_case(MI_INTERRUPT, cpubus_.mi_interrupt_.full);
                 redir_case(MI_MASK, cpubus_.mi_mask_);
-
-            // Video interface
-            case VI_AREA_START ... VI_AREA_END:
-            {
-                return rcp_.vi_.ReadWord(paddr);
-            }
-
-            // Audio Interface
-            case AI_AREA_START ... AI_AREA_END:
-            {
-                return rcp_.ai_.ReadWord(paddr);
-            }
-
                 // Peripheral Interface
                 redir_case(PI_DRAM_ADDR, cpubus_.pi_dram_addr_);
                 redir_case(PI_CART_ADDR, cpubus_.pi_cart_addr_);
@@ -398,10 +377,6 @@ namespace hydra::N64
                 return rcp_.rsp_.read_hwio(RSPHWIO::Busy);
             case RSP_SEMAPHORE:
                 return rcp_.rsp_.read_hwio(RSPHWIO::Semaphore);
-            case PIF_START ... PIF_END:
-            {
-                return bswap32(*reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[paddr - PIF_START]));
-            }
                 redir_case(PIF_COMMAND, cpubus_.pif_ram_[63]);
             case RSP_PC:
             {
@@ -411,29 +386,9 @@ namespace hydra::N64
                 }
                 return rcp_.rsp_.pc_;
             }
-            case RDP_AREA_START ... RDP_AREA_END:
-            {
-                return rcp_.rdp_.ReadWord(paddr);
-            }
             case ISVIEWER_FLUSH:
-            case ISVIEWER_START ... ISVIEWER_END:
             {
                 Logger::Fatal("Reading from ISViewer");
-                return 0;
-            }
-            case RDRAM_REGISTERS_START ... RDRAM_REGISTERS_END:
-            {
-                Logger::Warn("Reading from RDRAM registers");
-                return 0;
-            }
-            case 0x05000000 ... 0x05FFFFFF:
-            {
-                Logger::Warn("Accessing N64DD");
-                return 0;
-            }
-            case 0x08000000 ... 0x0FFFFFFF:
-            {
-                Logger::Warn("Accessing SRAM");
                 return 0;
             }
             default:
@@ -442,7 +397,45 @@ namespace hydra::N64
             }
         }
 #undef redir_case
-        Logger::Warn("Unhandled read_hwio from address {:08x} PC: {:08x}", paddr, pc_);
+        // Video interface
+        if (addr >= VI_AREA_START && addr <= VI_AREA_END)
+        {
+            return rcp_.vi_.ReadWord(addr);
+        }
+        // Audio Interface
+        else if (addr >= AI_AREA_START && addr <= AI_AREA_END)
+        {
+            return rcp_.ai_.ReadWord(addr);
+        }
+        else if (addr >= PIF_START && addr <= PIF_END)
+        {
+            return bswap32(*reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[addr - PIF_START]));
+        }
+        else if (addr >= RDRAM_REGISTERS_START && addr <= RDRAM_REGISTERS_END)
+        {
+            Logger::Warn("Reading from RDRAM registers");
+            return 0;
+        }
+        else if (addr >= ISVIEWER_AREA_START && addr <= ISVIEWER_AREA_END)
+        {
+            Logger::Fatal("Reading from ISViewer");
+            return 0;
+        }
+        else if (addr >= RDP_AREA_START && addr <= RDP_AREA_END)
+        {
+            return rcp_.rdp_.ReadWord(addr);
+        }
+        else if (addr >= N64DD_AREA_START && addr <= N64DD_AREA_END)
+        {
+            Logger::Warn("Accessing N64DD");
+            return 0;
+        }
+        else if (addr >= SRAM_AREA_START && addr <= SRAM_AREA_END)
+        {
+            Logger::Warn("Accessing SRAM");
+            return 0;
+        }
+        Logger::Warn("Unhandled read_hwio from address {:08x} PC: {:08x}", addr, pc_);
         return 0;
     }
 
@@ -827,7 +820,7 @@ namespace hydra::N64
     {
         TranslatedAddress paddr = translate_vaddr(vaddr);
         uint32_t* ptr = reinterpret_cast<uint32_t*>(cpubus_.redirect_paddress(paddr.paddr));
-        bool isviewer = paddr.paddr <= ISVIEWER_END && paddr.paddr >= ISVIEWER_FLUSH;
+        bool isviewer = paddr.paddr <= ISVIEWER_AREA_END && paddr.paddr >= ISVIEWER_FLUSH;
         if (!ptr || isviewer)
         {
             write_hwio(paddr.paddr, data);

@@ -502,7 +502,7 @@ namespace hydra::N64
                     case 7:
                         color_sub_a_ = &color_zero_;
                         break;
-                    case 8 ... 15:
+                    default:
                         color_sub_a_ = &color_zero_;
                         break;
                 }
@@ -535,7 +535,7 @@ namespace hydra::N64
                     case 7:
                         color_sub_b_ = &color_zero_;
                         break;
-                    case 8 ... 15:
+                    default:
                         color_sub_b_ = &color_zero_;
                         break;
                 }
@@ -561,7 +561,22 @@ namespace hydra::N64
                         color_multiplier_ = &environment_color_;
                         break;
                     // TODO: rest of the colors
-                    case 16 ... 31:
+                    case 16:
+                    case 17:
+                    case 18:
+                    case 19:
+                    case 20:
+                    case 21:
+                    case 22:
+                    case 23:
+                    case 24:
+                    case 25:
+                    case 26:
+                    case 27:
+                    case 28:
+                    case 29:
+                    case 30:
+                    case 31:
                         color_multiplier_ = &color_zero_;
                         break;
                     default:
@@ -774,9 +789,15 @@ namespace hydra::N64
         return old_depth > z;
         switch (z_mode_)
         {
-            case 0 ... 3:
+            // TODO: other depth modes
+            case 0:
             {
                 return z < old_depth;
+            }
+            default:
+            {
+                Logger::Warn("Unknown depth mode: %d", static_cast<int>(z_mode_));
+                return false;
             }
         }
         // TODO: std::unreachable
