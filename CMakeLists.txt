@@ -36,13 +36,13 @@ set(CMAKE_C_FLAGS "-g -O0")
 if (APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcrc32 -no-pie ${WARNINGS_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcrc32 ${WARNINGS_FLAGS}")
 endif()
 set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
-find_package(GTest REQUIRED)
+find_package(GTest)
 
 add_subdirectory(vendored/fmt)
 

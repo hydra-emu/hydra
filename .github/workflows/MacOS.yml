@@ -18,8 +18,8 @@ jobs:
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
     - name: install-deps
-      run: brew install qt6 googletest
+      run: brew install qt6 ninja
     - name: configure
-      run: cmake -B build -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make
       run: cmake --build build
