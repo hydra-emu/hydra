@@ -407,31 +407,31 @@ namespace hydra::N64
                 return;
             }
         }
-        int round_mode = fegetround();
+        int round_mode = std::fegetround();
         switch (fcr31_.rounding_mode)
         {
             case 0:
             {
-                fesetround(FE_TONEAREST);
+                std::fesetround(FE_TONEAREST);
                 break;
             }
             case 1:
             {
-                fesetround(FE_TOWARDZERO);
+                std::fesetround(FE_TOWARDZERO);
                 break;
             }
             case 2:
             {
-                fesetround(FE_UPWARD);
+                std::fesetround(FE_UPWARD);
                 break;
             }
             case 3:
             {
-                fesetround(FE_DOWNWARD);
+                std::fesetround(FE_DOWNWARD);
                 break;
             }
         }
-        feclearexcept(FE_ALL_EXCEPT);
+        std::feclearexcept(FE_ALL_EXCEPT);
         Type result{};
         // if takes 1 parameter
         if constexpr (std::is_invocable<decltype(op), Type>())
@@ -488,7 +488,7 @@ namespace hydra::N64
                 fcr31_.flag_invalidop = 1;
             }
         }
-        fesetround(round_mode);
+        std::fesetround(round_mode);
         check_fpu_result(result);
         if (check_fpu_exception())
         {

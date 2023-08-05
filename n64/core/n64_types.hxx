@@ -86,12 +86,12 @@ namespace hydra::N64
 
         struct
         {
-            unsigned offset  : 7;
-            unsigned element : 4;
-            unsigned opcode  : 5;
-            unsigned vt      : 5;
-            unsigned base    : 5;
-            unsigned op      : 6;
+            uint32_t offset  : 7;
+            uint32_t element : 4;
+            uint32_t opcode  : 5;
+            uint32_t vt      : 5;
+            uint32_t base    : 5;
+            uint32_t op      : 6;
         } WCType; // RSP LWC/SWC
 
         uint32_t full;
@@ -417,7 +417,7 @@ namespace hydra::N64
         s_DSRA32,
 
         NOP,
-        ERROR
+        ERROR_INSTRUCTION
     };
 
     [[maybe_unused]] static std::string gpr_get_name(int n, bool register_names)
