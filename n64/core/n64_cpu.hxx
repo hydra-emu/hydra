@@ -1,11 +1,11 @@
 #pragma once
 
 #include <array>
-#include <bit_cast.hxx>
 #include <cfenv>
 #include <cfloat>
 #include <chrono>
 #include <cmath>
+#include <compatibility.hxx>
 #include <concepts>
 #include <cstdint>
 #include <limits>

@@ -1,4 +1,4 @@
-#include <bswap.hxx>
+#include <compatibility.hxx>
 #include <fmt/format.h>
 #include <n64/core/n64_cpu.hxx>
 
@@ -141,7 +141,7 @@ namespace hydra::N64
         ret.resize(count);
         for (uint64_t i = start_vaddr; i < end_vaddr; i += 4)
         {
-            uint32_t instr = bswap32(
+            uint32_t instr = hydra::bswap32(
                 *reinterpret_cast<uint32_t*>(cpubus_.redirect_paddress(translate_vaddr(i).paddr)));
             std::string instr_str = disassemble_instr(instr, register_names);
             DisassemblerInstruction instr_s = {.vaddr = static_cast<uint32_t>(i),

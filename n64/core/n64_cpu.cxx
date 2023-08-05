@@ -1,9 +1,8 @@
 #include "n64/core/n64_addresses.hxx"
 #include <bitset>
-#include <bswap.hxx>
 #include <cassert>
 #include <cmath>
-#include <crc32.hxx>
+#include <compatibility.hxx>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -39,12 +38,12 @@ namespace hydra::N64
             // uint32_t pifcrc = 0xFFFF'FFFF;
             for (int i = 0; i < 32; i++)
             {
-                gprcrc = crc32_u64(gprcrc, gpr_regs_[i].UD);
-                fprcrc = crc32_u64(fprcrc, fpr_regs_[i].UD);
+                gprcrc = hydra::crc32_u64(gprcrc, gpr_regs_[i].UD);
+                fprcrc = hydra::crc32_u64(fprcrc, fpr_regs_[i].UD);
             }
             for (int i = 0; i < 64; i++)
             {
-                // pifcrc = crc32_u8(pifcrc, cpubus_.pif_ram_[i]);
+                // pifcrc = hydra::crc32_u8(pifcrc, cpubus_.pif_ram_[i]);
             }
             gprcrc ^= 0xFFFF'FFFF;
             fprcrc ^= 0xFFFF'FFFF;
@@ -87,8 +86,8 @@ namespace hydra::N64
             }
             case PI_RD_LEN:
             {
-                // std::memcpy(&cpubus_.rdram_[bswap32(cpubus_.pi_cart_addr_)],
-                // cpubus_.redirect_paddress(bswap32(cpubus_.pi_dram_addr_)), data + 1);
+                // std::memcpy(&cpubus_.rdram_[hydra::bswap32(cpubus_.pi_cart_addr_)],
+                // cpubus_.redirect_paddress(hydra::bswap32(cpubus_.pi_dram_addr_)), data + 1);
                 Logger::Warn("PI_RD_LEN write");
                 cpubus_.mi_interrupt_.PI = true;
                 return;
@@ -269,7 +268,7 @@ namespace hydra::N64
         else if (addr >= PIF_START && addr <= PIF_END)
         {
             uint32_t* ptr = reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[addr - PIF_START]);
-            *ptr = bswap32(data);
+            *ptr = hydra::bswap32(data);
             pif_command();
         }
         else if (addr == PIF_COMMAND)
@@ -288,7 +287,7 @@ namespace hydra::N64
         }
         else if (addr >= ISVIEWER_AREA_START && addr <= ISVIEWER_AREA_END)
         {
-            data = bswap32(data);
+            data = hydra::bswap32(data);
             for (int i = 0; i < 4; i++)
             {
                 cpubus_.isviewer_buffer_[addr - ISVIEWER_AREA_START + i] = data >> (i * 8);
@@ -409,7 +408,8 @@ namespace hydra::N64
         }
         else if (addr >= PIF_START && addr <= PIF_END)
         {
-            return bswap32(*reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[addr - PIF_START]));
+            return hydra::bswap32(
+                *reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[addr - PIF_START]));
         }
         else if (addr >= RDRAM_REGISTERS_START && addr <= RDRAM_REGISTERS_END)
         {
@@ -765,7 +765,7 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to load halfword from invalid address: {:08x}", vaddr);
         }
-        return bswap16(*ptr);
+        return hydra::bswap16(*ptr);
     }
 
     uint32_t CPU::load_word(uint64_t vaddr)
@@ -778,7 +778,7 @@ namespace hydra::N64
         }
         else
         {
-            return bswap32(*ptr);
+            return hydra::bswap32(*ptr);
         }
     }
 
@@ -790,7 +790,7 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to load doubleword from invalid address: {:08x}", vaddr);
         }
-        return bswap64(*ptr);
+        return hydra::bswap64(*ptr);
     }
 
     void CPU::store_byte(uint64_t vaddr, uint8_t data)
@@ -813,7 +813,7 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to store halfword to invalid address: {:08x}", vaddr);
         }
-        *ptr = bswap16(data);
+        *ptr = hydra::bswap16(data);
     }
 
     void CPU::store_word(uint64_t vaddr, uint32_t data)
@@ -827,7 +827,7 @@ namespace hydra::N64
         }
         else
         {
-            *ptr = bswap32(data);
+            *ptr = hydra::bswap32(data);
         }
     }
 
@@ -839,7 +839,7 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to store doubleword to invalid address: {:08x}", vaddr);
         }
-        *ptr = bswap64(data);
+        *ptr = hydra::bswap64(data);
     }
 
     void CPU::Tick()
