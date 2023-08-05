@@ -27,7 +27,7 @@ jobs:
     - name: install-deps
       run: |
         sudo apt-get update
-        sudo apt-get install build-essential libgl-dev ninja-build libgtest-dev
+        sudo apt-get install libgl-dev ninja-build
     - name: configure
       run: CC=/usr/bin/gcc-12 CXX=/usr/bin/g++-12 cmake -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make

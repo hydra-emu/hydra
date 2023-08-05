@@ -11,36 +11,53 @@
 <p align="center"><img src="./data/images/screen.png"></p>
 
 ## Current systems
-- Gameboy / Gameboy Color
 - Chip 8
-- NES (WIP)
-- Nintendo 64 (WIP)
+- Gameboy / Gameboy Color
+- NES
+- Nintendo 64
 
 ## Building
 
+You will need a C++20 compliant compiler like `gcc-12`
+
 <details>
  <summary>Archlinux</summary>
-<pre><code>pacman -S --needed git cmake ninja qt 
+<pre><code>
+pacman -S --needed qt6
 git clone https://github.com/OFFTKP/hydra.git
 cd hydra
-cmake -S . -B build -GNinja
-cmake --build build
+cmake -B build
+cmake --build build --target hydra -j $(nproc)
 </code></pre>
 </details>
 <details>
 <summary>Ubuntu</summary><br>
-These commands are used to install on a fresh ubuntu environment and some can be omitted.
-<pre><code>sudo apt-get update
-sudo apt-get install build-essential libgl-dev gcc-12 g++-12 ninja-build libfmt-dev qt6-base-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6
+<pre><code>
+sudo apt-get update
+sudo apt-get install libgl-dev qt6-base-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6
 git clone https://github.com/OFFTKP/hydra.git
 cd hydra
-cmake -S . -B build -GNinja
-cmake --build build
+cmake -B build
+cmake --build build --target hydra -j $(nproc)
+</code></pre>
+</details>
+<details>
+<summary>MacOS</summary><br>
+You can replace <code>-j 4</code> with your actual number of cores
+<pre><code>
+brew install qt6
+cmake -B build
+cmake --build build --target hydra -j 4
 </code></pre>
 </details>
 <details>
 <summary>Windows</summary><br>
-Has not been tested. Follow similar procedure, clone and build with cmake.
+Currently does not pass CI, so compilation might fail
+Make sure to install Qt6 first
+<pre><code>
+cmake.exe -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake.exe --build build --target hydra -j %NUMBER_OF_PROCESSORS%
+</code></pre>
 </details>
 
 ## Contributing
