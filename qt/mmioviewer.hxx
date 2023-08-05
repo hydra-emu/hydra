@@ -28,6 +28,9 @@ private:
 
     bool& open_;
 
+    void initialize_gb();
+    void initialize_nes();
+    void initialize_c8();
     void initialize_n64();
     void initialize_tab_list();
 

@@ -1,6 +1,9 @@
 #include "mmioviewer.hxx"
+#include "c8/c8_tkpwrapper.hxx"
 #include "emulator_types.hxx"
+#include "gb/gb_tkpwrapper.hxx"
 #include "n64/n64_tkpwrapper.hxx"
+#include "nes/nes_tkpwrapper.hxx"
 #include "registered_mmio.hxx"
 
 #include <QBoxLayout>
@@ -19,6 +22,21 @@ MmioViewer::MmioViewer(bool& open, hydra::Emulator* emulator, hydra::EmuType typ
     // TODO: thread safety - mutex locking
     switch (type)
     {
+        case hydra::EmuType::Gameboy:
+        {
+            initialize_gb();
+            break;
+        }
+        case hydra::EmuType::NES:
+        {
+            initialize_nes();
+            break;
+        }
+        case hydra::EmuType::c8:
+        {
+            initialize_c8();
+            break;
+        }
         case hydra::EmuType::N64:
         {
             initialize_n64();
@@ -32,15 +50,57 @@ MmioViewer::MmioViewer(bool& open, hydra::Emulator* emulator, hydra::EmuType typ
     initialize_tab_list();
 }
 
-void MmioViewer::initialize_n64()
-{
-    hydra::N64::N64_TKPWrapper* emulator = dynamic_cast<hydra::N64::N64_TKPWrapper*>(emulator_);
 #define REGISTER(group, name, value, mask, ...) \
     components_[group].push_back(RegisteredMmio::Register(name, value, mask, __VA_ARGS__))
 #define FREGISTER(group, name, value, mask) REGISTER(group, name, value, mask, {"Full"})
 #define FREGISTER64(group, name, value) \
     FREGISTER(group, name, value,       \
               "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+
+void MmioViewer::initialize_gb()
+{
+    hydra::Gameboy::Gameboy_TKPWrapper* emulator =
+        dynamic_cast<hydra::Gameboy::Gameboy_TKPWrapper*>(emulator_);
+    FREGISTER("CPU", "A", emulator->cpu_.A, "xxxxxxxx");
+    FREGISTER("CPU", "B", emulator->cpu_.B, "xxxxxxxx");
+    FREGISTER("CPU", "C", emulator->cpu_.C, "xxxxxxxx");
+    FREGISTER("CPU", "D", emulator->cpu_.D, "xxxxxxxx");
+    FREGISTER("CPU", "E", emulator->cpu_.E, "xxxxxxxx");
+    FREGISTER("CPU", "H", emulator->cpu_.H, "xxxxxxxx");
+    FREGISTER("CPU", "L", emulator->cpu_.L, "xxxxxxxx");
+    FREGISTER("CPU", "F", emulator->cpu_.F, "xxxxxxxx");
+    FREGISTER("CPU", "PC", emulator->cpu_.PC, "xxxxxxxxxxxxxxxx");
+    FREGISTER("CPU", "SP", emulator->cpu_.SP, "xxxxxxxxxxxxxxxx");
+    FREGISTER("CPU", "IF", emulator->cpu_.IF, "xxxxxxxx");
+    FREGISTER("CPU", "IE", emulator->cpu_.IE, "xxxxxxxx");
+
+    REGISTER("PPU", "LCDC", emulator->ppu_.LCDC, "x'x'x'x'x'x'x'x",
+             {"LCD/PPU enable", "Window tile map area", "Window enable",
+              "BG & window tile data area", "BG tile map area", "OBJ size", "OBJ enable",
+              "BG enable"});
+    FREGISTER("PPU", "STAT", emulator->ppu_.STAT, "xxxxxxxx");
+    FREGISTER("PPU", "SCY", emulator->ppu_.SCY, "xxxxxxxx");
+    FREGISTER("PPU", "SCX", emulator->ppu_.SCX, "xxxxxxxx");
+    FREGISTER("PPU", "LY", emulator->ppu_.LY, "xxxxxxxx");
+    FREGISTER("PPU", "LYC", emulator->ppu_.LYC, "xxxxxxxx");
+    FREGISTER("PPU", "WX", emulator->ppu_.WX, "xxxxxxxx");
+    FREGISTER("PPU", "WY", emulator->ppu_.WY, "xxxxxxxx");
+}
+
+void MmioViewer::initialize_nes()
+{
+    // hydra::NES::NES_TKPWrapper* emulator = dynamic_cast<hydra::NES::NES_TKPWrapper*>(emulator_);
+}
+
+void MmioViewer::initialize_c8()
+{
+    // hydra::c8::Chip8_TKPWrapper* emulator =
+    // dynamic_cast<hydra::c8::Chip8_TKPWrapper*>(emulator_);
+}
+
+void MmioViewer::initialize_n64()
+{
+    hydra::N64::N64_TKPWrapper* emulator = dynamic_cast<hydra::N64::N64_TKPWrapper*>(emulator_);
     // components_["CPU"] = {};
     // components_["RSP"] = {};
     // components_["RDP"] = {};
@@ -52,6 +112,10 @@ void MmioViewer::initialize_n64()
         FREGISTER64("CPU", "r" + std::to_string(i), emulator->n64_impl_.cpu_.gpr_regs_[i].UD);
     }
 }
+
+#undef REGISTER
+#undef FREGISTER
+#undef FREGISTER64
 
 void MmioViewer::initialize_tab_list()
 {
@@ -136,6 +200,9 @@ QWidget* MmioViewer::create_item(RegisteredMmio::MmioWrapper& mmiowrapper)
         line_edit->setReadOnly(true);
         line_edit->setText(QString::number(mmiowrapper.GetValue()));
         layout->addWidget(line_edit);
+    }
+    else
+    {
     }
 
     return item;
