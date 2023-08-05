@@ -1,6 +1,5 @@
 #include <log.hxx>
 #include <n64/core/n64_cpu.hxx>
-#include <overflow.hxx>
 
 #define rdreg (gpr_regs_[instruction_.RType.rd])
 #define rsreg (gpr_regs_[instruction_.RType.rs])
@@ -121,7 +120,7 @@ namespace hydra::N64
     void CPU::s_SUB()
     {
         int32_t result = 0;
-        bool overflow = hydra::add_overflow(rsreg.W._0, -rtreg.W._0, result);
+        bool overflow = hydra::sub_overflow(rsreg.W._0, rtreg.W._0, result);
         if (overflow)
         {
             return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
@@ -137,7 +136,7 @@ namespace hydra::N64
     void CPU::s_DSUB()
     {
         int64_t result = 0;
-        bool overflow = hydra::add_overflow(rsreg.D, rtreg.D, result);
+        bool overflow = hydra::sub_overflow(rsreg.D, rtreg.D, result);
         if (overflow)
         {
             return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
@@ -166,16 +165,16 @@ namespace hydra::N64
 
     void CPU::s_DMULT()
     {
-        __uint128_t res = static_cast<__uint128_t>(rsreg.D) * rtreg.D;
-        lo_ = static_cast<uint64_t>(res);
-        hi_ = res >> 64;
+        auto [high, low] = hydra::mul64(rsreg.D, rtreg.D);
+        hi_ = high;
+        lo_ = low;
     }
 
     void CPU::s_DMULTU()
     {
-        __uint128_t res = static_cast<__uint128_t>(rsreg.UD) * rtreg.UD;
-        lo_ = static_cast<uint64_t>(res);
-        hi_ = res >> 64;
+        auto [high, low] = hydra::mul64(rsreg.UD, rtreg.UD);
+        hi_ = high;
+        lo_ = low;
     }
 
     void CPU::s_DIV()

@@ -1,7 +1,7 @@
 #include <bit>
 #include <bitset>
-#include <bswap.hxx>
 #include <cassert>
+#include <compatibility.hxx>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -28,7 +28,7 @@ static inline uint16_t rgba32_to_rgba16(uint32_t color)
     uint8_t r = (color >> 3) & 0x1F;
     uint8_t g = (color >> 11) & 0x1F;
     uint8_t b = (color >> 19) & 0x1F;
-    return bswap16((r << 11) | (g << 6) | (b << 1) | 1);
+    return hydra::bswap16((r << 11) | (g << 6) | (b << 1) | 1);
 }
 
 namespace hydra::N64
@@ -187,7 +187,7 @@ namespace hydra::N64
         {
             uintptr_t address = status_.dma_source_dmem ? reinterpret_cast<uintptr_t>(spmem_ptr_)
                                                         : reinterpret_cast<uintptr_t>(rdram_ptr_);
-            uint64_t data = bswap64(*reinterpret_cast<uint64_t*>(address + current));
+            uint64_t data = hydra::bswap64(*reinterpret_cast<uint64_t*>(address + current));
             uint8_t command_type = (data >> 56) & 0b111111;
 
             if (command_type >= 8)
@@ -197,7 +197,8 @@ namespace hydra::N64
                 command.resize(length);
                 for (int i = 0; i < length; i++)
                 {
-                    command[i] = bswap64(*reinterpret_cast<uint64_t*>(address + current + (i * 8)));
+                    command[i] =
+                        hydra::bswap64(*reinterpret_cast<uint64_t*>(address + current + (i * 8)));
                 }
                 execute_command(command);
                 // Logger::Info("RDP: Command {} ({:02x})",
@@ -324,7 +325,7 @@ namespace hydra::N64
             case RDPCommandType::SetFillColor:
             {
                 fill_color_ = data[0] & 0xFFFFFFFF;
-                fill_color_ = bswap32(fill_color_);
+                fill_color_ = hydra::bswap32(fill_color_);
                 break;
             }
             case RDPCommandType::LoadTile:
@@ -379,7 +380,7 @@ namespace hydra::N64
                         src = (src >> 32) | (src << 32);
                     }
                     uint64_t* dst = reinterpret_cast<uint64_t*>(&tmem_[tile.tmem_address + i]);
-                    *dst = bswap64(src);
+                    *dst = hydra::bswap64(src);
                     tl += DxT;
                     odd = (tl >> 11) & 1;
                 }
@@ -440,19 +441,19 @@ namespace hydra::N64
             case RDPCommandType::SetEnvironmentColor:
             {
                 environment_color_ = data[0] & 0xFFFFFFFF;
-                environment_color_ = bswap32(environment_color_);
+                environment_color_ = hydra::bswap32(environment_color_);
                 break;
             }
             case RDPCommandType::SetBlendColor:
             {
                 blend_color_ = data[0] & 0xFFFFFFFF;
-                blend_color_ = bswap32(blend_color_);
+                blend_color_ = hydra::bswap32(blend_color_);
                 break;
             }
             case RDPCommandType::SetPrimitiveColor:
             {
                 primitive_color_ = data[0] & 0xFFFFFFFF;
-                primitive_color_ = bswap32(primitive_color_);
+                primitive_color_ = hydra::bswap32(primitive_color_);
                 break;
             }
             case RDPCommandType::SetScissor:
@@ -468,7 +469,7 @@ namespace hydra::N64
             case RDPCommandType::SetFogColor:
             {
                 fog_color_ = data[0] & 0xFFFFFFFF;
-                fog_color_ = bswap32(fog_color_);
+                fog_color_ = hydra::bswap32(fog_color_);
                 break;
             }
             case RDPCommandType::SetCombineMode:

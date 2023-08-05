@@ -1,5 +1,4 @@
-#include <bswap.hxx>
-#include <crc32.hxx>
+#include <compatibility.hxx>
 #include <fmt/format.h>
 #include <fstream>
 #include <iomanip>
@@ -34,15 +33,15 @@ namespace hydra::N64
             uint32_t memcrc = 0xFFFF'FFFF;
             for (int i = 0; i < 32; i++)
             {
-                gprcrc = crc32_u64(gprcrc, gpr_regs_[i].UW);
+                gprcrc = hydra::crc32_u64(gprcrc, gpr_regs_[i].UW);
                 for (int j = 0; j < 8; j++)
                 {
-                    veccrc = crc32_u16(veccrc, vu_regs_[i][j]);
+                    veccrc = hydra::crc32_u16(veccrc, vu_regs_[i][j]);
                 }
             }
             for (int i = 0; i < 0x1000; i += 4)
             {
-                memcrc = crc32_u32(memcrc, bswap32(load_word(i)));
+                memcrc = hydra::crc32_u32(memcrc, hydra::bswap32(load_word(i)));
             }
             memcrc ^= 0xFFFF'FFFF;
             gprcrc ^= 0xFFFF'FFFF;
@@ -94,7 +93,7 @@ namespace hydra::N64
     uint32_t RSP::fetch_instruction()
     {
         uint32_t instruction = *reinterpret_cast<uint32_t*>(&mem_[0x1000 + (pc_ & 0xFFF)]);
-        return bswap32(instruction);
+        return hydra::bswap32(instruction);
     }
 
     uint8_t RSP::load_byte(uint16_t address)
@@ -105,14 +104,14 @@ namespace hydra::N64
     uint16_t RSP::load_halfword(uint16_t address)
     {
         uint16_t data = mem_[address & 0xFFF] | (mem_[(address + 1) & 0xFFF] << 8);
-        return bswap16(data);
+        return hydra::bswap16(data);
     }
 
     uint32_t RSP::load_word(uint16_t address)
     {
         uint32_t data = mem_[address & 0xFFF] | (mem_[(address + 1) & 0xFFF] << 8) |
                         (mem_[(address + 2) & 0xFFF] << 16) | (mem_[(address + 3) & 0xFFF] << 24);
-        return bswap32(data);
+        return hydra::bswap32(data);
     }
 
     void RSP::store_byte(uint16_t address, uint8_t data)
@@ -122,14 +121,14 @@ namespace hydra::N64
 
     void RSP::store_halfword(uint16_t address, uint16_t data)
     {
-        data = bswap16(data);
+        data = hydra::bswap16(data);
         mem_[address & 0xFFF] = data & 0xFF;
         mem_[(address + 1) & 0xFFF] = (data >> 8) & 0xFF;
     }
 
     void RSP::store_word(uint16_t address, uint32_t data)
     {
-        data = bswap32(data);
+        data = hydra::bswap32(data);
         mem_[address & 0xFFF] = data & 0xFF;
         mem_[(address + 1) & 0xFFF] = (data >> 8) & 0xFF;
         mem_[(address + 2) & 0xFFF] = (data >> 16) & 0xFF;

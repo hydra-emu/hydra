@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <bswap.hxx>
+#include <compatibility.hxx>
 #include <fmt/format.h>
 #include <fstream>
 #include <miniaudio.h>
@@ -202,8 +202,8 @@ namespace hydra::N64
             uint32_t data = *reinterpret_cast<uint32_t*>(rdram_ptr_ + address);
             int16_t left = (static_cast<int16_t>(data >> 16));
             int16_t right = (static_cast<int16_t>(data & 0xffff));
-            bool insert_a = ai_buffer_.insert(bswap16(left));
-            bool insert_b = ai_buffer_.insert(bswap16(right));
+            bool insert_a = ai_buffer_.insert(hydra::bswap16(left));
+            bool insert_b = ai_buffer_.insert(hydra::bswap16(right));
             if (!insert_a || !insert_b) [[unlikely]]
             {
                 Logger::Fatal("AI buffer overflow");

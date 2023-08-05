@@ -1,4 +1,4 @@
-#include <bit_cast.hxx>
+#include <compatibility.hxx>
 #include <functional>
 #include <log.hxx>
 #include <n64/core/n64_cpu.hxx>

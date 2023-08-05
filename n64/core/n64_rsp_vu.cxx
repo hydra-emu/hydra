@@ -1,9 +1,8 @@
 #include <algorithm>
 #include <array>
-#include <bit.hxx>
+#include <compatibility.hxx>
 #include <log.hxx>
 #include <n64/core/n64_rsp.hxx>
-#include <overflow.hxx>
 
 template <class T, class X1, class X2>
 T pclamp(T value, X1 min, X2 max)
