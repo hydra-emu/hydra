@@ -23,6 +23,7 @@ namespace hydra
         struct TestGameboy;
     }
 } // namespace hydra
+class MmioViewer;
 
 namespace hydra::Gameboy
 {
@@ -62,5 +63,6 @@ namespace hydra::Gameboy
         uint8_t &joypad_, &interrupt_flag_;
         inline void update_audio_sync();
         friend class hydra::Gameboy::QA::TestGameboy;
+        friend class ::MmioViewer;
     };
 } // namespace hydra::Gameboy
