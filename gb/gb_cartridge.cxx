@@ -138,7 +138,7 @@ namespace hydra::Gameboy
         }
     }
 
-    const char* Cartridge::GetCartridgeTypeName()
+    std::string Cartridge::GetCartridgeTypeName()
     {
         auto ct = GetCartridgeType();
         switch (ct)
@@ -213,12 +213,12 @@ namespace hydra::Gameboy
             }
             default:
             {
-                return std::to_string(static_cast<int>(ct)).c_str();
+                return std::to_string(static_cast<int>(ct));
             }
         }
     }
 
-    const char* Cartridge::GetHeaderText()
+    std::string Cartridge::GetHeaderText()
     {
         static std::string header_text;
         if (!text_cached_)

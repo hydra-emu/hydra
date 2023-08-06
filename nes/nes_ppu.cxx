@@ -76,6 +76,7 @@ namespace hydra::NES
             if (scanline_ == 241 && scanline_cycle_ == 9)
             {
                 ppu_status_ |= 0x80;
+                printf("VBlank\n");
                 ntsc.data = screen_color_data_second_.data();
                 ntsc.w = 256;
                 ntsc.h = 240;
@@ -316,6 +317,7 @@ namespace hydra::NES
                 break;
             }
         }
+        open_bus_ = data;
     }
 
     void PPU::dma(std::array<uint8_t, 256> data)

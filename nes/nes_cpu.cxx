@@ -692,6 +692,8 @@ namespace hydra::NES
         for (int j = 0; j < i; j++)
         {
             bus_.ppu_.Tick();
+            bus_.ppu_.Tick();
+            bus_.ppu_.Tick();
             bus_.apu_.Tick();
         }
     }
@@ -1444,8 +1446,8 @@ namespace hydra::NES
         A = 0;
         X = 0;
         Y = 0;
-        P = 0x24;
-        cycles_ = 7;
+        P = 0x04;
+        delay(8);
         was_prefetched_ = false;
         bus_.Reset();
     }

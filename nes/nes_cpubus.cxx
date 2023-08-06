@@ -87,6 +87,7 @@ namespace hydra::NES
                 {
                     auto temp = ppu_.ppu_status_;
                     ppu_.ppu_status_ &= ~0x80;
+                    temp |= ppu_.open_bus_ & 0b1'1111;
                     return temp;
                 }
                 case 0b011:

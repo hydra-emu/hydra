@@ -157,6 +157,11 @@ namespace hydra::N64
         uint32_t* color_multiplier_;
         uint32_t* color_adder_;
 
+        uint32_t* alpha_sub_a_;
+        uint32_t* alpha_sub_b_;
+        uint32_t* alpha_multiplier_;
+        uint32_t* alpha_adder_;
+
         uint8_t blender_1a_0_;
         uint8_t blender_1b_0_;
         uint8_t blender_2a_0_;
@@ -179,6 +184,7 @@ namespace hydra::N64
         bool z_update_en_ = false;
         bool z_compare_en_ = false;
         bool z_source_sel_ = false;
+        bool image_read_en_ = false;
         uint8_t z_mode_ : 2 = 0;
         uint16_t primitive_depth_ = 0;
         uint16_t primitive_depth_delta_ = 0;
@@ -204,6 +210,11 @@ namespace hydra::N64
         uint32_t z_decompress(uint32_t z);
         void init_depth_luts();
         void fetch_texels(int tile, int32_t s, int32_t t);
+
+        uint32_t* get_sub_a(uint8_t sub_a);
+        uint32_t* get_sub_b(uint8_t sub_b);
+        uint32_t* get_mul(uint8_t mul);
+        uint32_t* get_add(uint8_t add);
 
         template <bool Shade, bool Texture, bool Depth>
         void edgewalker(const std::vector<uint64_t>& data);
