@@ -22,4 +22,4 @@ jobs:
     - name: configure
       run: cmake -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make
-      run: cmake --build build
+      run: cmake --build build --target hydra

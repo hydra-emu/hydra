@@ -42,7 +42,6 @@ set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
-find_package(GTest)
 
 add_subdirectory(vendored/fmt)
 
@@ -161,8 +160,8 @@ set_target_properties(hydra PROPERTIES hydra_properties
 qt_finalize_executable(hydra)
 
 # Testing
-
-enable_testing()
+if (CMAKE_TESTING_ENABLED)
+find_package(GTest)
 project(n64_qa)
 add_library(alp-core STATIC
     vendored/angrylion-rdp-plus/common.h
@@ -180,3 +179,4 @@ add_executable(n64_qa n64/qa/n64_rdp_qa.cxx n64/core/n64_rdp.cxx n64/qa/n64_angr
 target_include_directories(n64_qa PRIVATE ${HYDRA_INCLUDE_DIRECTORIES} vendored/angrylion-rdp-plus/)
 target_link_libraries(n64_qa PUBLIC GTest::gtest GTest::gtest_main fmt::fmt alp-core)
 add_test(NAME n64_qa COMMAND n64_qa WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()

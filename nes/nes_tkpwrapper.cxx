@@ -51,8 +51,8 @@ namespace hydra::NES
 
     void NES_TKPWrapper::reset()
     {
-        cpu_.SoftReset();
         ppu_.Reset();
+        cpu_.Reset();
     }
 
     void NES_TKPWrapper::update()
@@ -74,6 +74,7 @@ namespace hydra::NES
 
     bool NES_TKPWrapper::load_file(const std::string& path)
     {
-        return cpu_.bus_.LoadCartridge(path);
+        bool loaded = cpu_.bus_.LoadCartridge(path);
+        return loaded;
     }
 } // namespace hydra::NES

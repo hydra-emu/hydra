@@ -8,6 +8,7 @@
 
 namespace hydra::NES
 {
+    class CPU;
     class CPUBus;
 
     struct Sprite
@@ -30,6 +31,7 @@ namespace hydra::NES
     private:
         uint8_t ppu_ctrl_ = 0, ppu_mask_ = 0, ppu_status_ = 0, oam_addr_ = 0, oam_data_ = 0,
                 ppu_scroll_ = 0, ppu_data_ = 0, oam_dma_ = 0;
+        uint8_t open_bus_ = 0;
         uint16_t vram_addr_ = 0;
         int scanline_ = 0;
         int scanline_cycle_ = 0;
@@ -92,6 +94,7 @@ namespace hydra::NES
         std::vector<uint8_t> chr_rom_;
         std::function<void()> fire_nmi;
         uint64_t master_clock_dbg_ = 0;
+        friend class CPU;
         friend class CPUBus;
     };
 } // namespace hydra::NES

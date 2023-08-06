@@ -28,7 +28,8 @@ static inline uint16_t rgba32_to_rgba16(uint32_t color)
     uint8_t r = (color >> 3) & 0x1F;
     uint8_t g = (color >> 11) & 0x1F;
     uint8_t b = (color >> 19) & 0x1F;
-    return hydra::bswap16((r << 11) | (g << 6) | (b << 1) | 1);
+    uint8_t a = (color >> 24) & 0x1;
+    return hydra::bswap16((r << 11) | (g << 6) | (b << 1) | a);
 }
 
 namespace hydra::N64
@@ -425,6 +426,7 @@ namespace hydra::N64
                 blender_1b_0_ = command.b_m1b_0;
                 blender_2a_0_ = command.b_m2a_0;
                 blender_2b_0_ = command.b_m2b_0;
+                image_read_en_ = command.image_read_en;
                 break;
             }
             case RDPCommandType::SetPrimDepth:
@@ -476,148 +478,141 @@ namespace hydra::N64
             {
                 SetCombineModeCommand command;
                 command.full = data[0];
-                switch (command.sub_A_RGB_1)
-                {
-                    case 0:
-                        color_sub_a_ = &combined_color_;
-                        break;
-                    case 1:
-                        color_sub_a_ = &texel_color_0_;
-                        break;
-                    case 2:
-                        color_sub_a_ = &texel_color_1_;
-                        break;
-                    case 3:
-                        color_sub_a_ = &primitive_color_;
-                        break;
-                    case 4:
-                        color_sub_a_ = &shade_color_;
-                        break;
-                    case 5:
-                        color_sub_a_ = &environment_color_;
-                        break;
-                    case 6:
-                        color_sub_a_ = &color_one_;
-                        break;
-                    // TODO: Implement noise
-                    case 7:
-                        color_sub_a_ = &color_zero_;
-                        break;
-                    default:
-                        color_sub_a_ = &color_zero_;
-                        break;
-                }
 
-                switch (command.sub_B_RGB_1)
-                {
-                    case 0:
-                        color_sub_b_ = &combined_color_;
-                        break;
-                    case 1:
-                        color_sub_b_ = &texel_color_0_;
-                        break;
-                    case 2:
-                        color_sub_b_ = &texel_color_1_;
-                        break;
-                    case 3:
-                        color_sub_b_ = &primitive_color_;
-                        break;
-                    case 4:
-                        color_sub_b_ = &shade_color_;
-                        break;
-                    case 5:
-                        color_sub_b_ = &environment_color_;
-                        break;
-                    // TODO: Key center??
-                    case 6:
-                        color_sub_b_ = &color_zero_;
-                        break;
-                    // TODO: Convert K4??
-                    case 7:
-                        color_sub_b_ = &color_zero_;
-                        break;
-                    default:
-                        color_sub_b_ = &color_zero_;
-                        break;
-                }
+                color_sub_a_ = get_sub_a(command.sub_A_RGB_1);
+                color_sub_b_ = get_sub_b(command.sub_B_RGB_1);
+                color_multiplier_ = get_mul(command.mul_RGB_1);
+                color_adder_ = get_add(command.add_RGB_1);
 
-                switch (command.mul_RGB_1)
-                {
-                    case 0:
-                        color_multiplier_ = &combined_color_;
-                        break;
-                    case 1:
-                        color_multiplier_ = &texel_color_0_;
-                        break;
-                    case 2:
-                        color_multiplier_ = &texel_color_1_;
-                        break;
-                    case 3:
-                        color_multiplier_ = &primitive_color_;
-                        break;
-                    case 4:
-                        color_multiplier_ = &shade_color_;
-                        break;
-                    case 5:
-                        color_multiplier_ = &environment_color_;
-                        break;
-                    // TODO: rest of the colors
-                    case 16:
-                    case 17:
-                    case 18:
-                    case 19:
-                    case 20:
-                    case 21:
-                    case 22:
-                    case 23:
-                    case 24:
-                    case 25:
-                    case 26:
-                    case 27:
-                    case 28:
-                    case 29:
-                    case 30:
-                    case 31:
-                        color_multiplier_ = &color_zero_;
-                        break;
-                    default:
-                        std::cout << "Bad multiplier: " << command.mul_RGB_1 << std::endl;
-                        break;
-                }
-
-                switch (command.add_RGB_1)
-                {
-                    case 0:
-                        color_adder_ = &combined_color_;
-                        break;
-                    case 1:
-                        color_adder_ = &texel_color_0_;
-                        break;
-                    case 2:
-                        color_adder_ = &texel_color_1_;
-                        break;
-                    case 3:
-                        color_adder_ = &primitive_color_;
-                        break;
-                    case 4:
-                        color_adder_ = &shade_color_;
-                        break;
-                    case 5:
-                        color_adder_ = &environment_color_;
-                        break;
-                    case 6:
-                        color_adder_ = &color_one_;
-                        break;
-                    case 7:
-                        color_adder_ = &color_zero_;
-                        break;
-                }
+                alpha_sub_a_ = get_sub_a(command.sub_A_Alpha_1);
+                alpha_sub_b_ = get_sub_b(command.sub_B_Alpha_1);
+                alpha_multiplier_ = get_mul(command.mul_Alpha_1);
+                alpha_adder_ = get_add(command.add_Alpha_1);
                 break;
             }
             default:
                 Logger::Debug("Unhandled command: {} ({:02x})", get_rdp_command_name(id),
                               static_cast<int>(id));
                 break;
+        }
+    }
+
+    uint32_t* RDP::get_sub_a(uint8_t sub_a)
+    {
+        switch (sub_a & 0b1111)
+        {
+            case 0:
+                return &combined_color_;
+            case 1:
+                return &texel_color_0_;
+            case 2:
+                return &texel_color_1_;
+            case 3:
+                return &primitive_color_;
+            case 4:
+                return &shade_color_;
+            case 5:
+                return &environment_color_;
+            case 6:
+                return &color_one_;
+            // TODO: Implement noise
+            case 7:
+                return &color_zero_;
+            default:
+                return &color_zero_;
+        }
+    }
+
+    uint32_t* RDP::get_sub_b(uint8_t sub_b)
+    {
+        switch (sub_b & 0b1111)
+        {
+            case 0:
+                return &combined_color_;
+            case 1:
+                return &texel_color_0_;
+            case 2:
+                return &texel_color_1_;
+            case 3:
+                return &primitive_color_;
+            case 4:
+                return &shade_color_;
+            case 5:
+                return &environment_color_;
+            // TODO: Key center??
+            case 6:
+                return &color_zero_;
+            // TODO: Convert K4??
+            case 7:
+                return &color_zero_;
+            default:
+                return &color_zero_;
+        }
+    }
+
+    uint32_t* RDP::get_mul(uint8_t mul)
+    {
+        switch (mul & 0b11111)
+        {
+            case 0:
+                return &combined_color_;
+            case 1:
+                return &texel_color_0_;
+            case 2:
+                return &texel_color_1_;
+            case 3:
+                return &primitive_color_;
+            case 4:
+                return &shade_color_;
+            case 5:
+                return &environment_color_;
+            // TODO: rest of the colors
+            case 16:
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+            case 24:
+            case 25:
+            case 26:
+            case 27:
+            case 28:
+            case 29:
+            case 30:
+            case 31:
+                return &color_zero_;
+            default:
+                Logger::Warn("Unhandled mul: {}", mul);
+                return &color_zero_;
+        }
+    }
+
+    uint32_t* RDP::get_add(uint8_t add)
+    {
+        switch (add & 0b111)
+        {
+            case 0:
+                return &combined_color_;
+            case 1:
+                return &texel_color_0_;
+            case 2:
+                return &texel_color_1_;
+            case 3:
+                return &primitive_color_;
+            case 4:
+                return &shade_color_;
+            case 5:
+                return &environment_color_;
+            case 6:
+                return &color_one_;
+            case 7:
+                return &color_zero_;
+            default:
+                // TODO: std::unreachable
+                return nullptr;
         }
     }
 
@@ -644,12 +639,24 @@ namespace hydra::N64
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
                     framebuffer_color_ = rgba16_to_rgba32(*ptr);
+                    // TODO: remove code duplication
+                    // Seems to set alpha to max when disabled
+                    if (!image_read_en_)
+                    {
+                        framebuffer_color_ &= 0xFFFFFF;
+                        framebuffer_color_ |= 0xFF000000;
+                    }
                     *ptr = rgba32_to_rgba16(blender());
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
                     framebuffer_color_ = *ptr;
+                    if (!image_read_en_)
+                    {
+                        framebuffer_color_ &= 0xFFFFFF;
+                        framebuffer_color_ |= 0xFF000000;
+                    }
                     *ptr = blender();
                 }
                 break;
@@ -695,8 +702,13 @@ namespace hydra::N64
                       ((*color_multiplier_ >> 16) & 0xFF)) /
                      0xFF) +
                     ((*color_adder_ >> 16) & 0xFF);
-        uint8_t a = 0xFF;
-        combined_color_ = (a << 24) | (b << 16) | (g << 8) | r;
+        uint8_t a = (((((*alpha_sub_a_ >> 24) & 0xFF) - ((*alpha_sub_b_ >> 24) & 0xFF)) *
+                      ((*alpha_multiplier_ >> 24) & 0xFF)) /
+                     0xFF) +
+                    ((*alpha_adder_ >> 24) & 0xFF);
+        // Don't use this for now
+        (void)a;
+        combined_color_ = (0xFF << 24) | (b << 16) | (g << 8) | r;
     }
 
     uint32_t RDP::blender()
@@ -758,7 +770,9 @@ namespace hydra::N64
                 multiplier2 = ~multiplier1;
                 break;
             case 1:
-                multiplier2 = framebuffer_color_ >> 24;
+                // TODO: Very weird colors when using framebuffer alpha...
+                multiplier2 = 0x00;
+                // multiplier2 = framebuffer_color_ >> 24;
                 break;
             case 2:
                 multiplier2 = 0xFF;
@@ -768,20 +782,15 @@ namespace hydra::N64
                 break;
         }
 
-        float r = (((color1 & 0xFF) * multiplier1) + ((color2 & 0xFF) * multiplier2)) /
-                  (multiplier1 + multiplier2);
-        float g =
-            ((((color1 >> 8) & 0xFF) * multiplier1) + (((color2 >> 8) & 0xFF) * multiplier2)) /
+        uint8_t r = (((color1 >> 0) & 0xFF) * multiplier1 + ((color2 >> 0) & 0xFF) * multiplier2) /
+                    (multiplier1 + multiplier2);
+        uint8_t g = (((color1 >> 8) & 0xFF) * multiplier1 + ((color2 >> 8) & 0xFF) * multiplier2) /
+                    (multiplier1 + multiplier2);
+        uint8_t b =
+            (((color1 >> 16) & 0xFF) * multiplier1 + ((color2 >> 16) & 0xFF) * multiplier2) /
             (multiplier1 + multiplier2);
-        float b =
-            ((((color1 >> 16) & 0xFF) * multiplier1) + (((color2 >> 16) & 0xFF) * multiplier2)) /
-            (multiplier1 + multiplier2);
-        // TODO: can we do this faster?
-        uint8_t r8 = (r > 255.0f) ? 255 : r;
-        uint8_t g8 = (g > 255.0f) ? 255 : g;
-        uint8_t b8 = (b > 255.0f) ? 255 : b;
-        uint8_t a = 0xFF;
-        return (a << 24) | (b8 << 16) | (g8 << 8) | r8;
+
+        return (0xFF << 24) | (b << 16) | (g << 8) | r;
     }
 
     bool RDP::depth_test(int x, int y, uint16_t z)

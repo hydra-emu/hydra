@@ -76,8 +76,8 @@ namespace hydra::Gameboy
         int GetRamSize();
         int GetRomSize();
         bool UsingBattery();
-        const char* GetCartridgeTypeName();
-        const char* GetHeaderText();
+        std::string GetCartridgeTypeName();
+        std::string GetHeaderText();
         std::string GetLicenseeNew();
         std::string GetLicenseeOld();
         bool UseCGB = false;

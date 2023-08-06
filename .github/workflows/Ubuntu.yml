@@ -31,7 +31,7 @@ jobs:
     - name: configure
       run: CC=/usr/bin/gcc-12 CXX=/usr/bin/g++-12 cmake -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make
-      run: cmake --build build
+      run: cmake --build build --target hydra
     - name: upload
       uses: actions/upload-artifact@v2
       with:
