@@ -45,6 +45,7 @@ private:
 
 private slots:
     void redraw_screen();
+    void on_mouse_move(QMouseEvent* event);
 
 public:
     MainWindow(QWidget* parent = nullptr);

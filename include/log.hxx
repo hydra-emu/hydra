@@ -4,6 +4,8 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <global.hxx>
+#include <str_hash.hxx>
+#include <unordered_map>
 
 // TODO: move to cpp file
 #define ENABLE_LOGGING true
@@ -26,6 +28,25 @@ struct Logger
     {
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
         log_impl<LogWarning, ConsoleNormal>(str);
+    }
+
+    template <typename... T>
+    static void WarnOnce(fmt::format_string<T...> fmt, T&&... args)
+    {
+        static std::unordered_map<uint32_t, bool> warnings = get_warnings();
+
+        std::string msg = fmt::format(fmt, std::forward<T>(args)...);
+        uint32_t hash = str_hash(msg);
+        if (warnings[hash])
+            return;
+
+        Logger::Warn("{}", msg);
+        warnings[hash] = true;
+    }
+
+    static void ClearWarnings()
+    {
+        get_warnings().clear();
     }
 
     template <typename... T>
@@ -82,5 +103,11 @@ private:
         std::string messagef = fmt::format(" {}\n", message);
         OutputFunction(prefix + messagef);
 #endif
+    }
+
+    static std::unordered_map<uint32_t, bool>& get_warnings()
+    {
+        static std::unordered_map<uint32_t, bool> warnings;
+        return warnings;
     }
 };

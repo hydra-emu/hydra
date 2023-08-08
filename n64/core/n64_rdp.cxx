@@ -2,7 +2,6 @@
 #include <bitset>
 #include <cassert>
 #include <compatibility.hxx>
-#include <fstream>
 #include <functional>
 #include <iostream>
 #include <log.hxx>
@@ -10,6 +9,7 @@
 #include <n64/core/n64_rdp.hxx>
 #include <n64/core/n64_rdp_commands.hxx>
 #include <sstream>
+#include <str_hash.hxx>
 
 static inline uint32_t rgba16_to_rgba32(uint16_t color)
 {
@@ -167,6 +167,10 @@ namespace hydra::N64
         color_sub_b_ = &color_zero_;
         color_multiplier_ = &color_one_;
         color_adder_ = &color_zero_;
+        alpha_sub_a_ = &color_zero_;
+        alpha_sub_b_ = &color_zero_;
+        alpha_multiplier_ = &color_one_;
+        alpha_adder_ = &color_zero_;
         blender_1a_0_ = 0;
         blender_1b_0_ = 0;
         blender_2a_0_ = 0;
@@ -220,7 +224,7 @@ namespace hydra::N64
     void RDP::execute_command(const std::vector<uint64_t>& data)
     {
         RDPCommandType id = static_cast<RDPCommandType>((data[0] >> 56) & 0b111111);
-        // Logger::Info("RDP: {}", get_rdp_command_name(command));
+        // Logger::Info("RDP: {}", get_rdp_command_name(id));
         switch (id)
         {
             case RDPCommandType::SyncFull:
@@ -295,11 +299,6 @@ namespace hydra::N64
                 int32_t xmin = command.XMIN >> 2;
                 int32_t ymin = command.YMIN >> 2;
 
-                if (cycle_type_ >= static_cast<int>(CycleType::Copy))
-                {
-                    ymin += 1;
-                }
-
                 int z = 0;
 
                 if (z_source_sel_)
@@ -307,11 +306,11 @@ namespace hydra::N64
                     z = primitive_depth_;
                 }
 
-                for (int y = ymin; y < ymax; y++)
+                for (int y = ymin; y <= ymax; y++)
                 {
-                    for (int x = xmin; x < xmax; x++)
+                    for (int x = xmin; x <= xmax; x++)
                     {
-                        if (!z_compare_en_ || depth_test(x, y, z))
+                        if (depth_test(x, y, z, 0))
                         {
                             draw_pixel(x, y);
                             if (z_update_en_)
@@ -444,6 +443,9 @@ namespace hydra::N64
             {
                 environment_color_ = data[0] & 0xFFFFFFFF;
                 environment_color_ = hydra::bswap32(environment_color_);
+
+                uint8_t alpha = environment_color_ >> 24;
+                environment_alpha_ = (alpha << 24) | (alpha << 16) | (alpha << 8) | alpha;
                 break;
             }
             case RDPCommandType::SetBlendColor:
@@ -456,6 +458,9 @@ namespace hydra::N64
             {
                 primitive_color_ = data[0] & 0xFFFFFFFF;
                 primitive_color_ = hydra::bswap32(primitive_color_);
+
+                uint8_t alpha = primitive_color_ >> 24;
+                primitive_alpha_ = (alpha << 24) | (alpha << 16) | (alpha << 8) | alpha;
                 break;
             }
             case RDPCommandType::SetScissor:
@@ -472,6 +477,9 @@ namespace hydra::N64
             {
                 fog_color_ = data[0] & 0xFFFFFFFF;
                 fog_color_ = hydra::bswap32(fog_color_);
+
+                uint8_t alpha = fog_color_ >> 24;
+                fog_alpha_ = (alpha << 24) | (alpha << 16) | (alpha << 8) | alpha;
                 break;
             }
             case RDPCommandType::SetCombineMode:
@@ -479,15 +487,19 @@ namespace hydra::N64
                 SetCombineModeCommand command;
                 command.full = data[0];
 
-                color_sub_a_ = get_sub_a(command.sub_A_RGB_1);
-                color_sub_b_ = get_sub_b(command.sub_B_RGB_1);
-                color_multiplier_ = get_mul(command.mul_RGB_1);
-                color_adder_ = get_add(command.add_RGB_1);
+                color_sub_a_ = color_get_sub_a(command.sub_A_RGB_1);
+                color_sub_b_ = color_get_sub_b(command.sub_B_RGB_1);
+                color_multiplier_ = color_get_mul(command.mul_RGB_1);
+                color_adder_ = color_get_add(command.add_RGB_1);
+                printf("%d %d %d %d\n", command.sub_A_RGB_1, command.sub_B_RGB_1, command.mul_RGB_1,
+                       command.add_RGB_1);
 
-                alpha_sub_a_ = get_sub_a(command.sub_A_Alpha_1);
-                alpha_sub_b_ = get_sub_b(command.sub_B_Alpha_1);
-                alpha_multiplier_ = get_mul(command.mul_Alpha_1);
-                alpha_adder_ = get_add(command.add_Alpha_1);
+                alpha_sub_a_ = alpha_get_sub_add(command.sub_A_Alpha_1);
+                alpha_sub_b_ = alpha_get_sub_add(command.sub_B_Alpha_1);
+                alpha_multiplier_ = alpha_get_mul(command.mul_Alpha_1);
+                alpha_adder_ = alpha_get_sub_add(command.add_Alpha_1);
+                printf("Alpha - %d %d %d %d\n", command.sub_A_Alpha_1, command.sub_B_Alpha_1,
+                       command.mul_Alpha_1, command.add_Alpha_1);
                 break;
             }
             default:
@@ -497,7 +509,7 @@ namespace hydra::N64
         }
     }
 
-    uint32_t* RDP::get_sub_a(uint8_t sub_a)
+    uint32_t* RDP::color_get_sub_a(uint8_t sub_a)
     {
         switch (sub_a & 0b1111)
         {
@@ -523,7 +535,7 @@ namespace hydra::N64
         }
     }
 
-    uint32_t* RDP::get_sub_b(uint8_t sub_b)
+    uint32_t* RDP::color_get_sub_b(uint8_t sub_b)
     {
         switch (sub_b & 0b1111)
         {
@@ -550,7 +562,7 @@ namespace hydra::N64
         }
     }
 
-    uint32_t* RDP::get_mul(uint8_t mul)
+    uint32_t* RDP::color_get_mul(uint8_t mul)
     {
         switch (mul & 0b11111)
         {
@@ -566,6 +578,8 @@ namespace hydra::N64
                 return &shade_color_;
             case 5:
                 return &environment_color_;
+            case 7:
+                return &combined_alpha_;
             // TODO: rest of the colors
             case 16:
             case 17:
@@ -585,12 +599,12 @@ namespace hydra::N64
             case 31:
                 return &color_zero_;
             default:
-                Logger::Warn("Unhandled mul: {}", mul);
+                Logger::WarnOnce("Unhandled mul: {}", mul);
                 return &color_zero_;
         }
     }
 
-    uint32_t* RDP::get_add(uint8_t add)
+    uint32_t* RDP::color_get_add(uint8_t add)
     {
         switch (add & 0b111)
         {
@@ -610,9 +624,60 @@ namespace hydra::N64
                 return &color_one_;
             case 7:
                 return &color_zero_;
+        }
+        Logger::Fatal("Unreachable!");
+        return nullptr;
+    }
+
+    uint32_t* RDP::alpha_get_sub_add(uint8_t sub_a)
+    {
+        switch (sub_a & 0b111)
+        {
+            case 0:
+                return &combined_alpha_;
+            case 1:
+                return &texel_alpha_0_;
+            case 2:
+                return &texel_alpha_1_;
+            case 3:
+                return &primitive_alpha_;
+            case 4:
+                return &shade_alpha_;
+            case 5:
+                return &environment_alpha_;
+            case 6:
+                return &color_one_;
             default:
-                // TODO: std::unreachable
-                return nullptr;
+                return &color_zero_;
+        }
+    }
+
+    uint32_t* RDP::alpha_get_mul(uint8_t mul)
+    {
+        switch (mul & 0b111)
+        {
+            case 0:
+            {
+                Logger::WarnOnce("Unhandled alpha mul: LOD fraction", mul);
+                return &color_one_;
+            }
+            case 1:
+                return &texel_alpha_0_;
+            case 2:
+                return &texel_alpha_1_;
+            case 3:
+                return &primitive_alpha_;
+            case 4:
+                return &shade_alpha_;
+            case 5:
+                return &environment_alpha_;
+            case 6:
+            {
+                Logger::WarnOnce("Unhandled alpha mul: Primitive LOD fraction", mul);
+                return &color_zero_;
+            }
+            default:
+                return &color_zero_;
         }
     }
 
@@ -663,12 +728,7 @@ namespace hydra::N64
             }
             case CycleType::Copy:
             {
-                static bool warned = false;
-                if (!warned)
-                {
-                    Logger::Warn("This game uses Copy, which is not implemented yet");
-                    warned = true;
-                }
+                Logger::WarnOnce("This game uses CycleType::Copy, which is not implemented yet");
                 break;
             }
             case CycleType::Fill:
@@ -688,27 +748,21 @@ namespace hydra::N64
         }
     }
 
+    uint8_t combine(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
+    {
+        return (a - b) * c / 0xFF + d;
+    }
+
     void RDP::color_combiner()
     {
-        uint8_t r =
-            ((((*color_sub_a_ & 0xFF) - (*color_sub_b_ & 0xFF)) * (*color_multiplier_ & 0xFF)) /
-             0xFF) +
-            (*color_adder_ & 0xFF);
-        uint8_t g = (((((*color_sub_a_ >> 8) & 0xFF) - ((*color_sub_b_ >> 8) & 0xFF)) *
-                      ((*color_multiplier_ >> 8) & 0xFF)) /
-                     0xFF) +
-                    ((*color_adder_ >> 8) & 0xFF);
-        uint8_t b = (((((*color_sub_a_ >> 16) & 0xFF) - ((*color_sub_b_ >> 16) & 0xFF)) *
-                      ((*color_multiplier_ >> 16) & 0xFF)) /
-                     0xFF) +
-                    ((*color_adder_ >> 16) & 0xFF);
-        uint8_t a = (((((*alpha_sub_a_ >> 24) & 0xFF) - ((*alpha_sub_b_ >> 24) & 0xFF)) *
-                      ((*alpha_multiplier_ >> 24) & 0xFF)) /
-                     0xFF) +
-                    ((*alpha_adder_ >> 24) & 0xFF);
-        // Don't use this for now
-        (void)a;
-        combined_color_ = (0xFF << 24) | (b << 16) | (g << 8) | r;
+        uint8_t r = combine(*color_sub_a_, *color_sub_b_, *color_multiplier_, *color_adder_);
+        uint8_t g = combine(*color_sub_a_ >> 8, *color_sub_b_ >> 8, *color_multiplier_ >> 8,
+                            *color_adder_ >> 8);
+        uint8_t b = combine(*color_sub_a_ >> 16, *color_sub_b_ >> 16, *color_multiplier_ >> 16,
+                            *color_adder_ >> 16);
+        uint8_t a = combine(*alpha_sub_a_, *alpha_sub_b_, *alpha_multiplier_, *alpha_adder_);
+        combined_color_ = (a << 24) | (b << 16) | (g << 8) | r;
+        combined_alpha_ = a << 24 | a << 16 | a << 8 | a;
     }
 
     uint32_t RDP::blender()
@@ -751,13 +805,13 @@ namespace hydra::N64
         switch (blender_1b_0_ & 0b11)
         {
             case 0:
-                multiplier1 = combined_color_ >> 24;
+                multiplier1 = combined_alpha_;
                 break;
             case 1:
-                multiplier1 = fog_color_ >> 24;
+                multiplier1 = fog_alpha_;
                 break;
             case 2:
-                multiplier1 = shade_color_ >> 24;
+                multiplier1 = shade_alpha_;
                 break;
             case 3:
                 multiplier1 = 0x00;
@@ -782,6 +836,13 @@ namespace hydra::N64
                 break;
         }
 
+        if (multiplier1 + multiplier2 == 0)
+        {
+            Logger::WarnOnce("Blender division by zero - blender settings: {} {} {} {}",
+                             blender_1a_0_, blender_2a_0_, blender_1b_0_, blender_2b_0_);
+            multiplier1 = 0xFF;
+        }
+
         uint8_t r = (((color1 >> 0) & 0xFF) * multiplier1 + ((color2 >> 0) & 0xFF) * multiplier2) /
                     (multiplier1 + multiplier2);
         uint8_t g = (((color1 >> 8) & 0xFF) * multiplier1 + ((color2 >> 8) & 0xFF) * multiplier2) /
@@ -793,25 +854,49 @@ namespace hydra::N64
         return (0xFF << 24) | (b << 16) | (g << 8) | r;
     }
 
-    bool RDP::depth_test(int x, int y, uint16_t z)
+    bool RDP::depth_test(int x, int y, uint32_t z, uint16_t dz)
     {
-        uint16_t old_depth = z_get(x, y);
-        return old_depth > z;
-        switch (z_mode_)
+        enum DepthMode { Opaque, Interpenetrating, Transparent, Decal };
+
+        if (z_compare_en_)
         {
-            // TODO: other depth modes
-            case 0:
+            uint32_t old_depth = z_get(x, y);
+            uint16_t old_dz = dz_get(x, y);
+
+            bool pass = false;
+            switch (z_mode_ & 0b11)
             {
-                return z < old_depth;
+                // TODO: other depth modes
+                case Opaque:
+                {
+                    // TODO: there's also some coverage stuff going on here normally
+                    pass = (old_depth == 0x3ffff) || (z < old_depth);
+                    break;
+                }
+                case Interpenetrating:
+                {
+                    Logger::WarnOnce("Interpenetrating depth mode not implemented");
+                    pass = (old_depth == 0x3ffff) || (z < old_depth);
+                    break;
+                }
+                case Transparent:
+                {
+                    pass = (old_depth == 0x3ffff) || (z < old_depth);
+                    break;
+                }
+                case Decal:
+                {
+                    pass = hydra::abs(z - old_depth) <= hydra::max(dz, old_dz);
+                    break;
+                }
             }
-            default:
-            {
-                Logger::Warn("Unknown depth mode: %d", static_cast<int>(z_mode_));
-                return false;
-            }
+            // TODO: std::unreachable
+            return pass;
         }
-        // TODO: std::unreachable
-        return false;
+        else
+        {
+            return true;
+        }
     }
 
     uint32_t RDP::z_get(int x, int y)
@@ -819,8 +904,16 @@ namespace hydra::N64
         uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + zbuffer_dram_address_ +
                             (y * framebuffer_width_ + x) * 2;
         uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-        uint32_t decompressed = *ptr; // z_decompress_lut_[*ptr & 0x3FFF];
+        uint32_t decompressed = z_decompress_lut_[(*ptr >> 2) & 0x3FFF];
         return decompressed;
+    }
+
+    uint8_t RDP::dz_get(int x, int y)
+    {
+        uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + zbuffer_dram_address_ +
+                            (y * framebuffer_width_ + x) * 2;
+        uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
+        return *ptr & 0b11;
     }
 
     void RDP::z_set(int x, int y, uint32_t z)
@@ -828,7 +921,7 @@ namespace hydra::N64
         uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + zbuffer_dram_address_ +
                             (y * framebuffer_width_ + x) * 2;
         uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-        uint16_t compressed = z; // z_compress_lut_[z & 0x3FFFF];
+        uint16_t compressed = z_compress_lut_[z & 0x3FFFF];
         *ptr = compressed;
     }
 
@@ -867,6 +960,7 @@ namespace hydra::N64
         uint8_t byte1 = tmem_[(address + (t * td.line_width) + s * 2) & 0x1FFF];
         uint8_t byte2 = tmem_[(address + (t * td.line_width) + (s * 2) + 1) & 0x1FFF];
         texel_color_0_ = rgba16_to_rgba32((byte2 << 8) | byte1);
+        texel_alpha_0_ = texel_color_0_ >> 24;
     }
 
     void RDP::init_depth_luts()
@@ -1005,7 +1099,7 @@ namespace hydra::N64
             next_block += 8;
         }
 
-        int32_t z = 0, DzDx, DzDy [[maybe_unused]], DzDe;
+        int32_t z = 0, DzDx [[maybe_unused]], DzDy [[maybe_unused]], DzDe;
 
         if constexpr (Depth)
         {
@@ -1061,6 +1155,16 @@ namespace hydra::N64
                         gbase += DgDx * increment;
                         bbase += DbDx * increment;
                         abase += DaDx * increment;
+
+                        if (rbase < 0 || gbase < 0 || bbase < 0 || abase < 0)
+                            Logger::WarnOnce("Negative color value detected");
+                        // TODO: needed? for weird shading issues
+                        if (rbase < 0)
+                            rbase = 0;
+                        if (gbase < 0)
+                            gbase = 0;
+                        if (bbase < 0)
+                            bbase = 0;
                         int16_t final_r = rbase >> 16;
                         int16_t final_g = gbase >> 16;
                         int16_t final_b = bbase >> 16;
@@ -1074,11 +1178,16 @@ namespace hydra::N64
                         final_b = final_b < 0 ? 0 : final_b;
                         final_a = final_a < 0 ? 0 : final_a;
                         shade_color_ = (final_a << 24) | (final_b << 16) | (final_g << 8) | final_r;
+                        shade_alpha_ = (final_a << 24) | (final_a << 16) | (final_a << 8) | final_a;
                     }
 
                     if constexpr (Depth)
                     {
                         z_line += DzDx * increment;
+                        if (z_line < 0)
+                        {
+                            z_line = 0;
+                        }
                     }
 
                     if constexpr (Texture)
@@ -1088,11 +1197,12 @@ namespace hydra::N64
                         w_line += DwDx * increment;
                     }
 
+                    uint32_t z_15_3 = z_line >> 14;
                     bool pass_depth_test = true;
 
                     if constexpr (Depth)
                     {
-                        pass_depth_test = !z_compare_en_ || depth_test(x, y, z_line >> 16);
+                        pass_depth_test = depth_test(x, y, z_15_3, 0);
                     }
 
                     if (pass_depth_test)
@@ -1115,7 +1225,7 @@ namespace hydra::N64
                     {
                         if (z_update_en_ && pass_depth_test)
                         {
-                            z_set(x, y, z_line >> 16);
+                            z_set(x, y, z_15_3);
                         }
                     }
                 }
@@ -1139,6 +1249,12 @@ namespace hydra::N64
             if constexpr (Depth)
             {
                 z += DzDe;
+
+                // TODO: there must be a better way to do this
+                if (z < 0)
+                {
+                    z = 0;
+                }
             }
         }
     }

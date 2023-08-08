@@ -59,9 +59,11 @@ namespace hydra::N64
         int width_ = 320, height_ = 240;
         int num_halflines_ = 262;
         int cycles_per_halfline_ = 1000;
+        bool blacked_out_ = false;
 
         uint8_t pixel_mode_ = 0;
         std::vector<uint8_t> framebuffer_;
+        std::vector<uint8_t> framebuffer_black_;
         uint8_t* framebuffer_ptr_ = nullptr;
         uint8_t* memory_ptr_ = nullptr;
         uint8_t* rdram_ptr_ = nullptr;

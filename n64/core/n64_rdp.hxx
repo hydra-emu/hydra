@@ -144,13 +144,20 @@ namespace hydra::N64
         uint32_t blend_color_;
         uint32_t fog_color_;
         uint32_t combined_color_;
-        uint32_t combined_alpha_;
         uint32_t shade_color_;
         uint32_t primitive_color_;
         uint32_t texel_color_0_;
         uint32_t texel_color_1_;
         uint32_t environment_color_;
         uint32_t framebuffer_color_;
+
+        uint32_t combined_alpha_;
+        uint32_t texel_alpha_0_;
+        uint32_t texel_alpha_1_;
+        uint32_t primitive_alpha_;
+        uint32_t shade_alpha_;
+        uint32_t environment_alpha_;
+        uint32_t fog_alpha_;
 
         uint32_t* color_sub_a_;
         uint32_t* color_sub_b_;
@@ -203,18 +210,22 @@ namespace hydra::N64
         void color_combiner();
         uint32_t blender();
 
-        bool depth_test(int x, int y, uint16_t z);
-        uint32_t z_get(int x, int y);
-        void z_set(int x, int y, uint32_t z);
+        bool depth_test(int x, int y, uint32_t z, uint16_t dz);
+        inline uint32_t z_get(int x, int y);
+        inline uint8_t dz_get(int x, int y);
+        inline void z_set(int x, int y, uint32_t z);
+        inline void dz_set(int x, int y, uint8_t dz);
         uint32_t z_compress(uint32_t z);
         uint32_t z_decompress(uint32_t z);
         void init_depth_luts();
         void fetch_texels(int tile, int32_t s, int32_t t);
 
-        uint32_t* get_sub_a(uint8_t sub_a);
-        uint32_t* get_sub_b(uint8_t sub_b);
-        uint32_t* get_mul(uint8_t mul);
-        uint32_t* get_add(uint8_t add);
+        uint32_t* color_get_sub_a(uint8_t sub_a);
+        uint32_t* color_get_sub_b(uint8_t sub_b);
+        uint32_t* color_get_mul(uint8_t mul);
+        uint32_t* color_get_add(uint8_t add);
+        uint32_t* alpha_get_sub_add(uint8_t sub_a);
+        uint32_t* alpha_get_mul(uint8_t mul);
 
         template <bool Shade, bool Texture, bool Depth>
         void edgewalker(const std::vector<uint64_t>& data);

@@ -29,6 +29,8 @@ namespace hydra::N64
             return n64_impl_.GetHeight();
         }
 
+        void HandleMouseMove(int32_t, int32_t) override;
+
         std::map<uint32_t, uint32_t> key_mappings_;
 
         friend class ::N64Debugger;

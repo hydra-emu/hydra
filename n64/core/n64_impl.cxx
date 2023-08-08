@@ -77,4 +77,12 @@ namespace hydra::N64
         cpu_.Reset();
         rcp_.Reset();
     }
+
+    void N64::SetMousePos(int32_t x, int32_t y)
+    {
+        cpu_.mouse_delta_x_ = x - cpu_.mouse_x_;
+        cpu_.mouse_delta_y_ = y - cpu_.mouse_y_;
+        cpu_.mouse_x_ = x;
+        cpu_.mouse_y_ = y;
+    }
 } // namespace hydra::N64

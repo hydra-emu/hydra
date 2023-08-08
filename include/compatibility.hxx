@@ -145,6 +145,25 @@ namespace hydra
     }
 
     template <class T>
+    constexpr T abs(T num)
+    {
+        if constexpr (std::is_signed_v<T>)
+        {
+            return num < 0 ? -num : num;
+        }
+        else
+        {
+            return num;
+        }
+    }
+
+    template <class T>
+    constexpr T max(T a, T b)
+    {
+        return a > b ? a : b;
+    }
+
+    template <class T>
     constexpr T clz(T num)
     {
 #ifdef __APPLE__

@@ -44,6 +44,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), tools_{}, tools_o
     timer->start(16);
     connect(timer, SIGNAL(timeout()), this, SLOT(redraw_screen()));
     enable_emulation_actions(false);
+    screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
+    screen_->setMouseTracking(true);
 }
 
 MainWindow::~MainWindow()
@@ -152,6 +154,14 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
     }
 }
 
+void MainWindow::on_mouse_move(QMouseEvent* event)
+{
+    if (emulator_)
+    {
+        emulator_->HandleMouseMove(event->position().x(), event->position().y());
+    }
+}
+
 void MainWindow::open_file()
 {
     static QString extensions;
@@ -204,6 +214,7 @@ void MainWindow::open_file_impl(const std::string& path)
     auto dirpath = pathfs.parent_path();
     EmulatorSettings::GetGeneralSettings().Set("last_path", dirpath);
     close_tools();
+    Logger::ClearWarnings();
     auto type = hydra::EmulatorFactory::GetEmulatorType(path);
     {
         stop_emulator();

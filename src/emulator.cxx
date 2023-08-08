@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <log.hxx>
 #include <str_hash.hxx>
 // TODO: add make target for profiling that includes this
 // #include <valgrind/callgrind.h>
@@ -22,18 +23,20 @@ namespace hydra
 
     void Emulator::HandleKeyDown(uint32_t keycode)
     {
-        std::cout << "Warning: Key " << keycode
-                  << " was pressed but\n"
-                     "Emulator::HandleKeyDown was not implemented"
-                  << std::endl;
+        Logger::WarnOnce("Key {} was pressed but Emulator::HandleKeyDown was not implemented",
+                         keycode);
     }
 
     void Emulator::HandleKeyUp(uint32_t keycode)
     {
-        std::cout << "Warning: Key " << keycode
-                  << " was released but\n"
-                     "Emulator::HandleKeyUp was not implemented"
-                  << std::endl;
+        Logger::WarnOnce("Key {} was released but Emulator::HandleKeyUp was not implemented",
+                         keycode);
+    }
+
+    void Emulator::HandleMouseMove(int x, int y)
+    {
+        Logger::WarnOnce(
+            "Mouse movement was detected but Emulator::HandleMouseMove was not implemented");
     }
 
     void* Emulator::GetScreenData()
