@@ -13,22 +13,24 @@ namespace hydra::N64
 
     bool Vi::Redraw()
     {
-        width_ = vi_h_end_ - vi_h_start_;
-        height_ = (vi_v_end_ - vi_v_start_) / 2;
-        width_ *= vi_x_scale_ ? vi_x_scale_ : 512;
-        height_ *= vi_y_scale_ ? vi_y_scale_ : 512;
-        if (width_ == 0 || height_ == 0 || !memory_ptr_)
+        auto new_width = vi_h_end_ - vi_h_start_;
+        auto new_height = (vi_v_end_ - vi_v_start_) / 2;
+        new_width *= vi_x_scale_ ? vi_x_scale_ : 512;
+        new_height *= vi_y_scale_ ? vi_y_scale_ : 512;
+        if (new_width == 0 || new_height == 0 || !memory_ptr_ || pixel_mode_ == 0)
         {
-            framebuffer_ptr_ = nullptr;
-            return false;
+            if (!blacked_out_)
+            {
+                std::fill(framebuffer_.begin(), framebuffer_.end(), 0);
+                blacked_out_ = true;
+            }
+            return true;
         }
-        if (pixel_mode_ == 0)
-        {
-            framebuffer_ptr_ = nullptr;
-            return false;
-        }
-        width_ >>= 10;
-        height_ >>= 10;
+        blacked_out_ = false;
+        new_width >>= 10;
+        new_height >>= 10;
+        width_ = new_width;
+        height_ = new_height;
         size_t new_size = width_ * height_ * 4;
         if (framebuffer_.size() != new_size)
         {
@@ -163,7 +165,7 @@ namespace hydra::N64
                 pixel_mode_ = format;
                 if ((data >> 6) & 0b1)
                 {
-                    Logger::Warn("Interlacing enabled");
+                    Logger::WarnOnce("Interlacing enabled");
                 }
                 vi_ctrl_ = data;
                 break;

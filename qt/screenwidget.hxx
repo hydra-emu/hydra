@@ -21,6 +21,13 @@ public:
     void Redraw(int width, int height, int bitdepth, void* data);
     void ResetProgram(QString* vertex = nullptr, QString* fragment = nullptr);
 
+    void SetMouseMoveCallback(std::function<void(QMouseEvent*)> callback)
+    {
+        mouse_move_callback_ = callback;
+    }
+
+    void mouseMoveEvent(QMouseEvent* event) override;
+
 private:
     void initializeGL() override;
     void resizeGL(int width, int height) override;
@@ -32,5 +39,9 @@ private:
     QOpenGLVertexArrayObject vao_;
     QOpenGLBuffer vbo_;
     bool initialized_ = false;
+
+    std::function<void(QMouseEvent*)> mouse_move_callback_;
+
+    friend class MainWindow;
 };
 #endif

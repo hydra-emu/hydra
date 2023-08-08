@@ -131,8 +131,13 @@ namespace hydra::N64
         }
         page_table_[ADDR_TO_PAGE(0x04000000)] = &rcp_.rsp_.mem_[0];
 
+        for (int i = ADDR_TO_PAGE(0x08000000); i <= ADDR_TO_PAGE(0x0FFF'0000); i++)
+        {
+            // page_table_[i] = &sram_[PAGE_SIZE * (i - ADDR_TO_PAGE(0x0800'0000))];
+        }
+
         // Map cartridge rom
-        for (int i = ADDR_TO_PAGE(0x1000'0000); i <= ADDR_TO_PAGE(0x1FB0'0000); i++)
+        for (int i = ADDR_TO_PAGE(0x1000'0000); i <= ADDR_TO_PAGE(0x1FBF'0000); i++)
         {
             page_table_[i] = &cart_rom_[PAGE_SIZE * (i - ADDR_TO_PAGE(0x1000'0000))];
         }

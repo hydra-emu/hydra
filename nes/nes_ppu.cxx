@@ -76,7 +76,6 @@ namespace hydra::NES
             if (scanline_ == 241 && scanline_cycle_ == 9)
             {
                 ppu_status_ |= 0x80;
-                printf("VBlank\n");
                 ntsc.data = screen_color_data_second_.data();
                 ntsc.w = 256;
                 ntsc.h = 240;
@@ -252,7 +251,7 @@ namespace hydra::NES
             case 0b000:
             {
                 ppu_ctrl_ = data;
-                nt_addr_ = 0x2000 + (ppu_ctrl_ & 0b11) * 0x400;
+                nt_addr_ = 0x2000 + (vram_addr_ & ~0x0C00) | ((ppu_ctrl_ & 0b11) << 10);
                 vram_incr_vertical_ = ppu_ctrl_ & 0b100;
                 sprite_pattern_address_ = !!(ppu_ctrl_ & 0b1000) * 0x1000;
                 background_pattern_address_ = !!(ppu_ctrl_ & 0b1'0000) * 0x1000;
@@ -301,13 +300,36 @@ namespace hydra::NES
             }
             case 0b101:
             {
-                ppu_scroll_ = data;
+                if (scanline_ >= 241 && scanline_ <= 260)
+                {
+                    Logger::Warn("Writing to PPU scroll during vblank");
+                }
+
+                if (!write_toggle_)
+                {
+                    fine_x_ = data & 0b111;
+                    vram_addr_latch_ = (vram_addr_latch_ & ~0x1F) | (data >> 3);
+                }
+                else
+                {
+                    vram_addr_latch_ =
+                        (vram_addr_latch_ & ~0x73E0) | ((data & 0xF8) << 2) | ((data & 0x07) << 12);
+                }
+                write_toggle_ = !write_toggle_;
                 break;
             }
             case 0b110:
             {
-                vram_addr_ <<= 8;
-                vram_addr_ |= data;
+                if (!write_toggle_)
+                {
+                    vram_addr_latch_ = (vram_addr_latch_ & 0xFF) | ((data & 0x3F) << 8);
+                }
+                else
+                {
+                    vram_addr_latch_ = (vram_addr_latch_ & 0xFF00) | data;
+                    vram_addr_ = vram_addr_latch_;
+                }
+                write_toggle_ = !write_toggle_;
                 break;
             }
             case 0b111:
@@ -433,6 +455,12 @@ namespace hydra::NES
 
     void PPU::draw_pixel()
     {
+        if ((vram_addr_ & 0x3F00) == 0x3F00)
+        {
+            printf("vram_addr: %x\n", vram_addr_);
+            return;
+        }
+
         uint8_t bg_cur = ((piso_bg_high_ >> 15) << 1) | (piso_bg_low_ >> 15);
         auto pixel = cur_x_ * 4 + cur_y_ * 256 * 4;
         uint8_t left_shift = !!(cur_x_ & 0b10000) * 2;
@@ -664,5 +692,6 @@ namespace hydra::NES
             screen_color_data_[i + 3] = 255;
         }
         vram_.fill(0);
+        write_toggle_ = false;
     }
 } // namespace hydra::NES

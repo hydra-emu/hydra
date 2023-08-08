@@ -16,14 +16,9 @@ namespace hydra::Gameboy
         void InitSound();
         void Update(int clk);
 
-        inline void QueueSamples()
-        {
-            // SDL_QueueAudio(device_id_, &samples_[0], sizeof(samples_));
-        }
-
         inline bool IsQueueEmpty()
         {
-            return true; // SDL_GetQueuedAudioSize(device_id_) < 100;
+            return samples_.empty();
         }
 
         bool UseSound = false;

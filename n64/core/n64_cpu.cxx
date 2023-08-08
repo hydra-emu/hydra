@@ -541,8 +541,9 @@ namespace hydra::N64
                 {
                     case 0:
                     {
-                        result[0] = 0x05;
-                        result[1] = 0x00;
+                        uint16_t controller = static_cast<uint16_t>(controller_type_);
+                        result[0] = controller >> 8;
+                        result[1] = controller & 0xFF;
                         result[2] = 0x01;
                         break;
                     }
@@ -567,14 +568,38 @@ namespace hydra::N64
                 {
                     return true;
                 }
+
+                get_controller_state(result, controller_type_);
+                break;
+            }
+            case JoybusCommand::WriteMempack:
+            {
+                if (result.size() != 1)
+                {
+                    Logger::Fatal("Joybus WriteMempack command with result size {}", result.size());
+                }
+                result[0] = 0x80;
+                break;
+            }
+            default:
+            {
+                Logger::WarnOnce("Unhandled joybus command type {}",
+                                 static_cast<uint8_t>(command_type));
+            }
+        }
+        return false;
+    }
+
+    void CPU::get_controller_state(std::vector<uint8_t>& result, ControllerType controller)
+    {
+        switch (controller)
+        {
+            case ControllerType::Keyboard:
+            {
                 result[0] = key_state_[Keys::A] << 7 | key_state_[Keys::B] << 6 |
-                            key_state_[Keys::Z] << 5 | key_state_[Keys::Start] << 4;
-                // TODO: DPAD
-                // |
-                // key_state_[Keys::Up] << 3 |
-                // key_state_[Keys::Down] << 2 |
-                // key_state_[Keys::Left] << 1 |
-                // key_state_[Keys::Right];
+                            key_state_[Keys::Z] << 5 | key_state_[Keys::Start] << 4 |
+                            key_state_[Keys::Up] << 3 | key_state_[Keys::Down] << 2 |
+                            key_state_[Keys::Left] << 1 | key_state_[Keys::Right];
                 result[1] = 0 | 0 | key_state_[Keys::L] << 5 | key_state_[Keys::R] << 4 |
                             key_state_[Keys::CUp] << 3 | key_state_[Keys::CDown] << 2 |
                             key_state_[Keys::CLeft] << 1 | key_state_[Keys::CRight];
@@ -599,22 +624,18 @@ namespace hydra::N64
                 result[3] = y;
                 break;
             }
-            case JoybusCommand::WriteMempack:
+            case ControllerType::Mouse:
             {
-                if (result.size() != 1)
-                {
-                    Logger::Fatal("Joybus WriteMempack command with result size {}", result.size());
-                }
-                result[0] = 0x80;
+                result[0] = key_state_[Keys::A] << 7 | key_state_[Keys::B] << 6;
+                result[1] = 0;
+                result[2] = mouse_delta_x_ << 2;
+                result[3] = mouse_delta_y_ << 2;
+
+                mouse_delta_x_ = 0;
+                mouse_delta_y_ = 0;
                 break;
             }
-            default:
-            {
-                Logger::Warn("Unhandled joybus command type {}",
-                             static_cast<uint8_t>(command_type));
-            }
         }
-        return false;
     }
 
     CPU::CPU(CPUBus& cpubus, RCP& rcp, bool& should_draw)

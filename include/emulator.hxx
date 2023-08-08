@@ -50,6 +50,7 @@ namespace hydra
         void Reset();
         virtual void HandleKeyDown(uint32_t keycode);
         virtual void HandleKeyUp(uint32_t keycode);
+        virtual void HandleMouseMove(int x, int y);
         bool LoadFromFile(std::string path);
         void CloseAndWait();
 

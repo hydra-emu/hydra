@@ -168,6 +168,11 @@ namespace hydra::N64
         }
     }
 
+    void N64_TKPWrapper::HandleMouseMove(int32_t x, int32_t y)
+    {
+        n64_impl_.SetMousePos(x, y);
+    }
+
     void* N64_TKPWrapper::GetScreenData()
     {
         return n64_impl_.GetColorData();

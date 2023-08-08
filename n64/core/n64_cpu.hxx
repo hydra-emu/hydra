@@ -41,6 +41,11 @@ enum class ExceptionType {
     FloatingPoint = 15,
 };
 
+enum class ControllerType : uint16_t {
+    Keyboard = 0x0500,
+    Mouse = 0x0200,
+};
+
 #define X(name, value) constexpr auto CP0_##name = value;
 #include "cp0_regs.def"
 #undef X
@@ -206,6 +211,7 @@ namespace hydra::N64
         bool rom_loaded_ = false;
         bool ipl_loaded_ = false;
         std::vector<uint8_t> rdram_{};
+        std::vector<uint8_t> sram_{};
         std::array<char, ISVIEWER_AREA_END - ISVIEWER_AREA_START> isviewer_buffer_{};
         std::array<uint8_t, 64> pif_ram_{};
         std::array<uint8_t*, 0x10000> page_table_{};
@@ -306,6 +312,9 @@ namespace hydra::N64
         uint32_t tlb_offset_mask_ = 0;
         int pif_channel_ = 0;
         int vis_per_second_ = 0;
+        ControllerType controller_type_ = ControllerType::Keyboard;
+        int32_t mouse_x_, mouse_y_;
+        int32_t mouse_delta_x_, mouse_delta_y_;
         std::chrono::time_point<std::chrono::high_resolution_clock> last_second_time_;
 
         TranslatedAddress translate_vaddr(uint32_t vaddr);
@@ -569,6 +578,7 @@ namespace hydra::N64
 
         void pif_command();
         bool joybus_command(const std::vector<uint8_t>&, std::vector<uint8_t>&);
+        void get_controller_state(std::vector<uint8_t>& result, ControllerType controller);
         std::array<bool, hydra::N64::Keys::N64KeyCount> key_state_{};
         std::vector<DisassemblerInstruction> disassemble(uint64_t start_vaddr, uint64_t end_vaddr,
                                                          bool register_names);

@@ -16,6 +16,7 @@ namespace hydra::N64
         bool LoadIPL(std::string path);
         void Update();
         void Reset();
+        void SetMousePos(int32_t x, int32_t y);
 
         void* GetColorData()
         {

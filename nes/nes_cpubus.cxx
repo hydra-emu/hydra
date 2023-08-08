@@ -88,6 +88,7 @@ namespace hydra::NES
                     auto temp = ppu_.ppu_status_;
                     ppu_.ppu_status_ &= ~0x80;
                     temp |= ppu_.open_bus_ & 0b1'1111;
+                    ppu_.write_toggle_ = false;
                     return temp;
                 }
                 case 0b011:
@@ -95,7 +96,7 @@ namespace hydra::NES
                 case 0b100:
                     return ppu_.oam_data_;
                 case 0b101:
-                    return ppu_.ppu_scroll_;
+                    return ppu_.open_bus_;
                 case 0b110:
                     return ppu_.vram_addr_;
                 case 0b111:

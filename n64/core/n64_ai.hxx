@@ -62,7 +62,7 @@ namespace hydra::N64
         ma_device ai_device_{};
         MIInterrupt* mi_interrupt_ = nullptr;
         // Cacheline may not be 64, but this is to ignore a warning
-        jnk0le::Ringbuffer<int16_t, 65536, false, 64> ai_buffer_;
+        jnk0le::Ringbuffer<int16_t, 65536 * 2, false, 64> ai_buffer_;
 
         friend class hydra::N64::RCP;
         friend class hydra::N64::CPU;

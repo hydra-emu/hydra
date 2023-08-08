@@ -118,6 +118,11 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment)
     delete vshader;
 }
 
+void ScreenWidget::mouseMoveEvent(QMouseEvent* event)
+{
+    mouse_move_callback_(event);
+}
+
 void ScreenWidget::initializeGL()
 {
     initializeOpenGLFunctions();
