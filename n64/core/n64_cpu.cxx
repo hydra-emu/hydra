@@ -418,8 +418,8 @@ namespace hydra::N64
         }
         else if (addr >= ISVIEWER_AREA_START && addr <= ISVIEWER_AREA_END)
         {
-            Logger::Fatal("Reading from ISViewer");
-            return 0;
+            return hydra::bswap32(*reinterpret_cast<uint32_t*>(
+                &cpubus_.isviewer_buffer_[addr - ISVIEWER_AREA_START]));
         }
         else if (addr >= RDP_AREA_START && addr <= RDP_AREA_END)
         {

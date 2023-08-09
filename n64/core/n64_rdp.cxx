@@ -175,6 +175,10 @@ namespace hydra::N64
         blender_1b_0_ = 0;
         blender_2a_0_ = 0;
         blender_2b_0_ = 0;
+        texel_color_0_ = 0xFFFFFFFF;
+        texel_color_1_ = 0xFFFFFFFF;
+        texel_alpha_0_ = 0xFFFFFFFF;
+        texel_alpha_1_ = 0xFFFFFFFF;
     }
 
     void RDP::SendCommand(const std::vector<uint64_t>& data)
@@ -491,15 +495,11 @@ namespace hydra::N64
                 color_sub_b_ = color_get_sub_b(command.sub_B_RGB_1);
                 color_multiplier_ = color_get_mul(command.mul_RGB_1);
                 color_adder_ = color_get_add(command.add_RGB_1);
-                printf("%d %d %d %d\n", command.sub_A_RGB_1, command.sub_B_RGB_1, command.mul_RGB_1,
-                       command.add_RGB_1);
 
                 alpha_sub_a_ = alpha_get_sub_add(command.sub_A_Alpha_1);
                 alpha_sub_b_ = alpha_get_sub_add(command.sub_B_Alpha_1);
                 alpha_multiplier_ = alpha_get_mul(command.mul_Alpha_1);
                 alpha_adder_ = alpha_get_sub_add(command.add_Alpha_1);
-                printf("Alpha - %d %d %d %d\n", command.sub_A_Alpha_1, command.sub_B_Alpha_1,
-                       command.mul_Alpha_1, command.add_Alpha_1);
                 break;
             }
             default:
