@@ -24,9 +24,16 @@ namespace hydra::N64
         CP0Status.EXL = true;
         switch (type)
         {
+            case ExceptionType::CoprocessorUnusable:
+            {
+                Logger::WarnOnce("Coprocessor unusable exception {:08x}", instruction_.full);
+                goto handler;
+            }
             case ExceptionType::FloatingPoint:
-                Logger::Warn("Floating point exception {:08x}\n", instruction_.full);
-                [[fallthrough]];
+            {
+                Logger::Warn("Floating point exception {:08x}", instruction_.full);
+                goto handler;
+            }
             case ExceptionType::Trap:
             case ExceptionType::Syscall:
             case ExceptionType::Interrupt:
@@ -36,7 +43,7 @@ namespace hydra::N64
             case ExceptionType::AddressErrorLoad:
             case ExceptionType::AddressErrorStore:
             case ExceptionType::ReservedInstruction:
-            case ExceptionType::CoprocessorUnusable:
+            handler:
             {
                 pc_ = 0x8000'0180;
                 next_pc_ = pc_ + 4;
