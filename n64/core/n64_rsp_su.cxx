@@ -217,7 +217,7 @@ namespace hydra::N64
 
     void RSP::SLTIU()
     {
-        rtreg.UW = rsreg.UW < static_cast<uint16_t>(immval);
+        rtreg.UW = rsreg.UW < static_cast<uint32_t>(seimmval);
     }
 
     void RSP::ANDI()
