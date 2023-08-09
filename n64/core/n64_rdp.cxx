@@ -29,7 +29,7 @@ static inline uint16_t rgba32_to_rgba16(uint32_t color)
     uint8_t g = (color >> 11) & 0x1F;
     uint8_t b = (color >> 19) & 0x1F;
     uint8_t a = (color >> 24) & 0x1;
-    return hydra::bswap16((r << 11) | (g << 6) | (b << 1) | a);
+    return (r << 11) | (g << 6) | (b << 1) | a;
 }
 
 namespace hydra::N64
@@ -703,26 +703,14 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    framebuffer_color_ = rgba16_to_rgba32(*ptr);
-                    // TODO: remove code duplication
-                    // Seems to set alpha to max when disabled
-                    if (!image_read_en_)
-                    {
-                        framebuffer_color_ &= 0xFFFFFF;
-                        framebuffer_color_ |= 0xFF000000;
-                    }
-                    *ptr = rgba32_to_rgba16(blender());
+                    framebuffer_color_ = rgba16_to_rgba32(hydra::bswap16(*ptr));
+                    *ptr = hydra::bswap16(rgba32_to_rgba16(blender()));
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    framebuffer_color_ = *ptr;
-                    if (!image_read_en_)
-                    {
-                        framebuffer_color_ &= 0xFFFFFF;
-                        framebuffer_color_ |= 0xFF000000;
-                    }
-                    *ptr = blender();
+                    framebuffer_color_ = hydra::bswap32(*ptr);
+                    *ptr = hydra::bswap32(blender());
                 }
                 break;
             }
@@ -824,9 +812,10 @@ namespace hydra::N64
                 multiplier2 = ~multiplier1;
                 break;
             case 1:
-                // TODO: Very weird colors when using framebuffer alpha...
+                // Apparently this is coverage
+                // The bits in the framebuffer that are normally used for alpha are actually
+                // coverage use 0 for now
                 multiplier2 = 0x00;
-                // multiplier2 = framebuffer_color_ >> 24;
                 break;
             case 2:
                 multiplier2 = 0xFF;
