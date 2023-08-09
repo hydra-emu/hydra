@@ -59,7 +59,6 @@ namespace hydra::N64
                     {
                         uint16_t color_temp =
                             (reinterpret_cast<uint16_t*>(memory_ptr_))[(y * vi_width_) + x];
-                        color_temp = (color_temp >> 8) | (color_temp << 8);
                         uint8_t r = (color_temp >> 11) & 0x1F;
                         uint8_t g = (color_temp >> 6) & 0x1F;
                         uint8_t b = (color_temp >> 1) & 0x1F;

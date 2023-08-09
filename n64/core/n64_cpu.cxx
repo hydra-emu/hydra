@@ -48,14 +48,14 @@ namespace hydra::N64
             gprcrc ^= 0xFFFF'FFFF;
             fprcrc ^= 0xFFFF'FFFF;
             // pifcrc ^= 0xFFFF'FFFF;
-            printf("%08x %08x %08x %08x", pc_, instruction_.full, gprcrc, fprcrc);
+            printf("%08lx %08x %08x %08x", pc_ & 0xFFFF'FFFF, instruction_.full, gprcrc, fprcrc);
         }
         else
         {
-            printf("%08x %08x ", pc_, instruction_.full);
+            printf("%08lx %08x ", pc_, instruction_.full);
             for (int i = 1; i < 32; i++)
             {
-                printf("%016x ", gpr_regs_[i].UD);
+                printf("%016lx ", gpr_regs_[i].UD);
             }
         }
         printf("\n");
@@ -881,7 +881,7 @@ namespace hydra::N64
             {
                 return;
             }
-            log_cpu_state<CPU_LOGGING>(true, 50'000'000, 200'000'000);
+            log_cpu_state<CPU_LOGGING>(true, 30'000'000, 0);
             prev_pc_ = pc_;
             pc_ = next_pc_;
             next_pc_ += 4;

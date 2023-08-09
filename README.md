@@ -22,8 +22,7 @@ You will need a C++20 compliant compiler like `gcc-12`
 
 <details>
  <summary>Archlinux</summary>
-<pre><code>
-pacman -S --needed qt6
+<pre><code>pacman -S --needed qt6
 git clone https://github.com/OFFTKP/hydra.git
 cd hydra
 cmake -B build
@@ -32,8 +31,7 @@ cmake --build build --target hydra -j $(nproc)
 </details>
 <details>
 <summary>Ubuntu</summary><br>
-<pre><code>
-sudo apt-get update
+<pre><code>sudo apt-get update
 sudo apt-get install libgl-dev qt6-base-dev libqt6openglwidgets6 libqt6widgets6 libqt6opengl6 libqt6gui6
 git clone https://github.com/OFFTKP/hydra.git
 cd hydra
@@ -44,8 +42,7 @@ cmake --build build --target hydra -j $(nproc)
 <details>
 <summary>MacOS</summary><br>
 You can replace <code>-j 4</code> with your actual number of cores
-<pre><code>
-brew install qt6
+<pre><code>brew install qt6
 cmake -B build
 cmake --build build --target hydra -j 4
 </code></pre>
@@ -54,8 +51,7 @@ cmake --build build --target hydra -j 4
 <summary>Windows</summary><br>
 Currently does not pass CI, so compilation might fail
 Make sure to install Qt6 first
-<pre><code>
-cmake.exe -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+<pre><code>cmake.exe -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 cmake.exe --build build --target hydra -j %NUMBER_OF_PROCESSORS%
 </code></pre>
 </details>
