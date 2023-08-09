@@ -30,7 +30,7 @@ namespace hydra::N64
         {
             uint32_t gprcrc = 0xFFFF'FFFF;
             uint32_t veccrc = 0xFFFF'FFFF;
-            uint32_t memcrc = 0xFFFF'FFFF;
+            // uint32_t memcrc = 0xFFFF'FFFF;
             for (int i = 0; i < 32; i++)
             {
                 gprcrc = hydra::crc32_u64(gprcrc, gpr_regs_[i].UW);
@@ -39,14 +39,14 @@ namespace hydra::N64
                     veccrc = hydra::crc32_u16(veccrc, vu_regs_[i][j]);
                 }
             }
-            for (int i = 0; i < 0x1000; i += 4)
-            {
-                memcrc = hydra::crc32_u32(memcrc, hydra::bswap32(load_word(i)));
-            }
-            memcrc ^= 0xFFFF'FFFF;
+            // for (int i = 0; i < 0x1000; i += 4)
+            // {
+            //     memcrc = hydra::crc32_u32(memcrc, hydra::bswap32(load_word(i)));
+            // }
+            // memcrc ^= 0xFFFF'FFFF;
             gprcrc ^= 0xFFFF'FFFF;
             veccrc ^= 0xFFFF'FFFF;
-            printf("RSP: %08x %08x %08x %08x", pc_, instruction_.full, gprcrc, veccrc);
+            printf("RSP: %08x %08x %08x", pc_, instruction_.full, gprcrc);
         }
         else
         {

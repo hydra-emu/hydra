@@ -310,9 +310,9 @@ namespace hydra::N64
                     z = primitive_depth_;
                 }
 
-                for (int y = ymin; y <= ymax; y++)
+                for (int y = ymin; y < ymax; y++)
                 {
-                    for (int x = xmin; x <= xmax; x++)
+                    for (int x = xmin; x < xmax; x++)
                     {
                         if (depth_test(x, y, z, 0))
                         {
@@ -703,14 +703,14 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    framebuffer_color_ = rgba16_to_rgba32(hydra::bswap16(*ptr));
-                    *ptr = hydra::bswap16(rgba32_to_rgba16(blender()));
+                    framebuffer_color_ = rgba16_to_rgba32(*ptr);
+                    *ptr = rgba32_to_rgba16(blender());
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    framebuffer_color_ = hydra::bswap32(*ptr);
-                    *ptr = hydra::bswap32(blender());
+                    framebuffer_color_ = *ptr;
+                    *ptr = blender();
                 }
                 break;
             }
