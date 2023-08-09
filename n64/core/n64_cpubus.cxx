@@ -141,6 +141,7 @@ namespace hydra::N64
         {
             page_table_[i] = &cart_rom_[PAGE_SIZE * (i - ADDR_TO_PAGE(0x1000'0000))];
         }
+        page_table_[ADDR_TO_PAGE(ISVIEWER_AREA_START)] = nullptr;
 #undef ADDR_TO_PAGE
     }
 } // namespace hydra::N64
