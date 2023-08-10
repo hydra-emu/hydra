@@ -162,7 +162,6 @@ namespace hydra::N64
     void RDP::Reset()
     {
         status_.ready = 1;
-        rdram_9th_bit_.clear();
         color_sub_a_ = &color_one_;
         color_sub_b_ = &color_zero_;
         color_multiplier_ = &color_one_;
@@ -314,12 +313,16 @@ namespace hydra::N64
                 {
                     for (int x = xmin; x < xmax; x++)
                     {
-                        if (depth_test(x, y, z, 0))
+                        if (x >= scissor_xh_ && x < scissor_xl_ && y >= scissor_yh_ &&
+                            y < scissor_yl_)
                         {
-                            draw_pixel(x, y);
-                            if (z_update_en_)
+                            if (depth_test(x, y, z, 0))
                             {
-                                z_set(x, y, z);
+                                draw_pixel(x, y);
+                                if (z_update_en_)
+                                {
+                                    z_set(x, y, z);
+                                }
                             }
                         }
                     }
@@ -1107,7 +1110,9 @@ namespace hydra::N64
             DzDy = data[next_block + 1] & 0xFFFF'FFFF;
         }
 
-        int32_t rbase, gbase, bbase, abase;
+        int32_t r_line, g_line, b_line, a_line;
+        int32_t z_line;
+        int32_t s_line, t_line, w_line;
         for (int y = ystart; y < yend; y++)
         {
             if (y == ymiddle) [[unlikely]]
@@ -1121,10 +1126,33 @@ namespace hydra::N64
 
             if constexpr (Shade)
             {
-                rbase = r;
-                gbase = g;
-                bbase = b;
-                abase = a;
+                r += DrDe;
+                g += DgDe;
+                b += DbDe;
+                a += DaDe;
+
+                r_line = r;
+                g_line = g;
+                b_line = b;
+                a_line = a;
+            }
+
+            if constexpr (Texture)
+            {
+                s += DsDe;
+                t += DtDe;
+                w += DwDe;
+
+                s_line = s;
+                t_line = t;
+                w_line = w;
+            }
+
+            if constexpr (Depth)
+            {
+                z += DzDe;
+
+                z_line = z;
             }
 
             xstart += start_slope;
@@ -1132,42 +1160,23 @@ namespace hydra::N64
             // get the integer part
             int xstart_i = xstart >> 16;
             int xend_i = xend >> 16;
-            int z_line = z;
-            int s_line = s;
-            int t_line = t;
-            int w_line = w;
+
             for (int x = xstart_i; comparison(x, xend_i); x += increment)
             {
                 if (x >= scissor_xh_ && x < scissor_xl_ && y >= scissor_yh_ && y < scissor_yl_)
                 {
                     if constexpr (Shade)
                     {
-                        rbase += DrDx * increment;
-                        gbase += DgDx * increment;
-                        bbase += DbDx * increment;
-                        abase += DaDx * increment;
-
-                        if (rbase < 0 || gbase < 0 || bbase < 0 || abase < 0)
+                        r_line += DrDx * increment;
+                        g_line += DgDx * increment;
+                        b_line += DbDx * increment;
+                        a_line += DaDx * increment;
+                        if (r_line < 0 || g_line < 0 || b_line < 0 || a_line < 0)
                             Logger::WarnOnce("Negative color value detected");
-                        // TODO: needed? for weird shading issues
-                        if (rbase < 0)
-                            rbase = 0;
-                        if (gbase < 0)
-                            gbase = 0;
-                        if (bbase < 0)
-                            bbase = 0;
-                        int16_t final_r = rbase >> 16;
-                        int16_t final_g = gbase >> 16;
-                        int16_t final_b = bbase >> 16;
-                        int16_t final_a = abase >> 16;
-                        final_r = final_r > 0xFF ? 0xFF : final_r;
-                        final_g = final_g > 0xFF ? 0xFF : final_g;
-                        final_b = final_b > 0xFF ? 0xFF : final_b;
-                        final_a = final_a > 0xFF ? 0xFF : final_a;
-                        final_r = final_r < 0 ? 0 : final_r;
-                        final_g = final_g < 0 ? 0 : final_g;
-                        final_b = final_b < 0 ? 0 : final_b;
-                        final_a = final_a < 0 ? 0 : final_a;
+                        uint8_t final_r = std::max(0x00, std::min(0xFF, r_line >> 16));
+                        uint8_t final_g = std::max(0x00, std::min(0xFF, g_line >> 16));
+                        uint8_t final_b = std::max(0x00, std::min(0xFF, b_line >> 16));
+                        uint8_t final_a = std::max(0x00, std::min(0xFF, a_line >> 16));
                         shade_color_ = (final_a << 24) | (final_b << 16) | (final_g << 8) | final_r;
                         shade_alpha_ = (final_a << 24) | (final_a << 16) | (final_a << 8) | final_a;
                     }
@@ -1175,10 +1184,7 @@ namespace hydra::N64
                     if constexpr (Depth)
                     {
                         z_line += DzDx * increment;
-                        if (z_line < 0)
-                        {
-                            z_line = 0;
-                        }
+                        z_line = std::max(0, z_line);
                     }
 
                     if constexpr (Texture)
@@ -1188,11 +1194,12 @@ namespace hydra::N64
                         w_line += DwDx * increment;
                     }
 
-                    uint32_t z_15_3 = z_line >> 14;
+                    uint32_t z_15_3 = 0;
                     bool pass_depth_test = true;
 
                     if constexpr (Depth)
                     {
+                        z_15_3 = z_line >> 14;
                         pass_depth_test = depth_test(x, y, z_15_3, 0);
                     }
 
@@ -1219,32 +1226,6 @@ namespace hydra::N64
                             z_set(x, y, z_15_3);
                         }
                     }
-                }
-            }
-
-            if constexpr (Shade)
-            {
-                r += DrDe;
-                g += DgDe;
-                b += DbDe;
-                a += DaDe;
-            }
-
-            if constexpr (Texture)
-            {
-                s += DsDe;
-                t += DtDe;
-                w += DwDe;
-            }
-
-            if constexpr (Depth)
-            {
-                z += DzDe;
-
-                // TODO: there must be a better way to do this
-                if (z < 0)
-                {
-                    z = 0;
                 }
             }
         }

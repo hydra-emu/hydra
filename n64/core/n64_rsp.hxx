@@ -228,7 +228,6 @@ namespace hydra::N64
     {
     public:
         RSP();
-        ~RSP();
         void Tick();
         void Reset();
 

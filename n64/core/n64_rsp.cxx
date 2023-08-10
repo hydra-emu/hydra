@@ -64,10 +64,11 @@ namespace hydra::N64
         status_.halt = true;
     }
 
-    RSP::~RSP() {}
-
     void RSP::Reset()
     {
+        pc_ = 0;
+        next_pc_ = 4;
+        status_.halt = true;
         std::fill(mem_.begin(), mem_.end(), 0);
         div_in_ready_ = false;
     }

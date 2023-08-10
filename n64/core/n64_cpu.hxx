@@ -435,132 +435,19 @@ namespace hydra::N64
         T get_fpr_reg(int regnum);
 
         template <class T>
-        bool check_nan(T arg)
-        {
-            if constexpr (std::is_same_v<T, float>)
-            {
-                return (hydra::bit_cast<uint32_t>(arg) & 0x7FC00000) == 0x7FC00000;
-            }
-            else
-            {
-                return (hydra::bit_cast<uint64_t>(arg) & 0x7FF8000000000000) == 0x7FF8000000000000;
-            }
-        }
+        bool check_nan(T arg);
 
         template <class T>
-        T get_nan()
-        {
-            if constexpr (std::is_same_v<T, float>)
-            {
-                return hydra::bit_cast<float>(0x7FBF'FFFF);
-            }
-            else
-            {
-                return hydra::bit_cast<double>(0x7FF7'FFFF'FFFF'FFFFu);
-            }
-        }
+        T get_nan();
 
         template <class T>
         void set_fpr_reg(int regnum, T value);
 
         template <class T>
-        void check_fpu_arg(T arg)
-        {
-            switch (std::fpclassify(arg))
-            {
-                case FP_NAN:
-                {
-                    if (check_nan<T>(arg))
-                    {
-                        fcr31_.cause_invalidop = 1;
-                        if (!fcr31_.enable_invalidop)
-                        {
-                            fcr31_.flag_invalidop = 1;
-                        }
-                    }
-                    else
-                    {
-                        fcr31_.unimplemented = 1;
-                    }
-                    break;
-                }
-                case FP_SUBNORMAL:
-                {
-                    fcr31_.unimplemented = 1;
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
-        }
+        void check_fpu_arg(T arg);
 
         template <class T>
-        void check_fpu_result(T& arg)
-        {
-            switch (std::fpclassify(arg))
-            {
-                case FP_NAN:
-                {
-                    arg = get_nan<T>();
-                    break;
-                }
-                case FP_SUBNORMAL:
-                {
-                    if (!fcr31_.flush_subnormals || fcr31_.enable_underflow ||
-                        fcr31_.enable_inexact)
-                    {
-                        fcr31_.unimplemented = 1;
-                        return;
-                    }
-                    fcr31_.cause_underflow = 1;
-                    if (!fcr31_.enable_underflow)
-                    {
-                        fcr31_.flag_underflow = 1;
-                    }
-                    fcr31_.cause_inexact = 1;
-                    if (!fcr31_.enable_inexact)
-                    {
-                        fcr31_.flag_inexact = 1;
-                    }
-                    switch (fcr31_.rounding_mode)
-                    {
-                        case 0:
-                        case 1:
-                        {
-                            arg = std::copysign(0, arg);
-                            break;
-                        }
-                        case 2:
-                        {
-                            if (std::signbit(arg))
-                            {
-                                arg = -static_cast<T>(0);
-                            }
-                            else
-                            {
-                                arg = std::numeric_limits<T>::min();
-                            }
-                            break;
-                        }
-                        case 3:
-                        {
-                            if (std::signbit(arg))
-                            {
-                                arg = -std::numeric_limits<T>::min();
-                            }
-                            else
-                            {
-                                arg = 0;
-                            }
-                            break;
-                        }
-                    }
-                    break;
-                }
-            }
-        }
+        void check_fpu_result(T& arg);
 
         template <class OperatorFunction, class CastFunction>
         void fpu_operate(OperatorFunction op, CastFunction cast);
