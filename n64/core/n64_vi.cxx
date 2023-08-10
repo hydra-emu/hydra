@@ -1,3 +1,4 @@
+#include <compatibility.hxx>
 #include <fmt/format.h>
 #include <log.hxx>
 #include <n64/core/n64_addresses.hxx>
@@ -173,7 +174,7 @@ namespace hydra::N64
             {
                 data &= 0x00FFFFFF;
                 memory_ptr_ = &rdram_ptr_[data];
-                vis_counter_ += mi_interrupt_->VI;
+                vis_counter_ += 1;
                 break;
             }
             case VI_WIDTH:

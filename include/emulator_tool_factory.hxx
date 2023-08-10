@@ -2,9 +2,9 @@
 
 #include "qt/mmioviewer.hxx"
 #include <emulator_types.hxx>
+#include <log.hxx>
 #include <memory>
 #include <qt/mmioviewer.hxx>
-#include <qt/n64_debugger.hxx>
 
 enum EmulatorTool : size_t {
     ET_Debugger,
@@ -25,12 +25,12 @@ struct EmulatorToolFactory
             {
                 switch (emu_type)
                 {
-                    case hydra::EmuType::N64:
-                    {
-                        auto ret = new N64Debugger(open, nullptr);
-                        ret->SetEmulator(dynamic_cast<hydra::N64::N64_TKPWrapper*>(emulator));
-                        return ret;
-                    }
+                    // case hydra::EmuType::N64:
+                    // {
+                    //     auto ret = new N64Debugger(open, nullptr);
+                    //     ret->SetEmulator(dynamic_cast<hydra::N64::N64_TKPWrapper*>(emulator));
+                    //     return ret;
+                    // }
                     default:
                     {
                         Logger::Warn("EmulatorToolFactory::CreateTool tried to create debugger for "

@@ -21,6 +21,16 @@
 #endif
 #endif
 
+#ifdef __clang__
+#define hydra_inline [[clang::always_inline]] inline
+#elif defined(__GNUC__)
+#define hydra_inline __always_inline
+#elif defined(_MSC_VER)
+#define hydra_inline __forceinline
+#else
+#define hydra_inline inline
+#endif
+
 namespace hydra
 {
     template <class T>

@@ -32,7 +32,7 @@ if (LINUX)
 endif()
 string(REPLACE ";" " " WARNINGS_FLAGS "${WARNINGS}")
 set(CMAKE_CXX_FLAGS "-g -O2")
-set(CMAKE_C_FLAGS "-g -O0")
+set(CMAKE_C_FLAGS "-g -O2")
 if (APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
 else()
@@ -45,8 +45,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidg
 
 add_subdirectory(vendored/fmt)
 
-add_compile_options(-fsanitize=address)
-add_link_options(-fsanitize=address)
+# add_compile_options(-fsanitize=address)
+# add_link_options(-fsanitize=address)
 
 set(PROJECT_SOURCES
     data/resources.qrc
@@ -57,7 +57,6 @@ set(PROJECT_SOURCES
     qt/shadereditor.cxx
     qt/aboutwindow.cxx
     qt/keypicker.cxx
-    qt/n64_debugger.cxx
     qt/nes_ppuviewer.cxx
     qt/mmioviewer.cxx
     src/emulator.cxx
@@ -101,13 +100,7 @@ set(N64_FILES
     n64/n64_tkpwrapper.cxx
     n64/core/n64_impl.cxx
     n64/core/n64_cpu.cxx
-    n64/core/n64_cpuinstructions.cxx
-    n64/core/n64_cpuinstructions_special.cxx
-    n64/core/n64_cpuinstructions_branch.cxx
-    n64/core/n64_cpuinstructions_float.cxx
-    n64/core/n64_cpuinstructions_loadstore.cxx
     n64/core/n64_cpubus.cxx
-    n64/core/n64_cpuexceptions.cxx
     n64/core/n64_rcp.cxx
     n64/core/n64_rsp.cxx
     n64/core/n64_rdp.cxx
@@ -115,7 +108,6 @@ set(N64_FILES
     n64/core/n64_rsp_vu.cxx
     n64/core/n64_vi.cxx
     n64/core/n64_ai.cxx
-    n64/core/n64_cpudisassemble.cxx
     vendored/miniaudio.c
 )
 

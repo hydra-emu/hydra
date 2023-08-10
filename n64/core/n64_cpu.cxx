@@ -4,10 +4,12 @@
 #include <cmath>
 #include <compatibility.hxx>
 #include <cstring>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 #include <n64/core/n64_cpu.hxx>
+#include <random>
 #include <sstream>
 
 namespace hydra::N64
@@ -1177,4 +1179,2379 @@ namespace hydra::N64
                    cpubus_.rdram_[i + 2], cpubus_.rdram_[i + 3]);
         }
     }
+
+    void CPU::throw_exception(uint32_t address, ExceptionType type, uint8_t processor)
+    {
+        if (!CP0Status.EXL)
+        {
+            int64_t new_pc = static_cast<int32_t>(address);
+            if (prev_branch_)
+            {
+                new_pc -= 4;
+            }
+            CP0Cause.BD = prev_branch_;
+            cp0_regs_[CP0_EPC].UD = new_pc;
+        }
+        else
+        {
+            Logger::Warn("Nested exception");
+            exit(1);
+        }
+        CP0Cause.ExCode = static_cast<uint8_t>(type);
+        CP0Cause.CE = processor;
+        CP0Status.EXL = true;
+        switch (type)
+        {
+            case ExceptionType::CoprocessorUnusable:
+            {
+                Logger::WarnOnce("Coprocessor unusable exception {:08x}", instruction_.full);
+                goto handler;
+            }
+            case ExceptionType::FloatingPoint:
+            {
+                Logger::Warn("Floating point exception {:08x}", instruction_.full);
+                goto handler;
+            }
+            case ExceptionType::Trap:
+            case ExceptionType::Syscall:
+            case ExceptionType::Interrupt:
+            case ExceptionType::Breakpoint:
+            case ExceptionType::TLBMissLoad:
+            case ExceptionType::IntegerOverflow:
+            case ExceptionType::AddressErrorLoad:
+            case ExceptionType::AddressErrorStore:
+            case ExceptionType::ReservedInstruction:
+            handler:
+            {
+                pc_ = 0x8000'0180;
+                next_pc_ = pc_ + 4;
+                break;
+            }
+            default:
+            {
+                Logger::Fatal("Unhandled exception type: {}", static_cast<int>(type));
+            }
+        }
+    }
+
+#define rdreg (gpr_regs_[instruction_.RType.rd])
+#define rsreg (gpr_regs_[instruction_.RType.rs])
+#define rtreg (gpr_regs_[instruction_.RType.rt])
+#define saval (instruction_.RType.sa)
+#define immval (instruction_.IType.immediate)
+#define seimmval (static_cast<int64_t>(static_cast<int16_t>(instruction_.IType.immediate)))
+#define fmtval (instruction_.FType.fmt)
+#define ftreg (fpr_regs_[instruction_.FType.ft])
+#define fsreg (fpr_regs_[instruction_.FType.fs])
+#define fdreg (fpr_regs_[instruction_.FType.fd])
+
+    void CPU::LDL()
+    {
+        int16_t offset = immval;
+        uint64_t address = rsreg.D + offset;
+        int shift = 8 * ((address ^ 0) & 7);
+        uint64_t mask = (uint64_t)0xFFFFFFFFFFFFFFFF << shift;
+        uint64_t data = load_doubleword(address & ~7);
+        rtreg.UD = (rtreg.UD & ~mask) | (data << shift);
+    }
+
+    void CPU::LDR()
+    {
+        int16_t offset = immval;
+        uint64_t address = rsreg.D + offset;
+        int shift = 8 * ((address ^ 7) & 7);
+        uint64_t mask = (uint64_t)0xFFFFFFFFFFFFFFFF >> shift;
+        uint64_t data = load_doubleword(address & ~7);
+        rtreg.UD = (rtreg.UD & ~mask) | (data >> shift);
+    }
+
+    void CPU::LWL()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        uint32_t shift = 8 * ((address ^ 0) & 3);
+        uint32_t mask = 0xFFFFFFFF << shift;
+        uint32_t data = load_word(address & ~3);
+        rtreg.UD =
+            static_cast<int64_t>(static_cast<int32_t>((rtreg.UW._0 & ~mask) | data << shift));
+    }
+
+    void CPU::LWR()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        uint32_t shift = 8 * ((address ^ 3) & 3);
+        uint32_t mask = 0xFFFFFFFF >> shift;
+        uint32_t data = load_word(address & ~3);
+        rtreg.UD =
+            static_cast<int64_t>(static_cast<int32_t>((rtreg.UW._0 & ~mask) | data >> shift));
+    }
+
+    void CPU::SB()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        store_byte(address, rtreg.UB._0);
+    }
+
+    void CPU::SWL()
+    {
+        constexpr static uint32_t mask[4] = {0x00000000, 0xFF000000, 0xFFFF0000, 0xFFFFFF00};
+        constexpr static uint32_t shift[4] = {0, 8, 16, 24};
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = (static_cast<uint32_t>(seoffset) & ~0b11) + rsreg.UD;
+        auto addr_off = immval & 0b11;
+        uint32_t word = load_word(address);
+        word &= mask[addr_off];
+        word |= rtreg.UW._0 >> shift[addr_off];
+        store_word(address, word);
+    }
+
+    void CPU::SWR()
+    {
+        constexpr static uint32_t mask[4] = {0x00FFFFFF, 0x0000FFFF, 0x000000FF, 0x00000000};
+        constexpr static uint32_t shift[4] = {24, 16, 8, 0};
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = (static_cast<uint32_t>(seoffset) & ~0b11) + rsreg.UD;
+        auto addr_off = immval & 0b11;
+        uint32_t word = load_word(address);
+        word &= mask[addr_off];
+        word |= rtreg.UW._0 << shift[addr_off];
+        store_word(address, word);
+    }
+
+    void CPU::SDL()
+    {
+        constexpr static uint64_t mask[8] = {0,
+                                             0xFF00000000000000,
+                                             0xFFFF000000000000,
+                                             0xFFFFFF0000000000,
+                                             0xFFFFFFFF00000000,
+                                             0xFFFFFFFFFF000000,
+                                             0xFFFFFFFFFFFF0000,
+                                             0xFFFFFFFFFFFFFF00};
+        constexpr static uint32_t shift[8] = {0, 8, 16, 24, 32, 40, 48, 56};
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = (static_cast<uint32_t>(seoffset) & ~0b111) + rsreg.UD;
+        auto addr_off = immval & 0b111;
+        uint64_t doubleword = load_doubleword(address);
+        doubleword &= mask[addr_off];
+        doubleword |= rtreg.UD >> shift[addr_off];
+        store_doubleword(address, doubleword);
+    }
+
+    void CPU::SDR()
+    {
+        constexpr static uint64_t mask[8] = {
+            0x00FFFFFFFFFFFFFF, 0x0000FFFFFFFFFFFF, 0x000000FFFFFFFFFF, 0x00000000FFFFFFFF,
+            0x0000000000FFFFFF, 0x000000000000FFFF, 0x00000000000000FF, 0x0000000000000000};
+        constexpr static uint32_t shift[8] = {56, 48, 40, 32, 24, 16, 8, 0};
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = (static_cast<uint32_t>(seoffset) & ~0b111) + rsreg.UD;
+        auto addr_off = immval & 0b111;
+        uint64_t doubleword = load_doubleword(address);
+        doubleword &= mask[addr_off];
+        doubleword |= rtreg.UD << shift[addr_off];
+        store_doubleword(address, doubleword);
+    }
+
+    void CPU::SD()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        if ((address & 0b111) != 0)
+        {
+            // If either of the loworder two bits of the address are not zero, an address error
+            // exception occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorStore);
+            return;
+        }
+        if (!mode64_ && opmode_ != OperatingMode::Kernel)
+        {
+            // This operation is defined for the VR4300 operating in 64-bit mode and in 32-bit
+            // Kernel mode. Execution of this instruction in 32-bit User or Supervisor mode
+            // causes a reserved instruction exception.
+            throw_exception(prev_pc_, ExceptionType::ReservedInstruction);
+        }
+        store_doubleword(address, rtreg.UD);
+    }
+
+    void CPU::SW()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        if ((address & 0b11) != 0)
+        {
+            // If either of the loworder two bits of the address are not zero, an address error
+            // exception occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorStore);
+            return;
+        }
+        if ((address >> 31) && static_cast<int64_t>(address) > 0)
+        {
+            // If bit 31 is set and address is positive, that means it's not sign extended, an
+            // address error exception occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorStore);
+            return;
+        }
+        store_word(address, rtreg.UW._0);
+    }
+
+    void CPU::SH()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        if ((address & 0b1) != 0)
+        {
+            // If either of the loworder two bits of the address are not zero, an address error
+            // exception occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorStore);
+            return;
+        }
+        store_halfword(address, rtreg.UH._0);
+    }
+
+    void CPU::SC()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+
+        if ((address & 0b11) != 0)
+        {
+            // If either of the loworder two bits of the address are not zero, an address error
+            // exception occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorStore);
+            return;
+        }
+
+        if (llbit_)
+        {
+            store_word(address, rtreg.UW._0);
+            rtreg.UD = 1;
+        }
+        else
+        {
+            rtreg.UD = 0;
+        }
+    }
+
+    void CPU::LBU()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        rtreg.UD = load_byte(seoffset + rsreg.UD);
+    }
+
+    void CPU::LB()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        rtreg.D = static_cast<int8_t>(load_byte(seoffset + rsreg.UD));
+    }
+
+    void CPU::LHU()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        rtreg.UD = load_halfword(seoffset + rsreg.UD);
+    }
+
+    void CPU::LH()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        if ((address & 0b1) != 0)
+        {
+            // If the least-significant bit of the address is not zero, an address error exception
+            // occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorLoad);
+            return;
+        }
+        rtreg.D = static_cast<int16_t>(load_halfword(address));
+    }
+
+    void CPU::LWU()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        rtreg.UD = load_word(seoffset + rsreg.UD);
+    }
+
+    void CPU::LW()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        if ((address & 0b11) != 0)
+        {
+            // If either of the loworder two bits of the address are not zero, an address error
+            // exception occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorLoad);
+            return;
+        }
+        if ((address >> 31) && static_cast<int64_t>(address) > 0)
+        {
+            // If bit 31 is set and address is positive, that means it's not sign extended, an
+            // address error exception occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorLoad);
+            return;
+        }
+        rtreg.D = static_cast<int32_t>(load_word(address));
+    }
+
+    void CPU::LD()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        if ((address & 0b111) != 0)
+        {
+            // If either of the loworder two bits of the address are not zero, an address error
+            // exception occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorLoad);
+            return;
+        }
+        if (!mode64_ && opmode_ != OperatingMode::Kernel)
+        {
+            // This operation is defined for the VR4300 operating in 64-bit mode and in 32-bit
+            // Kernel mode. Execution of this instruction in 32-bit User or Supervisor mode
+            // causes a reserved instruction exception.
+            throw_exception(prev_pc_, ExceptionType::ReservedInstruction);
+            return;
+        }
+        rtreg.UD = load_doubleword(address);
+    }
+
+    void CPU::LL()
+    {
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint64_t address = seoffset + rsreg.UD;
+        if ((address & 0b11) != 0)
+        {
+            // If either of the loworder two bits of the address are not zero, an address error
+            // exception occurs.
+            set_cp0_regs_exception(address);
+            throw_exception(prev_pc_, ExceptionType::AddressErrorLoad);
+            return;
+        }
+        rtreg.D = static_cast<int32_t>(load_word(address));
+        llbit_ = true;
+        lladdr_ = translate_vaddr(address).paddr;
+    }
+
+    void CPU::BGTZL()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch_likely(rsreg.D > 0, pc_ + seoffset);
+    }
+
+    void CPU::BLEZ()
+    {
+        int32_t seoffset = static_cast<int16_t>(immval << 2);
+        conditional_branch(rsreg.D <= 0, pc_ + seoffset);
+    }
+
+    void CPU::BEQ()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch(rsreg.UD == rtreg.UD, pc_ + seoffset);
+    }
+
+    void CPU::BEQL()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch_likely(rsreg.UD == rtreg.UD, pc_ + seoffset);
+    }
+
+    void CPU::BNE()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch(rsreg.UD != rtreg.UD, pc_ + seoffset);
+    }
+
+    void CPU::BNEL()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch_likely(rsreg.UD != rtreg.UD, pc_ + seoffset);
+    }
+
+    void CPU::BLEZL()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch_likely(rsreg.D <= 0, pc_ + seoffset);
+    }
+
+    void CPU::BGTZ()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch(rsreg.D > 0, pc_ + seoffset);
+    }
+
+    void CPU::JAL()
+    {
+        link_register(31);
+        J();
+    }
+
+    void CPU::J()
+    {
+        auto jump_addr = instruction_.JType.target;
+        // combine first 3 bits of pc and jump_addr shifted left by 2
+        branch_to(((pc_ - 4) & 0xF000'0000) | (jump_addr << 2));
+    }
+
+    void CPU::s_JALR()
+    {
+        link_register(instruction_.RType.rd);
+        // Register numbers rs and rd should not be equal, because such an instruction does
+        // not have the same effect when re-executed. If they are equal, the contents of rs
+        // are destroyed by storing link address. However, if an attempt is made to execute
+        // this instruction, an exception will not occur, and the result of executing such an
+        // instruction is undefined.
+        if (rdreg.UD != rsreg.UD)
+        {
+            // throw_exception(prev_pc_, ExceptionType::AddressErrorLoad);
+        }
+        s_JR();
+    }
+
+    void CPU::s_JR()
+    {
+        auto jump_addr = rsreg.UD;
+        if ((jump_addr & 0b11) != 0)
+        {
+            // Since instructions must be word-aligned, a Jump Register instruction must
+            // specify a target register (rs) which contains an address whose low-order two bits
+            // are zero. If these low-order two bits are not zero, an address exception will occur
+            // when the jump target instruction is fetched.
+            set_cp0_regs_exception(jump_addr);
+            throw_exception(jump_addr, ExceptionType::AddressErrorLoad);
+            return;
+        }
+        branch_to(jump_addr);
+    }
+
+    void CPU::r_BLTZ()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch(rsreg.D < 0, pc_ + seoffset);
+    }
+
+    void CPU::r_BGEZ()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch(rsreg.W._0 >= 0, pc_ + seoffset);
+    }
+
+    void CPU::r_BLTZL()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch_likely(rsreg.D < 0, pc_ + seoffset);
+    }
+
+    void CPU::r_BGEZL()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch_likely(rsreg.W._0 >= 0, pc_ + seoffset);
+    }
+
+    void CPU::r_BLTZAL()
+    {
+        Logger::Warn("r_BLTZAL not implemented");
+    }
+
+    void CPU::r_BGEZAL()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        conditional_branch(rsreg.D >= 0, pc_ + seoffset);
+        link_register(31);
+    }
+
+    void CPU::r_BLTZALL()
+    {
+        Logger::Warn("r_BLTZALL not implemented");
+    }
+
+    void CPU::r_BGEZALL()
+    {
+        int16_t offset = immval << 2;
+        int32_t seoffset = offset;
+        link_register(31);
+        conditional_branch_likely(rsreg.D >= 0, pc_ + seoffset);
+    }
+
+    void CPU::s_SLL()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 << saval);
+    }
+
+    void CPU::s_SRL()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 >> saval);
+    }
+
+    void CPU::s_SRA()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.D >> saval);
+    }
+
+    void CPU::s_SLLV()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 << (rsreg.UD & 0b111111));
+    }
+
+    void CPU::s_SRLV()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 >> (rsreg.UD & 0b111111));
+    }
+
+    void CPU::s_SRAV()
+    {
+        rdreg.D = static_cast<int32_t>(rtreg.D >> (rsreg.UD & 0b11111));
+    }
+
+    void CPU::s_DSRL()
+    {
+        rdreg.UD = rtreg.UD >> saval;
+    }
+
+    void CPU::s_DSRLV()
+    {
+        rdreg.UD = rtreg.UD >> (rsreg.UD & 0b111111);
+    }
+
+    void CPU::s_DSLL()
+    {
+        rdreg.UD = rtreg.UD << saval;
+    }
+
+    void CPU::s_DSLLV()
+    {
+        rdreg.UD = rtreg.UD << (rsreg.UD & 0b111111);
+    }
+
+    void CPU::s_DSLL32()
+    {
+        rdreg.UD = rtreg.UD << (saval + 32);
+    }
+
+    void CPU::s_DSRA()
+    {
+        rdreg.D = rtreg.D >> saval;
+    }
+
+    void CPU::s_DSRA32()
+    {
+        rdreg.D = rtreg.D >> (saval + 32);
+    }
+
+    void CPU::s_DSRAV()
+    {
+        rdreg.D = rtreg.D >> (rsreg.UD & 0b111111);
+    }
+
+    void CPU::s_DSRL32()
+    {
+        rdreg.UD = rtreg.UD >> (saval + 32);
+    }
+
+    void CPU::s_ADD()
+    {
+        int32_t result = 0;
+        bool overflow = hydra::add_overflow(rtreg.W._0, rsreg.W._0, result);
+        if (overflow)
+        {
+            return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
+        }
+        rdreg.UD = static_cast<int64_t>(result);
+    }
+
+    void CPU::s_ADDU()
+    {
+        rdreg.D = static_cast<int32_t>(rsreg.UW._0 + rtreg.UW._0);
+    }
+
+    void CPU::s_DADD()
+    {
+        int64_t result = 0;
+        bool overflow = hydra::add_overflow(rtreg.D, rsreg.D, result);
+        if (overflow)
+        {
+            return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
+        }
+        rdreg.D = result;
+    }
+
+    void CPU::s_DADDU()
+    {
+        rdreg.UD = rsreg.UD + rtreg.UD;
+    }
+
+    void CPU::s_SUB()
+    {
+        int32_t result = 0;
+        bool overflow = hydra::sub_overflow(rsreg.W._0, rtreg.W._0, result);
+        if (overflow)
+        {
+            return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
+        }
+        rdreg.D = result;
+    }
+
+    void CPU::s_SUBU()
+    {
+        rdreg.D = static_cast<int32_t>(rsreg.UW._0 - rtreg.UW._0);
+    }
+
+    void CPU::s_DSUB()
+    {
+        int64_t result = 0;
+        bool overflow = hydra::sub_overflow(rsreg.D, rtreg.D, result);
+        if (overflow)
+        {
+            return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
+        }
+        rdreg.D = result;
+    }
+
+    void CPU::s_DSUBU()
+    {
+        rdreg.UD = rsreg.UD - rtreg.UD;
+    }
+
+    void CPU::s_MULT()
+    {
+        uint64_t res = static_cast<int64_t>(rsreg.W._0) * rtreg.W._0;
+        lo_ = static_cast<int64_t>(static_cast<int32_t>(res & 0xFFFF'FFFF));
+        hi_ = static_cast<int64_t>(static_cast<int32_t>(res >> 32));
+    }
+
+    void CPU::s_MULTU()
+    {
+        uint64_t res = static_cast<uint64_t>(rsreg.UW._0) * rtreg.UW._0;
+        lo_ = static_cast<int64_t>(static_cast<int32_t>(res & 0xFFFF'FFFF));
+        hi_ = static_cast<int64_t>(static_cast<int32_t>(res >> 32));
+    }
+
+    void CPU::s_DMULT()
+    {
+        auto [high, low] = hydra::mul64(rsreg.D, rtreg.D);
+        hi_ = high;
+        lo_ = low;
+    }
+
+    void CPU::s_DMULTU()
+    {
+        auto [high, low] = hydra::mul64(rsreg.UD, rtreg.UD);
+        hi_ = high;
+        lo_ = low;
+    }
+
+    void CPU::s_DIV()
+    {
+        if (rtreg.W._0 == 0) [[unlikely]]
+        {
+            lo_ = rsreg.W._0 < 0 ? 1 : -1;
+            hi_ = static_cast<int64_t>(rsreg.W._0);
+            return;
+        }
+        // TODO: replace with uint64_t division
+        if (rsreg.W._0 == std::numeric_limits<decltype(rsreg.W._0)>::min() && rtreg.W._0 == -1)
+            [[unlikely]]
+        {
+            lo_ = static_cast<int64_t>(rsreg.W._0);
+            hi_ = 0;
+            return;
+        }
+        lo_ = rsreg.W._0 / rtreg.W._0;
+        hi_ = rsreg.W._0 % rtreg.W._0;
+    }
+
+    void CPU::s_DIVU()
+    {
+        if (rtreg.UW._0 == 0) [[unlikely]]
+        {
+            lo_ = -1;
+            hi_ = rsreg.UD;
+            return;
+        }
+        lo_ = rsreg.UW._0 / rtreg.UW._0;
+        hi_ = rsreg.UW._0 % rtreg.UW._0;
+    }
+
+    void CPU::s_DDIV()
+    {
+        if (rtreg.D == 0) [[unlikely]]
+        {
+            bool sign = rsreg.UD >> 63;
+            lo_ = sign ? 1 : -1;
+            hi_ = rsreg.UD;
+            return;
+        }
+        if (rsreg.D == std::numeric_limits<int64_t>::min() && rtreg.D == -1)
+        {
+            lo_ = rsreg.D;
+            hi_ = 0;
+            return;
+        }
+        lo_ = rsreg.D / rtreg.D;
+        hi_ = rsreg.D % rtreg.D;
+    }
+
+    void CPU::s_DDIVU()
+    {
+        if (rtreg.UD == 0) [[unlikely]]
+        {
+            lo_ = -1;
+            hi_ = rsreg.UD;
+            return;
+        }
+        lo_ = static_cast<int64_t>(rsreg.UD / rtreg.UD);
+        hi_ = static_cast<int64_t>(rsreg.UD % rtreg.UD);
+    }
+
+    void CPU::s_AND()
+    {
+        rdreg.UD = rsreg.UD & rtreg.UD;
+    }
+
+    void CPU::s_OR()
+    {
+        rdreg.UD = rsreg.UD | rtreg.UD;
+    }
+
+    void CPU::s_XOR()
+    {
+        rdreg.UD = rsreg.UD ^ rtreg.UD;
+    }
+
+    void CPU::s_NOR()
+    {
+        rdreg.UD = ~(rsreg.UD | rtreg.UD);
+    }
+
+    void CPU::s_TGE()
+    {
+        if (rsreg.D >= rtreg.D)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::s_TGEU()
+    {
+        if (rsreg.UD >= rtreg.UD)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::s_TLT()
+    {
+        if (rsreg.D < rtreg.D)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::s_TLTU()
+    {
+        if (rsreg.UD < rtreg.UD)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::s_TEQ()
+    {
+        if (rsreg.UD == rtreg.UD)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::s_TNE()
+    {
+        if (rsreg.UD != rtreg.UD)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::r_TGEI()
+    {
+        if (rsreg.D >= seimmval)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::r_TGEIU()
+    {
+        if (rsreg.UD >= static_cast<uint64_t>(seimmval))
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::r_TLTI()
+    {
+        if (rsreg.D < seimmval)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::r_TLTIU()
+    {
+        if (rsreg.UD < static_cast<uint64_t>(seimmval))
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::r_TEQI()
+    {
+        if (rsreg.D == seimmval)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::r_TNEI()
+    {
+        if (rsreg.D != seimmval)
+        {
+            throw_exception(prev_pc_, ExceptionType::Trap);
+        }
+    }
+
+    void CPU::s_SLT()
+    {
+        rdreg.UD = rsreg.D < rtreg.D;
+    }
+
+    void CPU::s_SLTU()
+    {
+        rdreg.UD = rsreg.UD < rtreg.UD;
+    }
+
+    void CPU::s_SYSCALL()
+    {
+        throw_exception(prev_pc_, ExceptionType::Syscall);
+    }
+
+    void CPU::s_BREAK()
+    {
+        throw_exception(prev_pc_, ExceptionType::Breakpoint);
+    }
+
+    void CPU::s_SYNC() {}
+
+    void CPU::s_MFHI()
+    {
+        rdreg.UD = hi_;
+    }
+
+    void CPU::s_MTHI()
+    {
+        hi_ = rsreg.UD;
+    }
+
+    void CPU::s_MFLO()
+    {
+        rdreg.UD = lo_;
+    }
+
+    void CPU::s_MTLO()
+    {
+        lo_ = rsreg.UD;
+    }
+
+    void CPU::ERROR()
+    {
+        Logger::Fatal("Error instruction at PC: {:08X}, instruction: {}", pc_, instruction_.full);
+    }
+
+    void CPU::SPECIAL()
+    {
+        (special_table_[instruction_.RType.func])(this);
+    }
+
+    void CPU::REGIMM()
+    {
+        (regimm_table_[instruction_.RType.rt])(this);
+    }
+
+    void CPU::RDHWR()
+    {
+        throw_exception(prev_pc_, ExceptionType::ReservedInstruction);
+    }
+
+    void CPU::COP0()
+    {
+        execute_cp0_instruction();
+    }
+
+    void CPU::COP1()
+    {
+        // TODO: another LUT?
+        // TODO: preserve cause
+        if (!CP0Status.CP1)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+        }
+        switch (instruction_.RType.rs)
+        {
+            case 0b00010:
+                f_CFC1();
+                break;
+            case 0b00000:
+                f_MFC1();
+                break;
+            case 0b00001:
+                f_DMFC1();
+                break;
+            case 0b00100:
+                f_MTC1();
+                break;
+            case 0b00101:
+                f_DMTC1();
+                break;
+            case 0b00110:
+                f_CTC1();
+                break;
+            case 0b01000:
+                switch (instruction_.RType.rt)
+                {
+                    case 0:
+                    {
+                        int16_t offset = immval << 2;
+                        int32_t seoffset = offset;
+                        conditional_branch(!fcr31_.compare, pc_ + seoffset);
+                        was_branch_ = false;
+                        break;
+                    }
+                    case 1:
+                    {
+                        int16_t offset = immval << 2;
+                        int32_t seoffset = offset;
+                        conditional_branch(fcr31_.compare, pc_ + seoffset);
+                        was_branch_ = false;
+                        break;
+                    }
+                    case 2:
+                    {
+                        int16_t offset = immval << 2;
+                        int32_t seoffset = offset;
+                        conditional_branch_likely(!fcr31_.compare, pc_ + seoffset);
+                        was_branch_ = false;
+                        break;
+                    }
+                    case 3:
+                    {
+                        int16_t offset = immval << 2;
+                        int32_t seoffset = offset;
+                        conditional_branch_likely(fcr31_.compare, pc_ + seoffset);
+                        was_branch_ = false;
+                        break;
+                    }
+                    default:
+                    {
+                        Logger::Fatal("Unimplemented COP1 BC instruction");
+                    }
+                }
+                break;
+            case 0b00011:
+            case 0b00111:
+            {
+                if (!CP0Status.CP1)
+                {
+                    return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+                }
+                fcr31_.cause_divbyzero = 0;
+                fcr31_.cause_inexact = 0;
+                fcr31_.cause_invalidop = 0;
+                fcr31_.cause_overflow = 0;
+                fcr31_.cause_underflow = 0;
+                fcr31_.unimplemented = 1;
+                return throw_exception(prev_pc_, ExceptionType::FloatingPoint, 0);
+            }
+            case 0x9:
+            case 0xA:
+            case 0xB:
+            case 0xC:
+            case 0xD:
+            case 0xE:
+            case 0xF:
+                return throw_exception(prev_pc_, ExceptionType::ReservedInstruction);
+            default:
+            {
+                (float_table_[instruction_.RType.func])(this);
+                break;
+            }
+        }
+    }
+
+    void CPU::MFC2()
+    {
+        if (!CP0Status.CP2)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 2);
+        }
+        rtreg.D = static_cast<int32_t>(cp2_weirdness_);
+    }
+
+    void CPU::DMFC2()
+    {
+        if (!CP0Status.CP2)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 2);
+        }
+        rtreg.D = cp2_weirdness_;
+    }
+
+    void CPU::MTC2()
+    {
+        if (!CP0Status.CP2)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 2);
+        }
+        cp2_weirdness_ = rtreg.UD;
+    }
+
+    void CPU::DMTC2()
+    {
+        if (!CP0Status.CP2)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 2);
+        }
+        cp2_weirdness_ = rtreg.UD;
+    }
+
+    void CPU::CFC2()
+    {
+        if (!CP0Status.CP2)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 2);
+        }
+    }
+
+    void CPU::CTC2()
+    {
+        if (!CP0Status.CP2)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 2);
+        }
+    }
+
+    void CPU::COP2()
+    {
+        switch (instruction_.RType.rs)
+        {
+            case 0:
+                return MFC2();
+            case 1:
+                return DMFC2();
+            case 2:
+                return CFC2();
+            case 4:
+                return MTC2();
+            case 5:
+                return DMTC2();
+            case 6:
+                return CTC2();
+            default:
+            {
+                if (!CP0Status.CP2)
+                {
+                    throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 2);
+                }
+                else
+                {
+                    throw_exception(prev_pc_, ExceptionType::ReservedInstruction, 2);
+                }
+            }
+        }
+    }
+
+    void CPU::COP3()
+    {
+        throw_exception(prev_pc_, ExceptionType::ReservedInstruction, 0);
+    }
+
+    void CPU::CACHE()
+    {
+        // TODO: TLB stuff
+    }
+
+    void CPU::ANDI()
+    {
+        rtreg.UD = rsreg.UD & immval;
+    }
+
+    void CPU::ADDI()
+    {
+        int32_t seimm = static_cast<int16_t>(immval);
+        int32_t result = 0;
+        bool overflow = hydra::add_overflow(rsreg.W._0, seimm, result);
+        if (overflow)
+        {
+            // An integer overflow exception occurs if carries out of bits 30 and 31 differ (2’s
+            // complement overflow). The contents of destination register rt is not modified
+            // when an integer overflow exception occurs.
+            return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
+        }
+        rtreg.D = static_cast<int32_t>(result);
+    }
+
+    void CPU::ADDIU()
+    {
+        rtreg.D = static_cast<int32_t>(rsreg.W._0 + static_cast<int16_t>(immval));
+    }
+
+    void CPU::DADDI()
+    {
+        int64_t seimm = static_cast<int16_t>(immval);
+        int64_t result = 0;
+        bool overflow = hydra::add_overflow(rsreg.D, seimm, result);
+        if (overflow)
+        {
+            // An integer overflow exception occurs if carries out of bits 30 and 31 differ (2’s
+            // complement overflow). The contents of destination register rt is not modified
+            // when an integer overflow exception occurs.
+            return throw_exception(prev_pc_, ExceptionType::IntegerOverflow);
+        }
+        rtreg.D = result;
+    }
+
+    void CPU::DADDIU()
+    {
+        rtreg.D = rsreg.D + static_cast<int16_t>(immval);
+    }
+
+    void CPU::LUI()
+    {
+        int32_t imm = immval << 16;
+        uint64_t seimm = static_cast<int64_t>(imm);
+        rtreg.UD = seimm;
+    }
+
+    void CPU::ORI()
+    {
+        rtreg.UD = rsreg.UD | immval;
+    }
+
+    void CPU::XORI()
+    {
+        rtreg.UD = rsreg.UD ^ immval;
+    }
+
+    void CPU::SLTI()
+    {
+        int64_t seimm = static_cast<int16_t>(immval);
+        rtreg.UD = rsreg.D < seimm;
+    }
+
+    void CPU::SLTIU()
+    {
+        rtreg.UD = rsreg.UD < static_cast<uint64_t>(seimmval);
+    }
+
+    void CPU::MTC0()
+    {
+        set_cp0_register_32(instruction_.RType.rd, rtreg.UW._0);
+    }
+
+    void CPU::DMTC0()
+    {
+        set_cp0_register_64(instruction_.RType.rd, rtreg.UD);
+    }
+
+    void CPU::MFC0()
+    {
+        int32_t value = get_cp0_register_32(instruction_.RType.rd);
+        rtreg.D = value;
+    }
+
+    void CPU::DMFC0()
+    {
+        uint64_t value = get_cp0_register_64(instruction_.RType.rd);
+        rtreg.UD = value;
+    }
+
+    uint32_t CPU::get_cp0_register_32(uint8_t reg)
+    {
+        switch (reg)
+        {
+            case CP0_INDEX:
+                return cp0_regs_[reg].UW._0 & 0x8000'003F;
+            case CP0_COUNT:
+                return cpubus_.time_ >> 1;
+            case CP0_CAUSE:
+            {
+                // TODO: instead update whenever mi_interrupt changes
+                CP0CauseType newcause;
+                newcause.full = cp0_regs_[reg].UD;
+                bool interrupt = cpubus_.mi_interrupt_.full & cpubus_.mi_mask_;
+                newcause.IP2 = interrupt;
+                return newcause.full;
+            }
+            case CP0_RANDOM:
+            {
+                uint8_t wired = cp0_regs_[CP0_WIRED].UB._0;
+                int start = 0;
+                int end = 64;
+
+                if (wired <= 31)
+                {
+                    start = wired;
+                    end = 32 - wired;
+                }
+
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_int_distribution<> dis(start, start + end - 1);
+                auto generated_number = dis(gen);
+                return generated_number;
+            }
+            case 7:
+            case 21:
+            case 22:
+            case 23:
+            case 24:
+            case 25:
+            case 31:
+                return cp0_weirdness_;
+            default:
+                return cp0_regs_[reg].UW._0;
+        }
+    }
+
+    uint64_t CPU::get_cp0_register_64(uint8_t reg)
+    {
+        switch (reg)
+        {
+            case CP0_ENTRYLO0:
+            case CP0_ENTRYLO1:
+            case CP0_CONTEXT:
+            case CP0_BADVADDR:
+            case CP0_ENTRYHI:
+            case CP0_STATUS:
+            case CP0_EPC:
+            case CP0_PRID:
+            case CP0_LLADDR:
+            case CP0_ERROREPC:
+                return cp0_regs_[reg].UD;
+            case CP0_XCONTEXT:
+                return cp0_regs_[reg].UD & 0xFFFFFFFFFFFFFFF0;
+            default:
+                Logger::Fatal("Reading 64 bits from COP0 register {}", reg);
+                return 0;
+        }
+    }
+
+    void CPU::set_cp0_register_32(uint8_t reg, uint32_t val)
+    {
+        cp0_weirdness_ = val;
+        int64_t value = static_cast<int32_t>(val);
+        switch (reg)
+        {
+            case CP0_PAGEMASK:
+            {
+                union PageMaskWrite
+                {
+                    uint32_t full;
+
+                    struct
+                    {
+                        uint32_t      : 13;
+                        uint32_t mask : 12;
+                        uint32_t      : 7;
+                    };
+                };
+
+                PageMaskWrite newmask;
+                {
+                    PageMaskWrite unmaskedmask;
+                    unmaskedmask.full = value;
+                    newmask.mask = unmaskedmask.mask;
+                }
+                cp0_regs_[reg].UD = newmask.full;
+                break;
+            }
+            case CP0_ENTRYLO0:
+            case CP0_ENTRYLO1:
+            {
+                cp0_regs_[reg].UD = value & 0x3FFF'FFFF;
+                break;
+            }
+            case CP0_CAUSE:
+            {
+                CP0CauseType newcause;
+                newcause.full = value;
+                CP0Cause.IP0 = newcause.IP0;
+                CP0Cause.IP1 = newcause.IP1;
+                break;
+            }
+            case CP0_COMPARE:
+            {
+                CP0Cause.IP7 = false;
+                cp0_regs_[reg].UD = value;
+                break;
+            }
+            case CP0_COUNT:
+            {
+                cpubus_.time_ = value << 1;
+                break;
+            }
+            case CP0_CONFIG:
+            {
+                cp0_regs_[reg].UD &= ~0x0F00800F;
+                cp0_regs_[reg].UD |= value & 0x0F00800F;
+                break;
+            }
+            case CP0_CONTEXT:
+            {
+                CP0Context.full = (value & 0xFFFFFFFFFF800000) | (CP0Context.full & 0x7FFFFF);
+                break;
+            }
+            case CP0_XCONTEXT:
+            {
+                CP0XContext.full =
+                    (value & 0xFFFFFFFE00000000) | (CP0XContext.full & 0x00000001FFFFFFFF);
+                break;
+            }
+            case CP0_ENTRYHI:
+            {
+                CP0EntryHi.full = value & 0xC00000FFFFFFE0FF;
+                break;
+            }
+            case CP0_STATUS:
+            {
+                CP0Status.full &= ~0xFF57FFFF;
+                CP0Status.full |= value & 0xFF57FFFF;
+                break;
+            }
+            case CP0_PARITYERROR:
+            {
+                cp0_regs_[reg].UD = value & 0xFF;
+                break;
+            }
+            case CP0_WIRED:
+            {
+                cp0_regs_[reg].UD = value & 0x3F;
+                break;
+            }
+            case CP0_PRID:
+            case CP0_RANDOM:
+            case CP0_CACHEERROR:
+            case CP0_BADVADDR:
+            {
+                break;
+            }
+            default:
+            {
+                cp0_regs_[reg].UD = value;
+                return;
+            }
+        }
+    }
+
+    void CPU::set_cp0_register_64(uint8_t reg, uint64_t value)
+    {
+        switch (reg)
+        {
+            case CP0_ENTRYLO0:
+            case CP0_ENTRYLO1:
+            {
+                cp0_regs_[reg].UD = value & 0x3FFF'FFFF;
+                break;
+            }
+            case CP0_CONTEXT:
+            {
+                cp0_regs_[reg].UD = (value & 0xFFFFFFFFFF800000) | (cp0_regs_[reg].UD & 0x7FFFFF);
+                break;
+            }
+            case CP0_ENTRYHI:
+            {
+                cp0_regs_[reg].UD = value & 0xC00000FFFFFFE0FF;
+                break;
+            }
+            case CP0_XCONTEXT:
+            {
+                cp0_regs_[reg].UD =
+                    (value & 0xFFFFFFFE00000000) | (cp0_regs_[reg].UD & 0x00000001FFFFFFFF);
+                break;
+            }
+            case CP0_LLADDR:
+                value &= 0xFFFF'FFFF;
+                [[fallthrough]];
+            case CP0_EPC:
+            case CP0_ERROREPC:
+            {
+                cp0_regs_[reg].UD = value;
+                break;
+            }
+            case CP0_CAUSE:
+            {
+                CP0CauseType newcause;
+                newcause.full = value;
+                CP0Cause.IP0 = newcause.IP0;
+                CP0Cause.IP1 = newcause.IP1;
+                break;
+            }
+
+            case CP0_INDEX:
+            case CP0_RANDOM:
+            case CP0_PAGEMASK:
+            case CP0_WIRED:
+            case CP0_COUNT:
+            case CP0_COMPARE:
+            case CP0_PRID:
+            case CP0_CONFIG:
+            case CP0_WATCHLO:
+            case CP0_WATCHHI:
+            case CP0_PARITYERROR:
+            case CP0_CACHEERROR:
+            case CP0_TAGLO:
+            case CP0_TAGHI:
+            default:
+            {
+                Logger::Warn("Writing 64 bits to COP0 register {}", reg);
+                break;
+            }
+        }
+    }
+
+    struct cast_bitcast
+    {
+        template <typename T>
+        constexpr uint64_t operator()(T x) const
+        {
+            if constexpr (sizeof(T) == 4)
+            {
+                return hydra::bit_cast<uint32_t>(x);
+            }
+            else
+            {
+                return hydra::bit_cast<uint64_t>(x);
+            }
+        }
+    };
+
+    struct cast_nocast
+    {
+        template <typename T>
+        constexpr uint64_t operator()(T x) const
+        {
+            return x;
+        }
+    };
+
+    struct cast_wcast
+    {
+        template <typename T>
+        constexpr uint64_t operator()(T x) const
+        {
+            if constexpr (sizeof(T) == 4)
+            {
+                return static_cast<uint32_t>(x);
+            }
+            else
+            {
+                return static_cast<uint64_t>(x);
+            }
+        }
+    };
+
+    struct func_sqrt
+    {
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::sqrt(x);
+        }
+    };
+
+    struct func_abs
+    {
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::abs(x);
+        }
+    };
+
+    struct func_round
+    {
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::nearbyintl(x);
+        }
+    };
+
+    struct func_trunc
+    {
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::trunc(x);
+        }
+    };
+
+    struct func_ceil
+    {
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::ceil(x);
+        }
+    };
+
+    struct func_floor
+    {
+        template <typename T>
+        constexpr T operator()(T x) const
+        {
+            return std::floor(x);
+        }
+    };
+
+    template <>
+    double CPU::get_fpu_reg<double>(int regnum)
+    {
+        return fpr_regs_[regnum].DOUBLE;
+    }
+
+    template <>
+    float CPU::get_fpu_reg<float>(int regnum)
+    {
+        return fpr_regs_[regnum].FLOAT._0;
+    }
+
+    template <>
+    void CPU::set_fpu_reg<double>(int regnum, double data)
+    {
+        fpr_regs_[regnum].DOUBLE = data;
+    }
+
+    template <>
+    void CPU::set_fpu_reg<float>(int regnum, float data)
+    {
+        fpr_regs_[regnum].FLOAT._0 = data;
+    }
+
+    template <>
+    uint32_t CPU::get_fpr_reg<uint32_t>(int regnum)
+    {
+        bool _64bit = CP0Status.FR;
+        if (_64bit)
+        {
+            return fpr_regs_[regnum].UW._0;
+        }
+        else
+        {
+            if (regnum & 1)
+            {
+                return fpr_regs_[regnum & ~1].UW._1;
+            }
+            else
+            {
+                return fpr_regs_[regnum].UW._0;
+            }
+        }
+    }
+
+    template <>
+    uint64_t CPU::get_fpr_reg<uint64_t>(int regnum)
+    {
+        bool _64bit = CP0Status.FR;
+        if (!_64bit)
+        {
+            regnum &= ~1;
+        }
+        return fpr_regs_[regnum].UD;
+    }
+
+    template <>
+    void CPU::set_fpr_reg<uint32_t>(int regnum, uint32_t val)
+    {
+        bool _64bit = CP0Status.FR;
+        if (_64bit)
+        {
+            fpr_regs_[regnum].UW._0 = val;
+        }
+        else
+        {
+            if (regnum & 1)
+            {
+                fpr_regs_[regnum & ~1].UW._1 = val;
+            }
+            else
+            {
+                fpr_regs_[regnum].UW._0 = val;
+            }
+        }
+    }
+
+    template <>
+    void CPU::set_fpr_reg<uint64_t>(int regnum, uint64_t val)
+    {
+        bool _64bit = CP0Status.FR;
+        if (!_64bit)
+        {
+            regnum &= ~1;
+        }
+        fpr_regs_[regnum].UD = val;
+    }
+
+    void CPU::LWC1()
+    {
+        if (!CP0Status.CP1)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+        }
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint32_t vaddr = seoffset + rsreg.UW._0;
+        set_fpr_reg<uint32_t>(instruction_.FType.ft, load_word(vaddr));
+    }
+
+    void CPU::LWC2()
+    {
+        Logger::Warn("LWC2 not implemented");
+    }
+
+    void CPU::LLD()
+    {
+        Logger::Warn("LLD not implemented");
+    }
+
+    void CPU::LDC1()
+    {
+        if (!CP0Status.CP1)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+        }
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint32_t vaddr = seoffset + rsreg.UW._0;
+        set_fpr_reg<uint64_t>(instruction_.FType.ft, load_doubleword(vaddr));
+    }
+
+    void CPU::LDC2()
+    {
+        Logger::Warn("LDC2 not implemented");
+    }
+
+    void CPU::SWC1()
+    {
+        if (!CP0Status.CP1)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+        }
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint32_t vaddr = seoffset + rsreg.UW._0;
+        store_word(vaddr, get_fpr_reg<uint32_t>(instruction_.FType.ft));
+    }
+
+    void CPU::SWC2()
+    {
+        Logger::Warn("SWC2 not implemented");
+    }
+
+    void CPU::SCD()
+    {
+        Logger::Warn("SCD not implemented");
+    }
+
+    void CPU::SDC1()
+    {
+        if (!CP0Status.CP1)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+        }
+        int16_t offset = immval;
+        int32_t seoffset = offset;
+        uint32_t vaddr = seoffset + rsreg.UW._0;
+        store_doubleword(vaddr, get_fpr_reg<uint64_t>(instruction_.FType.ft));
+    }
+
+    void CPU::SDC2()
+    {
+        Logger::Warn("SDC2 not implemented");
+    }
+
+    void CPU::f_CFC1()
+    {
+        int32_t val = 0;
+        switch (instruction_.RType.rd)
+        {
+            case 0:
+            {
+                // fcr0 seems to only return 0xA00
+                val = 0xA00;
+                break;
+            }
+            case 31:
+            {
+                val = fcr31_.full;
+                break;
+            }
+            default:
+                Logger::Warn("CFC1 mega whoopsie");
+        }
+        rtreg.D = val;
+    }
+
+    void CPU::f_MFC1()
+    {
+        if (!CP0Status.CP1)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+        }
+        int32_t reg = get_fpr_reg<uint32_t>(instruction_.FType.fs);
+        rtreg.D = reg;
+    }
+
+    void CPU::f_DMFC1()
+    {
+        if (!CP0Status.CP1)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+        }
+        rtreg.UD = get_fpr_reg<uint64_t>(instruction_.FType.fs);
+    }
+
+    void CPU::f_MTC1()
+    {
+        if (!CP0Status.CP1)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+        }
+        set_fpr_reg<uint32_t>(instruction_.RType.rd, rtreg.W._0);
+    }
+
+    void CPU::f_DMTC1()
+    {
+        if (!CP0Status.CP1)
+        {
+            return throw_exception(prev_pc_, ExceptionType::CoprocessorUnusable, 1);
+        }
+        set_fpr_reg(instruction_.RType.rd, rtreg.UD);
+    }
+
+    void CPU::f_CTC1()
+    {
+        switch (instruction_.RType.rd)
+        {
+            case 0:
+            {
+                Logger::Warn("CTC1 fcr0 is read only");
+                break;
+            }
+            case 31:
+            {
+                fcr31_.full = rtreg.UW._0 & 0x183ffff;
+                check_fpu_exception();
+                break;
+            }
+            default:
+                Logger::Warn("CTC1 mega whoopsie");
+        }
+    }
+
+    enum { FMT_S = 16, FMT_D = 17, FMT_W = 20, FMT_L = 21 };
+
+    bool CPU::check_fpu_exception()
+    {
+        bool fire = false;
+        if (fcr31_.unimplemented)
+        {
+            fire = true;
+        }
+        else if ((fcr31_.cause_inexact && fcr31_.enable_inexact) ||
+                 (fcr31_.cause_underflow && fcr31_.enable_underflow) ||
+                 (fcr31_.cause_overflow && fcr31_.enable_overflow) ||
+                 (fcr31_.cause_divbyzero && fcr31_.enable_divbyzero) ||
+                 (fcr31_.cause_invalidop && fcr31_.enable_invalidop))
+        {
+            fire = true;
+        }
+        if (fire)
+        {
+            throw_exception(prev_pc_, ExceptionType::FloatingPoint, 0);
+        }
+        return fire;
+    }
+
+    template <class Type, class OperatorFunction, class CastFunction>
+    void CPU::fpu_operate_impl(OperatorFunction op, CastFunction cast)
+    {
+        bool _64bit = CP0Status.FR;
+        Type ft = get_fpu_reg<Type>(instruction_.FType.ft);
+        auto fs_index = instruction_.FType.fs;
+        if (!_64bit)
+        {
+            fs_index &= ~1;
+        }
+        Type fs = get_fpu_reg<Type>(fs_index);
+        check_fpu_arg(fs);
+        set_fpu_reg<Type>(instruction_.FType.fs, fs);
+        if (check_fpu_exception())
+        {
+            return;
+        }
+        // if takes 1 parameter
+        if constexpr (!std::is_invocable<decltype(op), Type>())
+        {
+            check_fpu_arg(ft);
+            set_fpu_reg<Type>(instruction_.FType.ft, ft);
+            if (check_fpu_exception())
+            {
+                return;
+            }
+        }
+        int round_mode = std::fegetround();
+        switch (fcr31_.rounding_mode)
+        {
+            case 0:
+            {
+                std::fesetround(FE_TONEAREST);
+                break;
+            }
+            case 1:
+            {
+                std::fesetround(FE_TOWARDZERO);
+                break;
+            }
+            case 2:
+            {
+                std::fesetround(FE_UPWARD);
+                break;
+            }
+            case 3:
+            {
+                std::fesetround(FE_DOWNWARD);
+                break;
+            }
+        }
+        std::feclearexcept(FE_ALL_EXCEPT);
+        Type result{};
+        // if takes 1 parameter
+        if constexpr (std::is_invocable<decltype(op), Type>())
+        {
+            result = std::invoke(op, fs);
+        }
+        else
+        {
+            result = std::invoke(op, fs, ft);
+        }
+        int exception = fetestexcept(FE_ALL_EXCEPT);
+        if (exception & FE_UNDERFLOW)
+        {
+            if (!fcr31_.flush_subnormals || fcr31_.enable_underflow || fcr31_.enable_inexact)
+            {
+                fcr31_.unimplemented = 1;
+                return;
+            }
+            fcr31_.cause_underflow = 1;
+            if (!fcr31_.enable_underflow)
+            {
+                fcr31_.flag_underflow = 1;
+            }
+        }
+        if (exception & FE_DIVBYZERO)
+        {
+            fcr31_.cause_divbyzero = 1;
+            if (!fcr31_.enable_divbyzero)
+            {
+                fcr31_.flag_divbyzero = 1;
+            }
+        }
+        if (exception & FE_OVERFLOW)
+        {
+            fcr31_.cause_overflow = 1;
+            if (!fcr31_.enable_overflow)
+            {
+                fcr31_.flag_overflow = 1;
+            }
+        }
+        if (exception & FE_INEXACT)
+        {
+            fcr31_.cause_inexact = 1;
+            if (!fcr31_.enable_inexact)
+            {
+                fcr31_.flag_inexact = 1;
+            }
+        }
+        if (exception & FE_INVALID)
+        {
+            fcr31_.cause_invalidop = 1;
+            if (!fcr31_.enable_invalidop)
+            {
+                fcr31_.flag_invalidop = 1;
+            }
+        }
+        std::fesetround(round_mode);
+        check_fpu_result(result);
+        if (check_fpu_exception())
+        {
+            return;
+        }
+        fdreg.UD = cast(result);
+    }
+
+    template <class OperatorFunction, class CastFunction>
+    void CPU::fpu_operate(OperatorFunction op, CastFunction cast)
+    {
+        fcr31_.cause_inexact = false;
+        fcr31_.cause_underflow = false;
+        fcr31_.cause_overflow = false;
+        fcr31_.cause_divbyzero = false;
+        fcr31_.cause_invalidop = false;
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                fpu_operate_impl<float>(op, cast);
+                break;
+            }
+            case FMT_D:
+            {
+                fpu_operate_impl<double>(op, cast);
+                break;
+            }
+        }
+    }
+
+    void CPU::f_ADD()
+    {
+        fpu_operate(std::plus(), cast_bitcast());
+    }
+
+    void CPU::f_SUB()
+    {
+        fpu_operate(std::minus(), cast_bitcast());
+    }
+
+    void CPU::f_MUL()
+    {
+        fpu_operate(std::multiplies(), cast_bitcast());
+    }
+
+    void CPU::f_DIV()
+    {
+        fpu_operate(std::divides(), cast_bitcast());
+    }
+
+    void CPU::f_SQRT()
+    {
+        fpu_operate(func_sqrt(), cast_bitcast());
+    }
+
+    void CPU::f_ABS()
+    {
+        fpu_operate(func_abs(), cast_bitcast());
+    }
+
+    void CPU::f_MOV()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                int reg = instruction_.FType.fs;
+                if (!CP0Status.FR)
+                {
+                    reg &= ~1;
+                }
+                uint64_t value = (fpr_regs_[reg]).UD;
+                fdreg.UD = value;
+                break;
+            }
+            case FMT_D:
+            {
+                int reg = instruction_.FType.fs;
+                if (!CP0Status.FR)
+                {
+                    reg &= ~1;
+                }
+                uint64_t value = (fpr_regs_[reg]).UD;
+                fdreg.UD = value;
+                break;
+            }
+            default:
+                Logger::Warn("f_MOV: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_NEG()
+    {
+        fpu_operate(std::negate(), cast_bitcast());
+    }
+
+    void CPU::f_ROUNDL()
+    {
+        fpu_operate(func_round(), cast_nocast());
+    }
+
+    void CPU::f_TRUNCL()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                uint64_t data = std::trunc(fsreg.FLOAT._0);
+                fdreg.UD = hydra::bit_cast<uint64_t>(data);
+                break;
+            }
+            case FMT_D:
+            {
+                uint64_t data = std::trunc(fsreg.DOUBLE);
+                fdreg.UD = hydra::bit_cast<uint64_t>(data);
+                break;
+            }
+        }
+    }
+
+    void CPU::f_CEILL()
+    {
+        fpu_operate(func_ceil(), cast_nocast());
+    }
+
+    void CPU::f_FLOORL()
+    {
+        fpu_operate(func_floor(), cast_nocast());
+    }
+
+    void CPU::f_ROUNDW()
+    {
+        fpu_operate(func_round(), cast_wcast());
+    }
+
+    void CPU::f_TRUNCW()
+    {
+        fpu_operate(func_trunc(), cast_wcast());
+    }
+
+    void CPU::f_CEILW()
+    {
+        fpu_operate(func_ceil(), cast_wcast());
+    }
+
+    void CPU::f_FLOORW()
+    {
+        fpu_operate(func_floor(), cast_wcast());
+    }
+
+    void CPU::f_CVTS()
+    {
+        switch (fmtval)
+        {
+            case FMT_L:
+            {
+                int64_t data = fsreg.D;
+                fdreg.UD = hydra::bit_cast<uint32_t>(static_cast<float>(data));
+                break;
+            }
+            case FMT_W:
+            {
+                int32_t data = fsreg.W._0;
+                fdreg.UD = hydra::bit_cast<uint32_t>(static_cast<float>(data));
+                break;
+            }
+            case FMT_D:
+            {
+                double data = fsreg.DOUBLE;
+                fdreg.UD = hydra::bit_cast<uint32_t>(static_cast<float>(data));
+                break;
+            }
+            default:
+                Logger::Warn("f_CVTS: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_CVTD()
+    {
+        switch (fmtval)
+        {
+            case FMT_L:
+            {
+                int64_t data = fsreg.D;
+                fdreg.UD = hydra::bit_cast<uint64_t>(static_cast<double>(data));
+                break;
+            }
+            case FMT_W:
+            {
+                int32_t data = fsreg.W._0;
+                fdreg.UD = hydra::bit_cast<uint64_t>(static_cast<double>(data));
+                break;
+            }
+            case FMT_S:
+            {
+                float data = fsreg.FLOAT._0;
+                fdreg.UD = hydra::bit_cast<uint64_t>(static_cast<double>(data));
+                break;
+            }
+            default:
+                Logger::Warn("f_CVTD: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_CVTW()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                float data = fsreg.FLOAT._0;
+                fdreg.UD = static_cast<int32_t>(data);
+                break;
+            }
+            case FMT_D:
+            {
+                double data = fsreg.DOUBLE;
+                fdreg.UD = static_cast<int32_t>(data);
+                break;
+            }
+            default:
+                Logger::Warn("f_CVTW: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_CVTL()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                float data = fsreg.FLOAT._0;
+                fdreg.UD = static_cast<int64_t>(data);
+                break;
+            }
+            case FMT_D:
+            {
+                double data = fsreg.DOUBLE;
+                fdreg.UD = static_cast<int64_t>(data);
+                break;
+            }
+            default:
+                Logger::Warn("f_CVTL: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_CF()
+    {
+        Logger::Warn("f_CF not implemented");
+    }
+
+    void CPU::f_CUN()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                fcr31_.compare = std::isnan(fsreg.FLOAT._0) || std::isnan(ftreg.FLOAT._0);
+                break;
+            }
+            case FMT_D:
+            {
+                fcr31_.compare = std::isnan(fsreg.DOUBLE) || std::isnan(ftreg.DOUBLE);
+                break;
+            }
+            default:
+                Logger::Warn("f_CEQ: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_CEQ()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                fcr31_.compare = fsreg.FLOAT._0 == ftreg.FLOAT._0;
+                break;
+            }
+            case FMT_D:
+            {
+                fcr31_.compare = fsreg.DOUBLE == ftreg.DOUBLE;
+                break;
+            }
+            default:
+                Logger::Warn("f_CEQ: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_CUEQ()
+    {
+        Logger::Warn("f_CUEQ not implemented");
+    }
+
+    void CPU::f_COLT()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                fcr31_.compare = fsreg.FLOAT._0 < ftreg.FLOAT._0;
+                break;
+            }
+            case FMT_D:
+            {
+                fcr31_.compare = fsreg.DOUBLE < ftreg.DOUBLE;
+                break;
+            }
+            default:
+                Logger::Warn("f_COLT: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_CULT()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                fcr31_.compare = fsreg.FLOAT._0 < ftreg.FLOAT._0 ||
+                                 (std::isnan(fsreg.FLOAT._0) || std::isnan(ftreg.FLOAT._0));
+                break;
+            }
+            case FMT_D:
+            {
+                fcr31_.compare = fsreg.DOUBLE < ftreg.DOUBLE ||
+                                 (std::isnan(fsreg.DOUBLE) || std::isnan(ftreg.DOUBLE));
+                break;
+            }
+            default:
+                Logger::Warn("f_CULT: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_COLE()
+    {
+        Logger::Warn("f_COLE not implemented");
+    }
+
+    void CPU::f_CULE()
+    {
+        Logger::Warn("f_CULE not implemented");
+    }
+
+    void CPU::f_CSF()
+    {
+        Logger::Warn("f_CSF not implemented");
+    }
+
+    void CPU::f_CNGLE()
+    {
+        Logger::Warn("f_CNGLE not implemented");
+    }
+
+    void CPU::f_CSEQ()
+    {
+        Logger::Warn("f_CSEQ not implemented");
+    }
+
+    void CPU::f_CNGL()
+    {
+        Logger::Warn("f_CNGL not implemented");
+    }
+
+    void CPU::f_CLT()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                fcr31_.compare = fsreg.FLOAT._0 < ftreg.FLOAT._0;
+                break;
+            }
+            case FMT_D:
+            {
+                fcr31_.compare = fsreg.DOUBLE < ftreg.DOUBLE;
+                break;
+            }
+            default:
+                Logger::Warn("f_CLT: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_CNGE()
+    {
+        Logger::Warn("f_CNGE not implemented");
+    }
+
+    void CPU::f_CLE()
+    {
+        switch (fmtval)
+        {
+            case FMT_S:
+            {
+                fcr31_.compare = fsreg.FLOAT._0 <= ftreg.FLOAT._0;
+                break;
+            }
+            case FMT_D:
+            {
+                fcr31_.compare = fsreg.DOUBLE <= ftreg.DOUBLE;
+                break;
+            }
+            default:
+                Logger::Warn("f_CLE: Invalid fmtval");
+        }
+    }
+
+    void CPU::f_CNGT()
+    {
+        Logger::Warn("f_CNGT not implemented");
+    }
+
+#undef rdreg
+#undef rsreg
+#undef rtreg
+#undef saval
+#undef immval
+#undef seimmval
+#undef fmtval
+#undef ftreg
+#undef fsreg
+#undef fdreg
 } // namespace hydra::N64
