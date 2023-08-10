@@ -317,9 +317,9 @@ namespace hydra::N64
         int32_t mouse_delta_x_, mouse_delta_y_;
         std::chrono::time_point<std::chrono::high_resolution_clock> last_second_time_;
 
-        TranslatedAddress translate_vaddr(uint32_t vaddr);
-        TranslatedAddress translate_vaddr_kernel(uint32_t vaddr);
-        TranslatedAddress probe_tlb(uint32_t vaddr);
+        hydra_inline TranslatedAddress translate_vaddr(uint32_t vaddr);
+        hydra_inline TranslatedAddress translate_vaddr_kernel(uint32_t vaddr);
+        hydra_inline TranslatedAddress probe_tlb(uint32_t vaddr);
 
         uint32_t read_hwio(uint32_t addr);
         void write_hwio(uint32_t addr, uint32_t data);

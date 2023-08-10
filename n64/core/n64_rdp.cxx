@@ -328,8 +328,10 @@ namespace hydra::N64
             }
             case RDPCommandType::SetFillColor:
             {
-                fill_color_ = data[0] & 0xFFFFFFFF;
-                fill_color_ = hydra::bswap32(fill_color_);
+                fill_color_32_ = data[0] & 0xFFFFFFFF;
+                fill_color_16_0_ = data[0] & 0xFFFF;
+                fill_color_16_1_ = (data[0] >> 16);
+                fill_color_32_ = hydra::bswap32(fill_color_32_);
                 break;
             }
             case RDPCommandType::LoadTile:
@@ -724,12 +726,12 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    *ptr = x & 1 ? (fill_color_ & 0xFFFF) : (fill_color_ >> 16);
+                    *ptr = x & 1 ? fill_color_16_0_ : fill_color_16_1_;
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    *ptr = fill_color_;
+                    *ptr = fill_color_32_;
                 }
                 break;
             }

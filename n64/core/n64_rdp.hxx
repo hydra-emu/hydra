@@ -140,7 +140,8 @@ namespace hydra::N64
         uint8_t framebuffer_format_;
         uint8_t framebuffer_pixel_size_;
 
-        uint32_t fill_color_;
+        uint32_t fill_color_32_;
+        uint16_t fill_color_16_0_, fill_color_16_1_;
         uint32_t blend_color_;
         uint32_t fog_color_;
         uint32_t combined_color_;
