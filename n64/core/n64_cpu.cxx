@@ -671,7 +671,6 @@ namespace hydra::N64
             reg.UD = 0;
         }
         cpubus_.Reset();
-        rcp_.Reset();
         CP0Status.full = 0x3400'0000;
         CP0Cause.full = 0xB000'007C;
         cp0_regs_[CP0_EPC].UD = 0xFFFF'FFFF'FFFF'FFFFu;
@@ -3020,6 +3019,130 @@ namespace hydra::N64
             throw_exception(prev_pc_, ExceptionType::FloatingPoint, 0);
         }
         return fire;
+    }
+
+    template <class T>
+    void CPU::check_fpu_result(T& arg)
+    {
+        switch (std::fpclassify(arg))
+        {
+            case FP_NAN:
+            {
+                arg = get_nan<T>();
+                break;
+            }
+            case FP_SUBNORMAL:
+            {
+                if (!fcr31_.flush_subnormals || fcr31_.enable_underflow || fcr31_.enable_inexact)
+                {
+                    fcr31_.unimplemented = 1;
+                    return;
+                }
+                fcr31_.cause_underflow = 1;
+                if (!fcr31_.enable_underflow)
+                {
+                    fcr31_.flag_underflow = 1;
+                }
+                fcr31_.cause_inexact = 1;
+                if (!fcr31_.enable_inexact)
+                {
+                    fcr31_.flag_inexact = 1;
+                }
+                switch (fcr31_.rounding_mode)
+                {
+                    case 0:
+                    case 1:
+                    {
+                        arg = std::copysign(0, arg);
+                        break;
+                    }
+                    case 2:
+                    {
+                        if (std::signbit(arg))
+                        {
+                            arg = -static_cast<T>(0);
+                        }
+                        else
+                        {
+                            arg = std::numeric_limits<T>::min();
+                        }
+                        break;
+                    }
+                    case 3:
+                    {
+                        if (std::signbit(arg))
+                        {
+                            arg = -std::numeric_limits<T>::min();
+                        }
+                        else
+                        {
+                            arg = 0;
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    template <class T>
+    bool CPU::check_nan(T arg)
+    {
+        if constexpr (std::is_same_v<T, float>)
+        {
+            return (hydra::bit_cast<uint32_t>(arg) & 0x7FC00000) == 0x7FC00000;
+        }
+        else
+        {
+            return (hydra::bit_cast<uint64_t>(arg) & 0x7FF8000000000000) == 0x7FF8000000000000;
+        }
+    }
+
+    template <class T>
+    T CPU::get_nan()
+    {
+        if constexpr (std::is_same_v<T, float>)
+        {
+            return hydra::bit_cast<float>(0x7FBF'FFFF);
+        }
+        else
+        {
+            return hydra::bit_cast<double>(0x7FF7'FFFF'FFFF'FFFFu);
+        }
+    }
+
+    template <class T>
+    void CPU::check_fpu_arg(T arg)
+    {
+        switch (std::fpclassify(arg))
+        {
+            case FP_NAN:
+            {
+                if (check_nan<T>(arg))
+                {
+                    fcr31_.cause_invalidop = 1;
+                    if (!fcr31_.enable_invalidop)
+                    {
+                        fcr31_.flag_invalidop = 1;
+                    }
+                }
+                else
+                {
+                    fcr31_.unimplemented = 1;
+                }
+                break;
+            }
+            case FP_SUBNORMAL:
+            {
+                fcr31_.unimplemented = 1;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
     }
 
     template <class Type, class OperatorFunction, class CastFunction>

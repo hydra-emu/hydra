@@ -22,7 +22,7 @@ class MmioViewer;
 
 namespace hydra::N64
 {
-    class RCP
+    class RCP final
     {
     public:
         void Reset();
