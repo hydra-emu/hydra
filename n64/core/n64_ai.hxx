@@ -6,7 +6,6 @@
 #include <log.hxx>
 #include <miniaudio.h>
 #include <n64/core/n64_types.hxx>
-#include <ringbuffer.hpp>
 #include <vector>
 
 namespace hydra::N64
@@ -61,8 +60,7 @@ namespace hydra::N64
 
         ma_device ai_device_{};
         MIInterrupt* mi_interrupt_ = nullptr;
-        // Cacheline may not be 64, but this is to ignore a warning
-        jnk0le::Ringbuffer<int16_t, 65536 * 2, false, 64> ai_buffer_;
+        std::vector<int16_t> ai_buffer_{};
 
         friend class hydra::N64::RCP;
         friend class hydra::N64::CPU;

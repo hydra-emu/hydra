@@ -269,8 +269,9 @@ namespace hydra::N64
         }
         else if (addr >= PIF_START && addr <= PIF_END)
         {
-            uint32_t* ptr = reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[addr - PIF_START]);
-            *ptr = hydra::bswap32(data);
+            uint8_t* pif_ptr = reinterpret_cast<uint8_t*>(&cpubus_.pif_ram_[addr - PIF_START]);
+            uint32_t swapped = hydra::bswap32(data);
+            memcpy(pif_ptr, &swapped, 4);
             pif_command();
         }
         else if (addr == PIF_COMMAND)
@@ -410,8 +411,9 @@ namespace hydra::N64
         }
         else if (addr >= PIF_START && addr <= PIF_END)
         {
-            return hydra::bswap32(
-                *reinterpret_cast<uint32_t*>(&cpubus_.pif_ram_[addr - PIF_START]));
+            uint8_t* pif_ram = &cpubus_.pif_ram_[addr - PIF_START];
+            uint32_t data = pif_ram[0] << 24 | pif_ram[1] << 16 | pif_ram[2] << 8 | pif_ram[3];
+            return data;
         }
         else if (addr >= RDRAM_REGISTERS_START && addr <= RDRAM_REGISTERS_END)
         {
@@ -420,8 +422,9 @@ namespace hydra::N64
         }
         else if (addr >= ISVIEWER_AREA_START && addr <= ISVIEWER_AREA_END)
         {
-            return hydra::bswap32(*reinterpret_cast<uint32_t*>(
-                &cpubus_.isviewer_buffer_[addr - ISVIEWER_AREA_START]));
+            uint8_t* isviewer_ptr = reinterpret_cast<uint8_t*>(&cpubus_.isviewer_buffer_[addr - ISVIEWER_AREA_START]);
+            uint32_t data = isviewer_ptr[0] << 24 | isviewer_ptr[1] << 16 | isviewer_ptr[2] << 8 | isviewer_ptr[3];
+            return data;
         }
         else if (addr >= RDP_AREA_START && addr <= RDP_AREA_END)
         {
@@ -772,10 +775,12 @@ namespace hydra::N64
     {
         TranslatedAddress paddr = translate_vaddr(vaddr);
         uint8_t* ptr = cpubus_.redirect_paddress(paddr.paddr);
+
         if (!ptr)
         {
             Logger::Fatal("Attempted to load byte from invalid address: {:08x}", vaddr);
         }
+
         return *ptr;
     }
 
@@ -783,24 +788,30 @@ namespace hydra::N64
     {
         TranslatedAddress paddr = translate_vaddr(vaddr);
         uint16_t* ptr = reinterpret_cast<uint16_t*>(cpubus_.redirect_paddress(paddr.paddr));
+        
         if (!ptr)
         {
             Logger::Fatal("Attempted to load halfword from invalid address: {:08x}", vaddr);
         }
-        return hydra::bswap16(*ptr);
+        
+        uint16_t data;
+        memcpy(&data, ptr, sizeof(uint16_t));
+        return hydra::bswap16(data);
     }
 
     uint32_t CPU::load_word(uint64_t vaddr)
     {
         TranslatedAddress paddr = translate_vaddr(vaddr);
-        uint32_t* ptr = reinterpret_cast<uint32_t*>(cpubus_.redirect_paddress(paddr.paddr));
+        uint8_t* ptr = cpubus_.redirect_paddress(paddr.paddr);
         if (!ptr)
         {
             return read_hwio(paddr.paddr);
         }
         else
         {
-            return hydra::bswap32(*ptr);
+            uint32_t data;
+            memcpy(&data, ptr, sizeof(uint32_t));
+            return hydra::bswap32(data);
         }
     }
 
@@ -808,11 +819,15 @@ namespace hydra::N64
     {
         TranslatedAddress paddr = translate_vaddr(vaddr);
         uint64_t* ptr = reinterpret_cast<uint64_t*>(cpubus_.redirect_paddress(paddr.paddr));
+
         if (!ptr)
         {
             Logger::Fatal("Attempted to load doubleword from invalid address: {:08x}", vaddr);
         }
-        return hydra::bswap64(*ptr);
+        
+        uint64_t data;
+        memcpy(&data, ptr, sizeof(uint64_t));
+        return hydra::bswap64(data);
     }
 
     void CPU::store_byte(uint64_t vaddr, uint8_t data)
@@ -835,7 +850,8 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to store halfword to invalid address: {:08x}", vaddr);
         }
-        *ptr = hydra::bswap16(data);
+        data = hydra::bswap16(data);
+        memcpy(ptr, &data, sizeof(uint16_t));
     }
 
     void CPU::store_word(uint64_t vaddr, uint32_t data)
@@ -849,7 +865,8 @@ namespace hydra::N64
         }
         else
         {
-            *ptr = hydra::bswap32(data);
+            data = hydra::bswap32(data);
+            memcpy(ptr, &data, sizeof(uint32_t));
         }
     }
 
@@ -861,7 +878,8 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to store doubleword to invalid address: {:08x}", vaddr);
         }
-        *ptr = hydra::bswap64(data);
+        data = hydra::bswap64(data);
+        memcpy(ptr, &data, sizeof(uint64_t));
     }
 
     void CPU::Tick()
@@ -1730,12 +1748,12 @@ namespace hydra::N64
 
     void CPU::s_SLLV()
     {
-        rdreg.D = static_cast<int32_t>(rtreg.UW._0 << (rsreg.UD & 0b111111));
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 << (rsreg.UD & 0b11111));
     }
 
     void CPU::s_SRLV()
     {
-        rdreg.D = static_cast<int32_t>(rtreg.UW._0 >> (rsreg.UD & 0b111111));
+        rdreg.D = static_cast<int32_t>(rtreg.UW._0 >> (rsreg.UD & 0b11111));
     }
 
     void CPU::s_SRAV()
