@@ -408,7 +408,7 @@ namespace hydra::N64
                             }
                             default:
                             {
-                                Logger::WarnOnce("Using unknown RGBA size for LoadBlock: {}\n",
+                                Logger::WarnOnce("Using unknown RGBA size for LoadBlock: {}",
                                                  texture_pixel_size_latch_);
                                 break;
                             }
@@ -417,7 +417,7 @@ namespace hydra::N64
                     }
                     default:
                     {
-                        Logger::WarnOnce("Using unknown format for LoadBlock: {}\n",
+                        Logger::WarnOnce("Using unknown format for LoadBlock: {}",
                                          static_cast<int>(texture_format_latch_));
                         break;
                     }
@@ -1211,10 +1211,10 @@ namespace hydra::N64
                         a_line += DaDx * increment;
                         if (r_line < 0 || g_line < 0 || b_line < 0 || a_line < 0)
                             Logger::WarnOnce("Negative color value detected");
-                        uint8_t final_r = std::max(0x00, std::min(0xFF, r_line >> 16));
-                        uint8_t final_g = std::max(0x00, std::min(0xFF, g_line >> 16));
-                        uint8_t final_b = std::max(0x00, std::min(0xFF, b_line >> 16));
-                        uint8_t final_a = std::max(0x00, std::min(0xFF, a_line >> 16));
+                        uint8_t final_r = std::clamp(r_line >> 16, 0, 0xFF);
+                        uint8_t final_g = std::clamp(g_line >> 16, 0, 0xFF);
+                        uint8_t final_b = std::clamp(b_line >> 16, 0, 0xFF);
+                        uint8_t final_a = std::clamp(a_line >> 16, 0, 0xFF);
                         shade_color_ = (final_a << 24) | (final_b << 16) | (final_g << 8) | final_r;
                         shade_alpha_ = (final_a << 24) | (final_a << 16) | (final_a << 8) | final_a;
                     }
