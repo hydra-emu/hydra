@@ -342,27 +342,29 @@ namespace hydra::N64
                 // Loads a tile (part of the bigger texture set by SetTextureImage) into TMEM
                 LoadTileCommand command;
                 command.full = data[0];
-                TileDescriptor& tile = tiles_[command.Tile];
+                // TileDescriptor& tile = tiles_[command.Tile];
 
-                int sl = command.SL;
-                int tl = command.TL;
-                int sh = command.SH + 1;
-                int th = command.TH + 1;
+                // int sl = command.SL;
+                // int tl = command.TL;
+                // int sh = command.SH + 1;
+                // int th = command.TH + 1;
 
-                sh *= sizeof(uint16_t);
-                sl *= sizeof(uint16_t);
-                for (int t = tl; t < th; t++)
-                {
-                    for (int s = sl; s < sh; s++)
-                    {
-                        uint16_t src = *reinterpret_cast<uint16_t*>(
-                            &rdram_ptr_[texture_dram_address_latch_ +
-                                        (t * texture_width_latch_ + s) * 2]);
-                        uint16_t* dst = reinterpret_cast<uint16_t*>(
-                            &tmem_[tile.tmem_address + (t - tl) * tile.line_width + (s - sl) * 2]);
-                        *dst = src;
-                    }
-                }
+                // sh *= sizeof(uint16_t);
+                // sl *= sizeof(uint16_t);
+                // for (int t = tl; t < th; t++)
+                // {
+                //     for (int s = sl; s < sh; s++)
+                //     {
+                //         uint16_t src = *reinterpret_cast<uint16_t*>(
+                //             &rdram_ptr_[texture_dram_address_latch_ +
+                //                         (t * texture_width_latch_ + s) * 2]);
+                //         uint16_t* dst = reinterpret_cast<uint16_t*>(
+                //             &tmem_[tile.tmem_address + (t - tl) * tile.line_width + (s - sl) *
+                //             2]);
+                //         *dst = src;
+                //     }
+                // }
+                Logger::WarnOnce("LoadTile: {}", command.full);
                 break;
             }
             case RDPCommandType::LoadBlock:
@@ -377,21 +379,48 @@ namespace hydra::N64
                 int DxT = command.DxT;
 
                 bool odd = false;
-                // 16 bits
-                sh *= sizeof(uint16_t);
-                sl *= sizeof(uint16_t);
-                for (int i = sl; i < sh; i += 8)
+
+                switch (texture_format_latch_)
                 {
-                    uint64_t src =
-                        *reinterpret_cast<uint64_t*>(&rdram_ptr_[texture_dram_address_latch_ + i]);
-                    if (odd)
+                    case Format::RGBA:
                     {
-                        src = (src >> 32) | (src << 32);
+                        switch (texture_pixel_size_latch_)
+                        {
+                            case 16:
+                            {
+                                sh *= sizeof(uint16_t);
+                                sl *= sizeof(uint16_t);
+                                for (int i = sl; i < sh; i += 8)
+                                {
+                                    uint64_t src = *reinterpret_cast<uint64_t*>(
+                                        &rdram_ptr_[texture_dram_address_latch_ + i]);
+                                    if (odd)
+                                    {
+                                        src = (src >> 32) | (src << 32);
+                                    }
+                                    uint64_t* dst =
+                                        reinterpret_cast<uint64_t*>(&tmem_[tile.tmem_address + i]);
+                                    *dst = hydra::bswap64(src);
+                                    tl += DxT;
+                                    odd = (tl >> 11) & 1;
+                                }
+                                break;
+                            }
+                            default:
+                            {
+                                Logger::WarnOnce("Using unknown RGBA size for LoadBlock: {}\n",
+                                                 texture_pixel_size_latch_);
+                                break;
+                            }
+                        }
+                        break;
                     }
-                    uint64_t* dst = reinterpret_cast<uint64_t*>(&tmem_[tile.tmem_address + i]);
-                    *dst = hydra::bswap64(src);
-                    tl += DxT;
-                    odd = (tl >> 11) & 1;
+                    default:
+                    {
+                        Logger::WarnOnce("Using unknown format for LoadBlock: {}\n",
+                                         static_cast<int>(texture_format_latch_));
+                        break;
+                    }
                 }
                 break;
             }
@@ -410,6 +439,15 @@ namespace hydra::N64
                 tile.palette_index = command.Palette << 4;
                 break;
             }
+            case RDPCommandType::SetTileSize:
+            {
+                SetTileSizeCommand command;
+                command.full = data[0];
+                TileDescriptor& tile = tiles_[command.Tile];
+                tile.s = command.SL << 3;
+                tile.t = command.TL << 3;
+                break;
+            }
             case RDPCommandType::SetTextureImage:
             {
                 // The gsDPSetTextureImage command sets a pointer to the location of the image.
@@ -417,8 +455,8 @@ namespace hydra::N64
                 command.full = data[0];
                 texture_dram_address_latch_ = command.DRAMAddress;
                 texture_width_latch_ = command.width + 1;
-                texture_format_latch_ = command.format;
-                texture_pixel_size_latch_ = command.size;
+                texture_format_latch_ = static_cast<Format>(command.format);
+                texture_pixel_size_latch_ = (1 << command.size) * 4;
                 break;
             }
             case RDPCommandType::SetOtherModes:

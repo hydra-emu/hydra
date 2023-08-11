@@ -104,6 +104,7 @@ namespace hydra::N64
         uint8_t size;
         uint8_t palette_index;
         uint16_t line_width;
+        uint16_t s, t;
     };
 
     class RDP final
@@ -181,7 +182,7 @@ namespace hydra::N64
         uint32_t texture_dram_address_latch_;
         uint32_t texture_width_latch_;
         uint32_t texture_pixel_size_latch_;
-        uint32_t texture_format_latch_;
+        Format texture_format_latch_;
 
         std::array<TileDescriptor, 8> tiles_;
         std::array<uint8_t, 4096> tmem_;

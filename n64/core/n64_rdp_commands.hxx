@@ -134,6 +134,27 @@ namespace hydra::N64
         }
     };
 
+    union SetTileSizeCommand
+    {
+        uint64_t full;
+
+        struct
+        {
+            uint64_t TH   : 12;
+            uint64_t SH   : 12;
+            uint64_t Tile : 3;
+            uint8_t       : 5;
+            uint64_t TL   : 12;
+            uint64_t SL   : 12;
+            uint64_t      : 8;
+        };
+
+        SetTileSizeCommand()
+        {
+            full = 0;
+        }
+    };
+
     union LoadTileCommand
     {
         uint64_t full;
