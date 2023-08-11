@@ -885,7 +885,7 @@ namespace hydra::N64
 
         for (int i = 0; i < 8; i++)
         {
-            accumulator_[i].Add(((vs[i] * vt[e[i]]) >> 16) & 0xFFFF);
+            accumulator_[i].Add(((static_cast<int64_t>(vs[i]) * vt[e[i]]) >> 16) & 0xFFFF);
         }
 
         for (int i = 0; i < 8; i++)
@@ -1170,7 +1170,7 @@ namespace hydra::N64
             return 0xFFFF0000;
         }
 
-        uint32_t shift = hydra::clz<uint32_t>(input);
+        uint32_t shift = hydra::clz<int32_t>(input);
         uint64_t dinput = (uint64_t)input;
         uint32_t index = ((dinput << shift) & 0x7FC00000) >> 22;
 

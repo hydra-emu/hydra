@@ -45,8 +45,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidg
 
 add_subdirectory(vendored/fmt)
 
-# add_compile_options(-fsanitize=address)
-# add_link_options(-fsanitize=address)
+# add_compile_options(-fsanitize=address -fsanitize=undefined)
+# add_link_options(-fsanitize=address -fsanitize=undefined)
 
 set(PROJECT_SOURCES
     data/resources.qrc

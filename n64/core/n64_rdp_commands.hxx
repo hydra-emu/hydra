@@ -70,7 +70,7 @@ namespace hydra::N64
             uint64_t         : 2;
             uint64_t YL      : 14;
             uint64_t         : 2;
-            uint64_t Tile    : 3;
+            uint64_t tile    : 3;
             uint64_t level   : 3;
             uint64_t         : 1;
             uint64_t lft     : 1;
@@ -99,6 +99,24 @@ namespace hydra::N64
         };
 
         RectangleCommand()
+        {
+            full = 0;
+        }
+    };
+
+    union TextureRectangleCoefficients
+    {
+        uint64_t full;
+
+        struct
+        {
+            uint64_t DtDy : 16;
+            uint64_t DsDx : 16;
+            uint64_t T    : 16;
+            uint64_t S    : 16;
+        };
+
+        TextureRectangleCoefficients()
         {
             full = 0;
         }
