@@ -12,6 +12,9 @@
 #include <sstream>
 #include <str_hash.hxx>
 
+// For debugging purposes
+constexpr bool slow_assertions = true;
+
 static inline uint32_t rgba16_to_rgba32(uint16_t color)
 {
     uint8_t r16 = (color >> 11) & 0x1F;
@@ -94,7 +97,7 @@ namespace hydra::N64
                 return 0; // ???
             default:
             {
-                Logger::Warn("RDP: Unhandled read from {:08X}", addr);
+                Logger::WarnOnce("RDP: Unhandled read from {:08X}", addr);
                 return 0;
             }
         }
@@ -266,26 +269,34 @@ namespace hydra::N64
                 bool shade = id8 & 0b100;
                 EdgewalkerInput input = triangle_get_edgewalker_input(data, shade, texture, depth);
                 Primitive primitive = edgewalker(input);
-                // TODO: move primitive checking code to QA once we're done with the edgewalker
-                check_primitive(primitive, data);
+
+                if (slow_assertions)
+                {
+                    check_primitive(primitive, data);
+                }
+
+                render_primitive(primitive);
                 break;
             }
             case RDPCommandType::Rectangle:
             {
                 EdgewalkerInput input = rectangle_get_edgewalker_input<false, false>(data);
-                edgewalker(input);
+                Primitive primitive = edgewalker(input);
+                render_primitive(primitive);
                 break;
             }
             case RDPCommandType::TextureRectangle:
             {
                 EdgewalkerInput input = rectangle_get_edgewalker_input<true, false>(data);
-                edgewalker(input);
+                Primitive primitive = edgewalker(input);
+                render_primitive(primitive);
                 break;
             }
             case RDPCommandType::TextureRectangleFlip:
             {
                 EdgewalkerInput input = rectangle_get_edgewalker_input<true, true>(data);
-                edgewalker(input);
+                Primitive primitive = edgewalker(input);
+                render_primitive(primitive);
                 break;
             }
             case RDPCommandType::SetFillColor:
@@ -986,7 +997,7 @@ namespace hydra::N64
         Primitive ret;
         // Convert our uint64_t vector to a uint32_t vector
         std::vector<uint32_t> ewdata;
-        ewdata.resize(data.size() * 2);
+        ewdata.resize(22 * 2);
 
         for (size_t i = 0; i < data.size(); i++)
         {
@@ -1372,20 +1383,64 @@ namespace hydra::N64
         }
         for (int i = angrylion_primitive.y_start; i <= angrylion_primitive.y_end; i++)
         {
+            std::string problem = "";
             if (my_primitive.spans[i].min_x != angrylion_primitive.spans[i].min_x)
             {
-                Logger::Fatal("Primitive mismatch: span {} min_x - expected: {}, actual: {}", i,
-                              angrylion_primitive.spans[i].min_x, my_primitive.spans[i].min_x);
+                problem = "min_x";
             }
+
             if (my_primitive.spans[i].max_x != angrylion_primitive.spans[i].max_x)
             {
-                Logger::Fatal("Primitive mismatch: span {} max_x - expected: {}, actual: {}", i,
-                              angrylion_primitive.spans[i].max_x, my_primitive.spans[i].max_x);
+                problem = "max_x";
             }
+
             if (my_primitive.spans[i].valid != angrylion_primitive.spans[i].valid)
             {
-                Logger::Fatal("Primitive mismatch: span {} valid - expected: {}, actual: {}", i,
-                              angrylion_primitive.spans[i].valid, my_primitive.spans[i].valid);
+                problem = "valid";
+            }
+
+            // if (my_primitive.spans[i].r != angrylion_primitive.spans[i].r ||
+            //     my_primitive.spans[i].g != angrylion_primitive.spans[i].g ||
+            //     my_primitive.spans[i].b != angrylion_primitive.spans[i].b ||
+            //     my_primitive.spans[i].a != angrylion_primitive.spans[i].a)
+            // {
+            //     Logger::Fatal("Primitive mismatch: span {} color - expected: {:08x}, {:08x}, "
+            //                     "{:08x}, {:08x}, actual: {:08x}, {:08x}, {:08x}, {:08x}",
+            //                   i, angrylion_primitive.spans[i].r, angrylion_primitive.spans[i].g,
+            //                   angrylion_primitive.spans[i].b, angrylion_primitive.spans[i].a,
+            //                   my_primitive.spans[i].r, my_primitive.spans[i].g,
+            //                   my_primitive.spans[i].b, my_primitive.spans[i].a);
+            // }
+
+            // if (my_primitive.spans[i].s != angrylion_primitive.spans[i].s ||
+            //     my_primitive.spans[i].t != angrylion_primitive.spans[i].t ||
+            //     my_primitive.spans[i].w != angrylion_primitive.spans[i].w)
+            // {
+            //     Logger::Fatal("Primitive mismatch: span {} texture - expected: {:08x}, {:08x}, "
+            //                     "{:08x}, actual: {:08x}, {:08x}, {:08x}",
+            //                   i, angrylion_primitive.spans[i].s, angrylion_primitive.spans[i].t,
+            //                   angrylion_primitive.spans[i].w, my_primitive.spans[i].s,
+            //                   my_primitive.spans[i].t, my_primitive.spans[i].w);
+            // }
+
+            // if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z)
+            // {
+            //     Logger::Fatal("Primitive mismatch: span {} depth - expected: {:08x}, actual:
+            //     {:08x}", i,
+            //                   angrylion_primitive.spans[i].z, my_primitive.spans[i].z);
+            // }
+
+            if (problem != "")
+            {
+                printf("Dumping problematic primitive:\n");
+                for (uint64_t block : data)
+                {
+                    printf("%016lx\n", block);
+                }
+                printf("Scissor YH: %08x, YL: %08x, XH: %08x, XL: %08x\n", scissor_yh_, scissor_yl_,
+                       scissor_xh_, scissor_xl_);
+                printf("Cycle type: %d\n", cycle_type_);
+                Logger::Fatal("Primitive mismatch: span {} - {}", i, problem);
             }
         }
     }
@@ -1560,13 +1615,9 @@ namespace hydra::N64
 
     Primitive RDP::edgewalker(const EdgewalkerInput& input)
     {
-        // static int drawn = 0;
-        // if (drawn++ > 1120)
-        // {
-        //     return;
-        // }
         Primitive primitive;
-        // const TileDescriptor& tile = input.tile_index;
+
+        primitive.tile_index = input.tile_index;
 
         int32_t xh = input.xh, xm = input.xm, xl = input.xl;
         int32_t yh = input.yh, ym = input.ym, yl = input.yl;
@@ -1690,7 +1741,8 @@ namespace hydra::N64
 
         Span current_span;
 
-        bool all_in = true, all_over = true, all_under = true;
+        // To check whether every subpixel is inside the scissor
+        bool all_invalid = true, all_over = true, all_under = true;
 
         // We start from y_start instead of y_top because we need to
         // edgewalk the shade/texture/depth values regardless of whether
@@ -1724,7 +1776,7 @@ namespace hydra::N64
                         span_leftmost = 0xFFF;
                         span_rightmost = 0;
                     }
-                    all_in = true;
+                    all_invalid = true;
                     all_over = true;
                     all_under = true;
                 }
@@ -1761,6 +1813,9 @@ namespace hydra::N64
                 x_left_clipped &= 0xFFF;
 
                 bool curcross;
+
+                // We don't want to continue drawing the primitive if
+                // it intersects
                 if (!input.right_major)
                 {
                     curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) >
@@ -1771,11 +1826,9 @@ namespace hydra::N64
                     curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) <
                                ((x_right ^ (1 << 27)) & (0x3fff << 14));
                 }
-                invalid_y |= curcross;
+                all_invalid &= invalid_y | curcross;
 
-                all_in &= invalid_y;
-
-                if (!invalid_y)
+                if (!invalid_y && !curcross)
                 {
                     if (input.right_major)
                     {
@@ -1803,25 +1856,29 @@ namespace hydra::N64
                     }
                 }
 
-                if (subpixel == 3)
+                int primitive_load_subpixel = (sign_slopeh ^ input.right_major) ? 0 : 3;
+                if (subpixel == primitive_load_subpixel)
                 {
                     int32_t x_frac = (x_right >> 8) & 0xFF;
-                    current_span.r = (((r & ~0x1FF) + DrDiff - (x_frac * DrDx)) & ~0x3FF) >> 16;
-                    current_span.g = (((g & ~0x1FF) + DgDiff - (x_frac * DgDx)) & ~0x3FF) >> 16;
-                    current_span.b = (((b & ~0x1FF) + DbDiff - (x_frac * DbDx)) & ~0x3FF) >> 16;
-                    current_span.a = (((a & ~0x1FF) + DaDiff - (x_frac * DaDx)) & ~0x3FF) >> 16;
-                    current_span.s = (((s & ~0x1FF) + DsDiff - (x_frac * DsDx)) & ~0x3FF) >> 16;
-                    current_span.t = (((t & ~0x1FF) + DtDiff - (x_frac * DtDx)) & ~0x3FF) >> 16;
-                    current_span.w = (((w & ~0x1FF) + DwDiff - (x_frac * DwDx)) & ~0x3FF) >> 16;
-                    current_span.z = (((z & ~0x1FF) + DzDiff - (x_frac * DzDx)) & ~0x3FF);
+                    current_span.r = ((r & ~0x1FF) + DrDiff - (x_frac * DrDx)) & ~0x3FF;
+                    current_span.g = ((g & ~0x1FF) + DgDiff - (x_frac * DgDx)) & ~0x3FF;
+                    current_span.b = ((b & ~0x1FF) + DbDiff - (x_frac * DbDx)) & ~0x3FF;
+                    current_span.a = ((a & ~0x1FF) + DaDiff - (x_frac * DaDx)) & ~0x3FF;
+                    current_span.s = ((s & ~0x1FF) + DsDiff - (x_frac * DsDx)) & ~0x3FF;
+                    current_span.t = ((t & ~0x1FF) + DtDiff - (x_frac * DtDx)) & ~0x3FF;
+                    current_span.w = ((w & ~0x1FF) + DwDiff - (x_frac * DwDx)) & ~0x3FF;
+                    current_span.z = ((z & ~0x1FF) + DzDiff - (x_frac * DzDx)) & ~0x3FF;
+                }
 
+                if (subpixel == 3)
+                {
                     current_span.min_x = span_leftmost;
                     current_span.max_x = span_rightmost;
                     if (input.right_major)
                     {
                         std::swap(current_span.min_x, current_span.max_x);
                     }
-                    current_span.valid = !all_in && !all_over && !all_under;
+                    current_span.valid = !all_invalid && !all_over && !all_under;
                     primitive.spans[integer_y] = current_span;
                 }
             }
@@ -1842,29 +1899,36 @@ namespace hydra::N64
             x_right += x_right_inc;
         }
 
-        // TODO: this needs to happen elsewhere
+        return primitive;
+    }
+
+    void RDP::render_primitive(const Primitive& primitive)
+    {
         for (int y = primitive.y_start; y <= primitive.y_end; y++)
         {
-            Span& span = primitive.spans[y];
+            const Span& span = primitive.spans[y];
             for (int x = span.min_x; x <= span.max_x; x++)
             {
-                shade_color_ = span.a << 24 | span.b << 16 | span.g << 8 | span.r;
-                shade_alpha_ = span.a << 24 | span.a << 16 | span.a << 8 | span.a;
+                uint8_t r8 = span.r >> 16;
+                uint8_t g8 = span.g >> 16;
+                uint8_t b8 = span.b >> 16;
+                uint8_t a8 = span.a >> 16;
+                shade_color_ = a8 << 24 | b8 << 16 | g8 << 8 | r8;
+                shade_alpha_ = a8 << 24 | a8 << 16 | a8 << 8 | a8;
                 if (depth_test(x, y, span.z >> 14, 0))
                 {
                     if (span.w != 0)
-                        fetch_texels(input.tile_index, span.s / span.w, span.t / span.w);
+                        fetch_texels(primitive.tile_index, span.s / span.w, span.t / span.w);
                     draw_pixel(x, y);
 
                     if (z_update_en_)
                     {
                         // TODO: remove?
-                        span.z = std::max(0, span.z & (0x3ffff << 14));
-                        z_set(x, y, span.z >> 14);
+                        auto z = std::max(0, span.z & (0x3ffff << 14));
+                        z_set(x, y, z >> 14);
                     }
                 }
             }
         }
-        return primitive;
     }
 } // namespace hydra::N64
