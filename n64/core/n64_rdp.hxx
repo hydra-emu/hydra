@@ -141,7 +141,7 @@ namespace hydra::N64
 
     struct Primitive
     {
-        std::array<Span, 1024> spans;
+        std::array<Span, 1024> spans{};
         int32_t y_start = 0;
         int32_t y_end = 0;
         int32_t DrDx, DgDx, DbDx, DaDx;
@@ -271,15 +271,16 @@ namespace hydra::N64
         uint32_t* alpha_get_sub_add(uint8_t sub_a);
         uint32_t* alpha_get_mul(uint8_t mul);
 
-        template <bool Shade, bool Texture, bool Depth>
-        EdgewalkerInput triangle_get_edgewalker_input(const std::vector<uint64_t>& data);
+        EdgewalkerInput triangle_get_edgewalker_input(const std::vector<uint64_t>& data, bool shade,
+                                                      bool texture, bool depth);
 
         template <bool Texture, bool Flip>
         EdgewalkerInput rectangle_get_edgewalker_input(const std::vector<uint64_t>& data);
 
-        void edgewalker(const EdgewalkerInput& data);
+        Primitive edgewalker(const EdgewalkerInput& data);
 
-        void dump_primitive(const Primitive& primitive);
+        Primitive get_angrylion_primitive(const std::vector<uint64_t>& data);
+        void check_primitive(const Primitive& primitive, const std::vector<uint64_t>& data);
 
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;
