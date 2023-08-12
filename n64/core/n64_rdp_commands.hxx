@@ -44,12 +44,12 @@ namespace hydra::N64
 
     union EdgeCoefficients
     {
-        uint64_t full;
+        int64_t full;
 
         struct
         {
-            uint64_t slope : 32;
-            uint64_t X     : 32;
+            int64_t slope : 32;
+            int64_t X     : 32;
         };
 
         EdgeCoefficients()

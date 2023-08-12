@@ -147,6 +147,7 @@ namespace hydra::N64
         int32_t DrDx, DgDx, DbDx, DaDx;
         int32_t DsDx, DtDx, DwDx;
         int32_t DzDx;
+        size_t tile_index;
     };
 
     class RDP final
@@ -278,6 +279,7 @@ namespace hydra::N64
         EdgewalkerInput rectangle_get_edgewalker_input(const std::vector<uint64_t>& data);
 
         Primitive edgewalker(const EdgewalkerInput& data);
+        void render_primitive(const Primitive& primitive);
 
         Primitive get_angrylion_primitive(const std::vector<uint64_t>& data);
         void check_primitive(const Primitive& primitive, const std::vector<uint64_t>& data);
