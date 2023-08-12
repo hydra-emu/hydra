@@ -266,6 +266,7 @@ namespace hydra::N64
                 bool shade = id8 & 0b100;
                 EdgewalkerInput input = triangle_get_edgewalker_input(data, shade, texture, depth);
                 Primitive primitive = edgewalker(input);
+                // TODO: move primitive checking code to QA once we're done with the edgewalker
                 check_primitive(primitive, data);
                 break;
             }
@@ -1369,25 +1370,24 @@ namespace hydra::N64
             Logger::Fatal("Primitive mismatch: y_end - expected: {}, actual: {}",
                           angrylion_primitive.y_end, my_primitive.y_end);
         }
-        for (int i = 0; i < 1024; i++)
+        for (int i = angrylion_primitive.y_start; i <= angrylion_primitive.y_end; i++)
         {
             if (my_primitive.spans[i].min_x != angrylion_primitive.spans[i].min_x)
             {
-                Logger::Warn("Primitive mismatch: span {} min_x - expected: {}, actual: {}", i,
-                             angrylion_primitive.spans[i].min_x, my_primitive.spans[i].min_x);
+                Logger::Fatal("Primitive mismatch: span {} min_x - expected: {}, actual: {}", i,
+                              angrylion_primitive.spans[i].min_x, my_primitive.spans[i].min_x);
             }
             if (my_primitive.spans[i].max_x != angrylion_primitive.spans[i].max_x)
             {
-                Logger::Warn("Primitive mismatch: span {} max_x - expected: {}, actual: {}", i,
-                             angrylion_primitive.spans[i].max_x, my_primitive.spans[i].max_x);
+                Logger::Fatal("Primitive mismatch: span {} max_x - expected: {}, actual: {}", i,
+                              angrylion_primitive.spans[i].max_x, my_primitive.spans[i].max_x);
             }
             if (my_primitive.spans[i].valid != angrylion_primitive.spans[i].valid)
             {
-                Logger::Warn("Primitive mismatch: span {} valid - expected: {}, actual: {}", i,
-                             angrylion_primitive.spans[i].valid, my_primitive.spans[i].valid);
+                Logger::Fatal("Primitive mismatch: span {} valid - expected: {}, actual: {}", i,
+                              angrylion_primitive.spans[i].valid, my_primitive.spans[i].valid);
             }
         }
-        exit(1);
     }
 
     EdgewalkerInput RDP::triangle_get_edgewalker_input(const std::vector<uint64_t>& data,
@@ -1685,7 +1685,12 @@ namespace hydra::N64
 
         int32_t span_leftmost = 0, span_rightmost = 0;
 
+        primitive.y_start = y_top >> 2;
+        primitive.y_end = y_bottom >> 2;
+
         Span current_span;
+
+        bool all_in = true, all_over = true, all_under = true;
 
         // We start from y_start instead of y_top because we need to
         // edgewalk the shade/texture/depth values regardless of whether
@@ -1702,14 +1707,26 @@ namespace hydra::N64
             uint8_t subpixel = y & 3;
             if (y >= y_top)
             {
+                bool invalid_y = y < yh_limit || y >= yl_limit;
                 int32_t integer_y = y >> 2;
 
                 if (subpixel == 0)
                 {
                     current_span = Span();
 
-                    span_leftmost = 0;
-                    span_rightmost = 0xFFF;
+                    if (input.right_major)
+                    {
+                        span_leftmost = 0;
+                        span_rightmost = 0xFFF;
+                    }
+                    else
+                    {
+                        span_leftmost = 0xFFF;
+                        span_rightmost = 0;
+                    }
+                    all_in = true;
+                    all_over = true;
+                    all_under = true;
                 }
 
                 bool stickybit = ((x_right >> 1) & 0x1fff) > 0;
@@ -1717,34 +1734,73 @@ namespace hydra::N64
                 bool curunder = ((x_right & 0x8000000) ||
                                  (x_right_clipped < scissor_xh_shift && !(x_right & 0x4000000)));
                 x_right_clipped =
-                    curunder ? scissor_xh_shift : ((x_right >> 13) & 0x3FFE) | stickybit;
+                    curunder ? scissor_xh_shift : (((x_right >> 13) & 0x3FFE) | stickybit);
                 bool curover =
                     ((x_right_clipped & 0x2000) || (x_right_clipped & 0x1FFF) >= scissor_xl_shift);
                 x_right_clipped = curover ? scissor_xl_shift : x_right_clipped;
+
+                all_under &= curunder;
+                all_over &= curover;
 
                 stickybit = ((x_left >> 1) & 0x1fff) > 0;
                 int32_t x_left_clipped = ((x_left >> 13) & 0x1FFE) | stickybit;
                 curunder = ((x_left & 0x8000000) ||
                             (x_left_clipped < scissor_xh_shift && !(x_left & 0x4000000)));
                 x_left_clipped =
-                    curunder ? scissor_xh_shift : ((x_left >> 13) & 0x3FFE) | stickybit;
+                    curunder ? scissor_xh_shift : (((x_left >> 13) & 0x3FFE) | stickybit);
                 curover =
                     ((x_left_clipped & 0x2000) || (x_left_clipped & 0x1FFF) >= scissor_xl_shift);
                 x_left_clipped = curover ? scissor_xl_shift : x_left_clipped;
+
+                all_under &= curunder;
+                all_over &= curover;
 
                 x_right_clipped >>= 3;
                 x_right_clipped &= 0xFFF;
                 x_left_clipped >>= 3;
                 x_left_clipped &= 0xFFF;
 
-                if (x_left_clipped > span_leftmost)
+                bool curcross;
+                if (!input.right_major)
                 {
-                    span_leftmost = x_left_clipped;
+                    curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) >
+                               ((x_right ^ (1 << 27)) & (0x3fff << 14));
                 }
-
-                if (x_right_clipped < span_rightmost)
+                else
                 {
-                    span_rightmost = x_right_clipped;
+                    curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) <
+                               ((x_right ^ (1 << 27)) & (0x3fff << 14));
+                }
+                invalid_y |= curcross;
+
+                all_in &= invalid_y;
+
+                if (!invalid_y)
+                {
+                    if (input.right_major)
+                    {
+                        if (x_left_clipped > span_leftmost)
+                        {
+                            span_leftmost = x_left_clipped;
+                        }
+
+                        if (x_right_clipped < span_rightmost)
+                        {
+                            span_rightmost = x_right_clipped;
+                        }
+                    }
+                    else
+                    {
+                        if (x_left_clipped < span_leftmost)
+                        {
+                            span_leftmost = x_left_clipped;
+                        }
+
+                        if (x_right_clipped > span_rightmost)
+                        {
+                            span_rightmost = x_right_clipped;
+                        }
+                    }
                 }
 
                 if (subpixel == 3)
@@ -1765,10 +1821,8 @@ namespace hydra::N64
                     {
                         std::swap(current_span.min_x, current_span.max_x);
                     }
-                    current_span.valid = true;
+                    current_span.valid = !all_in && !all_over && !all_under;
                     primitive.spans[integer_y] = current_span;
-                    primitive.y_start = y_top >> 2;
-                    primitive.y_end = y_bottom >> 2;
                 }
             }
 
