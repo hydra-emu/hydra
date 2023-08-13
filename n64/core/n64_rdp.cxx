@@ -2,6 +2,7 @@
 #include <bitset>
 #include <cassert>
 #include <compatibility.hxx>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <log.hxx>
@@ -252,81 +253,68 @@ namespace hydra::N64
             }
             case RDPCommandType::Triangle:
             {
-                edgewalker<false, false, false>(data);
+                EdgewalkerInput input = triangle_get_edgewalker_input<false, false, false>(data);
+                edgewalker(input);
                 break;
             }
             case RDPCommandType::TriangleDepth:
             {
-                edgewalker<false, false, true>(data);
+                EdgewalkerInput input = triangle_get_edgewalker_input<false, false, true>(data);
+                edgewalker(input);
                 break;
             }
             case RDPCommandType::TriangleTexture:
             {
-                edgewalker<false, true, false>(data);
+                EdgewalkerInput input = triangle_get_edgewalker_input<false, true, false>(data);
+                edgewalker(input);
                 break;
             }
             case RDPCommandType::TriangleTextureDepth:
             {
-                edgewalker<false, true, true>(data);
+                EdgewalkerInput input = triangle_get_edgewalker_input<false, true, true>(data);
+                edgewalker(input);
                 break;
             }
             case RDPCommandType::TriangleShade:
             {
-                edgewalker<true, false, false>(data);
+                EdgewalkerInput input = triangle_get_edgewalker_input<true, false, false>(data);
+                edgewalker(input);
                 break;
             }
             case RDPCommandType::TriangleShadeDepth:
             {
-                edgewalker<true, false, true>(data);
+                EdgewalkerInput input = triangle_get_edgewalker_input<true, false, true>(data);
+                edgewalker(input);
                 break;
             }
             case RDPCommandType::TriangleShadeTexture:
             {
-                edgewalker<true, true, false>(data);
+                EdgewalkerInput input = triangle_get_edgewalker_input<true, true, false>(data);
+                edgewalker(input);
                 break;
             }
             case RDPCommandType::TriangleShadeTextureDepth:
             {
-                edgewalker<true, true, true>(data);
+                EdgewalkerInput input = triangle_get_edgewalker_input<true, true, true>(data);
+                edgewalker(input);
+                break;
+            }
+            case RDPCommandType::Rectangle:
+            {
+                EdgewalkerInput input = rectangle_get_edgewalker_input<false, false>(data);
+                edgewalker(input);
+                break;
+            }
+            case RDPCommandType::TextureRectangle:
+            {
+                EdgewalkerInput input = rectangle_get_edgewalker_input<true, false>(data);
+                edgewalker(input);
                 break;
             }
             case RDPCommandType::TextureRectangleFlip:
-            case RDPCommandType::TextureRectangle:
-            case RDPCommandType::Rectangle:
             {
-                RectangleCommand command;
-                command.full = data[0];
-                // shift by 2 because these values are in 10.2 fixed point
-                int32_t xmax = command.XMAX >> 2;
-                int32_t ymax = command.YMAX >> 2;
-                int32_t xmin = command.XMIN >> 2;
-                int32_t ymin = command.YMIN >> 2;
-
-                int z = 0;
-
-                if (z_source_sel_)
-                {
-                    z = primitive_depth_;
-                }
-
-                for (int y = ymin; y < ymax; y++)
-                {
-                    for (int x = xmin; x < xmax; x++)
-                    {
-                        if (x >= scissor_xh_ && x < scissor_xl_ && y >= scissor_yh_ &&
-                            y < scissor_yl_)
-                        {
-                            if (depth_test(x, y, z, 0))
-                            {
-                                draw_pixel(x, y);
-                                if (z_update_en_)
-                                {
-                                    z_set(x, y, z);
-                                }
-                            }
-                        }
-                    }
-                }
+                EdgewalkerInput input = rectangle_get_edgewalker_input<true, true>(data);
+                edgewalker(input);
                 break;
             }
             case RDPCommandType::SetFillColor:
@@ -342,29 +330,27 @@ namespace hydra::N64
                 // Loads a tile (part of the bigger texture set by SetTextureImage) into TMEM
                 LoadTileCommand command;
                 command.full = data[0];
-                // TileDescriptor& tile = tiles_[command.Tile];
+                TileDescriptor& tile = tiles_[command.Tile];
 
-                // int sl = command.SL;
-                // int tl = command.TL;
-                // int sh = command.SH + 1;
-                // int th = command.TH + 1;
+                int sl = command.SL;
+                int tl = command.TL;
+                int sh = command.SH + 1;
+                int th = command.TH + 1;
 
-                // sh *= sizeof(uint16_t);
-                // sl *= sizeof(uint16_t);
-                // for (int t = tl; t < th; t++)
-                // {
-                //     for (int s = sl; s < sh; s++)
-                //     {
-                //         uint16_t src = *reinterpret_cast<uint16_t*>(
-                //             &rdram_ptr_[texture_dram_address_latch_ +
-                //                         (t * texture_width_latch_ + s) * 2]);
-                //         uint16_t* dst = reinterpret_cast<uint16_t*>(
-                //             &tmem_[tile.tmem_address + (t - tl) * tile.line_width + (s - sl) *
-                //             2]);
-                //         *dst = src;
-                //     }
-                // }
-                Logger::WarnOnce("LoadTile: {}", command.full);
+                sh *= sizeof(uint16_t);
+                sl *= sizeof(uint16_t);
+                for (int t = tl; t < th; t++)
+                {
+                    for (int s = sl; s < sh; s++)
+                    {
+                        uint16_t src = *reinterpret_cast<uint16_t*>(
+                            &rdram_ptr_[texture_dram_address_latch_ +
+                                        (t * texture_width_latch_ + s) * 2]);
+                        uint16_t* dst = reinterpret_cast<uint16_t*>(
+                            &tmem_[tile.tmem_address + (t - tl) * tile.line_width + (s - sl) * 2]);
+                        *dst = src;
+                    }
+                }
                 break;
             }
             case RDPCommandType::LoadBlock:
@@ -398,9 +384,10 @@ namespace hydra::N64
                                     {
                                         src = (src >> 32) | (src << 32);
                                     }
-                                    uint64_t* dst =
-                                        reinterpret_cast<uint64_t*>(&tmem_[tile.tmem_address + i]);
-                                    *dst = hydra::bswap64(src);
+                                    uint8_t* dst =
+                                        reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
+                                    src = hydra::bswap64(src);
+                                    memcpy(dst, &src, 8);
                                     tl += DxT;
                                     odd = (tl >> 11) & 1;
                                 }
@@ -433,8 +420,8 @@ namespace hydra::N64
                 TileDescriptor& tile = tiles_[command.Tile];
                 tile.tmem_address = command.TMemAddress;
                 tile.format = static_cast<Format>(command.format);
-                tile.size = command.size; // size of tile line in 64b word
-                tile.line_width = command.Line << 3;
+                tile.size = 4 * (1 << command.size);
+                tile.line_width = command.Line;
                 // This number is used as the MS 4b of an 8b index.
                 tile.palette_index = command.Palette << 4;
                 break;
@@ -514,10 +501,10 @@ namespace hydra::N64
             {
                 SetScissorCommand command;
                 command.full = data[0];
-                scissor_xh_ = command.XH >> 2;
-                scissor_yh_ = command.YH >> 2;
-                scissor_xl_ = command.XL >> 2;
-                scissor_yl_ = command.YL >> 2;
+                scissor_xh_ = command.XH;
+                scissor_yh_ = command.YH;
+                scissor_xl_ = command.XL;
+                scissor_yl_ = command.YL;
                 break;
             }
             case RDPCommandType::SetFogColor:
@@ -759,7 +746,16 @@ namespace hydra::N64
             }
             case CycleType::Copy:
             {
-                Logger::WarnOnce("This game uses CycleType::Copy, which is not implemented yet");
+                if (framebuffer_pixel_size_ == 16)
+                {
+                    uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
+                    *ptr = rgba32_to_rgba16(texel_color_0_);
+                }
+                else
+                {
+                    uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
+                    *ptr = texel_color_0_;
+                }
                 break;
             }
             case CycleType::Fill:
@@ -1011,8 +1007,10 @@ namespace hydra::N64
     }
 
     template <bool Shade, bool Texture, bool Depth>
-    void RDP::edgewalker(const std::vector<uint64_t>& data)
+    EdgewalkerInput RDP::triangle_get_edgewalker_input(const std::vector<uint64_t>& data)
     {
+        EdgewalkerInput ret;
+
         EdgeCoefficientsCommand command;
         EdgeCoefficients edgel, edgem, edgeh;
         command.full = data[0];
@@ -1020,252 +1018,388 @@ namespace hydra::N64
         edgeh.full = data[2];
         edgem.full = data[3];
 
+        ret.tile_index = command.tile;
+
+        // Sign extend the 14 bit values
+        ret.yh = static_cast<int16_t>(command.YH << 2) >> 2;
+        ret.ym = static_cast<int16_t>(command.YM << 2) >> 2;
+        ret.yl = static_cast<int16_t>(command.YL << 2) >> 2;
+
+        // Sign extend the 28 bit values
+        ret.xl = (edgel.X << 4) >> 4;
+        ret.xm = (edgem.X << 4) >> 4;
+        ret.xh = (edgeh.X << 4) >> 4;
+
+        // Sign extend the 30 bit values
+        ret.slopel = (edgel.slope << 2) >> 2;
+        ret.slopem = (edgem.slope << 2) >> 2;
+        ret.slopeh = (edgeh.slope << 2) >> 2;
+
+        ret.right_major = command.lft;
+
         int next_block = 4;
-        int tile = command.Tile;
-
-        int32_t yh = static_cast<int16_t>(command.YH << 2) >> 4;
-        int32_t ym = static_cast<int16_t>(command.YM << 2) >> 4;
-        int32_t yl = static_cast<int16_t>(command.YL << 2) >> 4;
-        int32_t slopel = edgel.slope;
-        int32_t slopem = edgem.slope;
-        int32_t slopeh = edgeh.slope;
-        int32_t xl = edgel.X - slopel;
-        int32_t xm = edgem.X;
-        int32_t xh = edgeh.X;
-
-        int ystart = yh;
-        int ymiddle = ym;
-        int yend = yl;
-
-        int32_t xstart = xh;
-        int32_t xend = xm;
-        int32_t start_slope = slopeh;
-        int32_t end_slope = slopem;
-
-        bool right_major = command.lft;
-        auto comparison = right_major ? std::function<bool(int, int)>(std::less_equal())
-                                      : std::function<bool(int, int)>(std::greater_equal());
-        int increment = right_major ? 1 : -1;
-
-        int32_t r, g, b, a;
-        int32_t DrDx, DgDx, DbDx, DaDx;
-        int32_t DrDy [[maybe_unused]], DgDy [[maybe_unused]], DbDy [[maybe_unused]],
-            DaDy [[maybe_unused]];
-        int32_t DrDe, DgDe, DbDe, DaDe;
 
         if constexpr (Shade)
         {
-            r = (((data[next_block] >> 48) & 0xFFFF) << 16) |
-                ((data[next_block + 2] >> 48) & 0xFFFF);
-            g = (((data[next_block] >> 32) & 0xFFFF) << 16) |
-                ((data[next_block + 2] >> 32) & 0xFFFF);
-            b = (((data[next_block] >> 16) & 0xFFFF) << 16) |
-                ((data[next_block + 2] >> 16) & 0xFFFF);
-            a = (((data[next_block] >> 0) & 0xFFFF) << 16) | ((data[next_block + 2] >> 0) & 0xFFFF);
+            ret.r = (((data[next_block] >> 48) & 0xFFFF) << 16) |
+                    ((data[next_block + 2] >> 48) & 0xFFFF);
+            ret.g = (((data[next_block] >> 32) & 0xFFFF) << 16) |
+                    ((data[next_block + 2] >> 32) & 0xFFFF);
+            ret.b = (((data[next_block] >> 16) & 0xFFFF) << 16) |
+                    ((data[next_block + 2] >> 16) & 0xFFFF);
+            ret.a =
+                (((data[next_block] >> 0) & 0xFFFF) << 16) | ((data[next_block + 2] >> 0) & 0xFFFF);
 
-            DrDx = (((data[next_block + 1] >> 48) & 0xFFFF) << 16) |
-                   ((data[next_block + 3] >> 48) & 0xFFFF);
-            DgDx = (((data[next_block + 1] >> 32) & 0xFFFF) << 16) |
-                   ((data[next_block + 3] >> 32) & 0xFFFF);
-            DbDx = (((data[next_block + 1] >> 16) & 0xFFFF) << 16) |
-                   ((data[next_block + 3] >> 16) & 0xFFFF);
-            DaDx = (((data[next_block + 1] >> 0) & 0xFFFF) << 16) |
-                   ((data[next_block + 3] >> 0) & 0xFFFF);
+            ret.DrDx = (((data[next_block + 1] >> 48) & 0xFFFF) << 16) |
+                       ((data[next_block + 3] >> 48) & 0xFFFF);
+            ret.DgDx = (((data[next_block + 1] >> 32) & 0xFFFF) << 16) |
+                       ((data[next_block + 3] >> 32) & 0xFFFF);
+            ret.DbDx = (((data[next_block + 1] >> 16) & 0xFFFF) << 16) |
+                       ((data[next_block + 3] >> 16) & 0xFFFF);
+            ret.DaDx = (((data[next_block + 1] >> 0) & 0xFFFF) << 16) |
+                       ((data[next_block + 3] >> 0) & 0xFFFF);
 
-            DrDe = (((data[next_block + 4] >> 48) & 0xFFFF) << 16) |
-                   ((data[next_block + 6] >> 48) & 0xFFFF);
-            DgDe = (((data[next_block + 4] >> 32) & 0xFFFF) << 16) |
-                   ((data[next_block + 6] >> 32) & 0xFFFF);
-            DbDe = (((data[next_block + 4] >> 16) & 0xFFFF) << 16) |
-                   ((data[next_block + 6] >> 16) & 0xFFFF);
-            DaDe = (((data[next_block + 4] >> 0) & 0xFFFF) << 16) |
-                   ((data[next_block + 6] >> 0) & 0xFFFF);
+            ret.DrDe = (((data[next_block + 4] >> 48) & 0xFFFF) << 16) |
+                       ((data[next_block + 6] >> 48) & 0xFFFF);
+            ret.DgDe = (((data[next_block + 4] >> 32) & 0xFFFF) << 16) |
+                       ((data[next_block + 6] >> 32) & 0xFFFF);
+            ret.DbDe = (((data[next_block + 4] >> 16) & 0xFFFF) << 16) |
+                       ((data[next_block + 6] >> 16) & 0xFFFF);
+            ret.DaDe = (((data[next_block + 4] >> 0) & 0xFFFF) << 16) |
+                       ((data[next_block + 6] >> 0) & 0xFFFF);
 
-            DrDy = (((data[next_block + 5] >> 48) & 0xFFFF) << 16) |
-                   ((data[next_block + 7] >> 48) & 0xFFFF);
-            DgDy = (((data[next_block + 5] >> 32) & 0xFFFF) << 16) |
-                   ((data[next_block + 7] >> 32) & 0xFFFF);
-            DbDy = (((data[next_block + 5] >> 16) & 0xFFFF) << 16) |
-                   ((data[next_block + 7] >> 16) & 0xFFFF);
-            DaDy = (((data[next_block + 5] >> 0) & 0xFFFF) << 16) |
-                   ((data[next_block + 7] >> 0) & 0xFFFF);
+            ret.DrDy = (((data[next_block + 5] >> 48) & 0xFFFF) << 16) |
+                       ((data[next_block + 7] >> 48) & 0xFFFF);
+            ret.DgDy = (((data[next_block + 5] >> 32) & 0xFFFF) << 16) |
+                       ((data[next_block + 7] >> 32) & 0xFFFF);
+            ret.DbDy = (((data[next_block + 5] >> 16) & 0xFFFF) << 16) |
+                       ((data[next_block + 7] >> 16) & 0xFFFF);
+            ret.DaDy = (((data[next_block + 5] >> 0) & 0xFFFF) << 16) |
+                       ((data[next_block + 7] >> 0) & 0xFFFF);
 
             next_block += 8;
         }
-
-        int32_t s = 0, t = 0, w = 0;
-        int32_t DsDx, DtDx, DwDx;
-        int32_t DsDy [[maybe_unused]], DtDy [[maybe_unused]], DwDy [[maybe_unused]];
-        int32_t DsDe, DtDe, DwDe;
 
         if constexpr (Texture)
         {
-            s = (((data[next_block] >> 48) & 0xFFFF) << 16) |
-                ((data[next_block + 2] >> 48) & 0xFFFF);
-            t = (((data[next_block] >> 32) & 0xFFFF) << 16) |
-                ((data[next_block + 2] >> 32) & 0xFFFF);
-            w = (((data[next_block] >> 16) & 0xFFFF) << 16) |
-                ((data[next_block + 2] >> 16) & 0xFFFF);
+            ret.s = (((data[next_block] >> 48) & 0xFFFF) << 16) |
+                    ((data[next_block + 2] >> 48) & 0xFFFF);
+            ret.t = (((data[next_block] >> 32) & 0xFFFF) << 16) |
+                    ((data[next_block + 2] >> 32) & 0xFFFF);
+            ret.w = (((data[next_block] >> 16) & 0xFFFF) << 16) |
+                    ((data[next_block + 2] >> 16) & 0xFFFF);
 
-            DsDx = (((data[next_block + 1] >> 48) & 0xFFFF) << 16) |
-                   ((data[next_block + 3] >> 48) & 0xFFFF);
-            DtDx = (((data[next_block + 1] >> 32) & 0xFFFF) << 16) |
-                   ((data[next_block + 3] >> 32) & 0xFFFF);
-            DwDx = (((data[next_block + 1] >> 16) & 0xFFFF) << 16) |
-                   ((data[next_block + 3] >> 16) & 0xFFFF);
+            ret.DsDx = (((data[next_block + 1] >> 48) & 0xFFFF) << 16) |
+                       ((data[next_block + 3] >> 48) & 0xFFFF);
+            ret.DtDx = (((data[next_block + 1] >> 32) & 0xFFFF) << 16) |
+                       ((data[next_block + 3] >> 32) & 0xFFFF);
+            ret.DwDx = (((data[next_block + 1] >> 16) & 0xFFFF) << 16) |
+                       ((data[next_block + 3] >> 16) & 0xFFFF);
 
-            DsDe = (((data[next_block + 4] >> 48) & 0xFFFF) << 16) |
-                   ((data[next_block + 6] >> 48) & 0xFFFF);
-            DtDe = (((data[next_block + 4] >> 32) & 0xFFFF) << 16) |
-                   ((data[next_block + 6] >> 32) & 0xFFFF);
-            DwDe = (((data[next_block + 4] >> 16) & 0xFFFF) << 16) |
-                   ((data[next_block + 6] >> 16) & 0xFFFF);
+            ret.DsDe = (((data[next_block + 4] >> 48) & 0xFFFF) << 16) |
+                       ((data[next_block + 6] >> 48) & 0xFFFF);
+            ret.DtDe = (((data[next_block + 4] >> 32) & 0xFFFF) << 16) |
+                       ((data[next_block + 6] >> 32) & 0xFFFF);
+            ret.DwDe = (((data[next_block + 4] >> 16) & 0xFFFF) << 16) |
+                       ((data[next_block + 6] >> 16) & 0xFFFF);
 
-            DsDy = (((data[next_block + 5] >> 48) & 0xFFFF) << 16) |
-                   ((data[next_block + 7] >> 48) & 0xFFFF);
-            DtDy = (((data[next_block + 5] >> 32) & 0xFFFF) << 16) |
-                   ((data[next_block + 7] >> 32) & 0xFFFF);
-            DwDy = (((data[next_block + 5] >> 16) & 0xFFFF) << 16) |
-                   ((data[next_block + 7] >> 16) & 0xFFFF);
+            ret.DsDy = (((data[next_block + 5] >> 48) & 0xFFFF) << 16) |
+                       ((data[next_block + 7] >> 48) & 0xFFFF);
+            ret.DtDy = (((data[next_block + 5] >> 32) & 0xFFFF) << 16) |
+                       ((data[next_block + 7] >> 32) & 0xFFFF);
+            ret.DwDy = (((data[next_block + 5] >> 16) & 0xFFFF) << 16) |
+                       ((data[next_block + 7] >> 16) & 0xFFFF);
 
             next_block += 8;
         }
-
-        int32_t z = 0, DzDx [[maybe_unused]], DzDy [[maybe_unused]], DzDe;
 
         if constexpr (Depth)
         {
             if (z_source_sel_)
             {
-                z = primitive_depth_ << 16;
+                ret.z = primitive_depth_ << 16;
             }
             else
             {
-                z = data[next_block] >> 32;
+                ret.z = data[next_block] >> 32;
             }
-            DzDx = data[next_block] & 0xFFFF'FFFF;
-            DzDe = data[next_block + 1] >> 32;
-            DzDy = data[next_block + 1] & 0xFFFF'FFFF;
+            ret.DzDx = data[next_block] & 0xFFFF'FFFF;
+            ret.DzDe = data[next_block + 1] >> 32;
+            ret.DzDy = data[next_block + 1] & 0xFFFF'FFFF;
         }
 
-        int32_t r_line, g_line, b_line, a_line;
-        int32_t z_line;
-        int32_t s_line, t_line, w_line;
-        for (int y = ystart; y < yend; y++)
+        return ret;
+    }
+
+    template <bool Texture, bool Flip>
+    EdgewalkerInput RDP::rectangle_get_edgewalker_input(const std::vector<uint64_t>& data)
+    {
+        // Rectangles are simply triangles with slopes = 0 in the RDP
+        EdgewalkerInput ret;
+
+        RectangleCommand command;
+        command.full = data[0];
+
+        int32_t xl_integer = command.xl >> 2;
+        int32_t xh_integer = command.xh >> 2;
+
+        ret.xl = (xl_integer << 16) | ((command.xl & 0b11) << 14);
+        ret.xm = (xl_integer << 16) | ((command.xl & 0b11) << 14);
+        ret.xh = (xh_integer << 16) | ((command.xh & 0b11) << 14);
+
+        ret.yl = command.yl;
+        ret.ym = command.yl;
+        ret.yh = command.yh;
+
+        // TODO: should probably be moved to depth_test
+        if (z_source_sel_)
         {
-            if (y == ymiddle) [[unlikely]]
+            ret.z = primitive_depth_ << 16;
+        }
+
+        ret.right_major = true;
+
+        return ret;
+    }
+
+    template <class T>
+    T clear_subpixels(T value)
+    {
+        return value & ~3;
+    }
+
+    template <class T>
+    T set_subpixels(T value)
+    {
+        return value | 3;
+    }
+
+    void RDP::edgewalker(const EdgewalkerInput& input)
+    {
+        Primitive primitive;
+        // const TileDescriptor& tile = input.tile_index;
+
+        int32_t xh = input.xh, xm = input.xm, xl = input.xl;
+        int32_t yh = input.yh, ym = input.ym, yl = input.yl;
+
+        int32_t r = input.r, g = input.g, b = input.b, a = input.a;
+        int32_t s = input.s, t = input.t, w = input.w;
+        int32_t z = input.z;
+
+        int32_t DrDe = input.DrDe, DgDe = input.DgDe, DbDe = input.DbDe, DaDe = input.DaDe;
+        int32_t DsDe = input.DsDe, DtDe = input.DtDe, DwDe = input.DwDe;
+        int32_t DzDe = input.DzDe;
+
+        int32_t DrDx = 0, DgDx = 0, DbDx = 0, DaDx = 0;
+        int32_t DsDx = 0, DtDx = 0, DwDx = 0;
+        int32_t DzDx = 0;
+
+        if (cycle_type_ != CycleType::Copy)
+        {
+            DrDx = (input.DrDx >> 8) & ~1;
+            DgDx = (input.DgDx >> 8) & ~1;
+            DbDx = (input.DbDx >> 8) & ~1;
+            DaDx = (input.DaDx >> 8) & ~1;
+            DsDx = (input.DsDx >> 8) & ~1;
+            DtDx = (input.DtDx >> 8) & ~1;
+            DwDx = (input.DwDx >> 8) & ~1;
+            DzDx = (input.DzDx >> 8) & ~1;
+        }
+
+        bool use_scissor_low = false, use_scissor_high = false;
+
+        int32_t y_start = clear_subpixels(yh);
+
+        if (yh & 0x2000)
+        {
+            use_scissor_high = true;
+        }
+        else if (yh & 0x1000)
+        {
+            use_scissor_high = false;
+        }
+        else
+        {
+            use_scissor_high = yh < scissor_yh_;
+        }
+
+        int32_t yh_limit = use_scissor_high ? scissor_yh_ : yh;
+
+        if (yl & 0x2000)
+        {
+            use_scissor_low = false;
+        }
+        else if (yl & 0x1000)
+        {
+            use_scissor_low = true;
+        }
+        else
+        {
+            use_scissor_low = yl >= scissor_yl_;
+        }
+
+        int32_t yl_limit = use_scissor_low ? scissor_yl_ : yl;
+
+        // Top and bottom of the primitive
+        int32_t y_top = clear_subpixels(yh_limit);
+        int32_t y_bottom = set_subpixels(yl_limit);
+
+        int32_t x_left_inc = (input.slopem >> 2) & ~1;
+        int32_t x_right_inc = (input.slopeh >> 2) & ~1;
+
+        int32_t x_left = xm & ~1;
+        int32_t x_right = xh & ~1;
+
+        int32_t scissor_xl_shift = scissor_xl_ << 1;
+        int32_t scissor_xh_shift = scissor_xh_ << 1;
+
+        int32_t span_leftmost = 0, span_rightmost = 0;
+
+        Span current_span;
+
+        // We start from y_start instead of y_top because we need to
+        // edgewalk the shade/texture/depth values regardless of whether
+        // we're drawing the current span
+        for (int32_t y = y_start; y <= y_bottom; y++)
+        {
+            if (y == ym)
             {
-                // we reached the middle point, change
-                // our slope and end point
-                // note that xstart is left unchanged
-                xend = xl;
-                end_slope = slopel;
+                // At the middle point x_left becomes xl and uses slope L
+                x_left = xl;
+                x_left_inc = (input.slopel >> 2) & ~1;
             }
 
-            if constexpr (Shade)
+            uint8_t subpixel = y & 3;
+            if (y >= y_top)
+            {
+                int32_t integer_y = y >> 2;
+
+                if (subpixel == 0)
+                {
+                    current_span = Span();
+
+                    span_leftmost = 0;
+                    span_rightmost = 0xFFF;
+                }
+
+                int32_t x_right_clipped = (x_right >> 13) & 0x1FFE;
+                int32_t x_left_clipped = (x_left >> 13) & 0x1FFE;
+
+                bool curunder = ((x_right & 0x8000000) ||
+                                 (x_right_clipped < scissor_xh_shift && !(x_right & 0x4000000)));
+                x_right_clipped = curunder ? scissor_xh_shift : ((x_right >> 13) & 0x3FFE);
+                bool curover =
+                    ((x_right_clipped & 0x2000) || (x_right_clipped & 0x1FFF) >= scissor_xl_shift);
+                x_right_clipped = curover ? scissor_xl_shift : x_right_clipped;
+
+                curunder = ((x_left & 0x8000000) ||
+                            (x_left_clipped < scissor_xh_shift && !(x_left & 0x4000000)));
+                x_left_clipped = curunder ? scissor_xh_shift : ((x_left >> 13) & 0x3FFE);
+                curover =
+                    ((x_left_clipped & 0x2000) || (x_left_clipped & 0x1FFF) >= scissor_xl_shift);
+                x_left_clipped = curover ? scissor_xl_shift : x_left_clipped;
+
+                x_right_clipped >>= 3;
+                x_right_clipped &= 0xFFF;
+                x_left_clipped >>= 3;
+                x_left_clipped &= 0xFFF;
+
+                if (x_left_clipped > span_leftmost)
+                {
+                    span_leftmost = x_left_clipped;
+                }
+
+                if (x_right_clipped < span_rightmost)
+                {
+                    span_rightmost = x_right_clipped;
+                }
+
+                if (subpixel == 3)
+                {
+                    // TODO: use DrDy etc.
+                    int32_t x_frac = (x_right >> 8) & 0xFF;
+                    current_span.r = (((r & ~0x1FF) - (x_frac * DrDx)) & ~0x3FF) >> 16;
+                    current_span.g = (((g & ~0x1FF) - (x_frac * DgDx)) & ~0x3FF) >> 16;
+                    current_span.b = (((b & ~0x1FF) - (x_frac * DbDx)) & ~0x3FF) >> 16;
+                    current_span.a = (((a & ~0x1FF) - (x_frac * DaDx)) & ~0x3FF) >> 16;
+                    current_span.s = (((s & ~0x1FF) - (x_frac * DsDx)) & ~0x3FF) >> 16;
+                    current_span.t = (((t & ~0x1FF) - (x_frac * DtDx)) & ~0x3FF) >> 16;
+                    current_span.w = (((w & ~0x1FF) - (x_frac * DwDx)) & ~0x3FF) >> 16;
+                    current_span.z = (((z & ~0x1FF) - (x_frac * DzDx)) & ~0x3FF);
+
+                    current_span.min_x = span_leftmost;
+                    current_span.max_x = span_rightmost;
+                    if (input.right_major)
+                    {
+                        std::swap(current_span.min_x, current_span.max_x);
+                    }
+                    current_span.valid = true;
+                    primitive.spans[integer_y] = current_span;
+                    primitive.y_start = y_top >> 2;
+                    primitive.y_end = y_bottom >> 2;
+                }
+            }
+
+            if (subpixel == 3)
             {
                 r += DrDe;
                 g += DgDe;
                 b += DbDe;
                 a += DaDe;
-
-                r_line = r;
-                g_line = g;
-                b_line = b;
-                a_line = a;
-            }
-
-            if constexpr (Texture)
-            {
                 s += DsDe;
                 t += DtDe;
                 w += DwDe;
-
-                s_line = s;
-                t_line = t;
-                w_line = w;
-            }
-
-            if constexpr (Depth)
-            {
                 z += DzDe;
-
-                z_line = z;
             }
 
-            xstart += start_slope;
-            xend += end_slope;
-            // get the integer part
-            int xstart_i = xstart >> 16;
-            int xend_i = xend >> 16;
+            x_left += x_left_inc;
+            x_right += x_right_inc;
+        }
 
-            for (int x = xstart_i; comparison(x, xend_i); x += increment)
+        if (primitive.y_end - primitive.y_start > 480)
+        {
+            Logger::Warn("Possibly broken primitive: {} {}", primitive.y_start, primitive.y_end);
+            dump_primitive(primitive);
+            Logger::Fatal("Exiting...");
+        }
+        for (int y = primitive.y_start; y <= primitive.y_end; y++)
+        {
+            Span& span = primitive.spans[y];
+            if (span.max_x - span.min_x > framebuffer_width_)
             {
-                if (x >= scissor_xh_ && x < scissor_xl_ && y >= scissor_yh_ && y < scissor_yl_)
+                Logger::Warn("Possibly broken span: {} {}", span.min_x, span.max_x);
+                dump_primitive(primitive);
+                Logger::Fatal("Exiting...");
+            }
+            for (int x = span.min_x; x <= span.max_x; x++)
+            {
+                shade_color_ = span.a << 24 | span.b << 16 | span.g << 8 | span.r;
+                shade_alpha_ = span.a << 24 | span.a << 16 | span.a << 8 | span.a;
+                if (depth_test(x, y, span.z >> 14, 0))
                 {
-                    if constexpr (Shade)
-                    {
-                        r_line += DrDx * increment;
-                        g_line += DgDx * increment;
-                        b_line += DbDx * increment;
-                        a_line += DaDx * increment;
-                        if (r_line < 0 || g_line < 0 || b_line < 0 || a_line < 0)
-                            Logger::WarnOnce("Negative color value detected");
-                        uint8_t final_r = std::clamp(r_line >> 16, 0, 0xFF);
-                        uint8_t final_g = std::clamp(g_line >> 16, 0, 0xFF);
-                        uint8_t final_b = std::clamp(b_line >> 16, 0, 0xFF);
-                        uint8_t final_a = std::clamp(a_line >> 16, 0, 0xFF);
-                        shade_color_ = (final_a << 24) | (final_b << 16) | (final_g << 8) | final_r;
-                        shade_alpha_ = (final_a << 24) | (final_a << 16) | (final_a << 8) | final_a;
-                    }
+                    if (span.w != 0)
+                        fetch_texels(input.tile_index, span.s / span.w, span.t / span.w);
+                    draw_pixel(x, y);
 
-                    if constexpr (Depth)
+                    if (z_update_en_)
                     {
-                        z_line += DzDx * increment;
-                        z_line = std::max(0, z_line);
-                    }
-
-                    if constexpr (Texture)
-                    {
-                        s_line += DsDx * increment;
-                        t_line += DtDx * increment;
-                        w_line += DwDx * increment;
-                    }
-
-                    uint32_t z_15_3 = 0;
-                    bool pass_depth_test = true;
-
-                    if constexpr (Depth)
-                    {
-                        z_15_3 = z_line >> 14;
-                        pass_depth_test = depth_test(x, y, z_15_3, 0);
-                    }
-
-                    if (pass_depth_test)
-                    {
-                        if constexpr (Texture)
-                        {
-                            if ((w_line >> 15) != 0)
-                            {
-                                // s_line /= w_line >> 15;
-                                // t_line /= w_line >> 15;
-                                // s_line >>= 5;
-                                // t_line >>= 5;
-                            }
-                            fetch_texels(tile, s_line / w_line, t_line / w_line);
-                        }
-                        draw_pixel(x, y);
-                    }
-
-                    if constexpr (Depth)
-                    {
-                        if (z_update_en_ && pass_depth_test)
-                        {
-                            z_set(x, y, z_15_3);
-                        }
+                        // TODO: remove?
+                        span.z = std::max(0, span.z & (0x3ffff << 14));
+                        z_set(x, y, span.z >> 14);
                     }
                 }
             }
+        }
+    }
+
+    void RDP::dump_primitive(const Primitive& primitive)
+    {
+        printf("Primitive dump:\n");
+        printf("Y top %d, Y bottom %d\n", primitive.y_start, primitive.y_end);
+        for (int y = primitive.y_start; y <= primitive.y_end; y++)
+        {
+            const Span& span = primitive.spans[y];
+            printf("Span %d: min_x %d, max_x %d\n", y, span.min_x, span.max_x);
         }
     }
 } // namespace hydra::N64

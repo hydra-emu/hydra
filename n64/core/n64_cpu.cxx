@@ -422,8 +422,10 @@ namespace hydra::N64
         }
         else if (addr >= ISVIEWER_AREA_START && addr <= ISVIEWER_AREA_END)
         {
-            uint8_t* isviewer_ptr = reinterpret_cast<uint8_t*>(&cpubus_.isviewer_buffer_[addr - ISVIEWER_AREA_START]);
-            uint32_t data = isviewer_ptr[0] << 24 | isviewer_ptr[1] << 16 | isviewer_ptr[2] << 8 | isviewer_ptr[3];
+            uint8_t* isviewer_ptr =
+                reinterpret_cast<uint8_t*>(&cpubus_.isviewer_buffer_[addr - ISVIEWER_AREA_START]);
+            uint32_t data = isviewer_ptr[0] << 24 | isviewer_ptr[1] << 16 | isviewer_ptr[2] << 8 |
+                            isviewer_ptr[3];
             return data;
         }
         else if (addr >= RDP_AREA_START && addr <= RDP_AREA_END)
@@ -788,12 +790,12 @@ namespace hydra::N64
     {
         TranslatedAddress paddr = translate_vaddr(vaddr);
         uint16_t* ptr = reinterpret_cast<uint16_t*>(cpubus_.redirect_paddress(paddr.paddr));
-        
+
         if (!ptr)
         {
             Logger::Fatal("Attempted to load halfword from invalid address: {:08x}", vaddr);
         }
-        
+
         uint16_t data;
         memcpy(&data, ptr, sizeof(uint16_t));
         return hydra::bswap16(data);
@@ -824,7 +826,7 @@ namespace hydra::N64
         {
             Logger::Fatal("Attempted to load doubleword from invalid address: {:08x}", vaddr);
         }
-        
+
         uint64_t data;
         memcpy(&data, ptr, sizeof(uint64_t));
         return hydra::bswap64(data);
