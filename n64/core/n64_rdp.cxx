@@ -1021,7 +1021,7 @@ namespace hydra::N64
         edgem.full = data[3];
 
         int next_block = 4;
-        int tile = command.Tile;
+        int tile = command.tile;
 
         int32_t yh = static_cast<int16_t>(command.YH << 2) >> 4;
         int32_t ym = static_cast<int16_t>(command.YM << 2) >> 4;

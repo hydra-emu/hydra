@@ -45,7 +45,10 @@ namespace hydra::N64
         if (ai.ai_buffer_.size() * sizeof(int16_t) < frames_in * bytes_per_frame * 3)
         {
             ai.hungry_ = true;
-            return;
+            if (ai.ai_buffer_.size() * sizeof(int16_t) < frames_in * bytes_per_frame)
+            {
+                return;
+            }
         }
         else
         {
