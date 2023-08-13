@@ -182,6 +182,7 @@ namespace hydra::N64
         texel_color_1_ = 0xFFFFFFFF;
         texel_alpha_0_ = 0xFFFFFFFF;
         texel_alpha_1_ = 0xFFFFFFFF;
+        cycle_type_ = CycleType::Cycle1;
     }
 
     void RDP::SendCommand(const std::vector<uint64_t>& data)
@@ -1191,7 +1192,7 @@ namespace hydra::N64
 
         int32_t clipxlshift = scissor_xl_ << 1;
         int32_t clipxhshift = scissor_xh_ << 1;
-        int allover = 1, allunder = 1, curover = 0, curunder = 0;
+        int allover = 1, allunder = 1, cur_over = 0, cur_under = 0;
         int allinval = 1;
         int32_t curcross = 0;
 
@@ -1226,24 +1227,24 @@ namespace hydra::N64
                     stickybit = ((xright >> 1) & 0x1fff) > 0;
                     xrsc = ((xright >> 13) & 0x1ffe) | stickybit;
 
-                    curunder =
+                    cur_under =
                         ((xright & 0x8000000) || (xrsc < clipxhshift && !(xright & 0x4000000)));
 
-                    xrsc = curunder ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
-                    curover = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
-                    xrsc = curover ? clipxlshift : xrsc;
-                    allover &= curover;
-                    allunder &= curunder;
+                    xrsc = cur_under ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
+                    cur_over = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
+                    xrsc = cur_over ? clipxlshift : xrsc;
+                    allover &= cur_over;
+                    allunder &= cur_under;
 
                     stickybit = ((xleft >> 1) & 0x1fff) > 0;
                     xlsc = ((xleft >> 13) & 0x1ffe) | stickybit;
-                    curunder =
+                    cur_under =
                         ((xleft & 0x8000000) || (xlsc < clipxhshift && !(xleft & 0x4000000)));
-                    xlsc = curunder ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
-                    curover = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
-                    xlsc = curover ? clipxlshift : xlsc;
-                    allover &= curover;
-                    allunder &= curunder;
+                    xlsc = cur_under ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
+                    cur_over = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
+                    xlsc = cur_over ? clipxlshift : xlsc;
+                    allover &= cur_over;
+                    allunder &= cur_under;
 
                     curcross = ((xleft ^ (1 << 27)) & (0x3fff << 14)) <
                                ((xright ^ (1 << 27)) & (0x3fff << 14));
@@ -1307,23 +1308,23 @@ namespace hydra::N64
 
                     stickybit = ((xright >> 1) & 0x1fff) > 0;
                     xrsc = ((xright >> 13) & 0x1ffe) | stickybit;
-                    curunder =
+                    cur_under =
                         ((xright & 0x8000000) || (xrsc < clipxhshift && !(xright & 0x4000000)));
-                    xrsc = curunder ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
-                    curover = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
-                    xrsc = curover ? clipxlshift : xrsc;
-                    allover &= curover;
-                    allunder &= curunder;
+                    xrsc = cur_under ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
+                    cur_over = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
+                    xrsc = cur_over ? clipxlshift : xrsc;
+                    allover &= cur_over;
+                    allunder &= cur_under;
 
                     stickybit = ((xleft >> 1) & 0x1fff) > 0;
                     xlsc = ((xleft >> 13) & 0x1ffe) | stickybit;
-                    curunder =
+                    cur_under =
                         ((xleft & 0x8000000) || (xlsc < clipxhshift && !(xleft & 0x4000000)));
-                    xlsc = curunder ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
-                    curover = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
-                    xlsc = curover ? clipxlshift : xlsc;
-                    allover &= curover;
-                    allunder &= curunder;
+                    xlsc = cur_under ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
+                    cur_over = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
+                    xlsc = cur_over ? clipxlshift : xlsc;
+                    allover &= cur_over;
+                    allunder &= cur_under;
 
                     curcross = ((xright ^ (1 << 27)) & (0x3fff << 14)) <
                                ((xleft ^ (1 << 27)) & (0x3fff << 14));
@@ -1399,18 +1400,18 @@ namespace hydra::N64
                 problem = "valid";
             }
 
-            // if (my_primitive.spans[i].r != angrylion_primitive.spans[i].r ||
-            //     my_primitive.spans[i].g != angrylion_primitive.spans[i].g ||
-            //     my_primitive.spans[i].b != angrylion_primitive.spans[i].b ||
-            //     my_primitive.spans[i].a != angrylion_primitive.spans[i].a)
-            // {
-            //     Logger::Fatal("Primitive mismatch: span {} color - expected: {:08x}, {:08x}, "
-            //                     "{:08x}, {:08x}, actual: {:08x}, {:08x}, {:08x}, {:08x}",
-            //                   i, angrylion_primitive.spans[i].r, angrylion_primitive.spans[i].g,
-            //                   angrylion_primitive.spans[i].b, angrylion_primitive.spans[i].a,
-            //                   my_primitive.spans[i].r, my_primitive.spans[i].g,
-            //                   my_primitive.spans[i].b, my_primitive.spans[i].a);
-            // }
+            if (my_primitive.spans[i].r != angrylion_primitive.spans[i].r ||
+                my_primitive.spans[i].g != angrylion_primitive.spans[i].g ||
+                my_primitive.spans[i].b != angrylion_primitive.spans[i].b ||
+                my_primitive.spans[i].a != angrylion_primitive.spans[i].a)
+            {
+                Logger::Fatal("Primitive mismatch: span {} color - expected: {:08x}, {:08x}, "
+                              "{:08x}, {:08x}, actual: {:08x}, {:08x}, {:08x}, {:08x}",
+                              i, angrylion_primitive.spans[i].r, angrylion_primitive.spans[i].g,
+                              angrylion_primitive.spans[i].b, angrylion_primitive.spans[i].a,
+                              my_primitive.spans[i].r, my_primitive.spans[i].g,
+                              my_primitive.spans[i].b, my_primitive.spans[i].a);
+            }
 
             // if (my_primitive.spans[i].s != angrylion_primitive.spans[i].s ||
             //     my_primitive.spans[i].t != angrylion_primitive.spans[i].t ||
@@ -1425,9 +1426,7 @@ namespace hydra::N64
 
             // if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z)
             // {
-            //     Logger::Fatal("Primitive mismatch: span {} depth - expected: {:08x}, actual:
-            //     {:08x}", i,
-            //                   angrylion_primitive.spans[i].z, my_primitive.spans[i].z);
+            //     problem = "zbuf";
             // }
 
             if (problem != "")
@@ -1781,31 +1780,36 @@ namespace hydra::N64
                     all_under = true;
                 }
 
-                bool stickybit = ((x_right >> 1) & 0x1fff) > 0;
-                int32_t x_right_clipped = ((x_right >> 13) & 0x1FFE) | stickybit;
-                bool curunder = ((x_right & 0x8000000) ||
-                                 (x_right_clipped < scissor_xh_shift && !(x_right & 0x4000000)));
+                // Check if the current subpixel is inside the scissor
+                // XH/XL are 16.16 fixed point, so shifting by 14 would convert the lower 12 bits
+                // to 10.2 fixed point Since scissor_**_shift is shifted to the left by 1, we need
+                // to shift the XH/XL values by 13 instead of 14, which would convert them to 10.2
+                // fixed point
+                bool round_bit = ((x_right >> 1) & 0x1fff) > 0;
+                int32_t x_right_clipped = ((x_right >> 13) & 0x1FFE) | round_bit;
+                bool cur_under = ((x_right & 0x8000000) ||
+                                  (x_right_clipped < scissor_xh_shift && !(x_right & 0x4000000)));
                 x_right_clipped =
-                    curunder ? scissor_xh_shift : (((x_right >> 13) & 0x3FFE) | stickybit);
-                bool curover =
+                    cur_under ? scissor_xh_shift : (((x_right >> 13) & 0x3FFE) | round_bit);
+                bool cur_over =
                     ((x_right_clipped & 0x2000) || (x_right_clipped & 0x1FFF) >= scissor_xl_shift);
-                x_right_clipped = curover ? scissor_xl_shift : x_right_clipped;
+                x_right_clipped = cur_over ? scissor_xl_shift : x_right_clipped;
 
-                all_under &= curunder;
-                all_over &= curover;
+                all_under &= cur_under;
+                all_over &= cur_over;
 
-                stickybit = ((x_left >> 1) & 0x1fff) > 0;
-                int32_t x_left_clipped = ((x_left >> 13) & 0x1FFE) | stickybit;
-                curunder = ((x_left & 0x8000000) ||
-                            (x_left_clipped < scissor_xh_shift && !(x_left & 0x4000000)));
+                round_bit = ((x_left >> 1) & 0x1fff) > 0;
+                int32_t x_left_clipped = ((x_left >> 13) & 0x1FFE) | round_bit;
+                cur_under = ((x_left & 0x8000000) ||
+                             (x_left_clipped < scissor_xh_shift && !(x_left & 0x4000000)));
                 x_left_clipped =
-                    curunder ? scissor_xh_shift : (((x_left >> 13) & 0x3FFE) | stickybit);
-                curover =
+                    cur_under ? scissor_xh_shift : (((x_left >> 13) & 0x3FFE) | round_bit);
+                cur_over =
                     ((x_left_clipped & 0x2000) || (x_left_clipped & 0x1FFF) >= scissor_xl_shift);
-                x_left_clipped = curover ? scissor_xl_shift : x_left_clipped;
+                x_left_clipped = cur_over ? scissor_xl_shift : x_left_clipped;
 
-                all_under &= curunder;
-                all_over &= curover;
+                all_under &= cur_under;
+                all_over &= cur_over;
 
                 x_right_clipped >>= 3;
                 x_right_clipped &= 0xFFF;
@@ -1907,14 +1911,24 @@ namespace hydra::N64
         for (int y = primitive.y_start; y <= primitive.y_end; y++)
         {
             const Span& span = primitive.spans[y];
+            if (!span.valid)
+                continue;
+
+            auto r = span.r;
+            auto g = span.g;
+            auto b = span.b;
+            auto a = span.a;
+
             for (int x = span.min_x; x <= span.max_x; x++)
             {
-                uint8_t r8 = span.r >> 16;
-                uint8_t g8 = span.g >> 16;
-                uint8_t b8 = span.b >> 16;
-                uint8_t a8 = span.a >> 16;
-                shade_color_ = a8 << 24 | b8 << 16 | g8 << 8 | r8;
-                shade_alpha_ = a8 << 24 | a8 << 16 | a8 << 8 | a8;
+                uint8_t r8 = std::clamp(r >> 16, 0, 0xFF);
+                uint8_t g8 = std::clamp(g >> 16, 0, 0xFF);
+                uint8_t b8 = std::clamp(b >> 16, 0, 0xFF);
+                uint8_t a8 = std::clamp(a >> 16, 0, 0xFF);
+
+                shade_color_ = (a8 << 24) | (b8 << 16) | (g8 << 8) | r8;
+                shade_alpha_ = (a8 << 24) | (a8 << 16) | (a8 << 8) | a8;
+
                 if (depth_test(x, y, span.z >> 14, 0))
                 {
                     if (span.w != 0)
