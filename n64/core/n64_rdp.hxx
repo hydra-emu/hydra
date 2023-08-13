@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <n64/core/n64_types.hxx>
 #include <vector>
 
@@ -105,6 +106,47 @@ namespace hydra::N64
         uint8_t palette_index;
         uint16_t line_width;
         uint16_t s, t;
+    };
+
+    struct EdgewalkerInput
+    {
+        int tile_index;
+        int32_t xh, xm, xl, yh, ym, yl;
+        int32_t slopeh, slopem, slopel;
+        bool right_major;
+        int32_t r, g, b, a;
+        int32_t DrDx, DgDx, DbDx, DaDx;
+        int32_t DrDy, DgDy, DbDy, DaDy;
+        int32_t DrDe, DgDe, DbDe, DaDe;
+        int32_t s, t, w;
+        int32_t DsDx, DtDx, DwDx;
+        int32_t DsDy, DtDy, DwDy;
+        int32_t DsDe, DtDe, DwDe;
+        int32_t z, DzDx, DzDy, DzDe;
+
+        EdgewalkerInput()
+        {
+            std::memset(this, 0, sizeof(*this));
+        }
+    };
+
+    struct Span
+    {
+        int32_t min_x, max_x;
+        bool valid;
+        int32_t r, g, b, a;
+        int32_t s, t, w;
+        int32_t z;
+    };
+
+    struct Primitive
+    {
+        std::array<Span, 1024> spans;
+        int32_t y_start = 0;
+        int32_t y_end = 0;
+        int32_t DrDx, DgDx, DbDx, DaDx;
+        int32_t DsDx, DtDx, DwDx;
+        int32_t DzDx;
     };
 
     class RDP final
@@ -230,7 +272,14 @@ namespace hydra::N64
         uint32_t* alpha_get_mul(uint8_t mul);
 
         template <bool Shade, bool Texture, bool Depth>
-        void edgewalker(const std::vector<uint64_t>& data);
+        EdgewalkerInput triangle_get_edgewalker_input(const std::vector<uint64_t>& data);
+
+        template <bool Texture, bool Flip>
+        EdgewalkerInput rectangle_get_edgewalker_input(const std::vector<uint64_t>& data);
+
+        void edgewalker(const EdgewalkerInput& data);
+
+        void dump_primitive(const Primitive& primitive);
 
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;
