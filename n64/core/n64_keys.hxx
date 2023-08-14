@@ -17,6 +17,10 @@ namespace hydra::N64::Keys
         CDown,
         CLeft,
         CRight,
+        KeypadUp,
+        KeypadDown,
+        KeypadLeft,
+        KeypadRight,
 
         N64KeyCount,
         ErrorKey = 0xFFFF'FFFF

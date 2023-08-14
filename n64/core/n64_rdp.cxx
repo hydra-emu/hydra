@@ -166,18 +166,18 @@ namespace hydra::N64
     void RDP::Reset()
     {
         status_.ready = 1;
-        color_sub_a_ = &color_one_;
-        color_sub_b_ = &color_zero_;
-        color_multiplier_ = &color_one_;
-        color_adder_ = &color_zero_;
-        alpha_sub_a_ = &color_zero_;
-        alpha_sub_b_ = &color_zero_;
-        alpha_multiplier_ = &color_one_;
-        alpha_adder_ = &color_zero_;
-        blender_1a_0_ = 0;
-        blender_1b_0_ = 0;
-        blender_2a_0_ = 0;
-        blender_2b_0_ = 0;
+        color_sub_a_[0] = color_sub_a_[1] = &color_one_;
+        color_sub_b_[0] = color_sub_b_[1] = &color_zero_;
+        color_multiplier_[0] = color_multiplier_[1] = &color_one_;
+        color_adder_[0] = color_adder_[1] = &color_zero_;
+        alpha_sub_a_[0] = alpha_sub_a_[1] = &color_zero_;
+        alpha_sub_b_[0] = alpha_sub_b_[1] = &color_zero_;
+        alpha_multiplier_[0] = alpha_multiplier_[1] = &color_one_;
+        alpha_adder_[0] = alpha_adder_[1] = &color_zero_;
+        blender_1a_[0] = blender_1a_[1] = 0;
+        blender_1b_[0] = blender_1b_[1] = 0;
+        blender_2a_[0] = blender_2a_[1] = 0;
+        blender_2b_[0] = blender_2b_[1] = 0;
         texel_color_0_ = 0xFFFFFFFF;
         texel_color_1_ = 0xFFFFFFFF;
         texel_alpha_0_ = 0xFFFFFFFF;
@@ -438,10 +438,17 @@ namespace hydra::N64
                 z_update_en_ = command.z_update_en;
                 z_source_sel_ = command.z_source_sel;
                 z_mode_ = command.z_mode;
-                blender_1a_0_ = command.b_m1a_0;
-                blender_1b_0_ = command.b_m1b_0;
-                blender_2a_0_ = command.b_m2a_0;
-                blender_2b_0_ = command.b_m2b_0;
+
+                blender_1a_[0] = command.b_m1a_0;
+                blender_1b_[0] = command.b_m1b_0;
+                blender_2a_[0] = command.b_m2a_0;
+                blender_2b_[0] = command.b_m2b_0;
+
+                blender_1a_[1] = command.b_m1a_1;
+                blender_1b_[1] = command.b_m1b_1;
+                blender_2a_[1] = command.b_m2a_1;
+                blender_2b_[1] = command.b_m2b_1;
+
                 image_read_en_ = command.image_read_en;
                 break;
             }
@@ -504,15 +511,25 @@ namespace hydra::N64
                 SetCombineModeCommand command;
                 command.full = data[0];
 
-                color_sub_a_ = color_get_sub_a(command.sub_A_RGB_1);
-                color_sub_b_ = color_get_sub_b(command.sub_B_RGB_1);
-                color_multiplier_ = color_get_mul(command.mul_RGB_1);
-                color_adder_ = color_get_add(command.add_RGB_1);
+                color_sub_a_[0] = color_get_sub_a(command.sub_A_RGB_0);
+                color_sub_b_[0] = color_get_sub_b(command.sub_B_RGB_0);
+                color_multiplier_[0] = color_get_mul(command.mul_RGB_0);
+                color_adder_[0] = color_get_add(command.add_RGB_0);
 
-                alpha_sub_a_ = alpha_get_sub_add(command.sub_A_Alpha_1);
-                alpha_sub_b_ = alpha_get_sub_add(command.sub_B_Alpha_1);
-                alpha_multiplier_ = alpha_get_mul(command.mul_Alpha_1);
-                alpha_adder_ = alpha_get_sub_add(command.add_Alpha_1);
+                color_sub_a_[1] = color_get_sub_a(command.sub_A_RGB_1);
+                color_sub_b_[1] = color_get_sub_b(command.sub_B_RGB_1);
+                color_multiplier_[1] = color_get_mul(command.mul_RGB_1);
+                color_adder_[1] = color_get_add(command.add_RGB_1);
+
+                alpha_sub_a_[0] = alpha_get_sub_add(command.sub_A_Alpha_0);
+                alpha_sub_b_[0] = alpha_get_sub_add(command.sub_B_Alpha_0);
+                alpha_multiplier_[0] = alpha_get_mul(command.mul_Alpha_0);
+                alpha_adder_[0] = alpha_get_sub_add(command.add_Alpha_0);
+
+                alpha_sub_a_[1] = alpha_get_sub_add(command.sub_A_Alpha_1);
+                alpha_sub_b_[1] = alpha_get_sub_add(command.sub_B_Alpha_1);
+                alpha_multiplier_[1] = alpha_get_mul(command.mul_Alpha_1);
+                alpha_adder_[1] = alpha_get_sub_add(command.add_Alpha_1);
                 break;
             }
             default:
@@ -702,28 +719,38 @@ namespace hydra::N64
         {
             case CycleType::Cycle2:
             {
-                static bool warned = false;
-                if (!warned)
-                {
-                    Logger::Warn("This game uses Cycle2, which is not implemented yet");
-                    warned = true;
-                }
-                [[fallthrough]];
-            }
-            case CycleType::Cycle1:
-            {
-                color_combiner();
+                color_combiner(0);
+                color_combiner(1);
+                blender(0);
+                // TODO: remove code duplication
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
                     framebuffer_color_ = rgba16_to_rgba32(*ptr);
-                    *ptr = rgba32_to_rgba16(blender());
+                    *ptr = rgba32_to_rgba16(blender(1));
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
                     framebuffer_color_ = *ptr;
-                    *ptr = blender();
+                    *ptr = blender(1);
+                }
+                break;
+            }
+            case CycleType::Cycle1:
+            {
+                color_combiner(1);
+                if (framebuffer_pixel_size_ == 16)
+                {
+                    uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
+                    framebuffer_color_ = rgba16_to_rgba32(*ptr);
+                    *ptr = rgba32_to_rgba16(blender(1));
+                }
+                else
+                {
+                    uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
+                    framebuffer_color_ = *ptr;
+                    *ptr = blender(1);
                 }
                 break;
             }
@@ -758,29 +785,32 @@ namespace hydra::N64
         }
     }
 
+    // TODO: using uint8s is technically not correct
     uint8_t combine(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
     {
         return (a - b) * c / 0xFF + d;
     }
 
-    void RDP::color_combiner()
+    void RDP::color_combiner(int cycle)
     {
-        uint8_t r = combine(*color_sub_a_, *color_sub_b_, *color_multiplier_, *color_adder_);
-        uint8_t g = combine(*color_sub_a_ >> 8, *color_sub_b_ >> 8, *color_multiplier_ >> 8,
-                            *color_adder_ >> 8);
-        uint8_t b = combine(*color_sub_a_ >> 16, *color_sub_b_ >> 16, *color_multiplier_ >> 16,
-                            *color_adder_ >> 16);
-        uint8_t a = combine(*alpha_sub_a_, *alpha_sub_b_, *alpha_multiplier_, *alpha_adder_);
+        uint8_t r = combine(*color_sub_a_[cycle], *color_sub_b_[cycle], *color_multiplier_[cycle],
+                            *color_adder_[cycle]);
+        uint8_t g = combine(*color_sub_a_[cycle] >> 8, *color_sub_b_[cycle] >> 8,
+                            *color_multiplier_[cycle] >> 8, *color_adder_[cycle] >> 8);
+        uint8_t b = combine(*color_sub_a_[cycle] >> 16, *color_sub_b_[cycle] >> 16,
+                            *color_multiplier_[cycle] >> 16, *color_adder_[cycle] >> 16);
+        uint8_t a = combine(*alpha_sub_a_[cycle], *alpha_sub_b_[cycle], *alpha_multiplier_[cycle],
+                            *alpha_adder_[cycle]);
         combined_color_ = (a << 24) | (b << 16) | (g << 8) | r;
         combined_alpha_ = a << 24 | a << 16 | a << 8 | a;
     }
 
-    uint32_t RDP::blender()
+    uint32_t RDP::blender(int cycle)
     {
         uint32_t color1, color2;
         uint8_t multiplier1, multiplier2;
 
-        switch (blender_1a_0_ & 0b11)
+        switch (blender_1a_[cycle] & 0b11)
         {
             case 0:
                 color1 = combined_color_;
@@ -796,7 +826,7 @@ namespace hydra::N64
                 break;
         }
 
-        switch (blender_2a_0_ & 0b11)
+        switch (blender_2a_[cycle] & 0b11)
         {
             case 0:
                 color2 = combined_color_;
@@ -812,7 +842,7 @@ namespace hydra::N64
                 break;
         }
 
-        switch (blender_1b_0_ & 0b11)
+        switch (blender_1b_[cycle] & 0b11)
         {
             case 0:
                 multiplier1 = combined_alpha_;
@@ -828,7 +858,7 @@ namespace hydra::N64
                 break;
         }
 
-        switch (blender_2b_0_ & 0b11)
+        switch (blender_2b_[cycle] & 0b11)
         {
             case 0:
                 multiplier2 = ~multiplier1;
@@ -850,7 +880,8 @@ namespace hydra::N64
         if (multiplier1 + multiplier2 == 0)
         {
             Logger::WarnOnce("Blender division by zero - blender settings: {} {} {} {}",
-                             blender_1a_0_, blender_2a_0_, blender_1b_0_, blender_2b_0_);
+                             blender_1a_[cycle], blender_2a_[cycle], blender_1b_[cycle],
+                             blender_2b_[cycle]);
             multiplier1 = 0xFF;
         }
 
@@ -973,6 +1004,9 @@ namespace hydra::N64
         uint8_t byte2 = tmem_[(address + (t * td.line_width) + (s * 2) + 1) & 0x1FFF];
         texel_color_0_ = rgba16_to_rgba32((byte2 << 8) | byte1);
         texel_alpha_0_ = texel_color_0_ >> 24;
+        // TODO: implement cycle 1 texel fetching
+        texel_color_1_ = texel_color_0_ | 0xFF;
+        texel_alpha_1_ = texel_alpha_0_;
     }
 
     void RDP::init_depth_luts()
