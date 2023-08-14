@@ -273,7 +273,7 @@ namespace hydra::N64
 
                 if (slow_assertions)
                 {
-                    check_primitive(primitive, data);
+                    check_primitive(primitive, input);
                 }
 
                 render_primitive(primitive);
@@ -447,7 +447,7 @@ namespace hydra::N64
             }
             case RDPCommandType::SetPrimDepth:
             {
-                primitive_depth_ = data[0] >> 16 & 0xFFFF;
+                primitive_depth_ = data[0] & (0x7FFF << 16);
                 primitive_depth_delta_ = data[0] & 0xFFFF;
                 break;
             }
@@ -929,6 +929,7 @@ namespace hydra::N64
 
     void RDP::z_set(int x, int y, uint32_t z)
     {
+        z &= 0x3FFFF;
         uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + zbuffer_dram_address_ +
                             (y * framebuffer_width_ + x) * 2;
         uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
@@ -993,18 +994,9 @@ namespace hydra::N64
     // and to return a Primitive, used to compare spans in real time
     // for debugging purposes
     // Code: https://github.com/ata4/angrylion-rdp-plus
-    Primitive RDP::get_angrylion_primitive(const std::vector<uint64_t>& data)
+    Primitive RDP::get_angrylion_primitive(const EdgewalkerInput& input)
     {
         Primitive ret;
-        // Convert our uint64_t vector to a uint32_t vector
-        std::vector<uint32_t> ewdata;
-        ewdata.resize(22 * 2);
-
-        for (size_t i = 0; i < data.size(); i++)
-        {
-            ewdata[i * 2] = data[i] >> 32;
-            ewdata[i * 2 + 1] = data[i] & 0xFFFFFFFF;
-        }
 
         int j = 0;
         int xleft = 0, xright = 0, xleft_inc = 0, xright_inc = 0;
@@ -1017,57 +1009,55 @@ namespace hydra::N64
         int32_t xl = 0, xm = 0, xh = 0;
         int32_t dxldy = 0, dxhdy = 0, dxmdy = 0;
 
-        flip = (ewdata[0] & 0x800000) != 0;
+        flip = input.right_major;
 
 #define SIGN(x, numb) (((x) & ((1 << (numb)) - 1)) | -((x) & (1 << ((numb)-1))))
-        yl = SIGN(ewdata[0], 14);
-        ym = ewdata[1] >> 16;
-        ym = SIGN(ym, 14);
-        yh = SIGN(ewdata[1], 14);
+        yl = input.yl;
+        ym = input.ym;
+        yh = input.yh;
 
-        xl = SIGN(ewdata[2], 28);
-        xh = SIGN(ewdata[4], 28);
-        xm = SIGN(ewdata[6], 28);
+        xl = input.xl;
+        xh = input.xh;
+        xm = input.xm;
 
-        dxldy = SIGN(ewdata[3], 30);
+        dxldy = input.slopel;
+        dxhdy = input.slopeh;
+        dxmdy = input.slopem;
 
-        dxhdy = SIGN(ewdata[5], 30);
-        dxmdy = SIGN(ewdata[7], 30);
+        r = input.r;
+        g = input.g;
+        b = input.b;
+        a = input.a;
+        drdx = input.DrDx;
+        dgdx = input.DgDx;
+        dbdx = input.DbDx;
+        dadx = input.DaDx;
+        drde = input.DrDe;
+        dgde = input.DgDe;
+        dbde = input.DbDe;
+        dade = input.DaDe;
+        drdy = input.DrDy;
+        dgdy = input.DgDy;
+        dbdy = input.DbDy;
+        dady = input.DaDy;
 
-        r = (ewdata[8] & 0xffff0000) | ((ewdata[12] >> 16) & 0x0000ffff);
-        g = ((ewdata[8] << 16) & 0xffff0000) | (ewdata[12] & 0x0000ffff);
-        b = (ewdata[9] & 0xffff0000) | ((ewdata[13] >> 16) & 0x0000ffff);
-        a = ((ewdata[9] << 16) & 0xffff0000) | (ewdata[13] & 0x0000ffff);
-        drdx = (ewdata[10] & 0xffff0000) | ((ewdata[14] >> 16) & 0x0000ffff);
-        dgdx = ((ewdata[10] << 16) & 0xffff0000) | (ewdata[14] & 0x0000ffff);
-        dbdx = (ewdata[11] & 0xffff0000) | ((ewdata[15] >> 16) & 0x0000ffff);
-        dadx = ((ewdata[11] << 16) & 0xffff0000) | (ewdata[15] & 0x0000ffff);
-        drde = (ewdata[16] & 0xffff0000) | ((ewdata[20] >> 16) & 0x0000ffff);
-        dgde = ((ewdata[16] << 16) & 0xffff0000) | (ewdata[20] & 0x0000ffff);
-        dbde = (ewdata[17] & 0xffff0000) | ((ewdata[21] >> 16) & 0x0000ffff);
-        dade = ((ewdata[17] << 16) & 0xffff0000) | (ewdata[21] & 0x0000ffff);
-        drdy = (ewdata[18] & 0xffff0000) | ((ewdata[22] >> 16) & 0x0000ffff);
-        dgdy = ((ewdata[18] << 16) & 0xffff0000) | (ewdata[22] & 0x0000ffff);
-        dbdy = (ewdata[19] & 0xffff0000) | ((ewdata[23] >> 16) & 0x0000ffff);
-        dady = ((ewdata[19] << 16) & 0xffff0000) | (ewdata[23] & 0x0000ffff);
+        s = input.s;
+        t = input.t;
+        w = input.w;
+        dsdx = input.DsDx;
+        dtdx = input.DtDx;
+        dwdx = input.DwDx;
+        dsde = input.DsDe;
+        dtde = input.DtDe;
+        dwde = input.DwDe;
+        dsdy = input.DsDy;
+        dtdy = input.DtDy;
+        dwdy = input.DwDy;
 
-        s = (ewdata[24] & 0xffff0000) | ((ewdata[28] >> 16) & 0x0000ffff);
-        t = ((ewdata[24] << 16) & 0xffff0000) | (ewdata[28] & 0x0000ffff);
-        w = (ewdata[25] & 0xffff0000) | ((ewdata[29] >> 16) & 0x0000ffff);
-        dsdx = (ewdata[26] & 0xffff0000) | ((ewdata[30] >> 16) & 0x0000ffff);
-        dtdx = ((ewdata[26] << 16) & 0xffff0000) | (ewdata[30] & 0x0000ffff);
-        dwdx = (ewdata[27] & 0xffff0000) | ((ewdata[31] >> 16) & 0x0000ffff);
-        dsde = (ewdata[32] & 0xffff0000) | ((ewdata[36] >> 16) & 0x0000ffff);
-        dtde = ((ewdata[32] << 16) & 0xffff0000) | (ewdata[36] & 0x0000ffff);
-        dwde = (ewdata[33] & 0xffff0000) | ((ewdata[37] >> 16) & 0x0000ffff);
-        dsdy = (ewdata[34] & 0xffff0000) | ((ewdata[38] >> 16) & 0x0000ffff);
-        dtdy = ((ewdata[34] << 16) & 0xffff0000) | (ewdata[38] & 0x0000ffff);
-        dwdy = (ewdata[35] & 0xffff0000) | ((ewdata[39] >> 16) & 0x0000ffff);
-
-        z = ewdata[40];
-        dzdx = ewdata[41];
-        dzde = ewdata[42];
-        dzdy = ewdata[43];
+        z = input.z;
+        dzdx = input.DzDx;
+        dzde = input.DzDe;
+        dzdy = input.DzDy;
 
         xleft_inc = (dxmdy >> 2) & ~0x1;
         xright_inc = (dxhdy >> 2) & ~0x1;
@@ -1078,7 +1068,7 @@ namespace hydra::N64
         int k = 0;
 
         int dsdiff, dtdiff, dwdiff, drdiff, dgdiff, dbdiff, dadiff, dzdiff;
-        int sign_dxhdy = (ewdata[5] & 0x80000000) != 0;
+        int sign_dxhdy = (input.slopeh & 0x80000000) != 0;
 
         int dsdeh, dtdeh, dwdeh, drdeh, dgdeh, dbdeh, dadeh, dzdeh, dsdyh, dtdyh, dwdyh, drdyh,
             dgdyh, dbdyh, dadyh, dzdyh;
@@ -1369,9 +1359,9 @@ namespace hydra::N64
         return ret;
     }
 
-    void RDP::check_primitive(const Primitive& my_primitive, const std::vector<uint64_t>& data)
+    void RDP::check_primitive(const Primitive& my_primitive, const EdgewalkerInput& input)
     {
-        Primitive angrylion_primitive = get_angrylion_primitive(data);
+        Primitive angrylion_primitive = get_angrylion_primitive(input);
         if (my_primitive.y_start != angrylion_primitive.y_start)
         {
             Logger::Fatal("Primitive mismatch: y_start - expected: {}, actual: {}",
@@ -1413,29 +1403,29 @@ namespace hydra::N64
                               my_primitive.spans[i].b, my_primitive.spans[i].a);
             }
 
-            // if (my_primitive.spans[i].s != angrylion_primitive.spans[i].s ||
-            //     my_primitive.spans[i].t != angrylion_primitive.spans[i].t ||
-            //     my_primitive.spans[i].w != angrylion_primitive.spans[i].w)
-            // {
-            //     Logger::Fatal("Primitive mismatch: span {} texture - expected: {:08x}, {:08x}, "
-            //                     "{:08x}, actual: {:08x}, {:08x}, {:08x}",
-            //                   i, angrylion_primitive.spans[i].s, angrylion_primitive.spans[i].t,
-            //                   angrylion_primitive.spans[i].w, my_primitive.spans[i].s,
-            //                   my_primitive.spans[i].t, my_primitive.spans[i].w);
-            // }
+            if (my_primitive.spans[i].s != angrylion_primitive.spans[i].s ||
+                my_primitive.spans[i].t != angrylion_primitive.spans[i].t ||
+                my_primitive.spans[i].w != angrylion_primitive.spans[i].w)
+            {
+                Logger::Fatal("Primitive mismatch: span {} texture - expected: {:08x}, {:08x}, "
+                              "{:08x}, actual: {:08x}, {:08x}, {:08x}",
+                              i, angrylion_primitive.spans[i].s, angrylion_primitive.spans[i].t,
+                              angrylion_primitive.spans[i].w, my_primitive.spans[i].s,
+                              my_primitive.spans[i].t, my_primitive.spans[i].w);
+            }
 
-            // if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z)
-            // {
-            //     problem = "zbuf";
-            // }
+            if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z)
+            {
+                problem = "zbuf";
+            }
 
             if (problem != "")
             {
                 printf("Dumping problematic primitive:\n");
-                for (uint64_t block : data)
-                {
-                    printf("%016lx\n", block);
-                }
+                // for (uint64_t block : data)
+                // {
+                //     printf("%016lx\n", block);
+                // }
                 printf("Scissor YH: %08x, YL: %08x, XH: %08x, XL: %08x\n", scissor_yh_, scissor_yl_,
                        scissor_xh_, scissor_xl_);
                 printf("Cycle type: %d\n", cycle_type_);
@@ -1515,6 +1505,11 @@ namespace hydra::N64
             ret.DaDy = (((data[next_block + 5] >> 0) & 0xFFFF) << 16) |
                        ((data[next_block + 7] >> 0) & 0xFFFF);
 
+            ret.DrDx &= ~0x1f;
+            ret.DgDx &= ~0x1f;
+            ret.DbDx &= ~0x1f;
+            ret.DaDx &= ~0x1f;
+
             next_block += 8;
         }
 
@@ -1548,19 +1543,16 @@ namespace hydra::N64
             ret.DwDy = (((data[next_block + 5] >> 16) & 0xFFFF) << 16) |
                        ((data[next_block + 7] >> 16) & 0xFFFF);
 
+            ret.DsDx &= ~0x1f;
+            ret.DtDx &= ~0x1f;
+            ret.DwDx &= ~0x1f;
+
             next_block += 8;
         }
 
         if (depth)
         {
-            if (z_source_sel_)
-            {
-                ret.z = primitive_depth_ << 16;
-            }
-            else
-            {
-                ret.z = data[next_block] >> 32;
-            }
+            ret.z = data[next_block] >> 32;
             ret.DzDx = data[next_block] & 0xFFFF'FFFF;
             ret.DzDe = data[next_block + 1] >> 32;
             ret.DzDy = data[next_block + 1] & 0xFFFF'FFFF;
@@ -1588,12 +1580,6 @@ namespace hydra::N64
         ret.yl = command.yl;
         ret.ym = command.yl;
         ret.yh = command.yh;
-
-        // TODO: should probably be moved to depth_test
-        if (z_source_sel_)
-        {
-            ret.z = primitive_depth_ << 16;
-        }
 
         ret.right_major = true;
 
@@ -1640,6 +1626,15 @@ namespace hydra::N64
         int32_t DrDiff = 0, DgDiff = 0, DbDiff = 0, DaDiff = 0;
         int32_t DsDiff = 0, DtDiff = 0, DwDiff = 0;
         int32_t DzDiff = 0;
+
+        primitive.DrDx = input.DrDx & ~0x1f;
+        primitive.DgDx = input.DgDx & ~0x1f;
+        primitive.DbDx = input.DbDx & ~0x1f;
+        primitive.DaDx = input.DaDx & ~0x1f;
+        primitive.DsDx = input.DsDx & ~0x1f;
+        primitive.DtDx = input.DtDx & ~0x1f;
+        primitive.DwDx = input.DwDx & ~0x1f;
+        primitive.DzDx = input.DzDx;
 
         if (cycle_type_ != CycleType::Copy)
         {
@@ -1908,6 +1903,13 @@ namespace hydra::N64
 
     void RDP::render_primitive(const Primitive& primitive)
     {
+        int32_t DzDx = primitive.DzDx;
+
+        if (z_source_sel_)
+        {
+            DzDx = 0;
+        }
+
         for (int y = primitive.y_start; y <= primitive.y_end; y++)
         {
             const Span& span = primitive.spans[y];
@@ -1919,6 +1921,8 @@ namespace hydra::N64
             auto b = span.b;
             auto a = span.a;
 
+            auto z = z_source_sel_ ? primitive_depth_ : span.z;
+
             for (int x = span.min_x; x <= span.max_x; x++)
             {
                 uint8_t r8 = std::clamp(r >> 16, 0, 0xFF);
@@ -1929,7 +1933,8 @@ namespace hydra::N64
                 shade_color_ = (a8 << 24) | (b8 << 16) | (g8 << 8) | r8;
                 shade_alpha_ = (a8 << 24) | (a8 << 16) | (a8 << 8) | a8;
 
-                if (depth_test(x, y, span.z >> 14, 0))
+                auto z_new = std::max(0, (static_cast<int32_t>(z) >> 13));
+                if (depth_test(x, y, z_new, 0))
                 {
                     if (span.w != 0)
                         fetch_texels(primitive.tile_index, span.s / span.w, span.t / span.w);
@@ -1937,11 +1942,11 @@ namespace hydra::N64
 
                     if (z_update_en_)
                     {
-                        // TODO: remove?
-                        auto z = std::max(0, span.z & (0x3ffff << 14));
-                        z_set(x, y, z >> 14);
+                        z_set(x, y, z_new);
                     }
                 }
+
+                z += DzDx;
             }
         }
     }

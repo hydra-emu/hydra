@@ -238,7 +238,7 @@ namespace hydra::N64
         bool z_source_sel_ = false;
         bool image_read_en_ = false;
         uint8_t z_mode_ : 2 = 0;
-        uint16_t primitive_depth_ = 0;
+        uint32_t primitive_depth_ = 0;
         uint16_t primitive_depth_delta_ = 0;
 
         uint16_t scissor_xh_ = 0;
@@ -281,8 +281,8 @@ namespace hydra::N64
         Primitive edgewalker(const EdgewalkerInput& data);
         void render_primitive(const Primitive& primitive);
 
-        Primitive get_angrylion_primitive(const std::vector<uint64_t>& data);
-        void check_primitive(const Primitive& primitive, const std::vector<uint64_t>& data);
+        Primitive get_angrylion_primitive(const EdgewalkerInput& data);
+        void check_primitive(const Primitive& primitive, const EdgewalkerInput& data);
 
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;
