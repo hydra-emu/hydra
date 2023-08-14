@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <n64/core/n64_types.hxx>
 #include <vector>
 
@@ -107,6 +108,48 @@ namespace hydra::N64
         uint16_t s, t;
     };
 
+    struct EdgewalkerInput
+    {
+        int tile_index;
+        int32_t xh, xm, xl, yh, ym, yl;
+        int32_t slopeh, slopem, slopel;
+        bool right_major;
+        int32_t r, g, b, a;
+        int32_t DrDx, DgDx, DbDx, DaDx;
+        int32_t DrDy, DgDy, DbDy, DaDy;
+        int32_t DrDe, DgDe, DbDe, DaDe;
+        int32_t s, t, w;
+        int32_t DsDx, DtDx, DwDx;
+        int32_t DsDy, DtDy, DwDy;
+        int32_t DsDe, DtDe, DwDe;
+        int32_t z, DzDx, DzDy, DzDe;
+
+        EdgewalkerInput()
+        {
+            std::memset(this, 0, sizeof(*this));
+        }
+    };
+
+    struct Span
+    {
+        int32_t min_x, max_x;
+        bool valid;
+        int32_t r, g, b, a;
+        int32_t s, t, w;
+        int32_t z;
+    };
+
+    struct Primitive
+    {
+        std::array<Span, 1024> spans{};
+        int32_t y_start = 0;
+        int32_t y_end = 0;
+        int32_t DrDx, DgDx, DbDx, DaDx;
+        int32_t DsDx, DtDx, DwDx;
+        int32_t DzDx;
+        size_t tile_index;
+    };
+
     class RDP final
     {
     public:
@@ -195,7 +238,7 @@ namespace hydra::N64
         bool z_source_sel_ = false;
         bool image_read_en_ = false;
         uint8_t z_mode_ : 2 = 0;
-        uint16_t primitive_depth_ = 0;
+        uint32_t primitive_depth_ = 0;
         uint16_t primitive_depth_delta_ = 0;
 
         uint16_t scissor_xh_ = 0;
@@ -229,8 +272,17 @@ namespace hydra::N64
         uint32_t* alpha_get_sub_add(uint8_t sub_a);
         uint32_t* alpha_get_mul(uint8_t mul);
 
-        template <bool Shade, bool Texture, bool Depth>
-        void edgewalker(const std::vector<uint64_t>& data);
+        EdgewalkerInput triangle_get_edgewalker_input(const std::vector<uint64_t>& data, bool shade,
+                                                      bool texture, bool depth);
+
+        template <bool Texture, bool Flip>
+        EdgewalkerInput rectangle_get_edgewalker_input(const std::vector<uint64_t>& data);
+
+        Primitive edgewalker(const EdgewalkerInput& data);
+        void render_primitive(const Primitive& primitive);
+
+        Primitive get_angrylion_primitive(const EdgewalkerInput& data);
+        void check_primitive(const Primitive& primitive, const EdgewalkerInput& data);
 
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;
