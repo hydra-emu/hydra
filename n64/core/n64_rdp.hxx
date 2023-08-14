@@ -204,20 +204,20 @@ namespace hydra::N64
         uint32_t environment_alpha_;
         uint32_t fog_alpha_;
 
-        uint32_t* color_sub_a_;
-        uint32_t* color_sub_b_;
-        uint32_t* color_multiplier_;
-        uint32_t* color_adder_;
+        uint32_t* color_sub_a_[2];
+        uint32_t* color_sub_b_[2];
+        uint32_t* color_multiplier_[2];
+        uint32_t* color_adder_[2];
 
-        uint32_t* alpha_sub_a_;
-        uint32_t* alpha_sub_b_;
-        uint32_t* alpha_multiplier_;
-        uint32_t* alpha_adder_;
+        uint32_t* alpha_sub_a_[2];
+        uint32_t* alpha_sub_b_[2];
+        uint32_t* alpha_multiplier_[2];
+        uint32_t* alpha_adder_[2];
 
-        uint8_t blender_1a_0_;
-        uint8_t blender_1b_0_;
-        uint8_t blender_2a_0_;
-        uint8_t blender_2b_0_;
+        uint8_t blender_1a_[2];
+        uint8_t blender_1b_[2];
+        uint8_t blender_2a_[2];
+        uint8_t blender_2b_[2];
 
         uint32_t color_zero_ = 0;
         uint32_t color_one_ = 0xFFFF'FFFF;
@@ -252,8 +252,8 @@ namespace hydra::N64
         void execute_command(const std::vector<uint64_t>& data);
         void draw_triangle(const std::vector<uint64_t>& data);
         inline void draw_pixel(int x, int y);
-        void color_combiner();
-        uint32_t blender();
+        void color_combiner(int cycle);
+        uint32_t blender(int cycle);
 
         bool depth_test(int x, int y, uint32_t z, uint16_t dz);
         inline uint32_t z_get(int x, int y);

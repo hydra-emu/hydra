@@ -605,8 +605,8 @@ namespace hydra::N64
             {
                 result[0] = key_state_[Keys::A] << 7 | key_state_[Keys::B] << 6 |
                             key_state_[Keys::Z] << 5 | key_state_[Keys::Start] << 4 |
-                            key_state_[Keys::Up] << 3 | key_state_[Keys::Down] << 2 |
-                            key_state_[Keys::Left] << 1 | key_state_[Keys::Right];
+                            key_state_[Keys::KeypadUp] << 3 | key_state_[Keys::KeypadDown] << 2 |
+                            key_state_[Keys::KeypadLeft] << 1 | key_state_[Keys::KeypadRight];
                 result[1] = 0 | 0 | key_state_[Keys::L] << 5 | key_state_[Keys::R] << 4 |
                             key_state_[Keys::CUp] << 3 | key_state_[Keys::CDown] << 2 |
                             key_state_[Keys::CLeft] << 1 | key_state_[Keys::CRight];
