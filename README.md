@@ -56,6 +56,9 @@ cmake.exe --build build --target hydra -j %NUMBER_OF_PROCESSORS%
 </code></pre>
 </details>
 
+## Sister projects
+[shadPS4](https://github.com/georgemoralis/shadPS4): Work-in-progress PS4 emulator by the founder of PCSX, PCSX2 and more
+
 ## Contributing
 Any contribution is welcome. Fork, open an issue or work on existing ones, or work on improving the documentation
 
