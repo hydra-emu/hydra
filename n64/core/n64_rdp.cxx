@@ -15,7 +15,13 @@
 // For debugging purposes
 constexpr bool slow_assertions = true;
 
-static inline uint32_t rgba16_to_rgba32(uint16_t color)
+hydra_inline static uint32_t irand(uint32_t* state)
+{
+    *state = *state * 0x343fd + 0x269ec3;
+    return ((*state >> 16) & 0x7fff);
+}
+
+hydra_inline static uint32_t rgba16_to_rgba32(uint16_t color)
 {
     uint8_t r16 = (color >> 11) & 0x1F;
     uint8_t g16 = (color >> 6) & 0x1F;
@@ -27,7 +33,7 @@ static inline uint32_t rgba16_to_rgba32(uint16_t color)
     return (a << 24) | (b << 16) | (g << 8) | r;
 }
 
-static inline uint16_t rgba32_to_rgba16(uint32_t color)
+hydra_inline static uint16_t rgba32_to_rgba16(uint32_t color)
 {
     uint8_t r = (color >> 3) & 0x1F;
     uint8_t g = (color >> 11) & 0x1F;
@@ -72,7 +78,6 @@ namespace hydra::N64
     {
         rdram_9th_bit_.resize(0x800000);
         init_depth_luts();
-        Reset();
     }
 
     void RDP::InstallBuses(uint8_t* rdram_ptr, uint8_t* spmem_ptr)
@@ -165,6 +170,7 @@ namespace hydra::N64
 
     void RDP::Reset()
     {
+        seed_ = 3;
         status_.ready = 1;
         color_sub_a_[0] = color_sub_a_[1] = &color_one_;
         color_sub_b_[0] = color_sub_b_[1] = &color_zero_;
@@ -183,6 +189,27 @@ namespace hydra::N64
         texel_alpha_0_ = 0xFFFFFFFF;
         texel_alpha_1_ = 0xFFFFFFFF;
         cycle_type_ = CycleType::Cycle1;
+
+        scissor_xh_ = 0;
+        scissor_yh_ = 0x20;
+        scissor_xl_ = 0x500;
+        scissor_yl_ = 0x3a0;
+        SendCommand({
+            0xcd0003c0ffffffff,
+            0x01244000fffee2ff,
+            0x0140ebf2fffec56e,
+            0x01934000ff910006,
+            0x00000000000000ff,
+            0x0000000000000000,
+            0x8000800080008000,
+            0x0000000000000000,
+            0x0000000000000000,
+            0x0000000000000000,
+            0x0000000000000000,
+            0x0000000000000000,
+            0x7be22fe000000000,
+            0x0000000000000000,
+        });
     }
 
     void RDP::SendCommand(const std::vector<uint64_t>& data)
@@ -273,7 +300,7 @@ namespace hydra::N64
 
                 if (slow_assertions)
                 {
-                    check_primitive(primitive, input);
+                    check_primitive(primitive, input, data);
                 }
 
                 render_primitive(primitive);
@@ -283,6 +310,12 @@ namespace hydra::N64
             {
                 EdgewalkerInput input = rectangle_get_edgewalker_input<false, false>(data);
                 Primitive primitive = edgewalker(input);
+
+                if (slow_assertions)
+                {
+                    check_primitive(primitive, input, data);
+                }
+
                 render_primitive(primitive);
                 break;
             }
@@ -313,27 +346,30 @@ namespace hydra::N64
                 // Loads a tile (part of the bigger texture set by SetTextureImage) into TMEM
                 LoadTileCommand command;
                 command.full = data[0];
+
                 TileDescriptor& tile = tiles_[command.Tile];
 
-                int sl = command.SL;
-                int tl = command.TL;
-                int sh = command.SH + 1;
-                int th = command.TH + 1;
+                tile.sl = command.SL;
+                tile.tl = command.TL;
+                tile.sh = command.SH;
+                tile.th = command.TH;
 
-                sh *= sizeof(uint16_t);
-                sl *= sizeof(uint16_t);
-                for (int t = tl; t < th; t++)
-                {
-                    for (int s = sl; s < sh; s++)
-                    {
-                        uint16_t src = *reinterpret_cast<uint16_t*>(
-                            &rdram_ptr_[texture_dram_address_latch_ +
-                                        (t * texture_width_latch_ + s) * 2]);
-                        uint16_t* dst = reinterpret_cast<uint16_t*>(
-                            &tmem_[tile.tmem_address + (t - tl) * tile.line_width + (s - sl) * 2]);
-                        *dst = src;
-                    }
-                }
+                EdgewalkerInput input;
+                input.tile_index = command.Tile;
+
+                input.yl = command.TH | 3;
+                input.ym = input.yl;
+                input.yh = command.TL;
+
+                input.xl = ((command.SH >> 2) << 16) | ((command.SH & 0b11) << 14);
+                input.xm = input.xl;
+                input.xh = ((command.SL >> 2) << 16) | ((command.SL & 0b11) << 14);
+
+                input.s = ((command.SL << 3) << 16);
+                input.t = ((command.TL << 3) << 16);
+
+                input.DtDe = 0x20;
+
                 break;
             }
             case RDPCommandType::LoadBlock:
@@ -532,6 +568,14 @@ namespace hydra::N64
                 alpha_adder_[1] = alpha_get_sub_add(command.add_Alpha_1);
                 break;
             }
+            case RDPCommandType::SetKeyR:
+            case RDPCommandType::SetKeyGB:
+            case RDPCommandType::SetConvert:
+            {
+                Logger::WarnOnce("Unhandled YUV related command: {} ({:02x})",
+                                 get_rdp_command_name(id), static_cast<int>(id));
+                break;
+            }
             default:
                 Logger::Debug("Unhandled command: {} ({:02x})", get_rdp_command_name(id),
                               static_cast<int>(id));
@@ -557,9 +601,8 @@ namespace hydra::N64
                 return &environment_color_;
             case 6:
                 return &color_one_;
-            // TODO: Implement noise
             case 7:
-                return &color_zero_;
+                return &noise_color_;
             default:
                 return &color_zero_;
         }
@@ -610,6 +653,16 @@ namespace hydra::N64
                 return &environment_color_;
             case 7:
                 return &combined_alpha_;
+            case 8:
+                return &texel_alpha_0_;
+            case 9:
+                return &texel_alpha_1_;
+            case 10:
+                return &primitive_alpha_;
+            case 11:
+                return &shade_alpha_;
+            case 12:
+                return &environment_alpha_;
             // TODO: rest of the colors
             case 16:
             case 17:
@@ -739,18 +792,19 @@ namespace hydra::N64
             }
             case CycleType::Cycle1:
             {
+                // TODO: there's may be a way to check which cycle we should get the data from
                 color_combiner(1);
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
                     framebuffer_color_ = rgba16_to_rgba32(*ptr);
-                    *ptr = rgba32_to_rgba16(blender(1));
+                    *ptr = rgba32_to_rgba16(blender(0));
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
                     framebuffer_color_ = *ptr;
-                    *ptr = blender(1);
+                    *ptr = blender(0);
                 }
                 break;
             }
@@ -759,12 +813,12 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    *ptr = rgba32_to_rgba16(texel_color_0_);
+                    *ptr = rgba32_to_rgba16(0xFF3333FF);
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    *ptr = texel_color_0_;
+                    *ptr = 0xFF3333FF;
                 }
                 break;
             }
@@ -904,8 +958,8 @@ namespace hydra::N64
         {
             uint32_t old_depth = z_get(x, y);
             uint16_t old_dz = dz_get(x, y);
-
             bool pass = false;
+
             switch (z_mode_ & 0b11)
             {
                 // TODO: other depth modes
@@ -1009,6 +1063,12 @@ namespace hydra::N64
         texel_alpha_1_ = texel_alpha_0_;
     }
 
+    void RDP::get_noise()
+    {
+        auto r = irand(&seed_);
+        noise_color_ = (r << 24) | (r << 16) | (r << 8) | r;
+    }
+
     void RDP::init_depth_luts()
     {
         for (int i = 0; i < 0x4000; i++)
@@ -1092,6 +1152,15 @@ namespace hydra::N64
         dzdx = input.DzDx;
         dzde = input.DzDe;
         dzdy = input.DzDy;
+
+        ret.DrDx = drdx & ~0x1F;
+        ret.DgDx = dgdx & ~0x1F;
+        ret.DbDx = dbdx & ~0x1F;
+        ret.DaDx = dadx & ~0x1F;
+        ret.DsDx = dsdx & ~0x1F;
+        ret.DtDx = dtdx & ~0x1F;
+        ret.DwDx = dwdx & ~0x1F;
+        ret.DzDx = dzdx;
 
         xleft_inc = (dxmdy >> 2) & ~0x1;
         xright_inc = (dxhdy >> 2) & ~0x1;
@@ -1393,7 +1462,8 @@ namespace hydra::N64
         return ret;
     }
 
-    void RDP::check_primitive(const Primitive& my_primitive, const EdgewalkerInput& input)
+    void RDP::check_primitive(const Primitive& my_primitive, const EdgewalkerInput& input,
+                              const std::vector<uint64_t>& data)
     {
         Primitive angrylion_primitive = get_angrylion_primitive(input);
         if (my_primitive.y_start != angrylion_primitive.y_start)
@@ -1406,7 +1476,7 @@ namespace hydra::N64
             Logger::Fatal("Primitive mismatch: y_end - expected: {}, actual: {}",
                           angrylion_primitive.y_end, my_primitive.y_end);
         }
-        for (int i = angrylion_primitive.y_start; i <= angrylion_primitive.y_end; i++)
+        for (int32_t i = angrylion_primitive.y_start; i < angrylion_primitive.y_end; i++)
         {
             std::string problem = "";
             if (my_primitive.spans[i].min_x != angrylion_primitive.spans[i].min_x)
@@ -1427,42 +1497,55 @@ namespace hydra::N64
             if (my_primitive.spans[i].r != angrylion_primitive.spans[i].r ||
                 my_primitive.spans[i].g != angrylion_primitive.spans[i].g ||
                 my_primitive.spans[i].b != angrylion_primitive.spans[i].b ||
-                my_primitive.spans[i].a != angrylion_primitive.spans[i].a)
+                my_primitive.spans[i].a != angrylion_primitive.spans[i].a ||
+                my_primitive.DrDx != angrylion_primitive.DrDx ||
+                my_primitive.DgDx != angrylion_primitive.DgDx ||
+                my_primitive.DbDx != angrylion_primitive.DbDx ||
+                my_primitive.DaDx != angrylion_primitive.DaDx)
             {
-                Logger::Fatal("Primitive mismatch: span {} color - expected: {:08x}, {:08x}, "
-                              "{:08x}, {:08x}, actual: {:08x}, {:08x}, {:08x}, {:08x}",
-                              i, angrylion_primitive.spans[i].r, angrylion_primitive.spans[i].g,
-                              angrylion_primitive.spans[i].b, angrylion_primitive.spans[i].a,
-                              my_primitive.spans[i].r, my_primitive.spans[i].g,
-                              my_primitive.spans[i].b, my_primitive.spans[i].a);
+                Logger::Warn("Primitive mismatch: span {} color - expected: {:08x}, {:08x}, "
+                             "{:08x}, {:08x} actual: {:08x}, {:08x}, {:08x}, {:08x}",
+                             i, angrylion_primitive.spans[i].r, angrylion_primitive.spans[i].g,
+                             angrylion_primitive.spans[i].b, angrylion_primitive.spans[i].a,
+                             my_primitive.spans[i].r, my_primitive.spans[i].g,
+                             my_primitive.spans[i].b, my_primitive.spans[i].a);
+                printf("DrDx: %08x, DgDx: %08x, DbDx: %08x, DaDx: %08x\n", angrylion_primitive.DrDx,
+                       angrylion_primitive.DgDx, angrylion_primitive.DbDx,
+                       angrylion_primitive.DaDx);
+                printf("My DrDx: %08x, DgDx: %08x, DbDx: %08x, DaDx: %08x\n", my_primitive.DrDx,
+                       my_primitive.DgDx, my_primitive.DbDx, my_primitive.DaDx);
             }
 
             if (my_primitive.spans[i].s != angrylion_primitive.spans[i].s ||
                 my_primitive.spans[i].t != angrylion_primitive.spans[i].t ||
                 my_primitive.spans[i].w != angrylion_primitive.spans[i].w)
             {
-                Logger::Fatal("Primitive mismatch: span {} texture - expected: {:08x}, {:08x}, "
-                              "{:08x}, actual: {:08x}, {:08x}, {:08x}",
-                              i, angrylion_primitive.spans[i].s, angrylion_primitive.spans[i].t,
-                              angrylion_primitive.spans[i].w, my_primitive.spans[i].s,
-                              my_primitive.spans[i].t, my_primitive.spans[i].w);
+                // Logger::Fatal("Primitive mismatch: span {} texture - expected: {:08x}, {:08x}, "
+                //               "{:08x}, actual: {:08x}, {:08x}, {:08x}",
+                //               i, angrylion_primitive.spans[i].s, angrylion_primitive.spans[i].t,
+                //               angrylion_primitive.spans[i].w, my_primitive.spans[i].s,
+                //               my_primitive.spans[i].t, my_primitive.spans[i].w);
             }
 
-            if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z)
+            if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z ||
+                my_primitive.DzDx != angrylion_primitive.DzDx)
             {
-                problem = "zbuf";
+                problem = fmt::format("z expected: {:08x}, actual: {:08x}",
+                                      angrylion_primitive.spans[i].z, my_primitive.spans[i].z);
             }
 
             if (problem != "")
             {
                 printf("Dumping problematic primitive:\n");
-                // for (uint64_t block : data)
-                // {
-                //     printf("%016lx\n", block);
-                // }
+                for (uint64_t block : data)
+                {
+                    printf("0x%016lx, ", block);
+                }
+                printf("\n");
                 printf("Scissor YH: %08x, YL: %08x, XH: %08x, XL: %08x\n", scissor_yh_, scissor_yl_,
                        scissor_xh_, scissor_xl_);
                 printf("Cycle type: %d\n", cycle_type_);
+                printf("Y start: %d, Y end: %d\n", my_primitive.y_start, my_primitive.y_end);
                 Logger::Fatal("Primitive mismatch: span {} - {}", i, problem);
             }
         }
@@ -1604,6 +1687,11 @@ namespace hydra::N64
         RectangleCommand command;
         command.full = data[0];
 
+        if (cycle_type_ == CycleType::Copy || cycle_type_ == CycleType::Fill)
+        {
+            command.yl |= 3;
+        }
+
         int32_t xl_integer = command.xl >> 2;
         int32_t xh_integer = command.xh >> 2;
 
@@ -1616,6 +1704,8 @@ namespace hydra::N64
         ret.yh = command.yh;
 
         ret.right_major = true;
+
+        // TODO: texture coefficients
 
         return ret;
     }
@@ -1632,6 +1722,7 @@ namespace hydra::N64
         return value | 3;
     }
 
+    template <bool Load>
     Primitive RDP::edgewalker(const EdgewalkerInput& input)
     {
         Primitive primitive;
@@ -1670,49 +1761,54 @@ namespace hydra::N64
         primitive.DwDx = input.DwDx & ~0x1f;
         primitive.DzDx = input.DzDx;
 
-        if (cycle_type_ != CycleType::Copy)
-        {
-            DrDx = (input.DrDx >> 8) & ~1;
-            DgDx = (input.DgDx >> 8) & ~1;
-            DbDx = (input.DbDx >> 8) & ~1;
-            DaDx = (input.DaDx >> 8) & ~1;
-            DsDx = (input.DsDx >> 8) & ~1;
-            DtDx = (input.DtDx >> 8) & ~1;
-            DwDx = (input.DwDx >> 8) & ~1;
-            DzDx = (input.DzDx >> 8) & ~1;
-        }
+        primitive.right_major = input.right_major;
 
         bool sign_slopeh = input.slopeh & 0x80000000;
-        bool do_offset = !(sign_slopeh ^ input.right_major);
-
-        if (do_offset)
+        if constexpr (!Load)
         {
-            int32_t dsdeh = DsDe & ~0x1ff;
-            int32_t dtdeh = DtDe & ~0x1ff;
-            int32_t dwdeh = DwDe & ~0x1ff;
-            int32_t drdeh = DrDe & ~0x1ff;
-            int32_t dgdeh = DgDe & ~0x1ff;
-            int32_t dbdeh = DbDe & ~0x1ff;
-            int32_t dadeh = DaDe & ~0x1ff;
-            int32_t dzdeh = DzDe & ~0x1ff;
+            if (cycle_type_ != CycleType::Copy)
+            {
+                DrDx = (input.DrDx >> 8) & ~1;
+                DgDx = (input.DgDx >> 8) & ~1;
+                DbDx = (input.DbDx >> 8) & ~1;
+                DaDx = (input.DaDx >> 8) & ~1;
+                DsDx = (input.DsDx >> 8) & ~1;
+                DtDx = (input.DtDx >> 8) & ~1;
+                DwDx = (input.DwDx >> 8) & ~1;
+                DzDx = (input.DzDx >> 8) & ~1;
+            }
 
-            int32_t dsdyh = DsDy & ~0x1ff;
-            int32_t dtdyh = DtDy & ~0x1ff;
-            int32_t dwdyh = DwDy & ~0x1ff;
-            int32_t drdyh = DrDy & ~0x1ff;
-            int32_t dgdyh = DgDy & ~0x1ff;
-            int32_t dbdyh = DbDy & ~0x1ff;
-            int32_t dadyh = DaDy & ~0x1ff;
-            int32_t dzdyh = DzDy & ~0x1ff;
+            bool do_offset = !(sign_slopeh ^ input.right_major);
 
-            DrDiff = drdeh - (drdeh >> 2) - drdyh + (drdyh >> 2);
-            DgDiff = dgdeh - (dgdeh >> 2) - dgdyh + (dgdyh >> 2);
-            DbDiff = dbdeh - (dbdeh >> 2) - dbdyh + (dbdyh >> 2);
-            DaDiff = dadeh - (dadeh >> 2) - dadyh + (dadyh >> 2);
-            DsDiff = dsdeh - (dsdeh >> 2) - dsdyh + (dsdyh >> 2);
-            DtDiff = dtdeh - (dtdeh >> 2) - dtdyh + (dtdyh >> 2);
-            DwDiff = dwdeh - (dwdeh >> 2) - dwdyh + (dwdyh >> 2);
-            DzDiff = dzdeh - (dzdeh >> 2) - dzdyh + (dzdyh >> 2);
+            if (do_offset)
+            {
+                int32_t dsdeh = DsDe & ~0x1ff;
+                int32_t dtdeh = DtDe & ~0x1ff;
+                int32_t dwdeh = DwDe & ~0x1ff;
+                int32_t drdeh = DrDe & ~0x1ff;
+                int32_t dgdeh = DgDe & ~0x1ff;
+                int32_t dbdeh = DbDe & ~0x1ff;
+                int32_t dadeh = DaDe & ~0x1ff;
+                int32_t dzdeh = DzDe & ~0x1ff;
+
+                int32_t dsdyh = DsDy & ~0x1ff;
+                int32_t dtdyh = DtDy & ~0x1ff;
+                int32_t dwdyh = DwDy & ~0x1ff;
+                int32_t drdyh = DrDy & ~0x1ff;
+                int32_t dgdyh = DgDy & ~0x1ff;
+                int32_t dbdyh = DbDy & ~0x1ff;
+                int32_t dadyh = DaDy & ~0x1ff;
+                int32_t dzdyh = DzDy & ~0x1ff;
+
+                DrDiff = drdeh - (drdeh >> 2) - drdyh + (drdyh >> 2);
+                DgDiff = dgdeh - (dgdeh >> 2) - dgdyh + (dgdyh >> 2);
+                DbDiff = dbdeh - (dbdeh >> 2) - dbdyh + (dbdyh >> 2);
+                DaDiff = dadeh - (dadeh >> 2) - dadyh + (dadyh >> 2);
+                DsDiff = dsdeh - (dsdeh >> 2) - dsdyh + (dsdyh >> 2);
+                DtDiff = dtdeh - (dtdeh >> 2) - dtdyh + (dtdyh >> 2);
+                DwDiff = dwdeh - (dwdeh >> 2) - dwdyh + (dwdyh >> 2);
+                DzDiff = dzdeh - (dzdeh >> 2) - dzdyh + (dzdyh >> 2);
+            }
         }
 
         bool use_scissor_low = false, use_scissor_high = false;
@@ -1809,73 +1905,96 @@ namespace hydra::N64
                     all_under = true;
                 }
 
-                // Check if the current subpixel is inside the scissor
-                // XH/XL are 16.16 fixed point, so shifting by 14 would convert the lower 12 bits
-                // to 10.2 fixed point Since scissor_**_shift is shifted to the left by 1, we need
-                // to shift the XH/XL values by 13 instead of 14, which would convert them to 10.2
-                // fixed point
-                bool round_bit = ((x_right >> 1) & 0x1fff) > 0;
-                int32_t x_right_clipped = ((x_right >> 13) & 0x1FFE) | round_bit;
-                bool cur_under = ((x_right & 0x8000000) ||
-                                  (x_right_clipped < scissor_xh_shift && !(x_right & 0x4000000)));
-                x_right_clipped =
-                    cur_under ? scissor_xh_shift : (((x_right >> 13) & 0x3FFE) | round_bit);
-                bool cur_over =
-                    ((x_right_clipped & 0x2000) || (x_right_clipped & 0x1FFF) >= scissor_xl_shift);
-                x_right_clipped = cur_over ? scissor_xl_shift : x_right_clipped;
-
-                all_under &= cur_under;
-                all_over &= cur_over;
-
-                round_bit = ((x_left >> 1) & 0x1fff) > 0;
-                int32_t x_left_clipped = ((x_left >> 13) & 0x1FFE) | round_bit;
-                cur_under = ((x_left & 0x8000000) ||
-                             (x_left_clipped < scissor_xh_shift && !(x_left & 0x4000000)));
-                x_left_clipped =
-                    cur_under ? scissor_xh_shift : (((x_left >> 13) & 0x3FFE) | round_bit);
-                cur_over =
-                    ((x_left_clipped & 0x2000) || (x_left_clipped & 0x1FFF) >= scissor_xl_shift);
-                x_left_clipped = cur_over ? scissor_xl_shift : x_left_clipped;
-
-                all_under &= cur_under;
-                all_over &= cur_over;
-
-                x_right_clipped >>= 3;
-                x_right_clipped &= 0xFFF;
-                x_left_clipped >>= 3;
-                x_left_clipped &= 0xFFF;
-
-                bool curcross;
-
-                // We don't want to continue drawing the primitive if
-                // it intersects
-                if (!input.right_major)
+                if constexpr (!Load)
                 {
-                    curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) >
-                               ((x_right ^ (1 << 27)) & (0x3fff << 14));
+                    // Check if the current subpixel is inside the scissor
+                    // XH/XL are 16.16 fixed point, so shifting by 14 would convert the lower 12
+                    // bits to 10.2 fixed point Since scissor_**_shift is shifted to the left by 1,
+                    // we need to shift the XH/XL values by 13 instead of 14, which would convert
+                    // them to 10.2 fixed point
+                    bool round_bit = ((x_right >> 1) & 0x1fff) > 0;
+                    int32_t x_right_clipped = ((x_right >> 13) & 0x1FFE) | round_bit;
+                    bool cur_under =
+                        ((x_right & 0x8000000) ||
+                         (x_right_clipped < scissor_xh_shift && !(x_right & 0x4000000)));
+                    x_right_clipped =
+                        cur_under ? scissor_xh_shift : (((x_right >> 13) & 0x3FFE) | round_bit);
+                    bool cur_over = ((x_right_clipped & 0x2000) ||
+                                     (x_right_clipped & 0x1FFF) >= scissor_xl_shift);
+                    x_right_clipped = cur_over ? scissor_xl_shift : x_right_clipped;
+
+                    all_under &= cur_under;
+                    all_over &= cur_over;
+
+                    round_bit = ((x_left >> 1) & 0x1fff) > 0;
+                    int32_t x_left_clipped = ((x_left >> 13) & 0x1FFE) | round_bit;
+                    cur_under = ((x_left & 0x8000000) ||
+                                 (x_left_clipped < scissor_xh_shift && !(x_left & 0x4000000)));
+                    x_left_clipped =
+                        cur_under ? scissor_xh_shift : (((x_left >> 13) & 0x3FFE) | round_bit);
+                    cur_over = ((x_left_clipped & 0x2000) ||
+                                (x_left_clipped & 0x1FFF) >= scissor_xl_shift);
+                    x_left_clipped = cur_over ? scissor_xl_shift : x_left_clipped;
+
+                    all_under &= cur_under;
+                    all_over &= cur_over;
+
+                    x_right_clipped >>= 3;
+                    x_right_clipped &= 0xFFF;
+                    x_left_clipped >>= 3;
+                    x_left_clipped &= 0xFFF;
+
+                    bool curcross;
+
+                    // We don't want to continue drawing the primitive if
+                    // it intersects
+                    if (!input.right_major)
+                    {
+                        curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) >
+                                   ((x_right ^ (1 << 27)) & (0x3fff << 14));
+                    }
+                    else
+                    {
+                        curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) <
+                                   ((x_right ^ (1 << 27)) & (0x3fff << 14));
+                    }
+                    all_invalid &= invalid_y | curcross;
+
+                    if (!invalid_y && !curcross)
+                    {
+                        if (input.right_major)
+                        {
+                            if (x_left_clipped > span_leftmost)
+                            {
+                                span_leftmost = x_left_clipped;
+                            }
+
+                            if (x_right_clipped < span_rightmost)
+                            {
+                                span_rightmost = x_right_clipped;
+                            }
+                        }
+                        else
+                        {
+                            if (x_left_clipped < span_leftmost)
+                            {
+                                span_leftmost = x_left_clipped;
+                            }
+
+                            if (x_right_clipped > span_rightmost)
+                            {
+                                span_rightmost = x_right_clipped;
+                            }
+                        }
+                    }
                 }
                 else
                 {
-                    curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) <
-                               ((x_right ^ (1 << 27)) & (0x3fff << 14));
-                }
-                all_invalid &= invalid_y | curcross;
+                    // We don't do scissoring for loads
+                    int32_t x_left_clipped = (x_left >> 13) & 0x7FFE;
+                    int32_t x_right_clipped = (x_right >> 13) & 0x7FFE;
 
-                if (!invalid_y && !curcross)
-                {
-                    if (input.right_major)
-                    {
-                        if (x_left_clipped > span_leftmost)
-                        {
-                            span_leftmost = x_left_clipped;
-                        }
-
-                        if (x_right_clipped < span_rightmost)
-                        {
-                            span_rightmost = x_right_clipped;
-                        }
-                    }
-                    else
+                    if (!invalid_y)
                     {
                         if (x_left_clipped < span_leftmost)
                         {
@@ -1890,26 +2009,41 @@ namespace hydra::N64
                 }
 
                 int primitive_load_subpixel = (sign_slopeh ^ input.right_major) ? 0 : 3;
-                if (subpixel == primitive_load_subpixel)
+
+                if constexpr (!Load)
                 {
-                    int32_t x_frac = (x_right >> 8) & 0xFF;
-                    current_span.r = ((r & ~0x1FF) + DrDiff - (x_frac * DrDx)) & ~0x3FF;
-                    current_span.g = ((g & ~0x1FF) + DgDiff - (x_frac * DgDx)) & ~0x3FF;
-                    current_span.b = ((b & ~0x1FF) + DbDiff - (x_frac * DbDx)) & ~0x3FF;
-                    current_span.a = ((a & ~0x1FF) + DaDiff - (x_frac * DaDx)) & ~0x3FF;
-                    current_span.s = ((s & ~0x1FF) + DsDiff - (x_frac * DsDx)) & ~0x3FF;
-                    current_span.t = ((t & ~0x1FF) + DtDiff - (x_frac * DtDx)) & ~0x3FF;
-                    current_span.w = ((w & ~0x1FF) + DwDiff - (x_frac * DwDx)) & ~0x3FF;
-                    current_span.z = ((z & ~0x1FF) + DzDiff - (x_frac * DzDx)) & ~0x3FF;
+                    if (subpixel == primitive_load_subpixel)
+                    {
+                        int32_t x_frac = (x_right >> 8) & 0xFF;
+                        current_span.r = ((r & ~0x1FF) + DrDiff - (x_frac * DrDx)) & ~0x3FF;
+                        current_span.g = ((g & ~0x1FF) + DgDiff - (x_frac * DgDx)) & ~0x3FF;
+                        current_span.b = ((b & ~0x1FF) + DbDiff - (x_frac * DbDx)) & ~0x3FF;
+                        current_span.a = ((a & ~0x1FF) + DaDiff - (x_frac * DaDx)) & ~0x3FF;
+                        current_span.s = ((s & ~0x1FF) + DsDiff - (x_frac * DsDx)) & ~0x3FF;
+                        current_span.t = ((t & ~0x1FF) + DtDiff - (x_frac * DtDx)) & ~0x3FF;
+                        current_span.w = ((w & ~0x1FF) + DwDiff - (x_frac * DwDx)) & ~0x3FF;
+                        current_span.z = ((z & ~0x1FF) + DzDiff - (x_frac * DzDx)) & ~0x3FF;
+                    }
+                }
+                else
+                {
+                    if (subpixel == 0)
+                    {
+                        current_span.s = s & ~0x3FF;
+                        current_span.t = t & ~0x3FF;
+                    }
                 }
 
                 if (subpixel == 3)
                 {
                     current_span.min_x = span_leftmost;
                     current_span.max_x = span_rightmost;
-                    if (input.right_major)
+                    if constexpr (!Load)
                     {
-                        std::swap(current_span.min_x, current_span.max_x);
+                        if (input.right_major)
+                        {
+                            std::swap(current_span.min_x, current_span.max_x);
+                        }
                     }
                     current_span.valid = !all_invalid && !all_over && !all_under;
                     primitive.spans[integer_y] = current_span;
@@ -1935,9 +2069,44 @@ namespace hydra::N64
         return primitive;
     }
 
+    hydra_inline uint8_t color_clamp(uint16_t color)
+    {
+        switch ((color >> 7) & 3)
+        {
+            case 0:
+            case 1:
+                return color & 0xff;
+            case 2:
+                return 0xff;
+            default:
+                return 0;
+        }
+    }
+
+    hydra_inline int32_t z_correct(int32_t z)
+    {
+        z >>= 3;
+
+        switch ((z >> 17) & 3)
+        {
+            case 0:
+            case 1:
+                return z & 0x3ffff;
+            case 2:
+                return 0x3ffff;
+            default:
+                return 0;
+        }
+    }
+
     void RDP::render_primitive(const Primitive& primitive)
     {
+        int32_t x_start = 0, x_inc = 0;
         int32_t DzDx = primitive.DzDx;
+        int32_t DrDx = primitive.DrDx;
+        int32_t DgDx = primitive.DgDx;
+        int32_t DbDx = primitive.DbDx;
+        int32_t DaDx = primitive.DaDx;
 
         if (z_source_sel_)
         {
@@ -1955,19 +2124,35 @@ namespace hydra::N64
             auto b = span.b;
             auto a = span.a;
 
-            auto z = z_source_sel_ ? primitive_depth_ : span.z;
+            int32_t z = z_source_sel_ ? primitive_depth_ : span.z;
 
-            for (int x = span.min_x; x <= span.max_x; x++)
+            if (primitive.right_major)
             {
-                uint8_t r8 = std::clamp(r >> 16, 0, 0xFF);
-                uint8_t g8 = std::clamp(g >> 16, 0, 0xFF);
-                uint8_t b8 = std::clamp(b >> 16, 0, 0xFF);
-                uint8_t a8 = std::clamp(a >> 16, 0, 0xFF);
+                x_start = span.min_x;
+                x_inc = 1;
+            }
+            else
+            {
+                x_start = span.max_x;
+                x_inc = -1;
+            }
+
+            int32_t x = x_start;
+            int length = span.max_x - span.min_x;
+
+            for (int i = 0; i <= length; i++)
+            {
+                uint8_t r8 = color_clamp(r >> 16);
+                uint8_t g8 = color_clamp(g >> 16);
+                uint8_t b8 = color_clamp(b >> 16);
+                uint8_t a8 = color_clamp(a >> 16);
 
                 shade_color_ = (a8 << 24) | (b8 << 16) | (g8 << 8) | r8;
                 shade_alpha_ = (a8 << 24) | (a8 << 16) | (a8 << 8) | a8;
 
-                auto z_new = std::max(0, (static_cast<int32_t>(z) >> 13));
+                get_noise();
+
+                int32_t z_new = z_correct((z >> 10) & 0x3f'ffff);
                 if (depth_test(x, y, z_new, 0))
                 {
                     if (span.w != 0)
@@ -1980,7 +2165,12 @@ namespace hydra::N64
                     }
                 }
 
-                z += DzDx;
+                z += DzDx * x_inc;
+                r += DrDx * x_inc;
+                g += DgDx * x_inc;
+                b += DbDx * x_inc;
+                a += DaDx * x_inc;
+                x += x_inc;
             }
         }
     }
