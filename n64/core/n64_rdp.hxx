@@ -15,6 +15,9 @@
     X(TriangleShadeTextureDepth, 0xF, 22) \
     X(SyncPipe, 0x27, 1)                  \
     X(SyncFull, 0x29, 1)                  \
+    X(SetKeyGB, 0x2A, 1)                  \
+    X(SetKeyR, 0x2B, 1)                   \
+    X(SetConvert, 0x2C, 1)                \
     X(SetScissor, 0x2D, 1)                \
     X(SetOtherModes, 0x2F, 1)             \
     X(SetBlendColor, 0x39, 1)             \
@@ -106,6 +109,8 @@ namespace hydra::N64
         uint8_t palette_index;
         uint16_t line_width;
         uint16_t s, t;
+
+        uint16_t sl, sh, tl, th;
     };
 
     struct EdgewalkerInput
@@ -133,7 +138,7 @@ namespace hydra::N64
     struct Span
     {
         int32_t min_x, max_x;
-        bool valid;
+        bool valid = false;
         int32_t r, g, b, a;
         int32_t s, t, w;
         int32_t z;
@@ -148,6 +153,7 @@ namespace hydra::N64
         int32_t DsDx, DtDx, DwDx;
         int32_t DzDx;
         size_t tile_index;
+        bool right_major;
     };
 
     class RDP final
@@ -195,6 +201,7 @@ namespace hydra::N64
         uint32_t texel_color_1_;
         uint32_t environment_color_;
         uint32_t framebuffer_color_;
+        uint32_t noise_color_;
 
         uint32_t combined_alpha_;
         uint32_t texel_alpha_0_;
@@ -246,6 +253,8 @@ namespace hydra::N64
         uint16_t scissor_xl_ = 0;
         uint16_t scissor_yl_ = 0;
 
+        uint32_t seed_;
+
         enum CycleType { Cycle1, Cycle2, Copy, Fill } cycle_type_;
 
         void process_commands();
@@ -264,6 +273,7 @@ namespace hydra::N64
         uint32_t z_decompress(uint32_t z);
         void init_depth_luts();
         void fetch_texels(int tile, int32_t s, int32_t t);
+        void get_noise();
 
         uint32_t* color_get_sub_a(uint8_t sub_a);
         uint32_t* color_get_sub_b(uint8_t sub_b);
@@ -278,11 +288,13 @@ namespace hydra::N64
         template <bool Texture, bool Flip>
         EdgewalkerInput rectangle_get_edgewalker_input(const std::vector<uint64_t>& data);
 
+        template <bool Load = false>
         Primitive edgewalker(const EdgewalkerInput& data);
         void render_primitive(const Primitive& primitive);
 
         Primitive get_angrylion_primitive(const EdgewalkerInput& data);
-        void check_primitive(const Primitive& primitive, const EdgewalkerInput& data);
+        void check_primitive(const Primitive& primitive, const EdgewalkerInput& input,
+                             const std::vector<uint64_t>& data);
 
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;
