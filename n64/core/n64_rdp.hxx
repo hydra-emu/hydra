@@ -47,6 +47,7 @@ class MmioViewer;
 namespace hydra::N64
 {
     class RSP;
+    union LoadTileCommand;
 
     enum class RDPCommandType {
 #define X(name, opcode, length) name = opcode,
@@ -244,6 +245,7 @@ namespace hydra::N64
         bool z_compare_en_ = false;
         bool z_source_sel_ = false;
         bool image_read_en_ = false;
+        bool alpha_compare_en_ = false;
         uint8_t z_mode_ : 2 = 0;
         uint32_t primitive_depth_ = 0;
         uint16_t primitive_depth_delta_ = 0;
@@ -274,6 +276,7 @@ namespace hydra::N64
         void init_depth_luts();
         void fetch_texels(int tile, int32_t s, int32_t t);
         void get_noise();
+        void load_tile(const LoadTileCommand& command);
 
         uint32_t* color_get_sub_a(uint8_t sub_a);
         uint32_t* color_get_sub_b(uint8_t sub_b);
@@ -288,7 +291,6 @@ namespace hydra::N64
         template <bool Texture, bool Flip>
         EdgewalkerInput rectangle_get_edgewalker_input(const std::vector<uint64_t>& data);
 
-        template <bool Load = false>
         Primitive edgewalker(const EdgewalkerInput& data);
         void render_primitive(const Primitive& primitive);
 

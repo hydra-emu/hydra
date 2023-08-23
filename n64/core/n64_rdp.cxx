@@ -323,6 +323,12 @@ namespace hydra::N64
             {
                 EdgewalkerInput input = rectangle_get_edgewalker_input<true, false>(data);
                 Primitive primitive = edgewalker(input);
+
+                if (slow_assertions)
+                {
+                    check_primitive(primitive, input, data);
+                }
+
                 render_primitive(primitive);
                 break;
             }
@@ -347,41 +353,17 @@ namespace hydra::N64
                 LoadTileCommand command;
                 command.full = data[0];
 
-                TileDescriptor& tile = tiles_[command.Tile];
-
-                tile.sl = command.SL;
-                tile.tl = command.TL;
-                tile.sh = command.SH;
-                tile.th = command.TH;
-
-                EdgewalkerInput input;
-                input.tile_index = command.Tile;
-
-                input.yl = command.TH | 3;
-                input.ym = input.yl;
-                input.yh = command.TL;
-
-                input.xl = ((command.SH >> 2) << 16) | ((command.SH & 0b11) << 14);
-                input.xm = input.xl;
-                input.xh = ((command.SL >> 2) << 16) | ((command.SL & 0b11) << 14);
-
-                input.s = ((command.SL << 3) << 16);
-                input.t = ((command.TL << 3) << 16);
-
-                input.DtDe = 0x20;
-
+                load_tile(command);
                 break;
             }
             case RDPCommandType::LoadBlock:
             {
                 LoadBlockCommand command;
                 command.full = data[0];
-                TileDescriptor& tile = tiles_[command.Tile];
+                TileDescriptor& tile = tiles_[command.tile];
 
                 int sl = command.SL;
-                int tl = command.TL << 11;
                 int sh = command.SH + 1;
-                int DxT = command.DxT;
 
                 bool odd = false;
 
@@ -407,8 +389,6 @@ namespace hydra::N64
                                         reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
                                     src = hydra::bswap64(src);
                                     memcpy(dst, &src, 8);
-                                    tl += DxT;
-                                    odd = (tl >> 11) & 1;
                                 }
                                 break;
                             }
@@ -440,7 +420,7 @@ namespace hydra::N64
                 tile.tmem_address = command.TMemAddress;
                 tile.format = static_cast<Format>(command.format);
                 tile.size = 4 * (1 << command.size);
-                tile.line_width = command.Line;
+                tile.line_width = command.Line * 8; // in 64bit / 8 byte words
                 // This number is used as the MS 4b of an 8b index.
                 tile.palette_index = command.Palette << 4;
                 break;
@@ -486,6 +466,7 @@ namespace hydra::N64
                 blender_2b_[1] = command.b_m2b_1;
 
                 image_read_en_ = command.image_read_en;
+                alpha_compare_en_ = command.alpha_compare_en;
                 break;
             }
             case RDPCommandType::SetPrimDepth:
@@ -810,15 +791,20 @@ namespace hydra::N64
             }
             case CycleType::Copy:
             {
+                if (alpha_compare_en_ && texel_alpha_0_ == 0)
+                {
+                    break;
+                }
+
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    *ptr = rgba32_to_rgba16(0xFF3333FF);
+                    *ptr = rgba32_to_rgba16(texel_color_0_);
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    *ptr = 0xFF3333FF;
+                    *ptr = texel_color_0_;
                 }
                 break;
             }
@@ -1054,10 +1040,21 @@ namespace hydra::N64
         TileDescriptor& td = tiles_[tile];
         uint32_t address = td.tmem_address;
         // s ^= td.line_width ? (((t + (s * 2) / td.line_width) & 0x1) << 1) : 0;
-        uint8_t byte1 = tmem_[(address + (t * td.line_width) + s * 2) & 0x1FFF];
-        uint8_t byte2 = tmem_[(address + (t * td.line_width) + (s * 2) + 1) & 0x1FFF];
-        texel_color_0_ = rgba16_to_rgba32((byte2 << 8) | byte1);
-        texel_alpha_0_ = texel_color_0_ >> 24;
+        switch (td.size)
+        {
+            case 16:
+            {
+                uint8_t byte1 = tmem_[(address + (t * td.line_width) + s * 2) & 0x1FFF];
+                uint8_t byte2 = tmem_[(address + (t * td.line_width) + (s * 2) + 1) & 0x1FFF];
+                texel_color_0_ = rgba16_to_rgba32((byte1 << 8) | byte2);
+                texel_alpha_0_ = texel_color_0_ >> 24;
+                break;
+            }
+            case 32:
+            {
+                texel_color_0_ = 0xFF00FF00;
+            }
+        }
         // TODO: implement cycle 1 texel fetching
         texel_color_1_ = texel_color_0_ | 0xFF;
         texel_alpha_1_ = texel_alpha_0_;
@@ -1067,6 +1064,86 @@ namespace hydra::N64
     {
         auto r = irand(&seed_);
         noise_color_ = (r << 24) | (r << 16) | (r << 8) | r;
+    }
+
+    void RDP::load_tile(const LoadTileCommand& command)
+    {
+        TileDescriptor& td = tiles_[command.tile];
+        uint32_t x_start = command.SL >> 2;
+        uint32_t x_end = command.SH >> 2;
+        uint32_t y_start = command.TL >> 2;
+        uint32_t y_end = command.TH >> 2;
+        uint32_t dram_offset, tmem_offset;
+
+        switch (td.format)
+        {
+            case Format::RGBA:
+            {
+                switch (td.size)
+                {
+                    case 16:
+                    {
+                        for (uint32_t y = y_start; y <= y_end; ++y)
+                        {
+                            for (uint32_t x = x_start; x <= x_end; ++x)
+                            {
+                                dram_offset = texture_dram_address_latch_ +
+                                              (y * texture_width_latch_ + x) * 2;
+                                tmem_offset = (td.tmem_address + ((y - y_start) * td.line_width) +
+                                               ((x - x_start) * 2));
+                                tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
+                                tmem_.at(tmem_offset + 1) = rdram_ptr_[dram_offset + 1];
+                            }
+                        }
+                        break;
+                    }
+                    case 32:
+                    {
+                        for (uint32_t y = y_start; y <= y_end; ++y)
+                        {
+                            for (uint32_t x = x_start; x <= x_end; ++x)
+                            {
+                                dram_offset = texture_dram_address_latch_ +
+                                              (y * texture_width_latch_ + x) * 4;
+                                tmem_offset = (td.tmem_address + ((y - y_start) * td.line_width) +
+                                               ((x - x_start) * 2));
+                                tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
+                                tmem_.at(tmem_offset + 1) = rdram_ptr_[dram_offset + 1];
+                                tmem_.at(tmem_offset + 2) = rdram_ptr_[dram_offset + 2];
+                                tmem_.at(tmem_offset + 3) = rdram_ptr_[dram_offset + 3];
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        Logger::WarnOnce("Invalid RGBA LoadTile command with size: {}", td.size);
+                        break;
+                    }
+                }
+                break;
+            }
+            case Format::YUV:
+            {
+                Logger::WarnOnce("Unimplemented YUV LoadTile command");
+                break;
+            }
+            case Format::CI:
+            {
+                Logger::WarnOnce("Unimplemented CI LoadTile command");
+                break;
+            }
+            case Format::IA:
+            {
+                Logger::WarnOnce("Unimplemented IA LoadTile command");
+                break;
+            }
+            case Format::I:
+            {
+                Logger::WarnOnce("Unimplemented I LoadTile command");
+                break;
+            }
+        }
     }
 
     void RDP::init_depth_luts()
@@ -1520,11 +1597,11 @@ namespace hydra::N64
                 my_primitive.spans[i].t != angrylion_primitive.spans[i].t ||
                 my_primitive.spans[i].w != angrylion_primitive.spans[i].w)
             {
-                // Logger::Fatal("Primitive mismatch: span {} texture - expected: {:08x}, {:08x}, "
-                //               "{:08x}, actual: {:08x}, {:08x}, {:08x}",
-                //               i, angrylion_primitive.spans[i].s, angrylion_primitive.spans[i].t,
-                //               angrylion_primitive.spans[i].w, my_primitive.spans[i].s,
-                //               my_primitive.spans[i].t, my_primitive.spans[i].w);
+                Logger::Fatal("Primitive mismatch: span {} texture - expected: {:08x}, {:08x}, "
+                              "{:08x}, actual: {:08x}, {:08x}, {:08x}",
+                              i, angrylion_primitive.spans[i].s, angrylion_primitive.spans[i].t,
+                              angrylion_primitive.spans[i].w, my_primitive.spans[i].s,
+                              my_primitive.spans[i].t, my_primitive.spans[i].w);
             }
 
             if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z ||
@@ -1704,8 +1781,24 @@ namespace hydra::N64
         ret.yh = command.yh;
 
         ret.right_major = true;
+        ret.tile_index = command.tile;
 
-        // TODO: texture coefficients
+        if constexpr (Texture)
+        {
+            ret.s = data[1] >> 48;
+            ret.t = (data[1] >> 32) & 0xFFFF;
+            int32_t DsDx = (int16_t)((data[1] >> 16) & 0xFFFF);
+            int32_t DtDy = (int16_t)(data[1] & 0xFFFF);
+
+            if (cycle_type_ == CycleType::Copy)
+            {
+                DsDx >>= 2;
+            }
+
+            ret.DsDx = DsDx;
+            ret.DtDe = DtDy;
+            ret.DtDy = DtDy;
+        }
 
         return ret;
     }
@@ -1722,7 +1815,6 @@ namespace hydra::N64
         return value | 3;
     }
 
-    template <bool Load>
     Primitive RDP::edgewalker(const EdgewalkerInput& input)
     {
         Primitive primitive;
@@ -1764,51 +1856,48 @@ namespace hydra::N64
         primitive.right_major = input.right_major;
 
         bool sign_slopeh = input.slopeh & 0x80000000;
-        if constexpr (!Load)
+        if (cycle_type_ != CycleType::Copy)
         {
-            if (cycle_type_ != CycleType::Copy)
-            {
-                DrDx = (input.DrDx >> 8) & ~1;
-                DgDx = (input.DgDx >> 8) & ~1;
-                DbDx = (input.DbDx >> 8) & ~1;
-                DaDx = (input.DaDx >> 8) & ~1;
-                DsDx = (input.DsDx >> 8) & ~1;
-                DtDx = (input.DtDx >> 8) & ~1;
-                DwDx = (input.DwDx >> 8) & ~1;
-                DzDx = (input.DzDx >> 8) & ~1;
-            }
+            DrDx = (input.DrDx >> 8) & ~1;
+            DgDx = (input.DgDx >> 8) & ~1;
+            DbDx = (input.DbDx >> 8) & ~1;
+            DaDx = (input.DaDx >> 8) & ~1;
+            DsDx = (input.DsDx >> 8) & ~1;
+            DtDx = (input.DtDx >> 8) & ~1;
+            DwDx = (input.DwDx >> 8) & ~1;
+            DzDx = (input.DzDx >> 8) & ~1;
+        }
 
-            bool do_offset = !(sign_slopeh ^ input.right_major);
+        bool do_offset = !(sign_slopeh ^ input.right_major);
 
-            if (do_offset)
-            {
-                int32_t dsdeh = DsDe & ~0x1ff;
-                int32_t dtdeh = DtDe & ~0x1ff;
-                int32_t dwdeh = DwDe & ~0x1ff;
-                int32_t drdeh = DrDe & ~0x1ff;
-                int32_t dgdeh = DgDe & ~0x1ff;
-                int32_t dbdeh = DbDe & ~0x1ff;
-                int32_t dadeh = DaDe & ~0x1ff;
-                int32_t dzdeh = DzDe & ~0x1ff;
+        if (do_offset)
+        {
+            int32_t dsdeh = DsDe & ~0x1ff;
+            int32_t dtdeh = DtDe & ~0x1ff;
+            int32_t dwdeh = DwDe & ~0x1ff;
+            int32_t drdeh = DrDe & ~0x1ff;
+            int32_t dgdeh = DgDe & ~0x1ff;
+            int32_t dbdeh = DbDe & ~0x1ff;
+            int32_t dadeh = DaDe & ~0x1ff;
+            int32_t dzdeh = DzDe & ~0x1ff;
 
-                int32_t dsdyh = DsDy & ~0x1ff;
-                int32_t dtdyh = DtDy & ~0x1ff;
-                int32_t dwdyh = DwDy & ~0x1ff;
-                int32_t drdyh = DrDy & ~0x1ff;
-                int32_t dgdyh = DgDy & ~0x1ff;
-                int32_t dbdyh = DbDy & ~0x1ff;
-                int32_t dadyh = DaDy & ~0x1ff;
-                int32_t dzdyh = DzDy & ~0x1ff;
+            int32_t dsdyh = DsDy & ~0x1ff;
+            int32_t dtdyh = DtDy & ~0x1ff;
+            int32_t dwdyh = DwDy & ~0x1ff;
+            int32_t drdyh = DrDy & ~0x1ff;
+            int32_t dgdyh = DgDy & ~0x1ff;
+            int32_t dbdyh = DbDy & ~0x1ff;
+            int32_t dadyh = DaDy & ~0x1ff;
+            int32_t dzdyh = DzDy & ~0x1ff;
 
-                DrDiff = drdeh - (drdeh >> 2) - drdyh + (drdyh >> 2);
-                DgDiff = dgdeh - (dgdeh >> 2) - dgdyh + (dgdyh >> 2);
-                DbDiff = dbdeh - (dbdeh >> 2) - dbdyh + (dbdyh >> 2);
-                DaDiff = dadeh - (dadeh >> 2) - dadyh + (dadyh >> 2);
-                DsDiff = dsdeh - (dsdeh >> 2) - dsdyh + (dsdyh >> 2);
-                DtDiff = dtdeh - (dtdeh >> 2) - dtdyh + (dtdyh >> 2);
-                DwDiff = dwdeh - (dwdeh >> 2) - dwdyh + (dwdyh >> 2);
-                DzDiff = dzdeh - (dzdeh >> 2) - dzdyh + (dzdyh >> 2);
-            }
+            DrDiff = drdeh - (drdeh >> 2) - drdyh + (drdyh >> 2);
+            DgDiff = dgdeh - (dgdeh >> 2) - dgdyh + (dgdyh >> 2);
+            DbDiff = dbdeh - (dbdeh >> 2) - dbdyh + (dbdyh >> 2);
+            DaDiff = dadeh - (dadeh >> 2) - dadyh + (dadyh >> 2);
+            DsDiff = dsdeh - (dsdeh >> 2) - dsdyh + (dsdyh >> 2);
+            DtDiff = dtdeh - (dtdeh >> 2) - dtdyh + (dtdyh >> 2);
+            DwDiff = dwdeh - (dwdeh >> 2) - dwdyh + (dwdyh >> 2);
+            DzDiff = dzdeh - (dzdeh >> 2) - dzdyh + (dzdyh >> 2);
         }
 
         bool use_scissor_low = false, use_scissor_high = false;
@@ -1905,96 +1994,73 @@ namespace hydra::N64
                     all_under = true;
                 }
 
-                if constexpr (!Load)
+                // Check if the current subpixel is inside the scissor
+                // XH/XL are 16.16 fixed point, so shifting by 14 would convert the lower 12
+                // bits to 10.2 fixed point Since scissor_**_shift is shifted to the left by 1,
+                // we need to shift the XH/XL values by 13 instead of 14, which would convert
+                // them to 10.2 fixed point
+                bool round_bit = ((x_right >> 1) & 0x1fff) > 0;
+                int32_t x_right_clipped = ((x_right >> 13) & 0x1FFE) | round_bit;
+                bool cur_under = ((x_right & 0x8000000) ||
+                                  (x_right_clipped < scissor_xh_shift && !(x_right & 0x4000000)));
+                x_right_clipped =
+                    cur_under ? scissor_xh_shift : (((x_right >> 13) & 0x3FFE) | round_bit);
+                bool cur_over =
+                    ((x_right_clipped & 0x2000) || (x_right_clipped & 0x1FFF) >= scissor_xl_shift);
+                x_right_clipped = cur_over ? scissor_xl_shift : x_right_clipped;
+
+                all_under &= cur_under;
+                all_over &= cur_over;
+
+                round_bit = ((x_left >> 1) & 0x1fff) > 0;
+                int32_t x_left_clipped = ((x_left >> 13) & 0x1FFE) | round_bit;
+                cur_under = ((x_left & 0x8000000) ||
+                             (x_left_clipped < scissor_xh_shift && !(x_left & 0x4000000)));
+                x_left_clipped =
+                    cur_under ? scissor_xh_shift : (((x_left >> 13) & 0x3FFE) | round_bit);
+                cur_over =
+                    ((x_left_clipped & 0x2000) || (x_left_clipped & 0x1FFF) >= scissor_xl_shift);
+                x_left_clipped = cur_over ? scissor_xl_shift : x_left_clipped;
+
+                all_under &= cur_under;
+                all_over &= cur_over;
+
+                x_right_clipped >>= 3;
+                x_right_clipped &= 0xFFF;
+                x_left_clipped >>= 3;
+                x_left_clipped &= 0xFFF;
+
+                bool curcross;
+
+                // We don't want to continue drawing the primitive if
+                // it intersects
+                if (!input.right_major)
                 {
-                    // Check if the current subpixel is inside the scissor
-                    // XH/XL are 16.16 fixed point, so shifting by 14 would convert the lower 12
-                    // bits to 10.2 fixed point Since scissor_**_shift is shifted to the left by 1,
-                    // we need to shift the XH/XL values by 13 instead of 14, which would convert
-                    // them to 10.2 fixed point
-                    bool round_bit = ((x_right >> 1) & 0x1fff) > 0;
-                    int32_t x_right_clipped = ((x_right >> 13) & 0x1FFE) | round_bit;
-                    bool cur_under =
-                        ((x_right & 0x8000000) ||
-                         (x_right_clipped < scissor_xh_shift && !(x_right & 0x4000000)));
-                    x_right_clipped =
-                        cur_under ? scissor_xh_shift : (((x_right >> 13) & 0x3FFE) | round_bit);
-                    bool cur_over = ((x_right_clipped & 0x2000) ||
-                                     (x_right_clipped & 0x1FFF) >= scissor_xl_shift);
-                    x_right_clipped = cur_over ? scissor_xl_shift : x_right_clipped;
-
-                    all_under &= cur_under;
-                    all_over &= cur_over;
-
-                    round_bit = ((x_left >> 1) & 0x1fff) > 0;
-                    int32_t x_left_clipped = ((x_left >> 13) & 0x1FFE) | round_bit;
-                    cur_under = ((x_left & 0x8000000) ||
-                                 (x_left_clipped < scissor_xh_shift && !(x_left & 0x4000000)));
-                    x_left_clipped =
-                        cur_under ? scissor_xh_shift : (((x_left >> 13) & 0x3FFE) | round_bit);
-                    cur_over = ((x_left_clipped & 0x2000) ||
-                                (x_left_clipped & 0x1FFF) >= scissor_xl_shift);
-                    x_left_clipped = cur_over ? scissor_xl_shift : x_left_clipped;
-
-                    all_under &= cur_under;
-                    all_over &= cur_over;
-
-                    x_right_clipped >>= 3;
-                    x_right_clipped &= 0xFFF;
-                    x_left_clipped >>= 3;
-                    x_left_clipped &= 0xFFF;
-
-                    bool curcross;
-
-                    // We don't want to continue drawing the primitive if
-                    // it intersects
-                    if (!input.right_major)
-                    {
-                        curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) >
-                                   ((x_right ^ (1 << 27)) & (0x3fff << 14));
-                    }
-                    else
-                    {
-                        curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) <
-                                   ((x_right ^ (1 << 27)) & (0x3fff << 14));
-                    }
-                    all_invalid &= invalid_y | curcross;
-
-                    if (!invalid_y && !curcross)
-                    {
-                        if (input.right_major)
-                        {
-                            if (x_left_clipped > span_leftmost)
-                            {
-                                span_leftmost = x_left_clipped;
-                            }
-
-                            if (x_right_clipped < span_rightmost)
-                            {
-                                span_rightmost = x_right_clipped;
-                            }
-                        }
-                        else
-                        {
-                            if (x_left_clipped < span_leftmost)
-                            {
-                                span_leftmost = x_left_clipped;
-                            }
-
-                            if (x_right_clipped > span_rightmost)
-                            {
-                                span_rightmost = x_right_clipped;
-                            }
-                        }
-                    }
+                    curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) >
+                               ((x_right ^ (1 << 27)) & (0x3fff << 14));
                 }
                 else
                 {
-                    // We don't do scissoring for loads
-                    int32_t x_left_clipped = (x_left >> 13) & 0x7FFE;
-                    int32_t x_right_clipped = (x_right >> 13) & 0x7FFE;
+                    curcross = ((x_left ^ (1 << 27)) & (0x3fff << 14)) <
+                               ((x_right ^ (1 << 27)) & (0x3fff << 14));
+                }
+                all_invalid &= invalid_y | curcross;
 
-                    if (!invalid_y)
+                if (!invalid_y && !curcross)
+                {
+                    if (input.right_major)
+                    {
+                        if (x_left_clipped > span_leftmost)
+                        {
+                            span_leftmost = x_left_clipped;
+                        }
+
+                        if (x_right_clipped < span_rightmost)
+                        {
+                            span_rightmost = x_right_clipped;
+                        }
+                    }
+                    else
                     {
                         if (x_left_clipped < span_leftmost)
                         {
@@ -2010,40 +2076,26 @@ namespace hydra::N64
 
                 int primitive_load_subpixel = (sign_slopeh ^ input.right_major) ? 0 : 3;
 
-                if constexpr (!Load)
+                if (subpixel == primitive_load_subpixel)
                 {
-                    if (subpixel == primitive_load_subpixel)
-                    {
-                        int32_t x_frac = (x_right >> 8) & 0xFF;
-                        current_span.r = ((r & ~0x1FF) + DrDiff - (x_frac * DrDx)) & ~0x3FF;
-                        current_span.g = ((g & ~0x1FF) + DgDiff - (x_frac * DgDx)) & ~0x3FF;
-                        current_span.b = ((b & ~0x1FF) + DbDiff - (x_frac * DbDx)) & ~0x3FF;
-                        current_span.a = ((a & ~0x1FF) + DaDiff - (x_frac * DaDx)) & ~0x3FF;
-                        current_span.s = ((s & ~0x1FF) + DsDiff - (x_frac * DsDx)) & ~0x3FF;
-                        current_span.t = ((t & ~0x1FF) + DtDiff - (x_frac * DtDx)) & ~0x3FF;
-                        current_span.w = ((w & ~0x1FF) + DwDiff - (x_frac * DwDx)) & ~0x3FF;
-                        current_span.z = ((z & ~0x1FF) + DzDiff - (x_frac * DzDx)) & ~0x3FF;
-                    }
-                }
-                else
-                {
-                    if (subpixel == 0)
-                    {
-                        current_span.s = s & ~0x3FF;
-                        current_span.t = t & ~0x3FF;
-                    }
+                    int32_t x_frac = (x_right >> 8) & 0xFF;
+                    current_span.r = ((r & ~0x1FF) + DrDiff - (x_frac * DrDx)) & ~0x3FF;
+                    current_span.g = ((g & ~0x1FF) + DgDiff - (x_frac * DgDx)) & ~0x3FF;
+                    current_span.b = ((b & ~0x1FF) + DbDiff - (x_frac * DbDx)) & ~0x3FF;
+                    current_span.a = ((a & ~0x1FF) + DaDiff - (x_frac * DaDx)) & ~0x3FF;
+                    current_span.s = ((s & ~0x1FF) + DsDiff - (x_frac * DsDx)) & ~0x3FF;
+                    current_span.t = ((t & ~0x1FF) + DtDiff - (x_frac * DtDx)) & ~0x3FF;
+                    current_span.w = ((w & ~0x1FF) + DwDiff - (x_frac * DwDx)) & ~0x3FF;
+                    current_span.z = ((z & ~0x1FF) + DzDiff - (x_frac * DzDx)) & ~0x3FF;
                 }
 
                 if (subpixel == 3)
                 {
                     current_span.min_x = span_leftmost;
                     current_span.max_x = span_rightmost;
-                    if constexpr (!Load)
+                    if (input.right_major)
                     {
-                        if (input.right_major)
-                        {
-                            std::swap(current_span.min_x, current_span.max_x);
-                        }
+                        std::swap(current_span.min_x, current_span.max_x);
                     }
                     current_span.valid = !all_invalid && !all_over && !all_under;
                     primitive.spans[integer_y] = current_span;
@@ -2140,6 +2192,9 @@ namespace hydra::N64
             int32_t x = x_start;
             int length = span.max_x - span.min_x;
 
+            int32_t s = span.s;
+            int32_t t = span.t;
+
             for (int i = 0; i <= length; i++)
             {
                 uint8_t r8 = color_clamp(r >> 16);
@@ -2155,8 +2210,7 @@ namespace hydra::N64
                 int32_t z_new = z_correct((z >> 10) & 0x3f'ffff);
                 if (depth_test(x, y, z_new, 0))
                 {
-                    if (span.w != 0)
-                        fetch_texels(primitive.tile_index, span.s / span.w, span.t / span.w);
+                    fetch_texels(primitive.tile_index, s >> 10, t >> 10);
                     draw_pixel(x, y);
 
                     if (z_update_en_)
@@ -2170,6 +2224,7 @@ namespace hydra::N64
                 g += DgDx * x_inc;
                 b += DbDx * x_inc;
                 a += DaDx * x_inc;
+                s += primitive.DsDx * x_inc;
                 x += x_inc;
             }
         }
