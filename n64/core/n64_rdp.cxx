@@ -42,6 +42,21 @@ hydra_inline static uint16_t rgba32_to_rgba16(uint32_t color)
     return (r << 11) | (g << 6) | (b << 1) | a;
 }
 
+static std::pair<int32_t, int32_t> perspective_correction(int32_t s, int32_t t, int32_t w)
+{
+    if (w == 0)
+    {
+        Logger::WarnOnce("Division by zero in perspective correction");
+        return {s, t};
+    }
+    return {s / w, t / w};
+}
+
+static std::pair<int32_t, int32_t> no_perspective_correction(int32_t s, int32_t t, int32_t w)
+{
+    return {(int16_t)s, (int16_t)t};
+}
+
 namespace hydra::N64
 {
     constexpr inline std::string_view get_rdp_command_name(RDPCommandType type)
@@ -189,27 +204,7 @@ namespace hydra::N64
         texel_alpha_0_ = 0xFFFFFFFF;
         texel_alpha_1_ = 0xFFFFFFFF;
         cycle_type_ = CycleType::Cycle1;
-
-        scissor_xh_ = 0;
-        scissor_yh_ = 0x20;
-        scissor_xl_ = 0x500;
-        scissor_yl_ = 0x3a0;
-        SendCommand({
-            0xcd0003c0ffffffff,
-            0x01244000fffee2ff,
-            0x0140ebf2fffec56e,
-            0x01934000ff910006,
-            0x00000000000000ff,
-            0x0000000000000000,
-            0x8000800080008000,
-            0x0000000000000000,
-            0x0000000000000000,
-            0x0000000000000000,
-            0x0000000000000000,
-            0x0000000000000000,
-            0x7be22fe000000000,
-            0x0000000000000000,
-        });
+        perspective_correction_func_ = &no_perspective_correction;
     }
 
     void RDP::SendCommand(const std::vector<uint64_t>& data)
@@ -367,44 +362,50 @@ namespace hydra::N64
 
                 bool odd = false;
 
-                switch (texture_format_latch_)
+                switch (texture_pixel_size_latch_)
                 {
-                    case Format::RGBA:
+                    case 16:
                     {
-                        switch (texture_pixel_size_latch_)
+                        sh *= sizeof(uint16_t);
+                        sl *= sizeof(uint16_t);
+                        for (int i = sl; i < sh; i += 8)
                         {
-                            case 16:
+                            uint64_t src = *reinterpret_cast<uint64_t*>(
+                                &rdram_ptr_[texture_dram_address_latch_ + i]);
+                            if (odd)
                             {
-                                sh *= sizeof(uint16_t);
-                                sl *= sizeof(uint16_t);
-                                for (int i = sl; i < sh; i += 8)
-                                {
-                                    uint64_t src = *reinterpret_cast<uint64_t*>(
-                                        &rdram_ptr_[texture_dram_address_latch_ + i]);
-                                    if (odd)
-                                    {
-                                        src = (src >> 32) | (src << 32);
-                                    }
-                                    uint8_t* dst =
-                                        reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
-                                    src = hydra::bswap64(src);
-                                    memcpy(dst, &src, 8);
-                                }
-                                break;
+                                src = (src >> 32) | (src << 32);
                             }
-                            default:
-                            {
-                                Logger::WarnOnce("Using unknown RGBA size for LoadBlock: {}",
-                                                 texture_pixel_size_latch_);
-                                break;
-                            }
+                            uint8_t* dst =
+                                reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
+                            src = hydra::bswap64(src);
+                            memcpy(dst, &src, 8);
                         }
+                        break;
+                    }
+                    case 32:
+                    {
+                        // for (int i = sl; i < sh; i += 8)
+                        // {
+                        //     uint64_t src = *reinterpret_cast<uint64_t*>(
+                        //         &rdram_ptr_[texture_dram_address_latch_ + i]);
+                        //     // Write 8 bytes of texture data to TMEM, split across high and low
+                        //     banks uint8_t* dst =
+                        //         reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
+                        //     for (int j = 0; j < 4; j += 2)
+                        //     {
+                        //         dst[j + 0] = src >> (56 - j * 16);
+                        //         dst[j + 1] = src >> (48 - j * 16);
+                        //         dst[j + 2] = src >> (40 - j * 16);
+                        //         dst[j + 3] = src >> (32 - j * 16);
+                        //     }
+                        // }
                         break;
                     }
                     default:
                     {
-                        Logger::WarnOnce("Using unknown format for LoadBlock: {}",
-                                         static_cast<int>(texture_format_latch_));
+                        Logger::WarnOnce("Using unimplemented size for LoadBlock: {}",
+                                         texture_pixel_size_latch_);
                         break;
                     }
                 }
@@ -423,6 +424,18 @@ namespace hydra::N64
                 tile.line_width = command.Line * 8; // in 64bit / 8 byte words
                 // This number is used as the MS 4b of an 8b index.
                 tile.palette_index = command.Palette << 4;
+                tile.clamp_s = command.cs;
+                tile.clamp_t = command.ct;
+                tile.mirror_s = command.ms;
+                tile.mirror_t = command.mt;
+                if (command.MaskS == 0)
+                    tile.mask_s = -1;
+                else
+                    tile.mask_s = (1 << command.MaskS) - 1;
+                if (command.MaskT == 0)
+                    tile.mask_t = -1;
+                else
+                    tile.mask_t = (1 << command.MaskT) - 1;
                 break;
             }
             case RDPCommandType::SetTileSize:
@@ -430,8 +443,10 @@ namespace hydra::N64
                 SetTileSizeCommand command;
                 command.full = data[0];
                 TileDescriptor& tile = tiles_[command.Tile];
-                tile.s = command.SL << 3;
-                tile.t = command.TL << 3;
+                tile.sl = command.SL;
+                tile.tl = command.TL;
+                tile.sh = command.SH;
+                tile.th = command.TH;
                 break;
             }
             case RDPCommandType::SetTextureImage:
@@ -467,6 +482,14 @@ namespace hydra::N64
 
                 image_read_en_ = command.image_read_en;
                 alpha_compare_en_ = command.alpha_compare_en;
+                if (command.persp_tex_en)
+                {
+                    perspective_correction_func_ = &perspective_correction;
+                }
+                else
+                {
+                    perspective_correction_func_ = &no_perspective_correction;
+                }
                 break;
             }
             case RDPCommandType::SetPrimDepth:
@@ -1038,24 +1061,119 @@ namespace hydra::N64
     void RDP::fetch_texels(int tile, int32_t s, int32_t t)
     {
         TileDescriptor& td = tiles_[tile];
-        switch (td.size)
+        if (td.clamp_s)
         {
-            case 16:
+            auto max_s = ((td.sh >> 2) - (td.sl >> 2)) & 0x3ff;
+            s = std::clamp(s, 0, max_s);
+        }
+        else if (!td.mirror_s)
+            s &= td.mask_s;
+        if (td.clamp_t)
+        {
+            auto max_t = ((td.th >> 2) - (td.tl >> 2)) & 0x3ff;
+            t = std::clamp(t, 0, max_t);
+        }
+        else if (!td.mirror_t)
+            t &= td.mask_t;
+        switch (td.format)
+        {
+            case Format::RGBA:
             {
-                uint16_t address = (td.tmem_address + (t * td.line_width) + s * 2) & 0xFFF;
-                if (t & 1)
+                switch (td.size)
                 {
-                    address ^= 0b10;
+                    case 16:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s * 2) & 0xFFF;
+                        if (t & 1)
+                        {
+                            address ^= 0b10;
+                        }
+                        uint8_t byte1 = tmem_[address & 0xFFF];
+                        uint8_t byte2 = tmem_[(address + 1) & 0xFFF];
+                        texel_color_0_ = rgba16_to_rgba32((byte1 << 8) | byte2);
+                        texel_alpha_0_ = texel_color_0_ >> 24;
+                        break;
+                    }
+                    case 32:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s * 2) & 0xFFF;
+                        uint8_t byte1 = tmem_[address & 0xFFF];
+                        uint8_t byte2 = tmem_[(address + 1) & 0xFFF];
+                        uint8_t byte3 = tmem_[(address + 2) & 0xFFF];
+                        uint8_t byte4 = tmem_[(address + 3) & 0xFFF];
+                        texel_color_0_ = (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
+                        texel_alpha_0_ = texel_color_0_ >> 24;
+                        break;
+                    }
+                    default:
+                    {
+                        Logger::WarnOnce("Unimplemented texture size for RGBA: {}",
+                                         static_cast<int>(td.size));
+                        break;
+                    }
                 }
-                uint8_t byte1 = tmem_[address & 0xFFF];
-                uint8_t byte2 = tmem_[(address + 1) & 0xFFF];
-                texel_color_0_ = rgba16_to_rgba32((byte1 << 8) | byte2);
-                texel_alpha_0_ = texel_color_0_ >> 24;
                 break;
             }
-            case 32:
+            case Format::IA:
             {
-                texel_color_0_ = 0xFF00FF00;
+                switch (td.size)
+                {
+                    case 8:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s) & 0xFFF;
+                        uint8_t ia = tmem_[address & 0xFFF];
+                        uint8_t i = (ia >> 4) | (ia & 0xF0);
+                        uint8_t a = (ia & 0xF) | (ia << 4);
+                        texel_color_0_ = (a << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_0_ = a;
+                        break;
+                    }
+                    case 16:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s * 2) & 0xFFF;
+                        if (t & 1)
+                        {
+                            address ^= 0b10;
+                        }
+                        uint8_t i = tmem_[address & 0xFFF];
+                        uint8_t a = tmem_[(address + 1) & 0xFFF];
+                        texel_color_0_ = (a << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_0_ = a;
+                        break;
+                    }
+                    default:
+                    {
+                        Logger::WarnOnce("Unimplemented texture size for IA: {}",
+                                         static_cast<int>(td.size));
+                        break;
+                    }
+                }
+                break;
+            }
+            case Format::I:
+            {
+                switch (td.size)
+                {
+                    case 8:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s) & 0xFFF;
+                        uint8_t i = tmem_[address & 0xFFF];
+                        texel_color_0_ = (i << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_0_ = i;
+                        break;
+                    }
+                    default:
+                    {
+                        Logger::WarnOnce("Unimplemented texture size for I: {}",
+                                         static_cast<int>(td.size));
+                        break;
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                Logger::WarnOnce("Unimplemented texture format: {}", static_cast<int>(td.format));
             }
         }
         // TODO: implement cycle 1 texel fetching
@@ -1078,76 +1196,68 @@ namespace hydra::N64
         uint32_t y_end = command.TH >> 2;
         uint32_t dram_offset, tmem_offset;
 
-        switch (td.format)
+        td.sl = command.SL;
+        td.sh = command.SH;
+        td.tl = command.TL;
+        td.th = command.TH;
+
+        switch (td.size)
         {
-            case Format::RGBA:
+            case 8:
             {
-                switch (td.size)
+                for (uint32_t y = y_start; y <= y_end; ++y)
                 {
-                    case 16:
+                    for (uint32_t x = x_start; x <= x_end; ++x)
                     {
-                        for (uint32_t y = y_start; y <= y_end; ++y)
-                        {
-                            for (uint32_t x = x_start; x <= x_end; ++x)
-                            {
-                                dram_offset = texture_dram_address_latch_ +
-                                              (y * texture_width_latch_ + x) * 2;
-                                tmem_offset = (td.tmem_address + ((y - y_start) * td.line_width) +
-                                               ((x - x_start) * 2));
-                                if (y & 1)
-                                {
-                                    tmem_offset ^= 0b10;
-                                }
-                                tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
-                                tmem_.at(tmem_offset + 1) = rdram_ptr_[dram_offset + 1];
-                            }
-                        }
-                        break;
-                    }
-                    case 32:
-                    {
-                        for (uint32_t y = y_start; y <= y_end; ++y)
-                        {
-                            for (uint32_t x = x_start; x <= x_end; ++x)
-                            {
-                                dram_offset = texture_dram_address_latch_ +
-                                              (y * texture_width_latch_ + x) * 4;
-                                tmem_offset = (td.tmem_address + ((y - y_start) * td.line_width) +
-                                               ((x - x_start) * 2));
-                                tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
-                                tmem_.at(tmem_offset + 1) = rdram_ptr_[dram_offset + 1];
-                                tmem_.at(tmem_offset + 2) = rdram_ptr_[dram_offset + 2];
-                                tmem_.at(tmem_offset + 3) = rdram_ptr_[dram_offset + 3];
-                            }
-                        }
-                        break;
-                    }
-                    default:
-                    {
-                        Logger::WarnOnce("Invalid RGBA LoadTile command with size: {}", td.size);
-                        break;
+                        dram_offset = texture_dram_address_latch_ + (y * texture_width_latch_ + x);
+                        tmem_offset =
+                            (td.tmem_address + ((y - y_start) * td.line_width) + (x - x_start));
+                        tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
                     }
                 }
                 break;
             }
-            case Format::YUV:
+            case 16:
             {
-                Logger::WarnOnce("Unimplemented YUV LoadTile command");
+                for (uint32_t y = y_start; y <= y_end; ++y)
+                {
+                    for (uint32_t x = x_start; x <= x_end; ++x)
+                    {
+                        dram_offset =
+                            texture_dram_address_latch_ + (y * texture_width_latch_ + x) * 2;
+                        tmem_offset = (td.tmem_address + ((y - y_start) * td.line_width) +
+                                       ((x - x_start) * 2));
+                        if (y & 1)
+                        {
+                            tmem_offset ^= 0b10;
+                        }
+                        tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
+                        tmem_.at(tmem_offset + 1) = rdram_ptr_[dram_offset + 1];
+                    }
+                }
                 break;
             }
-            case Format::CI:
+            case 32:
             {
-                Logger::WarnOnce("Unimplemented CI LoadTile command");
+                for (uint32_t y = y_start; y <= y_end; ++y)
+                {
+                    for (uint32_t x = x_start; x <= x_end; ++x)
+                    {
+                        dram_offset =
+                            texture_dram_address_latch_ + (y * texture_width_latch_ + x) * 4;
+                        tmem_offset = (td.tmem_address + ((y - y_start) * td.line_width) +
+                                       ((x - x_start) * 2));
+                        tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
+                        tmem_.at(tmem_offset + 1) = rdram_ptr_[dram_offset + 1];
+                        tmem_.at(tmem_offset + 2) = rdram_ptr_[dram_offset + 2];
+                        tmem_.at(tmem_offset + 3) = rdram_ptr_[dram_offset + 3];
+                    }
+                }
                 break;
             }
-            case Format::IA:
+            default:
             {
-                Logger::WarnOnce("Unimplemented IA LoadTile command");
-                break;
-            }
-            case Format::I:
-            {
-                Logger::WarnOnce("Unimplemented I LoadTile command");
+                Logger::WarnOnce("Unimplemented LoadTile command with size: {}", td.size);
                 break;
             }
         }
@@ -2182,11 +2292,13 @@ namespace hydra::N64
             if (!span.valid)
                 continue;
 
-            auto r = span.r;
-            auto g = span.g;
-            auto b = span.b;
-            auto a = span.a;
-
+            int32_t r = span.r;
+            int32_t g = span.g;
+            int32_t b = span.b;
+            int32_t a = span.a;
+            int32_t s = span.s;
+            int32_t t = span.t;
+            int32_t w = span.w;
             int32_t z = z_source_sel_ ? primitive_depth_ : span.z;
 
             if (primitive.right_major)
@@ -2203,9 +2315,6 @@ namespace hydra::N64
             int32_t x = x_start;
             int length = span.max_x - span.min_x;
 
-            int32_t s = span.s;
-            int32_t t = span.t;
-
             for (int i = 0; i <= length; i++)
             {
                 uint8_t r8 = color_clamp(r >> 16);
@@ -2218,15 +2327,16 @@ namespace hydra::N64
 
                 get_noise();
 
-                int32_t z_new = z_correct((z >> 10) & 0x3f'ffff);
-                if (depth_test(x, y, z_new, 0))
+                int32_t z_cur = z_correct((z >> 10) & 0x3f'ffff);
+                if (depth_test(x, y, z_cur, 0))
                 {
-                    fetch_texels(primitive.tile_index, s >> 16, t >> 16);
+                    auto [s_cur, t_cur] = perspective_correction_func_(s >> 16, t >> 16, w >> 16);
+                    fetch_texels(primitive.tile_index, s_cur, t_cur);
                     draw_pixel(x, y);
 
                     if (z_update_en_)
                     {
-                        z_set(x, y, z_new);
+                        z_set(x, y, z_cur);
                     }
                 }
 
@@ -2236,6 +2346,8 @@ namespace hydra::N64
                 b += DbDx * x_inc;
                 a += DaDx * x_inc;
                 s += primitive.DsDx * x_inc;
+                t += primitive.DtDx * x_inc;
+                w += primitive.DwDx * x_inc;
                 x += x_inc;
             }
         }

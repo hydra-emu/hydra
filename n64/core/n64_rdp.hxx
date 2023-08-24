@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <n64/core/n64_types.hxx>
+#include <utility>
 #include <vector>
 
 #define RDP_COMMANDS                      \
@@ -40,6 +41,8 @@
     X(SetCombineMode, 0x3C, 1)            \
     X(SetEnvironmentColor, 0x3B, 1)       \
     X(SetFogColor, 0x38, 1)
+
+using persp_func_ptr = std::pair<int32_t, int32_t> (*)(int32_t, int32_t, int32_t);
 
 class N64Debugger;
 class MmioViewer;
@@ -109,7 +112,9 @@ namespace hydra::N64
         uint8_t size;
         uint8_t palette_index;
         uint16_t line_width;
-        uint16_t s, t;
+        uint8_t mask_s, mask_t;
+        bool clamp_s, clamp_t;
+        bool mirror_s, mirror_t;
 
         uint16_t sl, sh, tl, th;
     };
@@ -256,6 +261,8 @@ namespace hydra::N64
         uint16_t scissor_yl_ = 0;
 
         uint32_t seed_;
+        persp_func_ptr perspective_correction_func_;
+        ;
 
         enum CycleType { Cycle1, Cycle2, Copy, Fill } cycle_type_;
 
