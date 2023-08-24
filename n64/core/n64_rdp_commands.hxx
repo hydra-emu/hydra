@@ -266,7 +266,8 @@ namespace hydra::N64
             uint64_t b_m1a_1          : 2;
             uint64_t b_m1a_0          : 2;
             uint64_t                  : 4;
-            uint64_t                  : 16;
+            uint64_t                  : 15;
+            uint64_t persp_tex_en     : 1;
             uint64_t cycle_type       : 2;
             uint64_t                  : 2;
             uint64_t command          : 8;
