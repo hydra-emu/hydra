@@ -1038,14 +1038,17 @@ namespace hydra::N64
     void RDP::fetch_texels(int tile, int32_t s, int32_t t)
     {
         TileDescriptor& td = tiles_[tile];
-        uint32_t address = td.tmem_address;
-        // s ^= td.line_width ? (((t + (s * 2) / td.line_width) & 0x1) << 1) : 0;
         switch (td.size)
         {
             case 16:
             {
-                uint8_t byte1 = tmem_[(address + (t * td.line_width) + s * 2) & 0x1FFF];
-                uint8_t byte2 = tmem_[(address + (t * td.line_width) + (s * 2) + 1) & 0x1FFF];
+                uint16_t address = (td.tmem_address + (t * td.line_width) + s * 2) & 0xFFF;
+                if (t & 1)
+                {
+                    address ^= 0b10;
+                }
+                uint8_t byte1 = tmem_[address & 0xFFF];
+                uint8_t byte2 = tmem_[(address + 1) & 0xFFF];
                 texel_color_0_ = rgba16_to_rgba32((byte1 << 8) | byte2);
                 texel_alpha_0_ = texel_color_0_ >> 24;
                 break;
@@ -1091,6 +1094,10 @@ namespace hydra::N64
                                               (y * texture_width_latch_ + x) * 2;
                                 tmem_offset = (td.tmem_address + ((y - y_start) * td.line_width) +
                                                ((x - x_start) * 2));
+                                if (y & 1)
+                                {
+                                    tmem_offset ^= 0b10;
+                                }
                                 tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
                                 tmem_.at(tmem_offset + 1) = rdram_ptr_[dram_offset + 1];
                             }
@@ -1790,6 +1797,10 @@ namespace hydra::N64
             int32_t DsDx = (int16_t)((data[1] >> 16) & 0xFFFF);
             int32_t DtDy = (int16_t)(data[1] & 0xFFFF);
 
+            // s.5.10, we need to shift left by 6 to move the integer part to the top 16 bits
+            DsDx <<= 6;
+            DtDy <<= 6;
+
             if (cycle_type_ == CycleType::Copy)
             {
                 DsDx >>= 2;
@@ -2210,7 +2221,7 @@ namespace hydra::N64
                 int32_t z_new = z_correct((z >> 10) & 0x3f'ffff);
                 if (depth_test(x, y, z_new, 0))
                 {
-                    fetch_texels(primitive.tile_index, s >> 10, t >> 10);
+                    fetch_texels(primitive.tile_index, s >> 16, t >> 16);
                     draw_pixel(x, y);
 
                     if (z_update_en_)
