@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <n64/core/n64_types.hxx>
+#include <utility>
 #include <vector>
 
 #define RDP_COMMANDS                      \
@@ -15,6 +16,9 @@
     X(TriangleShadeTextureDepth, 0xF, 22) \
     X(SyncPipe, 0x27, 1)                  \
     X(SyncFull, 0x29, 1)                  \
+    X(SetKeyGB, 0x2A, 1)                  \
+    X(SetKeyR, 0x2B, 1)                   \
+    X(SetConvert, 0x2C, 1)                \
     X(SetScissor, 0x2D, 1)                \
     X(SetOtherModes, 0x2F, 1)             \
     X(SetBlendColor, 0x39, 1)             \
@@ -38,12 +42,15 @@
     X(SetEnvironmentColor, 0x3B, 1)       \
     X(SetFogColor, 0x38, 1)
 
+using persp_func_ptr = std::pair<int32_t, int32_t> (*)(int32_t, int32_t, int32_t);
+
 class N64Debugger;
 class MmioViewer;
 
 namespace hydra::N64
 {
     class RSP;
+    union LoadTileCommand;
 
     enum class RDPCommandType {
 #define X(name, opcode, length) name = opcode,
@@ -105,7 +112,11 @@ namespace hydra::N64
         uint8_t size;
         uint8_t palette_index;
         uint16_t line_width;
-        uint16_t s, t;
+        uint8_t mask_s, mask_t;
+        bool clamp_s, clamp_t;
+        bool mirror_s, mirror_t;
+
+        uint16_t sl, sh, tl, th;
     };
 
     struct EdgewalkerInput
@@ -133,7 +144,7 @@ namespace hydra::N64
     struct Span
     {
         int32_t min_x, max_x;
-        bool valid;
+        bool valid = false;
         int32_t r, g, b, a;
         int32_t s, t, w;
         int32_t z;
@@ -148,6 +159,7 @@ namespace hydra::N64
         int32_t DsDx, DtDx, DwDx;
         int32_t DzDx;
         size_t tile_index;
+        bool right_major;
     };
 
     class RDP final
@@ -191,33 +203,32 @@ namespace hydra::N64
         uint32_t combined_color_;
         uint32_t shade_color_;
         uint32_t primitive_color_;
-        uint32_t texel_color_0_;
-        uint32_t texel_color_1_;
+        uint32_t texel_color_[2];
+        uint32_t texel_alpha_[2];
         uint32_t environment_color_;
         uint32_t framebuffer_color_;
+        uint32_t noise_color_;
 
         uint32_t combined_alpha_;
-        uint32_t texel_alpha_0_;
-        uint32_t texel_alpha_1_;
         uint32_t primitive_alpha_;
         uint32_t shade_alpha_;
         uint32_t environment_alpha_;
         uint32_t fog_alpha_;
 
-        uint32_t* color_sub_a_;
-        uint32_t* color_sub_b_;
-        uint32_t* color_multiplier_;
-        uint32_t* color_adder_;
+        uint32_t* color_sub_a_[2];
+        uint32_t* color_sub_b_[2];
+        uint32_t* color_multiplier_[2];
+        uint32_t* color_adder_[2];
 
-        uint32_t* alpha_sub_a_;
-        uint32_t* alpha_sub_b_;
-        uint32_t* alpha_multiplier_;
-        uint32_t* alpha_adder_;
+        uint32_t* alpha_sub_a_[2];
+        uint32_t* alpha_sub_b_[2];
+        uint32_t* alpha_multiplier_[2];
+        uint32_t* alpha_adder_[2];
 
-        uint8_t blender_1a_0_;
-        uint8_t blender_1b_0_;
-        uint8_t blender_2a_0_;
-        uint8_t blender_2b_0_;
+        uint8_t blender_1a_[2];
+        uint8_t blender_1b_[2];
+        uint8_t blender_2a_[2];
+        uint8_t blender_2b_[2];
 
         uint32_t color_zero_ = 0;
         uint32_t color_one_ = 0xFFFF'FFFF;
@@ -237,6 +248,7 @@ namespace hydra::N64
         bool z_compare_en_ = false;
         bool z_source_sel_ = false;
         bool image_read_en_ = false;
+        bool alpha_compare_en_ = false;
         uint8_t z_mode_ : 2 = 0;
         uint32_t primitive_depth_ = 0;
         uint16_t primitive_depth_delta_ = 0;
@@ -246,14 +258,17 @@ namespace hydra::N64
         uint16_t scissor_xl_ = 0;
         uint16_t scissor_yl_ = 0;
 
+        uint32_t seed_;
+        persp_func_ptr perspective_correction_func_;
+
         enum CycleType { Cycle1, Cycle2, Copy, Fill } cycle_type_;
 
         void process_commands();
         void execute_command(const std::vector<uint64_t>& data);
         void draw_triangle(const std::vector<uint64_t>& data);
         inline void draw_pixel(int x, int y);
-        void color_combiner();
-        uint32_t blender();
+        void color_combiner(int cycle);
+        uint32_t blender(int cycle);
 
         bool depth_test(int x, int y, uint32_t z, uint16_t dz);
         inline uint32_t z_get(int x, int y);
@@ -263,7 +278,9 @@ namespace hydra::N64
         uint32_t z_compress(uint32_t z);
         uint32_t z_decompress(uint32_t z);
         void init_depth_luts();
-        void fetch_texels(int tile, int32_t s, int32_t t);
+        void fetch_texels(int texel, int tile, int32_t s, int32_t t);
+        void get_noise();
+        void load_tile(const LoadTileCommand& command);
 
         uint32_t* color_get_sub_a(uint8_t sub_a);
         uint32_t* color_get_sub_b(uint8_t sub_b);
@@ -282,7 +299,8 @@ namespace hydra::N64
         void render_primitive(const Primitive& primitive);
 
         Primitive get_angrylion_primitive(const EdgewalkerInput& data);
-        void check_primitive(const Primitive& primitive, const EdgewalkerInput& data);
+        void check_primitive(const Primitive& primitive, const EdgewalkerInput& input,
+                             const std::vector<uint64_t>& data);
 
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;

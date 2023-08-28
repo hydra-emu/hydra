@@ -15,7 +15,13 @@
 // For debugging purposes
 constexpr bool slow_assertions = true;
 
-static inline uint32_t rgba16_to_rgba32(uint16_t color)
+hydra_inline static uint32_t irand(uint32_t* state)
+{
+    *state = *state * 0x343fd + 0x269ec3;
+    return ((*state >> 16) & 0x7fff);
+}
+
+hydra_inline static uint32_t rgba16_to_rgba32(uint16_t color)
 {
     uint8_t r16 = (color >> 11) & 0x1F;
     uint8_t g16 = (color >> 6) & 0x1F;
@@ -27,13 +33,28 @@ static inline uint32_t rgba16_to_rgba32(uint16_t color)
     return (a << 24) | (b << 16) | (g << 8) | r;
 }
 
-static inline uint16_t rgba32_to_rgba16(uint32_t color)
+hydra_inline static uint16_t rgba32_to_rgba16(uint32_t color)
 {
     uint8_t r = (color >> 3) & 0x1F;
     uint8_t g = (color >> 11) & 0x1F;
     uint8_t b = (color >> 19) & 0x1F;
     uint8_t a = (color >> 24) & 0x1;
     return (r << 11) | (g << 6) | (b << 1) | a;
+}
+
+static std::pair<int32_t, int32_t> perspective_correction(int32_t s, int32_t t, int32_t w)
+{
+    if ((w >> 15) == 0)
+    {
+        Logger::WarnOnce("Division by zero in perspective correction");
+        return {0, 0};
+    }
+    return {(s / (w >> 15)) >> 5, (t / (w >> 15)) >> 5};
+}
+
+static std::pair<int32_t, int32_t> no_perspective_correction(int32_t s, int32_t t, int32_t w)
+{
+    return {(int16_t)s >> 16, (int16_t)t >> 16};
 }
 
 namespace hydra::N64
@@ -72,7 +93,6 @@ namespace hydra::N64
     {
         rdram_9th_bit_.resize(0x800000);
         init_depth_luts();
-        Reset();
     }
 
     void RDP::InstallBuses(uint8_t* rdram_ptr, uint8_t* spmem_ptr)
@@ -165,24 +185,24 @@ namespace hydra::N64
 
     void RDP::Reset()
     {
+        seed_ = 3;
         status_.ready = 1;
-        color_sub_a_ = &color_one_;
-        color_sub_b_ = &color_zero_;
-        color_multiplier_ = &color_one_;
-        color_adder_ = &color_zero_;
-        alpha_sub_a_ = &color_zero_;
-        alpha_sub_b_ = &color_zero_;
-        alpha_multiplier_ = &color_one_;
-        alpha_adder_ = &color_zero_;
-        blender_1a_0_ = 0;
-        blender_1b_0_ = 0;
-        blender_2a_0_ = 0;
-        blender_2b_0_ = 0;
-        texel_color_0_ = 0xFFFFFFFF;
-        texel_color_1_ = 0xFFFFFFFF;
-        texel_alpha_0_ = 0xFFFFFFFF;
-        texel_alpha_1_ = 0xFFFFFFFF;
+        color_sub_a_[0] = color_sub_a_[1] = &color_one_;
+        color_sub_b_[0] = color_sub_b_[1] = &color_zero_;
+        color_multiplier_[0] = color_multiplier_[1] = &color_one_;
+        color_adder_[0] = color_adder_[1] = &color_zero_;
+        alpha_sub_a_[0] = alpha_sub_a_[1] = &color_zero_;
+        alpha_sub_b_[0] = alpha_sub_b_[1] = &color_zero_;
+        alpha_multiplier_[0] = alpha_multiplier_[1] = &color_one_;
+        alpha_adder_[0] = alpha_adder_[1] = &color_zero_;
+        blender_1a_[0] = blender_1a_[1] = 0;
+        blender_1b_[0] = blender_1b_[1] = 0;
+        blender_2a_[0] = blender_2a_[1] = 0;
+        blender_2b_[0] = blender_2b_[1] = 0;
+        texel_color_[0] = texel_color_[1] = 0xFFFFFFFF;
+        texel_alpha_[0] = texel_alpha_[1] = 0xFFFFFFFF;
         cycle_type_ = CycleType::Cycle1;
+        perspective_correction_func_ = &no_perspective_correction;
     }
 
     void RDP::SendCommand(const std::vector<uint64_t>& data)
@@ -264,6 +284,12 @@ namespace hydra::N64
             case RDPCommandType::TriangleShadeTexture:
             case RDPCommandType::TriangleShadeTextureDepth:
             {
+                // printf("custom_triangle({");
+                // for (size_t i = 0; i < data.size(); i++)
+                // {
+                //     printf("0x%016lx, ", data[i]);
+                // }
+                // printf("});\n");
                 uint8_t id8 = static_cast<uint8_t>(id);
                 bool depth = id8 & 0b1;
                 bool texture = id8 & 0b10;
@@ -273,7 +299,7 @@ namespace hydra::N64
 
                 if (slow_assertions)
                 {
-                    check_primitive(primitive, input);
+                    check_primitive(primitive, input, data);
                 }
 
                 render_primitive(primitive);
@@ -283,6 +309,12 @@ namespace hydra::N64
             {
                 EdgewalkerInput input = rectangle_get_edgewalker_input<false, false>(data);
                 Primitive primitive = edgewalker(input);
+
+                if (slow_assertions)
+                {
+                    check_primitive(primitive, input, data);
+                }
+
                 render_primitive(primitive);
                 break;
             }
@@ -290,6 +322,12 @@ namespace hydra::N64
             {
                 EdgewalkerInput input = rectangle_get_edgewalker_input<true, false>(data);
                 Primitive primitive = edgewalker(input);
+
+                if (slow_assertions)
+                {
+                    check_primitive(primitive, input, data);
+                }
+
                 render_primitive(primitive);
                 break;
             }
@@ -313,82 +351,58 @@ namespace hydra::N64
                 // Loads a tile (part of the bigger texture set by SetTextureImage) into TMEM
                 LoadTileCommand command;
                 command.full = data[0];
-                TileDescriptor& tile = tiles_[command.Tile];
 
-                int sl = command.SL;
-                int tl = command.TL;
-                int sh = command.SH + 1;
-                int th = command.TH + 1;
-
-                sh *= sizeof(uint16_t);
-                sl *= sizeof(uint16_t);
-                for (int t = tl; t < th; t++)
-                {
-                    for (int s = sl; s < sh; s++)
-                    {
-                        uint16_t src = *reinterpret_cast<uint16_t*>(
-                            &rdram_ptr_[texture_dram_address_latch_ +
-                                        (t * texture_width_latch_ + s) * 2]);
-                        uint16_t* dst = reinterpret_cast<uint16_t*>(
-                            &tmem_[tile.tmem_address + (t - tl) * tile.line_width + (s - sl) * 2]);
-                        *dst = src;
-                    }
-                }
+                load_tile(command);
                 break;
             }
             case RDPCommandType::LoadBlock:
             {
                 LoadBlockCommand command;
                 command.full = data[0];
-                TileDescriptor& tile = tiles_[command.Tile];
+                TileDescriptor& tile = tiles_[command.tile];
 
                 int sl = command.SL;
-                int tl = command.TL << 11;
-                int sh = command.SH + 1;
-                int DxT = command.DxT;
+                int sh = command.SH;
 
-                bool odd = false;
-
-                switch (texture_format_latch_)
+                switch (texture_pixel_size_latch_)
                 {
-                    case Format::RGBA:
+                    case 16:
                     {
-                        switch (texture_pixel_size_latch_)
+                        sh *= sizeof(uint16_t);
+                        sl *= sizeof(uint16_t);
+                        for (int i = sl; i < sh; i += 8)
                         {
-                            case 16:
-                            {
-                                sh *= sizeof(uint16_t);
-                                sl *= sizeof(uint16_t);
-                                for (int i = sl; i < sh; i += 8)
-                                {
-                                    uint64_t src = *reinterpret_cast<uint64_t*>(
-                                        &rdram_ptr_[texture_dram_address_latch_ + i]);
-                                    if (odd)
-                                    {
-                                        src = (src >> 32) | (src << 32);
-                                    }
-                                    uint8_t* dst =
-                                        reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
-                                    src = hydra::bswap64(src);
-                                    memcpy(dst, &src, 8);
-                                    tl += DxT;
-                                    odd = (tl >> 11) & 1;
-                                }
-                                break;
-                            }
-                            default:
-                            {
-                                Logger::WarnOnce("Using unknown RGBA size for LoadBlock: {}",
-                                                 texture_pixel_size_latch_);
-                                break;
-                            }
+                            uint64_t src = *reinterpret_cast<uint64_t*>(
+                                &rdram_ptr_[texture_dram_address_latch_ + i]);
+                            uint8_t* dst =
+                                reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
+                            memcpy(dst, &src, 8);
                         }
+                        break;
+                    }
+                    case 32:
+                    {
+                        // for (int i = sl; i < sh; i += 8)
+                        // {
+                        //     uint64_t src = *reinterpret_cast<uint64_t*>(
+                        //         &rdram_ptr_[texture_dram_address_latch_ + i]);
+                        //     // Write 8 bytes of texture data to TMEM, split across high and low
+                        //     banks uint8_t* dst =
+                        //         reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
+                        //     for (int j = 0; j < 4; j += 2)
+                        //     {
+                        //         dst[j + 0] = src >> (56 - j * 16);
+                        //         dst[j + 1] = src >> (48 - j * 16);
+                        //         dst[j + 2] = src >> (40 - j * 16);
+                        //         dst[j + 3] = src >> (32 - j * 16);
+                        //     }
+                        // }
                         break;
                     }
                     default:
                     {
-                        Logger::WarnOnce("Using unknown format for LoadBlock: {}",
-                                         static_cast<int>(texture_format_latch_));
+                        Logger::WarnOnce("Using unimplemented size for LoadBlock: {}",
+                                         texture_pixel_size_latch_);
                         break;
                     }
                 }
@@ -404,9 +418,21 @@ namespace hydra::N64
                 tile.tmem_address = command.TMemAddress;
                 tile.format = static_cast<Format>(command.format);
                 tile.size = 4 * (1 << command.size);
-                tile.line_width = command.Line;
+                tile.line_width = command.Line * 8; // in 64bit / 8 byte words
                 // This number is used as the MS 4b of an 8b index.
                 tile.palette_index = command.Palette << 4;
+                tile.clamp_s = command.cs;
+                tile.clamp_t = command.ct;
+                tile.mirror_s = command.ms;
+                tile.mirror_t = command.mt;
+                if (command.MaskS == 0)
+                    tile.mask_s = -1;
+                else
+                    tile.mask_s = (1 << command.MaskS) - 1;
+                if (command.MaskT == 0)
+                    tile.mask_t = -1;
+                else
+                    tile.mask_t = (1 << command.MaskT) - 1;
                 break;
             }
             case RDPCommandType::SetTileSize:
@@ -414,8 +440,10 @@ namespace hydra::N64
                 SetTileSizeCommand command;
                 command.full = data[0];
                 TileDescriptor& tile = tiles_[command.Tile];
-                tile.s = command.SL << 3;
-                tile.t = command.TL << 3;
+                tile.sl = command.SL;
+                tile.tl = command.TL;
+                tile.sh = command.SH;
+                tile.th = command.TH;
                 break;
             }
             case RDPCommandType::SetTextureImage:
@@ -438,11 +466,27 @@ namespace hydra::N64
                 z_update_en_ = command.z_update_en;
                 z_source_sel_ = command.z_source_sel;
                 z_mode_ = command.z_mode;
-                blender_1a_0_ = command.b_m1a_0;
-                blender_1b_0_ = command.b_m1b_0;
-                blender_2a_0_ = command.b_m2a_0;
-                blender_2b_0_ = command.b_m2b_0;
+
+                blender_1a_[0] = command.b_m1a_0;
+                blender_1b_[0] = command.b_m1b_0;
+                blender_2a_[0] = command.b_m2a_0;
+                blender_2b_[0] = command.b_m2b_0;
+
+                blender_1a_[1] = command.b_m1a_1;
+                blender_1b_[1] = command.b_m1b_1;
+                blender_2a_[1] = command.b_m2a_1;
+                blender_2b_[1] = command.b_m2b_1;
+
                 image_read_en_ = command.image_read_en;
+                alpha_compare_en_ = command.alpha_compare_en;
+                if (command.persp_tex_en)
+                {
+                    perspective_correction_func_ = &perspective_correction;
+                }
+                else
+                {
+                    perspective_correction_func_ = &no_perspective_correction;
+                }
                 break;
             }
             case RDPCommandType::SetPrimDepth:
@@ -504,15 +548,33 @@ namespace hydra::N64
                 SetCombineModeCommand command;
                 command.full = data[0];
 
-                color_sub_a_ = color_get_sub_a(command.sub_A_RGB_1);
-                color_sub_b_ = color_get_sub_b(command.sub_B_RGB_1);
-                color_multiplier_ = color_get_mul(command.mul_RGB_1);
-                color_adder_ = color_get_add(command.add_RGB_1);
+                color_sub_a_[0] = color_get_sub_a(command.sub_A_RGB_0);
+                color_sub_b_[0] = color_get_sub_b(command.sub_B_RGB_0);
+                color_multiplier_[0] = color_get_mul(command.mul_RGB_0);
+                color_adder_[0] = color_get_add(command.add_RGB_0);
 
-                alpha_sub_a_ = alpha_get_sub_add(command.sub_A_Alpha_1);
-                alpha_sub_b_ = alpha_get_sub_add(command.sub_B_Alpha_1);
-                alpha_multiplier_ = alpha_get_mul(command.mul_Alpha_1);
-                alpha_adder_ = alpha_get_sub_add(command.add_Alpha_1);
+                color_sub_a_[1] = color_get_sub_a(command.sub_A_RGB_1);
+                color_sub_b_[1] = color_get_sub_b(command.sub_B_RGB_1);
+                color_multiplier_[1] = color_get_mul(command.mul_RGB_1);
+                color_adder_[1] = color_get_add(command.add_RGB_1);
+
+                alpha_sub_a_[0] = alpha_get_sub_add(command.sub_A_Alpha_0);
+                alpha_sub_b_[0] = alpha_get_sub_add(command.sub_B_Alpha_0);
+                alpha_multiplier_[0] = alpha_get_mul(command.mul_Alpha_0);
+                alpha_adder_[0] = alpha_get_sub_add(command.add_Alpha_0);
+
+                alpha_sub_a_[1] = alpha_get_sub_add(command.sub_A_Alpha_1);
+                alpha_sub_b_[1] = alpha_get_sub_add(command.sub_B_Alpha_1);
+                alpha_multiplier_[1] = alpha_get_mul(command.mul_Alpha_1);
+                alpha_adder_[1] = alpha_get_sub_add(command.add_Alpha_1);
+                break;
+            }
+            case RDPCommandType::SetKeyR:
+            case RDPCommandType::SetKeyGB:
+            case RDPCommandType::SetConvert:
+            {
+                Logger::WarnOnce("Unhandled YUV related command: {} ({:02x})",
+                                 get_rdp_command_name(id), static_cast<int>(id));
                 break;
             }
             default:
@@ -529,9 +591,9 @@ namespace hydra::N64
             case 0:
                 return &combined_color_;
             case 1:
-                return &texel_color_0_;
+                return &texel_color_[0];
             case 2:
-                return &texel_color_1_;
+                return &texel_color_[1];
             case 3:
                 return &primitive_color_;
             case 4:
@@ -540,9 +602,8 @@ namespace hydra::N64
                 return &environment_color_;
             case 6:
                 return &color_one_;
-            // TODO: Implement noise
             case 7:
-                return &color_zero_;
+                return &noise_color_;
             default:
                 return &color_zero_;
         }
@@ -555,9 +616,9 @@ namespace hydra::N64
             case 0:
                 return &combined_color_;
             case 1:
-                return &texel_color_0_;
+                return &texel_color_[0];
             case 2:
-                return &texel_color_1_;
+                return &texel_color_[1];
             case 3:
                 return &primitive_color_;
             case 4:
@@ -582,9 +643,9 @@ namespace hydra::N64
             case 0:
                 return &combined_color_;
             case 1:
-                return &texel_color_0_;
+                return &texel_color_[0];
             case 2:
-                return &texel_color_1_;
+                return &texel_color_[1];
             case 3:
                 return &primitive_color_;
             case 4:
@@ -593,6 +654,16 @@ namespace hydra::N64
                 return &environment_color_;
             case 7:
                 return &combined_alpha_;
+            case 8:
+                return &texel_alpha_[0];
+            case 9:
+                return &texel_alpha_[1];
+            case 10:
+                return &primitive_alpha_;
+            case 11:
+                return &shade_alpha_;
+            case 12:
+                return &environment_alpha_;
             // TODO: rest of the colors
             case 16:
             case 17:
@@ -624,9 +695,9 @@ namespace hydra::N64
             case 0:
                 return &combined_color_;
             case 1:
-                return &texel_color_0_;
+                return &texel_color_[0];
             case 2:
-                return &texel_color_1_;
+                return &texel_color_[1];
             case 3:
                 return &primitive_color_;
             case 4:
@@ -649,9 +720,9 @@ namespace hydra::N64
             case 0:
                 return &combined_alpha_;
             case 1:
-                return &texel_alpha_0_;
+                return &texel_alpha_[0];
             case 2:
-                return &texel_alpha_1_;
+                return &texel_alpha_[1];
             case 3:
                 return &primitive_alpha_;
             case 4:
@@ -675,9 +746,9 @@ namespace hydra::N64
                 return &color_one_;
             }
             case 1:
-                return &texel_alpha_0_;
+                return &texel_alpha_[0];
             case 2:
-                return &texel_alpha_1_;
+                return &texel_alpha_[1];
             case 3:
                 return &primitive_alpha_;
             case 4:
@@ -702,42 +773,58 @@ namespace hydra::N64
         {
             case CycleType::Cycle2:
             {
-                static bool warned = false;
-                if (!warned)
-                {
-                    Logger::Warn("This game uses Cycle2, which is not implemented yet");
-                    warned = true;
-                }
-                [[fallthrough]];
-            }
-            case CycleType::Cycle1:
-            {
-                color_combiner();
+                color_combiner(0);
+                color_combiner(1);
+                blender(0);
+                // TODO: remove code duplication
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
                     framebuffer_color_ = rgba16_to_rgba32(*ptr);
-                    *ptr = rgba32_to_rgba16(blender());
+                    *ptr = rgba32_to_rgba16(blender(1));
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
                     framebuffer_color_ = *ptr;
-                    *ptr = blender();
+                    *ptr = blender(1);
+                }
+                break;
+            }
+            case CycleType::Cycle1:
+            {
+                // TODO: there's may be a way to check which cycle we should get the data from
+                color_combiner(1);
+                if (framebuffer_pixel_size_ == 16)
+                {
+                    uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
+                    framebuffer_color_ = rgba16_to_rgba32(*ptr);
+                    *ptr = rgba32_to_rgba16(blender(0));
+                }
+                else
+                {
+                    uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
+                    framebuffer_color_ = *ptr;
+                    *ptr = blender(0);
                 }
                 break;
             }
             case CycleType::Copy:
             {
+                if (alpha_compare_en_ && texel_alpha_[0] == 0)
+                {
+                    break;
+                }
+
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    *ptr = rgba32_to_rgba16(texel_color_0_);
+                    *ptr = rgba32_to_rgba16(texel_color_[0]);
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    *ptr = texel_color_0_;
+                    *ptr = texel_color_[0];
                 }
                 break;
             }
@@ -758,29 +845,32 @@ namespace hydra::N64
         }
     }
 
+    // TODO: using uint8s is technically not correct
     uint8_t combine(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
     {
         return (a - b) * c / 0xFF + d;
     }
 
-    void RDP::color_combiner()
+    void RDP::color_combiner(int cycle)
     {
-        uint8_t r = combine(*color_sub_a_, *color_sub_b_, *color_multiplier_, *color_adder_);
-        uint8_t g = combine(*color_sub_a_ >> 8, *color_sub_b_ >> 8, *color_multiplier_ >> 8,
-                            *color_adder_ >> 8);
-        uint8_t b = combine(*color_sub_a_ >> 16, *color_sub_b_ >> 16, *color_multiplier_ >> 16,
-                            *color_adder_ >> 16);
-        uint8_t a = combine(*alpha_sub_a_, *alpha_sub_b_, *alpha_multiplier_, *alpha_adder_);
+        uint8_t r = combine(*color_sub_a_[cycle], *color_sub_b_[cycle], *color_multiplier_[cycle],
+                            *color_adder_[cycle]);
+        uint8_t g = combine(*color_sub_a_[cycle] >> 8, *color_sub_b_[cycle] >> 8,
+                            *color_multiplier_[cycle] >> 8, *color_adder_[cycle] >> 8);
+        uint8_t b = combine(*color_sub_a_[cycle] >> 16, *color_sub_b_[cycle] >> 16,
+                            *color_multiplier_[cycle] >> 16, *color_adder_[cycle] >> 16);
+        uint8_t a = combine(*alpha_sub_a_[cycle], *alpha_sub_b_[cycle], *alpha_multiplier_[cycle],
+                            *alpha_adder_[cycle]);
         combined_color_ = (a << 24) | (b << 16) | (g << 8) | r;
         combined_alpha_ = a << 24 | a << 16 | a << 8 | a;
     }
 
-    uint32_t RDP::blender()
+    uint32_t RDP::blender(int cycle)
     {
         uint32_t color1, color2;
         uint8_t multiplier1, multiplier2;
 
-        switch (blender_1a_0_ & 0b11)
+        switch (blender_1a_[cycle] & 0b11)
         {
             case 0:
                 color1 = combined_color_;
@@ -796,7 +886,7 @@ namespace hydra::N64
                 break;
         }
 
-        switch (blender_2a_0_ & 0b11)
+        switch (blender_2a_[cycle] & 0b11)
         {
             case 0:
                 color2 = combined_color_;
@@ -812,7 +902,7 @@ namespace hydra::N64
                 break;
         }
 
-        switch (blender_1b_0_ & 0b11)
+        switch (blender_1b_[cycle] & 0b11)
         {
             case 0:
                 multiplier1 = combined_alpha_;
@@ -828,7 +918,7 @@ namespace hydra::N64
                 break;
         }
 
-        switch (blender_2b_0_ & 0b11)
+        switch (blender_2b_[cycle] & 0b11)
         {
             case 0:
                 multiplier2 = ~multiplier1;
@@ -850,7 +940,8 @@ namespace hydra::N64
         if (multiplier1 + multiplier2 == 0)
         {
             Logger::WarnOnce("Blender division by zero - blender settings: {} {} {} {}",
-                             blender_1a_0_, blender_2a_0_, blender_1b_0_, blender_2b_0_);
+                             blender_1a_[cycle], blender_2a_[cycle], blender_1b_[cycle],
+                             blender_2b_[cycle]);
             multiplier1 = 0xFF;
         }
 
@@ -873,8 +964,8 @@ namespace hydra::N64
         {
             uint32_t old_depth = z_get(x, y);
             uint16_t old_dz = dz_get(x, y);
-
             bool pass = false;
+
             switch (z_mode_ & 0b11)
             {
                 // TODO: other depth modes
@@ -964,15 +1055,238 @@ namespace hydra::N64
         return bits & 0x3FFFF;
     }
 
-    void RDP::fetch_texels(int tile, int32_t s, int32_t t)
+    void RDP::fetch_texels(int texel, int tile, int32_t s, int32_t t)
     {
         TileDescriptor& td = tiles_[tile];
-        uint32_t address = td.tmem_address;
-        // s ^= td.line_width ? (((t + (s * 2) / td.line_width) & 0x1) << 1) : 0;
-        uint8_t byte1 = tmem_[(address + (t * td.line_width) + s * 2) & 0x1FFF];
-        uint8_t byte2 = tmem_[(address + (t * td.line_width) + (s * 2) + 1) & 0x1FFF];
-        texel_color_0_ = rgba16_to_rgba32((byte2 << 8) | byte1);
-        texel_alpha_0_ = texel_color_0_ >> 24;
+        if (td.clamp_s)
+        {
+            auto max_s = ((td.sh >> 2) - (td.sl >> 2)) & 0x3ff;
+            s = std::clamp(s, 0, max_s);
+        }
+        else if (!td.mirror_s)
+            s &= td.mask_s;
+        if (td.clamp_t)
+        {
+            auto max_t = ((td.th >> 2) - (td.tl >> 2)) & 0x3ff;
+            t = std::clamp(t, 0, max_t);
+        }
+        else if (!td.mirror_t)
+            t &= td.mask_t;
+        switch (td.format)
+        {
+            case Format::RGBA:
+            {
+                switch (td.size)
+                {
+                    case 16:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s * 2) & 0xFFF;
+                        if (t & 1)
+                        {
+                            address ^= 0b10;
+                        }
+                        uint8_t byte1 = tmem_[address & 0xFFF];
+                        uint8_t byte2 = tmem_[(address + 1) & 0xFFF];
+                        texel_color_[texel] = rgba16_to_rgba32((byte1 << 8) | byte2);
+                        texel_alpha_[texel] = (texel_color_[texel] >> 24) |
+                                              (texel_color_[texel] >> 16) |
+                                              (texel_color_[texel] >> 8) | texel_color_[texel];
+                        break;
+                    }
+                    case 32:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s * 2) & 0xFFF;
+                        uint8_t byte1 = tmem_[address & 0xFFF];
+                        uint8_t byte2 = tmem_[(address + 1) & 0xFFF];
+                        uint8_t byte3 = tmem_[(address + 2) & 0xFFF];
+                        uint8_t byte4 = tmem_[(address + 3) & 0xFFF];
+                        texel_color_[texel] = (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
+                        texel_alpha_[texel] = (texel_color_[texel] >> 24) |
+                                              (texel_color_[texel] >> 16) |
+                                              (texel_color_[texel] >> 8) | texel_color_[texel];
+                        break;
+                    }
+                    default:
+                    {
+                        Logger::WarnOnce("Unimplemented texture size for RGBA: {}",
+                                         static_cast<int>(td.size));
+                        break;
+                    }
+                }
+                break;
+            }
+            case Format::IA:
+            {
+                switch (td.size)
+                {
+                    case 4:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s / 2) & 0xFFF;
+                        uint8_t ia = tmem_[address & 0xFFF];
+                        ia = (s & 1) ? (ia & 0xF) : (ia >> 4);
+                        uint8_t i = ia & 0xE;
+                        i = (i << 4) | (i << 1) | (i >> 2);
+                        uint8_t a = (ia & 0x1) ? 0xFF : 0;
+                        texel_color_[texel] = (a << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = (a << 24) | (a << 16) | (a << 8) | a;
+                        break;
+                    }
+                    case 8:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s) & 0xFFF;
+                        uint8_t ia = tmem_[address & 0xFFF];
+                        uint8_t i = (ia >> 4) | (ia & 0xF0);
+                        uint8_t a = (ia & 0xF) | (ia << 4);
+                        texel_color_[texel] = (a << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = (a << 24) | (a << 16) | (a << 8) | a;
+                        break;
+                    }
+                    case 16:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s * 2) & 0xFFF;
+                        if (t & 1)
+                        {
+                            address ^= 0b10;
+                        }
+                        uint8_t i = tmem_[address & 0xFFF];
+                        uint8_t a = tmem_[(address + 1) & 0xFFF];
+                        texel_color_[texel] = (a << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = (a << 24) | (a << 16) | (a << 8) | a;
+                        break;
+                    }
+                    default:
+                    {
+                        Logger::WarnOnce("Unimplemented texture size for IA: {}",
+                                         static_cast<int>(td.size));
+                        break;
+                    }
+                }
+                break;
+            }
+            case Format::I:
+            {
+                switch (td.size)
+                {
+                    case 4:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s / 2) & 0xFFF;
+                        uint8_t i = tmem_[address & 0xFFF];
+                        if (s & 1)
+                        {
+                            i &= 0xF;
+                        }
+                        else
+                        {
+                            i >>= 4;
+                        }
+                        texel_color_[texel] = (i << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = texel_color_[texel];
+                        break;
+                    }
+                    case 8:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s) & 0xFFF;
+                        uint8_t i = tmem_[address & 0xFFF];
+                        texel_color_[texel] = (i << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = texel_color_[texel];
+                        break;
+                    }
+                    default:
+                    {
+                        Logger::WarnOnce("Unimplemented texture size for I: {}",
+                                         static_cast<int>(td.size));
+                        break;
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                Logger::WarnOnce("Unimplemented texture format: {}", static_cast<int>(td.format));
+            }
+        }
+    }
+
+    void RDP::get_noise()
+    {
+        auto r = irand(&seed_);
+        noise_color_ = (r << 24) | (r << 16) | (r << 8) | r;
+    }
+
+    void RDP::load_tile(const LoadTileCommand& command)
+    {
+        TileDescriptor& td = tiles_[command.tile];
+        uint32_t x_start = command.SL >> 2;
+        uint32_t x_end = command.SH >> 2;
+        uint32_t y_start = command.TL >> 2;
+        uint32_t y_end = command.TH >> 2;
+        uint32_t dram_offset, tmem_offset;
+
+        td.sl = command.SL;
+        td.sh = command.SH;
+        td.tl = command.TL;
+        td.th = command.TH;
+
+        switch (td.size)
+        {
+            case 8:
+            {
+                for (uint32_t y = y_start; y <= y_end; ++y)
+                {
+                    for (uint32_t x = x_start; x <= x_end; ++x)
+                    {
+                        dram_offset = texture_dram_address_latch_ + (y * texture_width_latch_ + x);
+                        tmem_offset =
+                            (td.tmem_address + ((y - y_start) * td.line_width) + (x - x_start));
+                        tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
+                    }
+                }
+                break;
+            }
+            case 16:
+            {
+                for (uint32_t y = y_start; y <= y_end; ++y)
+                {
+                    for (uint32_t x = x_start; x <= x_end; ++x)
+                    {
+                        dram_offset =
+                            texture_dram_address_latch_ + (y * texture_width_latch_ + x) * 2;
+                        tmem_offset = (td.tmem_address + ((y - y_start) * td.line_width) +
+                                       ((x - x_start) * 2));
+                        if (y & 1)
+                        {
+                            tmem_offset ^= 0b10;
+                        }
+                        tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
+                        tmem_.at(tmem_offset + 1) = rdram_ptr_[dram_offset + 1];
+                    }
+                }
+                break;
+            }
+            case 32:
+            {
+                for (uint32_t y = y_start; y <= y_end; ++y)
+                {
+                    for (uint32_t x = x_start; x <= x_end; ++x)
+                    {
+                        dram_offset =
+                            texture_dram_address_latch_ + (y * texture_width_latch_ + x) * 4;
+                        tmem_offset = (td.tmem_address + ((y - y_start) * td.line_width) +
+                                       ((x - x_start) * 2));
+                        tmem_.at(tmem_offset) = rdram_ptr_[dram_offset];
+                        tmem_.at(tmem_offset + 1) = rdram_ptr_[dram_offset + 1];
+                        tmem_.at(tmem_offset + 2) = rdram_ptr_[dram_offset + 2];
+                        tmem_.at(tmem_offset + 3) = rdram_ptr_[dram_offset + 3];
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                Logger::WarnOnce("Unimplemented LoadTile command with size: {}", td.size);
+                break;
+            }
+        }
     }
 
     void RDP::init_depth_luts()
@@ -1058,6 +1372,15 @@ namespace hydra::N64
         dzdx = input.DzDx;
         dzde = input.DzDe;
         dzdy = input.DzDy;
+
+        ret.DrDx = drdx & ~0x1F;
+        ret.DgDx = dgdx & ~0x1F;
+        ret.DbDx = dbdx & ~0x1F;
+        ret.DaDx = dadx & ~0x1F;
+        ret.DsDx = dsdx & ~0x1F;
+        ret.DtDx = dtdx & ~0x1F;
+        ret.DwDx = dwdx & ~0x1F;
+        ret.DzDx = dzdx;
 
         xleft_inc = (dxmdy >> 2) & ~0x1;
         xright_inc = (dxhdy >> 2) & ~0x1;
@@ -1359,7 +1682,8 @@ namespace hydra::N64
         return ret;
     }
 
-    void RDP::check_primitive(const Primitive& my_primitive, const EdgewalkerInput& input)
+    void RDP::check_primitive(const Primitive& my_primitive, const EdgewalkerInput& input,
+                              const std::vector<uint64_t>& data)
     {
         Primitive angrylion_primitive = get_angrylion_primitive(input);
         if (my_primitive.y_start != angrylion_primitive.y_start)
@@ -1372,7 +1696,7 @@ namespace hydra::N64
             Logger::Fatal("Primitive mismatch: y_end - expected: {}, actual: {}",
                           angrylion_primitive.y_end, my_primitive.y_end);
         }
-        for (int i = angrylion_primitive.y_start; i <= angrylion_primitive.y_end; i++)
+        for (int32_t i = angrylion_primitive.y_start; i < angrylion_primitive.y_end; i++)
         {
             std::string problem = "";
             if (my_primitive.spans[i].min_x != angrylion_primitive.spans[i].min_x)
@@ -1393,14 +1717,23 @@ namespace hydra::N64
             if (my_primitive.spans[i].r != angrylion_primitive.spans[i].r ||
                 my_primitive.spans[i].g != angrylion_primitive.spans[i].g ||
                 my_primitive.spans[i].b != angrylion_primitive.spans[i].b ||
-                my_primitive.spans[i].a != angrylion_primitive.spans[i].a)
+                my_primitive.spans[i].a != angrylion_primitive.spans[i].a ||
+                my_primitive.DrDx != angrylion_primitive.DrDx ||
+                my_primitive.DgDx != angrylion_primitive.DgDx ||
+                my_primitive.DbDx != angrylion_primitive.DbDx ||
+                my_primitive.DaDx != angrylion_primitive.DaDx)
             {
-                Logger::Fatal("Primitive mismatch: span {} color - expected: {:08x}, {:08x}, "
-                              "{:08x}, {:08x}, actual: {:08x}, {:08x}, {:08x}, {:08x}",
-                              i, angrylion_primitive.spans[i].r, angrylion_primitive.spans[i].g,
-                              angrylion_primitive.spans[i].b, angrylion_primitive.spans[i].a,
-                              my_primitive.spans[i].r, my_primitive.spans[i].g,
-                              my_primitive.spans[i].b, my_primitive.spans[i].a);
+                Logger::Warn("Primitive mismatch: span {} color - expected: {:08x}, {:08x}, "
+                             "{:08x}, {:08x} actual: {:08x}, {:08x}, {:08x}, {:08x}",
+                             i, angrylion_primitive.spans[i].r, angrylion_primitive.spans[i].g,
+                             angrylion_primitive.spans[i].b, angrylion_primitive.spans[i].a,
+                             my_primitive.spans[i].r, my_primitive.spans[i].g,
+                             my_primitive.spans[i].b, my_primitive.spans[i].a);
+                printf("DrDx: %08x, DgDx: %08x, DbDx: %08x, DaDx: %08x\n", angrylion_primitive.DrDx,
+                       angrylion_primitive.DgDx, angrylion_primitive.DbDx,
+                       angrylion_primitive.DaDx);
+                printf("My DrDx: %08x, DgDx: %08x, DbDx: %08x, DaDx: %08x\n", my_primitive.DrDx,
+                       my_primitive.DgDx, my_primitive.DbDx, my_primitive.DaDx);
             }
 
             if (my_primitive.spans[i].s != angrylion_primitive.spans[i].s ||
@@ -1414,21 +1747,25 @@ namespace hydra::N64
                               my_primitive.spans[i].t, my_primitive.spans[i].w);
             }
 
-            if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z)
+            if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z ||
+                my_primitive.DzDx != angrylion_primitive.DzDx)
             {
-                problem = "zbuf";
+                problem = fmt::format("z expected: {:08x}, actual: {:08x}",
+                                      angrylion_primitive.spans[i].z, my_primitive.spans[i].z);
             }
 
             if (problem != "")
             {
                 printf("Dumping problematic primitive:\n");
-                // for (uint64_t block : data)
-                // {
-                //     printf("%016lx\n", block);
-                // }
+                for (uint64_t block : data)
+                {
+                    printf("0x%016lx, ", block);
+                }
+                printf("\n");
                 printf("Scissor YH: %08x, YL: %08x, XH: %08x, XL: %08x\n", scissor_yh_, scissor_yl_,
                        scissor_xh_, scissor_xl_);
                 printf("Cycle type: %d\n", cycle_type_);
+                printf("Y start: %d, Y end: %d\n", my_primitive.y_start, my_primitive.y_end);
                 Logger::Fatal("Primitive mismatch: span {} - {}", i, problem);
             }
         }
@@ -1570,6 +1907,11 @@ namespace hydra::N64
         RectangleCommand command;
         command.full = data[0];
 
+        if (cycle_type_ == CycleType::Copy || cycle_type_ == CycleType::Fill)
+        {
+            command.yl |= 3;
+        }
+
         int32_t xl_integer = command.xl >> 2;
         int32_t xh_integer = command.xh >> 2;
 
@@ -1582,6 +1924,28 @@ namespace hydra::N64
         ret.yh = command.yh;
 
         ret.right_major = true;
+        ret.tile_index = command.tile;
+
+        if constexpr (Texture)
+        {
+            ret.s = data[1] >> 48;
+            ret.t = (data[1] >> 32) & 0xFFFF;
+            int32_t DsDx = (int16_t)((data[1] >> 16) & 0xFFFF);
+            int32_t DtDy = (int16_t)(data[1] & 0xFFFF);
+
+            // s.5.10, we need to shift left by 6 to move the integer part to the top 16 bits
+            DsDx <<= 6;
+            DtDy <<= 6;
+
+            if (cycle_type_ == CycleType::Copy)
+            {
+                DsDx >>= 2;
+            }
+
+            ret.DsDx = DsDx;
+            ret.DtDe = DtDy;
+            ret.DtDy = DtDy;
+        }
 
         return ret;
     }
@@ -1636,6 +2000,9 @@ namespace hydra::N64
         primitive.DwDx = input.DwDx & ~0x1f;
         primitive.DzDx = input.DzDx;
 
+        primitive.right_major = input.right_major;
+
+        bool sign_slopeh = input.slopeh & 0x80000000;
         if (cycle_type_ != CycleType::Copy)
         {
             DrDx = (input.DrDx >> 8) & ~1;
@@ -1648,7 +2015,6 @@ namespace hydra::N64
             DzDx = (input.DzDx >> 8) & ~1;
         }
 
-        bool sign_slopeh = input.slopeh & 0x80000000;
         bool do_offset = !(sign_slopeh ^ input.right_major);
 
         if (do_offset)
@@ -1776,10 +2142,10 @@ namespace hydra::N64
                 }
 
                 // Check if the current subpixel is inside the scissor
-                // XH/XL are 16.16 fixed point, so shifting by 14 would convert the lower 12 bits
-                // to 10.2 fixed point Since scissor_**_shift is shifted to the left by 1, we need
-                // to shift the XH/XL values by 13 instead of 14, which would convert them to 10.2
-                // fixed point
+                // XH/XL are 16.16 fixed point, so shifting by 14 would convert the lower 12
+                // bits to 10.2 fixed point Since scissor_**_shift is shifted to the left by 1,
+                // we need to shift the XH/XL values by 13 instead of 14, which would convert
+                // them to 10.2 fixed point
                 bool round_bit = ((x_right >> 1) & 0x1fff) > 0;
                 int32_t x_right_clipped = ((x_right >> 13) & 0x1FFE) | round_bit;
                 bool cur_under = ((x_right & 0x8000000) ||
@@ -1856,6 +2222,7 @@ namespace hydra::N64
                 }
 
                 int primitive_load_subpixel = (sign_slopeh ^ input.right_major) ? 0 : 3;
+
                 if (subpixel == primitive_load_subpixel)
                 {
                     int32_t x_frac = (x_right >> 8) & 0xFF;
@@ -1901,9 +2268,44 @@ namespace hydra::N64
         return primitive;
     }
 
+    hydra_inline uint8_t color_clamp(uint16_t color)
+    {
+        switch ((color >> 7) & 3)
+        {
+            case 0:
+            case 1:
+                return color & 0xff;
+            case 2:
+                return 0xff;
+            default:
+                return 0;
+        }
+    }
+
+    hydra_inline int32_t z_correct(int32_t z)
+    {
+        z >>= 3;
+
+        switch ((z >> 17) & 3)
+        {
+            case 0:
+            case 1:
+                return z & 0x3ffff;
+            case 2:
+                return 0x3ffff;
+            default:
+                return 0;
+        }
+    }
+
     void RDP::render_primitive(const Primitive& primitive)
     {
+        int32_t x_start = 0, x_inc = 0;
         int32_t DzDx = primitive.DzDx;
+        int32_t DrDx = primitive.DrDx;
+        int32_t DgDx = primitive.DgDx;
+        int32_t DbDx = primitive.DbDx;
+        int32_t DaDx = primitive.DaDx;
 
         if (z_source_sel_)
         {
@@ -1916,37 +2318,64 @@ namespace hydra::N64
             if (!span.valid)
                 continue;
 
-            auto r = span.r;
-            auto g = span.g;
-            auto b = span.b;
-            auto a = span.a;
+            int32_t r = span.r;
+            int32_t g = span.g;
+            int32_t b = span.b;
+            int32_t a = span.a;
+            int32_t s = span.s;
+            int32_t t = span.t;
+            int32_t w = span.w;
+            int32_t z = z_source_sel_ ? primitive_depth_ : span.z;
 
-            auto z = z_source_sel_ ? primitive_depth_ : span.z;
-
-            for (int x = span.min_x; x <= span.max_x; x++)
+            if (primitive.right_major)
             {
-                uint8_t r8 = std::clamp(r >> 16, 0, 0xFF);
-                uint8_t g8 = std::clamp(g >> 16, 0, 0xFF);
-                uint8_t b8 = std::clamp(b >> 16, 0, 0xFF);
-                uint8_t a8 = std::clamp(a >> 16, 0, 0xFF);
+                x_start = span.min_x;
+                x_inc = 1;
+            }
+            else
+            {
+                x_start = span.max_x;
+                x_inc = -1;
+            }
+
+            int32_t x = x_start;
+            int length = span.max_x - span.min_x;
+
+            for (int i = 0; i <= length; i++)
+            {
+                uint8_t r8 = color_clamp(r >> 16);
+                uint8_t g8 = color_clamp(g >> 16);
+                uint8_t b8 = color_clamp(b >> 16);
+                uint8_t a8 = color_clamp(a >> 16);
 
                 shade_color_ = (a8 << 24) | (b8 << 16) | (g8 << 8) | r8;
                 shade_alpha_ = (a8 << 24) | (a8 << 16) | (a8 << 8) | a8;
 
-                auto z_new = std::max(0, (static_cast<int32_t>(z) >> 13));
-                if (depth_test(x, y, z_new, 0))
+                get_noise();
+
+                int32_t z_cur = z_correct((z >> 10) & 0x3f'ffff);
+                if (depth_test(x, y, z_cur, 0))
                 {
-                    if (span.w != 0)
-                        fetch_texels(primitive.tile_index, span.s / span.w, span.t / span.w);
+                    auto [s_cur, t_cur] = perspective_correction_func_(s, t, w);
+                    fetch_texels(0, primitive.tile_index, s_cur, t_cur);
+                    fetch_texels(1, primitive.tile_index, s_cur, t_cur);
                     draw_pixel(x, y);
 
                     if (z_update_en_)
                     {
-                        z_set(x, y, z_new);
+                        z_set(x, y, z_cur);
                     }
                 }
 
-                z += DzDx;
+                z += DzDx * x_inc;
+                r += DrDx * x_inc;
+                g += DgDx * x_inc;
+                b += DbDx * x_inc;
+                a += DaDx * x_inc;
+                s += primitive.DsDx * x_inc;
+                t += primitive.DtDx * x_inc;
+                w += primitive.DwDx * x_inc;
+                x += x_inc;
             }
         }
     }

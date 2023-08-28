@@ -17,61 +17,44 @@ bool is_number(const std::string& s)
 
 uint32_t get_key_number(std::string key_s)
 {
-    if (key_s == "A")
+    switch (str_hash(key_s.c_str()))
     {
-        return hydra::N64::Keys::A;
-    }
-    if (key_s == "B")
-    {
-        return hydra::N64::Keys::B;
-    }
-    if (key_s == "Z")
-    {
-        return hydra::N64::Keys::Z;
-    }
-    if (key_s == "Start")
-    {
-        return hydra::N64::Keys::Start;
-    }
-    if (key_s == "Up")
-    {
-        return hydra::N64::Keys::Up;
-    }
-    if (key_s == "Down")
-    {
-        return hydra::N64::Keys::Down;
-    }
-    if (key_s == "Left")
-    {
-        return hydra::N64::Keys::Left;
-    }
-    if (key_s == "Right")
-    {
-        return hydra::N64::Keys::Right;
-    }
-    if (key_s == "L")
-    {
-        return hydra::N64::Keys::L;
-    }
-    if (key_s == "R")
-    {
-        return hydra::N64::Keys::R;
-    }
-    if (key_s == "CUp")
-    {
-        return hydra::N64::Keys::CUp;
-    }
-    if (key_s == "CDown")
-    {
-        return hydra::N64::Keys::CDown;
-    }
-    if (key_s == "CLeft")
-    {
-        return hydra::N64::Keys::CLeft;
-    }
-    if (key_s == "CRight")
-    {
-        return hydra::N64::Keys::CRight;
+        case str_hash("A"):
+            return hydra::N64::Keys::A;
+        case str_hash("B"):
+            return hydra::N64::Keys::B;
+        case str_hash("Z"):
+            return hydra::N64::Keys::Z;
+        case str_hash("Start"):
+            return hydra::N64::Keys::Start;
+        case str_hash("Up"):
+            return hydra::N64::Keys::Up;
+        case str_hash("Down"):
+            return hydra::N64::Keys::Down;
+        case str_hash("Left"):
+            return hydra::N64::Keys::Left;
+        case str_hash("Right"):
+            return hydra::N64::Keys::Right;
+        case str_hash("L"):
+            return hydra::N64::Keys::L;
+        case str_hash("R"):
+            return hydra::N64::Keys::R;
+        case str_hash("CUp"):
+            return hydra::N64::Keys::CUp;
+        case str_hash("CDown"):
+            return hydra::N64::Keys::CDown;
+        case str_hash("CLeft"):
+            return hydra::N64::Keys::CLeft;
+        case str_hash("CRight"):
+            return hydra::N64::Keys::CRight;
+        case str_hash("KeypadDown"):
+            return hydra::N64::Keys::KeypadDown;
+        case str_hash("KeypadUp"):
+            return hydra::N64::Keys::KeypadUp;
+        case str_hash("KeypadLeft"):
+            return hydra::N64::Keys::KeypadLeft;
+        case str_hash("KeypadRight"):
+            return hydra::N64::Keys::KeypadRight;
     }
 
     return hydra::N64::Keys::ErrorKey;

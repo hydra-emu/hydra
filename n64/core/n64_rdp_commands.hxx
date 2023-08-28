@@ -138,6 +138,7 @@ namespace hydra::N64
             uint64_t ct          : 1;
             uint64_t Palette     : 4;
             uint64_t Tile        : 3;
+            uint64_t             : 5;
             uint64_t TMemAddress : 9;
             uint64_t Line        : 9;
             uint64_t             : 1;
@@ -181,7 +182,7 @@ namespace hydra::N64
         {
             uint64_t TH   : 12;
             uint64_t SH   : 12;
-            uint64_t Tile : 3;
+            uint64_t tile : 3;
             uint8_t       : 5;
             uint64_t TL   : 12;
             uint64_t SL   : 12;
@@ -202,7 +203,7 @@ namespace hydra::N64
         {
             uint64_t DxT  : 12;
             uint64_t SH   : 12;
-            uint64_t Tile : 3;
+            uint64_t tile : 3;
             uint8_t       : 5;
             uint64_t TL   : 12;
             uint64_t SL   : 12;
@@ -242,7 +243,8 @@ namespace hydra::N64
 
         struct
         {
-            uint64_t                  : 2;
+            uint64_t alpha_compare_en : 1;
+            uint64_t                  : 1;
             uint64_t z_source_sel     : 1;
             uint64_t                  : 1;
             uint64_t z_compare_en     : 1;
@@ -264,7 +266,8 @@ namespace hydra::N64
             uint64_t b_m1a_1          : 2;
             uint64_t b_m1a_0          : 2;
             uint64_t                  : 4;
-            uint64_t                  : 16;
+            uint64_t                  : 15;
+            uint64_t persp_tex_en     : 1;
             uint64_t cycle_type       : 2;
             uint64_t                  : 2;
             uint64_t command          : 8;
