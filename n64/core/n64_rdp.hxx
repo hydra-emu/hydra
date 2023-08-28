@@ -203,15 +203,13 @@ namespace hydra::N64
         uint32_t combined_color_;
         uint32_t shade_color_;
         uint32_t primitive_color_;
-        uint32_t texel_color_0_;
-        uint32_t texel_color_1_;
+        uint32_t texel_color_[2];
+        uint32_t texel_alpha_[2];
         uint32_t environment_color_;
         uint32_t framebuffer_color_;
         uint32_t noise_color_;
 
         uint32_t combined_alpha_;
-        uint32_t texel_alpha_0_;
-        uint32_t texel_alpha_1_;
         uint32_t primitive_alpha_;
         uint32_t shade_alpha_;
         uint32_t environment_alpha_;
@@ -262,7 +260,6 @@ namespace hydra::N64
 
         uint32_t seed_;
         persp_func_ptr perspective_correction_func_;
-        ;
 
         enum CycleType { Cycle1, Cycle2, Copy, Fill } cycle_type_;
 
@@ -281,7 +278,7 @@ namespace hydra::N64
         uint32_t z_compress(uint32_t z);
         uint32_t z_decompress(uint32_t z);
         void init_depth_luts();
-        void fetch_texels(int tile, int32_t s, int32_t t);
+        void fetch_texels(int texel, int tile, int32_t s, int32_t t);
         void get_noise();
         void load_tile(const LoadTileCommand& command);
 
