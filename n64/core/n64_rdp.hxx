@@ -148,6 +148,7 @@ namespace hydra::N64
         int32_t r, g, b, a;
         int32_t s, t, w;
         int32_t z;
+        uint16_t coverage_left, coverage_right;
     };
 
     struct Primitive
@@ -214,6 +215,7 @@ namespace hydra::N64
         uint32_t shade_alpha_;
         uint32_t environment_alpha_;
         uint32_t fog_alpha_;
+        uint32_t current_coverage_;
 
         uint32_t* color_sub_a_[2];
         uint32_t* color_sub_b_[2];
@@ -273,8 +275,10 @@ namespace hydra::N64
         bool depth_test(int x, int y, uint32_t z, uint16_t dz);
         inline uint32_t z_get(int x, int y);
         inline uint8_t dz_get(int x, int y);
+        inline uint8_t coverage_get(int x, int y);
         inline void z_set(int x, int y, uint32_t z);
         inline void dz_set(int x, int y, uint8_t dz);
+        inline void coverage_set(int x, int y, uint16_t coverage);
         uint32_t z_compress(uint32_t z);
         uint32_t z_decompress(uint32_t z);
         void init_depth_luts();
@@ -297,10 +301,6 @@ namespace hydra::N64
 
         Primitive edgewalker(const EdgewalkerInput& data);
         void render_primitive(const Primitive& primitive);
-
-        Primitive get_angrylion_primitive(const EdgewalkerInput& data);
-        void check_primitive(const Primitive& primitive, const EdgewalkerInput& input,
-                             const std::vector<uint64_t>& data);
 
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;
