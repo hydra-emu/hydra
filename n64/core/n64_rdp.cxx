@@ -44,17 +44,17 @@ hydra_inline static uint16_t rgba32_to_rgba16(uint32_t color)
 
 static std::pair<int32_t, int32_t> perspective_correction(int32_t s, int32_t t, int32_t w)
 {
-    if (w == 0)
+    if ((w >> 15) == 0)
     {
         Logger::WarnOnce("Division by zero in perspective correction");
-        return {s, t};
+        return {0, 0};
     }
-    return {s / w, t / w};
+    return {(s / (w >> 15)) >> 5, (t / (w >> 15)) >> 5};
 }
 
 static std::pair<int32_t, int32_t> no_perspective_correction(int32_t s, int32_t t, int32_t w)
 {
-    return {(int16_t)s, (int16_t)t};
+    return {(int16_t)s >> 16, (int16_t)t >> 16};
 }
 
 namespace hydra::N64
@@ -199,10 +199,8 @@ namespace hydra::N64
         blender_1b_[0] = blender_1b_[1] = 0;
         blender_2a_[0] = blender_2a_[1] = 0;
         blender_2b_[0] = blender_2b_[1] = 0;
-        texel_color_0_ = 0xFFFFFFFF;
-        texel_color_1_ = 0xFFFFFFFF;
-        texel_alpha_0_ = 0xFFFFFFFF;
-        texel_alpha_1_ = 0xFFFFFFFF;
+        texel_color_[0] = texel_color_[1] = 0xFFFFFFFF;
+        texel_alpha_[0] = texel_alpha_[1] = 0xFFFFFFFF;
         cycle_type_ = CycleType::Cycle1;
         perspective_correction_func_ = &no_perspective_correction;
     }
@@ -286,6 +284,12 @@ namespace hydra::N64
             case RDPCommandType::TriangleShadeTexture:
             case RDPCommandType::TriangleShadeTextureDepth:
             {
+                // printf("custom_triangle({");
+                // for (size_t i = 0; i < data.size(); i++)
+                // {
+                //     printf("0x%016lx, ", data[i]);
+                // }
+                // printf("});\n");
                 uint8_t id8 = static_cast<uint8_t>(id);
                 bool depth = id8 & 0b1;
                 bool texture = id8 & 0b10;
@@ -358,9 +362,7 @@ namespace hydra::N64
                 TileDescriptor& tile = tiles_[command.tile];
 
                 int sl = command.SL;
-                int sh = command.SH + 1;
-
-                bool odd = false;
+                int sh = command.SH;
 
                 switch (texture_pixel_size_latch_)
                 {
@@ -372,13 +374,8 @@ namespace hydra::N64
                         {
                             uint64_t src = *reinterpret_cast<uint64_t*>(
                                 &rdram_ptr_[texture_dram_address_latch_ + i]);
-                            if (odd)
-                            {
-                                src = (src >> 32) | (src << 32);
-                            }
                             uint8_t* dst =
                                 reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
-                            src = hydra::bswap64(src);
                             memcpy(dst, &src, 8);
                         }
                         break;
@@ -594,9 +591,9 @@ namespace hydra::N64
             case 0:
                 return &combined_color_;
             case 1:
-                return &texel_color_0_;
+                return &texel_color_[0];
             case 2:
-                return &texel_color_1_;
+                return &texel_color_[1];
             case 3:
                 return &primitive_color_;
             case 4:
@@ -619,9 +616,9 @@ namespace hydra::N64
             case 0:
                 return &combined_color_;
             case 1:
-                return &texel_color_0_;
+                return &texel_color_[0];
             case 2:
-                return &texel_color_1_;
+                return &texel_color_[1];
             case 3:
                 return &primitive_color_;
             case 4:
@@ -646,9 +643,9 @@ namespace hydra::N64
             case 0:
                 return &combined_color_;
             case 1:
-                return &texel_color_0_;
+                return &texel_color_[0];
             case 2:
-                return &texel_color_1_;
+                return &texel_color_[1];
             case 3:
                 return &primitive_color_;
             case 4:
@@ -658,9 +655,9 @@ namespace hydra::N64
             case 7:
                 return &combined_alpha_;
             case 8:
-                return &texel_alpha_0_;
+                return &texel_alpha_[0];
             case 9:
-                return &texel_alpha_1_;
+                return &texel_alpha_[1];
             case 10:
                 return &primitive_alpha_;
             case 11:
@@ -698,9 +695,9 @@ namespace hydra::N64
             case 0:
                 return &combined_color_;
             case 1:
-                return &texel_color_0_;
+                return &texel_color_[0];
             case 2:
-                return &texel_color_1_;
+                return &texel_color_[1];
             case 3:
                 return &primitive_color_;
             case 4:
@@ -723,9 +720,9 @@ namespace hydra::N64
             case 0:
                 return &combined_alpha_;
             case 1:
-                return &texel_alpha_0_;
+                return &texel_alpha_[0];
             case 2:
-                return &texel_alpha_1_;
+                return &texel_alpha_[1];
             case 3:
                 return &primitive_alpha_;
             case 4:
@@ -749,9 +746,9 @@ namespace hydra::N64
                 return &color_one_;
             }
             case 1:
-                return &texel_alpha_0_;
+                return &texel_alpha_[0];
             case 2:
-                return &texel_alpha_1_;
+                return &texel_alpha_[1];
             case 3:
                 return &primitive_alpha_;
             case 4:
@@ -814,7 +811,7 @@ namespace hydra::N64
             }
             case CycleType::Copy:
             {
-                if (alpha_compare_en_ && texel_alpha_0_ == 0)
+                if (alpha_compare_en_ && texel_alpha_[0] == 0)
                 {
                     break;
                 }
@@ -822,12 +819,12 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    *ptr = rgba32_to_rgba16(texel_color_0_);
+                    *ptr = rgba32_to_rgba16(texel_color_[0]);
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    *ptr = texel_color_0_;
+                    *ptr = texel_color_[0];
                 }
                 break;
             }
@@ -1058,7 +1055,7 @@ namespace hydra::N64
         return bits & 0x3FFFF;
     }
 
-    void RDP::fetch_texels(int tile, int32_t s, int32_t t)
+    void RDP::fetch_texels(int texel, int tile, int32_t s, int32_t t)
     {
         TileDescriptor& td = tiles_[tile];
         if (td.clamp_s)
@@ -1090,8 +1087,10 @@ namespace hydra::N64
                         }
                         uint8_t byte1 = tmem_[address & 0xFFF];
                         uint8_t byte2 = tmem_[(address + 1) & 0xFFF];
-                        texel_color_0_ = rgba16_to_rgba32((byte1 << 8) | byte2);
-                        texel_alpha_0_ = texel_color_0_ >> 24;
+                        texel_color_[texel] = rgba16_to_rgba32((byte1 << 8) | byte2);
+                        texel_alpha_[texel] = (texel_color_[texel] >> 24) |
+                                              (texel_color_[texel] >> 16) |
+                                              (texel_color_[texel] >> 8) | texel_color_[texel];
                         break;
                     }
                     case 32:
@@ -1101,8 +1100,10 @@ namespace hydra::N64
                         uint8_t byte2 = tmem_[(address + 1) & 0xFFF];
                         uint8_t byte3 = tmem_[(address + 2) & 0xFFF];
                         uint8_t byte4 = tmem_[(address + 3) & 0xFFF];
-                        texel_color_0_ = (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
-                        texel_alpha_0_ = texel_color_0_ >> 24;
+                        texel_color_[texel] = (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
+                        texel_alpha_[texel] = (texel_color_[texel] >> 24) |
+                                              (texel_color_[texel] >> 16) |
+                                              (texel_color_[texel] >> 8) | texel_color_[texel];
                         break;
                     }
                     default:
@@ -1118,14 +1119,26 @@ namespace hydra::N64
             {
                 switch (td.size)
                 {
+                    case 4:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s / 2) & 0xFFF;
+                        uint8_t ia = tmem_[address & 0xFFF];
+                        ia = (s & 1) ? (ia & 0xF) : (ia >> 4);
+                        uint8_t i = ia & 0xE;
+                        i = (i << 4) | (i << 1) | (i >> 2);
+                        uint8_t a = (ia & 0x1) ? 0xFF : 0;
+                        texel_color_[texel] = (a << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = (a << 24) | (a << 16) | (a << 8) | a;
+                        break;
+                    }
                     case 8:
                     {
                         uint16_t address = (td.tmem_address + (t * td.line_width) + s) & 0xFFF;
                         uint8_t ia = tmem_[address & 0xFFF];
                         uint8_t i = (ia >> 4) | (ia & 0xF0);
                         uint8_t a = (ia & 0xF) | (ia << 4);
-                        texel_color_0_ = (a << 24) | (i << 16) | (i << 8) | i;
-                        texel_alpha_0_ = a;
+                        texel_color_[texel] = (a << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = (a << 24) | (a << 16) | (a << 8) | a;
                         break;
                     }
                     case 16:
@@ -1137,8 +1150,8 @@ namespace hydra::N64
                         }
                         uint8_t i = tmem_[address & 0xFFF];
                         uint8_t a = tmem_[(address + 1) & 0xFFF];
-                        texel_color_0_ = (a << 24) | (i << 16) | (i << 8) | i;
-                        texel_alpha_0_ = a;
+                        texel_color_[texel] = (a << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = (a << 24) | (a << 16) | (a << 8) | a;
                         break;
                     }
                     default:
@@ -1154,12 +1167,28 @@ namespace hydra::N64
             {
                 switch (td.size)
                 {
+                    case 4:
+                    {
+                        uint16_t address = (td.tmem_address + (t * td.line_width) + s / 2) & 0xFFF;
+                        uint8_t i = tmem_[address & 0xFFF];
+                        if (s & 1)
+                        {
+                            i &= 0xF;
+                        }
+                        else
+                        {
+                            i >>= 4;
+                        }
+                        texel_color_[texel] = (i << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = texel_color_[texel];
+                        break;
+                    }
                     case 8:
                     {
                         uint16_t address = (td.tmem_address + (t * td.line_width) + s) & 0xFFF;
                         uint8_t i = tmem_[address & 0xFFF];
-                        texel_color_0_ = (i << 24) | (i << 16) | (i << 8) | i;
-                        texel_alpha_0_ = i;
+                        texel_color_[texel] = (i << 24) | (i << 16) | (i << 8) | i;
+                        texel_alpha_[texel] = texel_color_[texel];
                         break;
                     }
                     default:
@@ -1176,9 +1205,6 @@ namespace hydra::N64
                 Logger::WarnOnce("Unimplemented texture format: {}", static_cast<int>(td.format));
             }
         }
-        // TODO: implement cycle 1 texel fetching
-        texel_color_1_ = texel_color_0_ | 0xFF;
-        texel_alpha_1_ = texel_alpha_0_;
     }
 
     void RDP::get_noise()
@@ -2330,8 +2356,9 @@ namespace hydra::N64
                 int32_t z_cur = z_correct((z >> 10) & 0x3f'ffff);
                 if (depth_test(x, y, z_cur, 0))
                 {
-                    auto [s_cur, t_cur] = perspective_correction_func_(s >> 16, t >> 16, w >> 16);
-                    fetch_texels(primitive.tile_index, s_cur, t_cur);
+                    auto [s_cur, t_cur] = perspective_correction_func_(s, t, w);
+                    fetch_texels(0, primitive.tile_index, s_cur, t_cur);
+                    fetch_texels(1, primitive.tile_index, s_cur, t_cur);
                     draw_pixel(x, y);
 
                     if (z_update_en_)
