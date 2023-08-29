@@ -453,6 +453,9 @@ namespace hydra::N64
 
                 image_read_en_ = command.image_read_en;
                 alpha_compare_en_ = command.alpha_compare_en;
+                antialias_en_ = command.antialias_en;
+                cvg_dest_ = static_cast<CoverageMode>(command.cvg_dest);
+                color_on_cvg_ = command.color_on_cvg;
                 if (command.persp_tex_en)
                 {
                     perspective_correction_func_ = &perspective_correction;
@@ -743,7 +746,8 @@ namespace hydra::N64
     {
         uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + framebuffer_dram_address_ +
                             (y * framebuffer_width_ + x) * (framebuffer_pixel_size_ >> 3);
-        current_coverage_ = (coverage / 8.0f) * 255.0f;
+        current_coverage_ = coverage;
+        old_coverage_ = coverage_get(x, y);
         switch (cycle_type_)
         {
             case CycleType::Cycle2:
@@ -899,7 +903,7 @@ namespace hydra::N64
                 multiplier2 = ~multiplier1;
                 break;
             case 1:
-                multiplier2 = 0x00;
+                multiplier2 = 0x00; //(uint8_t)(((float)old_coverage_ / 8.0f) * 0xFF);
                 break;
             case 2:
                 multiplier2 = 0xFF;
@@ -917,13 +921,36 @@ namespace hydra::N64
             multiplier1 = 0xFF;
         }
 
-        uint8_t r = (((color1 >> 0) & 0xFF) * multiplier1 + ((color2 >> 0) & 0xFF) * multiplier2) /
-                    (multiplier1 + multiplier2);
-        uint8_t g = (((color1 >> 8) & 0xFF) * multiplier1 + ((color2 >> 8) & 0xFF) * multiplier2) /
-                    (multiplier1 + multiplier2);
-        uint8_t b =
-            (((color1 >> 16) & 0xFF) * multiplier1 + ((color2 >> 16) & 0xFF) * multiplier2) /
-            (multiplier1 + multiplier2);
+        uint8_t r, g, b;
+        bool coverage_overflow = ((old_coverage_ - 1) + current_coverage_) & 0b1000;
+
+        if (!color_on_cvg_ || coverage_overflow)
+        {
+            r = (((color1 >> 0) & 0xFF) * multiplier1 + ((color2 >> 0) & 0xFF) * multiplier2) /
+                (multiplier1 + multiplier2);
+            g = (((color1 >> 8) & 0xFF) * multiplier1 + ((color2 >> 8) & 0xFF) * multiplier2) /
+                (multiplier1 + multiplier2);
+            b = (((color1 >> 16) & 0xFF) * multiplier1 + ((color2 >> 16) & 0xFF) * multiplier2) /
+                (multiplier1 + multiplier2);
+        }
+        else
+        {
+            r = color2 & 0xFF;
+            g = (color2 >> 8) & 0xFF;
+            b = (color2 >> 16) & 0xFF;
+        }
+
+        // uint8_t r_f = framebuffer_color_ & 0xFF;
+        // uint8_t g_f = (framebuffer_color_ >> 8) & 0xFF;
+        // uint8_t b_f = (framebuffer_color_ >> 16) & 0xFF;
+
+        if (current_coverage_ != 8)
+        {
+            // float cvg = (float)current_coverage_ / 8.0f;
+            // r = (r * cvg) + (r_f * (1 - cvg));
+            // g = (g * cvg) + (g_f * (1 - cvg));
+            // b = (b * cvg) + (b_f * (1 - cvg));
+        }
 
         return (0 << 24) | (b << 16) | (g << 8) | r;
     }
@@ -992,6 +1019,7 @@ namespace hydra::N64
 
     uint8_t RDP::coverage_get(int x, int y)
     {
+        uint8_t coverage = 0;
         if (framebuffer_pixel_size_ == 16)
         {
             // Get coverage from hidden bits
@@ -999,7 +1027,7 @@ namespace hydra::N64
             bool bit0 = rdram_9th_bit_[address];
             bool bit1 = rdram_9th_bit_[address + 1];
             bool bit2 = *reinterpret_cast<uint16_t*>(&rdram_ptr_[address]) & 0b1;
-            return (bit2 << 2) | (bit1 << 1) | bit0;
+            coverage = (bit2 << 2) | (bit1 << 1) | bit0;
         }
         else
         {
@@ -1007,12 +1035,45 @@ namespace hydra::N64
             uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) +
                                 framebuffer_dram_address_ + (y * framebuffer_width_ + x) * 4;
             uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-            return (*ptr >> 29) & 0b111;
+            coverage = (*ptr >> 29) & 0b111;
         }
+
+        coverage += 1;
+        return coverage;
     }
 
-    void RDP::coverage_set(int x, int y, uint16_t coverage)
+    void RDP::coverage_set(int x, int y, uint8_t coverage)
     {
+        auto old_coverage = coverage_get(x, y);
+        switch (cvg_dest_)
+        {
+            case CoverageMode::Clamp:
+            {
+                coverage += old_coverage;
+                if (!(coverage & 8))
+                    coverage &= 7;
+                else
+                    coverage = 7;
+                break;
+            }
+            case CoverageMode::Wrap:
+            {
+                coverage += old_coverage;
+                coverage &= 7;
+                break;
+            }
+            case CoverageMode::Zap:
+            {
+                coverage = 7;
+                break;
+            }
+            case CoverageMode::Save:
+            {
+                coverage = old_coverage;
+                break;
+            }
+        }
+
         if (framebuffer_pixel_size_ == 16)
         {
             bool bit0 = coverage & 0b1;
@@ -1896,11 +1957,6 @@ namespace hydra::N64
             // 4: 0001
             auto coverage_left = 0b0000'1111 >> ((current_left_frac + 1) >> 1);
 
-            std::cout << "coverage_right (" << current_right_int
-                      << "): " << std::bitset<4>(coverage_right) << std::endl;
-            std::cout << "coverage_left (" << current_left_int
-                      << "): " << std::bitset<4>(coverage_left) << std::endl;
-
             if (current_right_int == current_left_int)
             {
                 coverage_mask_buffer_[current_right_int] |= (coverage_left & coverage_right)
@@ -1915,7 +1971,6 @@ namespace hydra::N64
 
     void RDP::render_primitive(const Primitive& primitive)
     {
-        printf("triangle %d\n", primitive.right_major);
         int32_t x_start = 0, x_inc = 0;
         int32_t DzDx = primitive.DzDx;
         int32_t DrDx = primitive.DrDx;
@@ -1981,10 +2036,12 @@ namespace hydra::N64
                     // 0xA5A5 is the checkerboard pattern the N64 uses as it has only 3 bits to
                     // store coverage
                     auto cvg = std::popcount(coverage_mask_buffer_[x & 0x3ff] & 0xa5a5u);
-                    if (cvg)
+                    bool cvbit = coverage_mask_buffer_[x & 0x3ff] & 0x8000u;
+                    if (antialias_en_ ? cvg : cvbit)
                     {
                         draw_pixel(x, y, cvg);
                     }
+                    coverage_set(x, y, cvg);
 
                     if (z_update_en_)
                     {
