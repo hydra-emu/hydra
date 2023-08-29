@@ -148,7 +148,8 @@ namespace hydra::N64
         int32_t r, g, b, a;
         int32_t s, t, w;
         int32_t z;
-        uint16_t coverage_left, coverage_right;
+        uint16_t min_x_subpixel[4];
+        uint16_t max_x_subpixel[4];
     };
 
     struct Primitive
@@ -245,6 +246,7 @@ namespace hydra::N64
         std::vector<bool> rdram_9th_bit_;
         std::array<uint32_t, 0x4000> z_decompress_lut_;
         std::array<uint32_t, 0x40000> z_compress_lut_;
+        std::array<uint16_t, 1024> coverage_mask_buffer_;
 
         bool z_update_en_ = false;
         bool z_compare_en_ = false;
@@ -268,7 +270,7 @@ namespace hydra::N64
         void process_commands();
         void execute_command(const std::vector<uint64_t>& data);
         void draw_triangle(const std::vector<uint64_t>& data);
-        inline void draw_pixel(int x, int y);
+        inline void draw_pixel(int x, int y, uint8_t coverage);
         void color_combiner(int cycle);
         uint32_t blender(int cycle);
 
@@ -279,6 +281,7 @@ namespace hydra::N64
         inline void z_set(int x, int y, uint32_t z);
         inline void dz_set(int x, int y, uint8_t dz);
         inline void coverage_set(int x, int y, uint16_t coverage);
+        void compute_coverage(const Span& span);
         uint32_t z_compress(uint32_t z);
         uint32_t z_decompress(uint32_t z);
         void init_depth_luts();

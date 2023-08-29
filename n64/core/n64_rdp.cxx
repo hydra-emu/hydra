@@ -355,21 +355,22 @@ namespace hydra::N64
                     }
                     case 32:
                     {
-                        // for (int i = sl; i < sh; i += 8)
-                        // {
-                        //     uint64_t src = *reinterpret_cast<uint64_t*>(
-                        //         &rdram_ptr_[texture_dram_address_latch_ + i]);
-                        //     // Write 8 bytes of texture data to TMEM, split across high and low
-                        //     banks uint8_t* dst =
-                        //         reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
-                        //     for (int j = 0; j < 4; j += 2)
-                        //     {
-                        //         dst[j + 0] = src >> (56 - j * 16);
-                        //         dst[j + 1] = src >> (48 - j * 16);
-                        //         dst[j + 2] = src >> (40 - j * 16);
-                        //         dst[j + 3] = src >> (32 - j * 16);
-                        //     }
-                        // }
+                        for (int i = sl; i < sh; i += 8)
+                        {
+                            uint64_t src = *reinterpret_cast<uint64_t*>(
+                                &rdram_ptr_[texture_dram_address_latch_ + i]);
+                            // Write 8 bytes of texture data to TMEM, split across high and low
+                            // banks
+                            uint8_t* dst =
+                                reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
+                            for (int j = 0; j < 4; j += 2)
+                            {
+                                dst[j + 0] = src >> (56 - j * 16);
+                                dst[j + 1] = src >> (48 - j * 16);
+                                dst[j + 2] = src >> (40 - j * 16);
+                                dst[j + 3] = src >> (32 - j * 16);
+                            }
+                        }
                         break;
                     }
                     default:
@@ -738,10 +739,11 @@ namespace hydra::N64
         }
     }
 
-    void RDP::draw_pixel(int x, int y)
+    void RDP::draw_pixel(int x, int y, uint8_t coverage)
     {
         uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + framebuffer_dram_address_ +
                             (y * framebuffer_width_ + x) * (framebuffer_pixel_size_ >> 3);
+        current_coverage_ = (coverage / 8.0f) * 255.0f;
         switch (cycle_type_)
         {
             case CycleType::Cycle2:
@@ -1721,11 +1723,8 @@ namespace hydra::N64
                 all_under &= cur_under;
                 all_over &= cur_over;
 
-                auto subpixels_right = x_left & 0b1111;
-                auto subpixels_left = x_right & 0b1111;
-                // Set left and right coverage of span for current subpixel line
-                current_span.coverage_right |= (subpixels_right << (12 - subpixel * 4));
-                current_span.coverage_left |= (subpixels_left << (12 - subpixel * 4));
+                current_span.min_x_subpixel[subpixel] = x_left_clipped;
+                current_span.max_x_subpixel[subpixel] = x_right_clipped;
 
                 x_right_clipped >>= 3;
                 x_right_clipped &= 0xFFF;
@@ -1795,13 +1794,10 @@ namespace hydra::N64
                 {
                     current_span.min_x = span_leftmost;
                     current_span.max_x = span_rightmost;
-                    current_span.coverage_left &= 0xa5a5;
-                    current_span.coverage_right &= 0xa5a5;
-                    current_span.coverage_left = std::popcount(current_span.coverage_left);
-                    current_span.coverage_right = std::popcount(current_span.coverage_right);
                     if (input.right_major)
                     {
                         std::swap(current_span.min_x, current_span.max_x);
+                        std::swap(current_span.min_x_subpixel, current_span.max_x_subpixel);
                     }
                     current_span.valid = !all_invalid && !all_over && !all_under;
                     primitive.spans[integer_y] = current_span;
@@ -1857,8 +1853,69 @@ namespace hydra::N64
         }
     }
 
+    void RDP::compute_coverage(const Span& span)
+    {
+        std::memset(&coverage_mask_buffer_, 0xFFFF, sizeof(coverage_mask_buffer_));
+
+        for (int subpixel = 0; subpixel < 4; subpixel++)
+        {
+            uint8_t mask = 0xa >> (subpixel & 1);
+            // 12 8 4 0 shifts to place in the four top -> bottom bits
+            uint8_t shift = 12 - (subpixel * 4);
+
+            auto current_right = span.max_x_subpixel[subpixel];
+            auto current_right_int = current_right >> 3;
+            auto current_left = span.min_x_subpixel[subpixel];
+            auto current_left_int = current_left >> 3;
+
+            for (int i = span.min_x; i <= current_left_int; i++)
+            {
+                coverage_mask_buffer_[i] &= ~(mask << shift);
+            }
+
+            for (int i = span.max_x; i >= current_right_int; i--)
+            {
+                coverage_mask_buffer_[i] &= ~(mask << shift);
+            }
+
+            auto current_right_frac = current_right & 0b111;
+            // For fractional part 0->7, add 1 and divide by 2 to get a range 1->4
+            // After shifting, gives the coverage of
+            // 1: 1000
+            // 2: 1100
+            // 3: 1110
+            // 4: 1111
+            auto coverage_right = (0b1111'0000 >> ((current_right_frac + 1) >> 1)) & 0b1111;
+
+            auto current_left_frac = current_left & 0b111;
+            // For fractional part 0->7, add 1 and divide by 2 to get a range 1->4
+            // After shifting, gives the coverage of
+            // 1: 1111
+            // 2: 0111
+            // 3: 0011
+            // 4: 0001
+            auto coverage_left = 0b0000'1111 >> ((current_left_frac + 1) >> 1);
+
+            std::cout << "coverage_right (" << current_right_int
+                      << "): " << std::bitset<4>(coverage_right) << std::endl;
+            std::cout << "coverage_left (" << current_left_int
+                      << "): " << std::bitset<4>(coverage_left) << std::endl;
+
+            if (current_right_int == current_left_int)
+            {
+                coverage_mask_buffer_[current_right_int] |= (coverage_left & coverage_right)
+                                                            << shift;
+                continue;
+            }
+
+            coverage_mask_buffer_[current_right_int] |= coverage_right << shift;
+            coverage_mask_buffer_[current_left_int] |= coverage_left << shift;
+        }
+    }
+
     void RDP::render_primitive(const Primitive& primitive)
     {
+        printf("triangle %d\n", primitive.right_major);
         int32_t x_start = 0, x_inc = 0;
         int32_t DzDx = primitive.DzDx;
         int32_t DrDx = primitive.DrDx;
@@ -1900,6 +1957,8 @@ namespace hydra::N64
             int32_t x = x_start;
             int length = span.max_x - span.min_x;
 
+            compute_coverage(span);
+
             for (int i = 0; i <= length; i++)
             {
                 uint8_t r8 = color_clamp(r >> 16);
@@ -1918,7 +1977,14 @@ namespace hydra::N64
                     auto [s_cur, t_cur] = perspective_correction_func_(s, t, w);
                     fetch_texels(0, primitive.tile_index, s_cur, t_cur);
                     fetch_texels(1, primitive.tile_index, s_cur, t_cur);
-                    draw_pixel(x, y);
+
+                    // 0xA5A5 is the checkerboard pattern the N64 uses as it has only 3 bits to
+                    // store coverage
+                    auto cvg = std::popcount(coverage_mask_buffer_[x & 0x3ff] & 0xa5a5u);
+                    if (cvg)
+                    {
+                        draw_pixel(x, y, cvg);
+                    }
 
                     if (z_update_en_)
                     {
@@ -1936,9 +2002,6 @@ namespace hydra::N64
                 w += primitive.DwDx * x_inc;
                 x += x_inc;
             }
-
-            coverage_set(span.min_x, y, span.coverage_left);
-            coverage_set(span.max_x, y, span.coverage_right);
         }
     }
 } // namespace hydra::N64
