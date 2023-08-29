@@ -164,6 +164,8 @@ namespace hydra::N64
         bool right_major;
     };
 
+    enum class CoverageMode { Clamp = 0, Wrap = 1, Zap = 2, Save = 3 };
+
     class RDP final
     {
     public:
@@ -217,6 +219,7 @@ namespace hydra::N64
         uint32_t environment_alpha_;
         uint32_t fog_alpha_;
         uint32_t current_coverage_;
+        uint32_t old_coverage_;
 
         uint32_t* color_sub_a_[2];
         uint32_t* color_sub_b_[2];
@@ -253,6 +256,9 @@ namespace hydra::N64
         bool z_source_sel_ = false;
         bool image_read_en_ = false;
         bool alpha_compare_en_ = false;
+        bool antialias_en_ = false;
+        bool color_on_cvg_ = false;
+        CoverageMode cvg_dest_ = CoverageMode::Clamp;
         uint8_t z_mode_ : 2 = 0;
         uint32_t primitive_depth_ = 0;
         uint16_t primitive_depth_delta_ = 0;
@@ -280,7 +286,7 @@ namespace hydra::N64
         inline uint8_t coverage_get(int x, int y);
         inline void z_set(int x, int y, uint32_t z);
         inline void dz_set(int x, int y, uint8_t dz);
-        inline void coverage_set(int x, int y, uint16_t coverage);
+        inline void coverage_set(int x, int y, uint8_t coverage);
         void compute_coverage(const Span& span);
         uint32_t z_compress(uint32_t z);
         uint32_t z_decompress(uint32_t z);

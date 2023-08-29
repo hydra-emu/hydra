@@ -246,7 +246,7 @@ namespace hydra::N64
             uint64_t alpha_compare_en : 1;
             uint64_t                  : 1;
             uint64_t z_source_sel     : 1;
-            uint64_t                  : 1;
+            uint64_t antialias_en     : 1;
             uint64_t z_compare_en     : 1;
             uint64_t z_update_en      : 1;
             uint64_t image_read_en    : 1;
