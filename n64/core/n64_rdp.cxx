@@ -742,12 +742,10 @@ namespace hydra::N64
         }
     }
 
-    void RDP::draw_pixel(int x, int y, uint8_t coverage)
+    void RDP::draw_pixel(int x, int y)
     {
         uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + framebuffer_dram_address_ +
                             (y * framebuffer_width_ + x) * (framebuffer_pixel_size_ >> 3);
-        current_coverage_ = coverage;
-        old_coverage_ = coverage_get(x, y);
         switch (cycle_type_)
         {
             case CycleType::Cycle2:
@@ -884,13 +882,13 @@ namespace hydra::N64
         switch (blender_1b_[cycle] & 0b11)
         {
             case 0:
-                multiplier1 = combined_alpha_;
+                multiplier1 = combined_alpha_ >> 24;
                 break;
             case 1:
-                multiplier1 = fog_alpha_;
+                multiplier1 = fog_alpha_ >> 24;
                 break;
             case 2:
-                multiplier1 = shade_alpha_;
+                multiplier1 = shade_alpha_ >> 24;
                 break;
             case 3:
                 multiplier1 = 0x00;
@@ -922,9 +920,8 @@ namespace hydra::N64
         }
 
         uint8_t r, g, b;
-        bool coverage_overflow = ((old_coverage_ - 1) + current_coverage_) & 0b1000;
 
-        if (!color_on_cvg_ || coverage_overflow)
+        if (!color_on_cvg_ || coverage_overflow_)
         {
             r = (((color1 >> 0) & 0xFF) * multiplier1 + ((color2 >> 0) & 0xFF) * multiplier2) /
                 (multiplier1 + multiplier2);
@@ -955,43 +952,50 @@ namespace hydra::N64
         return (0 << 24) | (b << 16) | (g << 8) | r;
     }
 
-    bool RDP::depth_test(int x, int y, uint32_t z, uint16_t dz)
+    bool RDP::depth_test(int x, int y, int32_t z, int16_t dz)
     {
         enum DepthMode { Opaque, Interpenetrating, Transparent, Decal };
 
+        old_coverage_ = coverage_get(x, y);
+        coverage_overflow_ = ((old_coverage_ - 1) + current_coverage_) & 0b1000;
+
         if (z_compare_en_)
         {
-            uint32_t old_depth = z_get(x, y);
-            uint16_t old_dz = dz_get(x, y);
+            int32_t old_z = z_get(x, y);
+            int16_t old_dz = dz_get(x, y);
+            int16_t dz_max = std::max(old_dz, dz);
+            bool was_max = old_z == 0x3FFFF;
             bool pass = false;
 
+            bool farther = (z + dz_max) >= old_z;
+            bool nearer = (z - dz_max) <= old_z;
+            bool infront = z < old_z;
+
+            // See Color Blend Hardware in the programmers manual
             switch (z_mode_ & 0b11)
             {
-                // TODO: other depth modes
                 case Opaque:
                 {
-                    // TODO: there's also some coverage stuff going on here normally
-                    pass = (old_depth == 0x3ffff) || (z < old_depth);
+                    pass = was_max || (coverage_overflow_ ? infront : nearer);
                     break;
                 }
                 case Interpenetrating:
                 {
                     Logger::WarnOnce("Interpenetrating depth mode not implemented");
-                    pass = (old_depth == 0x3ffff) || (z < old_depth);
+                    pass = was_max || z < old_z;
                     break;
                 }
                 case Transparent:
                 {
-                    pass = (old_depth == 0x3ffff) || (z < old_depth);
+                    pass = was_max || infront;
                     break;
                 }
                 case Decal:
                 {
-                    pass = hydra::abs(z - old_depth) <= hydra::max(dz, old_dz);
+                    pass = farther && nearer && !was_max;
                     break;
                 }
             }
-            // TODO: std::unreachable
             return pass;
         }
         else
@@ -1009,12 +1013,25 @@ namespace hydra::N64
         return decompressed;
     }
 
-    uint8_t RDP::dz_get(int x, int y)
+    uint16_t RDP::dz_get(int x, int y)
     {
-        uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + zbuffer_dram_address_ +
-                            (y * framebuffer_width_ + x) * 2;
-        uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-        return *ptr & 0b11;
+        uintptr_t address = zbuffer_dram_address_ + (y * framebuffer_width_ + x) * 2;
+        uint16_t* ptr = reinterpret_cast<uint16_t*>(rdram_ptr_ + address);
+        bool hidden1 = rdram_9th_bit_[address];
+        bool hidden2 = rdram_9th_bit_[address + 1];
+        uint8_t dz_c = (*ptr & 0b11) | (hidden1 << 2) | (hidden2 << 3);
+        return dz_decompress(dz_c);
+    }
+
+    void RDP::dz_set(int x, int y, uint16_t dz)
+    {
+        uint8_t dz_c = dz_compress(dz);
+        uintptr_t address = zbuffer_dram_address_ + (y * framebuffer_width_ + x) * 2;
+        uint16_t* ptr = reinterpret_cast<uint16_t*>(rdram_ptr_ + address);
+        *ptr &= 0xFFFC;
+        *ptr |= dz_c & 0b11;
+        rdram_9th_bit_[address] = (dz_c >> 2) & 0b1;
+        rdram_9th_bit_[address + 1] = (dz_c >> 3) & 0b1;
     }
 
     uint8_t RDP::coverage_get(int x, int y)
@@ -1131,6 +1148,25 @@ namespace hydra::N64
         bits >>= 13;
         bits |= mantissa << z_shifts[exponent];
         return bits & 0x3FFFF;
+    }
+
+    uint8_t RDP::dz_compress(uint16_t dz)
+    {
+        int compressed = 0;
+        if (dz & 0xff00)
+            compressed |= 8;
+        if (dz & 0xf0f0)
+            compressed |= 4;
+        if (dz & 0xcccc)
+            compressed |= 2;
+        if (dz & 0xaaaa)
+            compressed |= 1;
+        return compressed;
+    }
+
+    uint16_t RDP::dz_decompress(uint8_t dz_c)
+    {
+        return 1 << dz_c;
     }
 
     void RDP::fetch_texels(int texel, int tile, int32_t s, int32_t t)
@@ -1659,6 +1695,10 @@ namespace hydra::N64
             DzDiff = dzdeh - (dzdeh >> 2) - dzdyh + (dzdyh >> 2);
         }
 
+        int16_t DzDyInt = DzDy >> 16;
+        int16_t DzDxInt = DzDx >> 16;
+        primitive.DzPix = std::abs(DzDxInt) + std::abs(DzDyInt);
+
         bool use_scissor_low = false, use_scissor_high = false;
 
         int32_t y_start = clear_subpixels(yh);
@@ -1978,9 +2018,12 @@ namespace hydra::N64
         int32_t DbDx = primitive.DbDx;
         int32_t DaDx = primitive.DaDx;
 
+        int32_t DzPix = primitive.DzPix;
+
         if (z_source_sel_)
         {
             DzDx = 0;
+            DzPix = primitive_depth_delta_;
         }
 
         for (int y = primitive.y_start; y <= primitive.y_end; y++)
@@ -2027,7 +2070,8 @@ namespace hydra::N64
                 get_noise();
 
                 int32_t z_cur = z_correct((z >> 10) & 0x3f'ffff);
-                if (depth_test(x, y, z_cur, 0))
+                current_coverage_ = std::popcount(coverage_mask_buffer_[x & 0x3ff] & 0xa5a5u);
+                if (depth_test(x, y, z_cur, DzPix))
                 {
                     auto [s_cur, t_cur] = perspective_correction_func_(s, t, w);
                     fetch_texels(0, primitive.tile_index, s_cur, t_cur);
@@ -2035,17 +2079,17 @@ namespace hydra::N64
 
                     // 0xA5A5 is the checkerboard pattern the N64 uses as it has only 3 bits to
                     // store coverage
-                    auto cvg = std::popcount(coverage_mask_buffer_[x & 0x3ff] & 0xa5a5u);
                     bool cvbit = coverage_mask_buffer_[x & 0x3ff] & 0x8000u;
-                    if (antialias_en_ ? cvg : cvbit)
+                    if (antialias_en_ ? current_coverage_ : cvbit)
                     {
-                        draw_pixel(x, y, cvg);
+                        draw_pixel(x, y);
                     }
-                    coverage_set(x, y, cvg);
+                    coverage_set(x, y, current_coverage_);
 
                     if (z_update_en_)
                     {
                         z_set(x, y, z_cur);
+                        dz_set(x, y, DzPix);
                     }
                 }
 
