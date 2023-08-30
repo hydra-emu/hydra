@@ -160,6 +160,7 @@ namespace hydra::N64
         int32_t DrDx, DgDx, DbDx, DaDx;
         int32_t DsDx, DtDx, DwDx;
         int32_t DzDx;
+        int16_t DzPix;
         size_t tile_index;
         bool right_major;
     };
@@ -258,6 +259,7 @@ namespace hydra::N64
         bool alpha_compare_en_ = false;
         bool antialias_en_ = false;
         bool color_on_cvg_ = false;
+        bool coverage_overflow_ = false;
         CoverageMode cvg_dest_ = CoverageMode::Clamp;
         uint8_t z_mode_ : 2 = 0;
         uint32_t primitive_depth_ = 0;
@@ -276,20 +278,22 @@ namespace hydra::N64
         void process_commands();
         void execute_command(const std::vector<uint64_t>& data);
         void draw_triangle(const std::vector<uint64_t>& data);
-        inline void draw_pixel(int x, int y, uint8_t coverage);
+        inline void draw_pixel(int x, int y);
         void color_combiner(int cycle);
         uint32_t blender(int cycle);
 
-        bool depth_test(int x, int y, uint32_t z, uint16_t dz);
+        bool depth_test(int x, int y, int32_t z, int16_t dz);
         inline uint32_t z_get(int x, int y);
-        inline uint8_t dz_get(int x, int y);
+        inline uint16_t dz_get(int x, int y);
         inline uint8_t coverage_get(int x, int y);
         inline void z_set(int x, int y, uint32_t z);
-        inline void dz_set(int x, int y, uint8_t dz);
+        inline void dz_set(int x, int y, uint16_t dz);
         inline void coverage_set(int x, int y, uint8_t coverage);
         void compute_coverage(const Span& span);
-        uint32_t z_compress(uint32_t z);
-        uint32_t z_decompress(uint32_t z);
+        inline uint32_t z_compress(uint32_t z);
+        inline uint32_t z_decompress(uint32_t z);
+        inline uint8_t dz_compress(uint16_t dz);
+        inline uint16_t dz_decompress(uint8_t dz);
         void init_depth_luts();
         void fetch_texels(int texel, int tile, int32_t s, int32_t t);
         void get_noise();
