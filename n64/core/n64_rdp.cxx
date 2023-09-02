@@ -51,7 +51,7 @@ static std::pair<int32_t, int32_t> perspective_correction(int32_t s, int32_t t, 
 
 static std::pair<int32_t, int32_t> no_perspective_correction(int32_t s, int32_t t, int32_t w)
 {
-    return {(int16_t)s >> 16, (int16_t)t >> 16};
+    return {(int16_t)(s >> 16), (int16_t)(t >> 16)};
 }
 
 namespace hydra::N64
