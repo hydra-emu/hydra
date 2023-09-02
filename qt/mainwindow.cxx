@@ -211,7 +211,7 @@ void MainWindow::open_file_impl(const std::string& path)
     {
         return;
     }
-    auto dirpath = pathfs.parent_path();
+    std::string dirpath = pathfs.parent_path().string();
     EmulatorSettings::GetGeneralSettings().Set("last_path", dirpath);
     close_tools();
     Logger::ClearWarnings();
