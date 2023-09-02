@@ -43,8 +43,8 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 
-if (WINDOWS)
-    add_compile_definitions("FMT_EXCEPTIONS=0")
+if (CMAKE_CXX_COMPILER_ID NOT STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
 endif()
 add_subdirectory(vendored/fmt)
 
