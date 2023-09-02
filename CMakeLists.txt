@@ -43,6 +43,9 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 
+if (WINDOWS)
+    target_compile_definitions(hydra PUBLIC "FMT_EXCEPTIONS=0")
+endif()
 add_subdirectory(vendored/fmt)
 
 # add_compile_options(-fsanitize=address -fsanitize=undefined)
