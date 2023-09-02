@@ -44,7 +44,7 @@ find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 
 if (WINDOWS)
-    target_compile_definitions(hydra PUBLIC "FMT_EXCEPTIONS=0")
+    add_compile_definitions("FMT_EXCEPTIONS=0")
 endif()
 add_subdirectory(vendored/fmt)
 
