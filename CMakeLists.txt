@@ -15,9 +15,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-# TODO: don't always compile with -g
-# TODO: compiler based
-if (LINUX)
+if(WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+elseif(APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
+elseif(LINUX)
     set(WARNINGS 
         "-Werror=return-type"
         "-Werror=unused-variable"
@@ -29,18 +31,10 @@ if (LINUX)
         "-Werror=shadow"
         "-Werror=deprecated-declarations"
     )
-endif()
-string(REPLACE ";" " " WARNINGS_FLAGS "${WARNINGS}")
-set(CMAKE_CXX_FLAGS "-g -O2")
-set(CMAKE_C_FLAGS "-g -O2")
-# TODO: prettify
-if (WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
-endif()
-if (APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
+    string(REPLACE ";" " " WARNINGS_FLAGS "${WARNINGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcrc32 ${WARNINGS_FLAGS} -g -O2")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcrc32 ${WARNINGS_FLAGS}")
+    message(FATAL_ERROR "Unsupported platform")
 endif()
 set(OpenGL_GL_PREFERENCE GLVND)
 
@@ -63,7 +57,6 @@ set(PROJECT_SOURCES
     qt/keypicker.cxx
     qt/nes_ppuviewer.cxx
     qt/mmioviewer.cxx
-    src/emulator.cxx
     src/global.cxx
 )
 
