@@ -20,7 +20,7 @@ namespace hydra
 
     namespace Gameboy::QA
     {
-        struct TestGameboy;
+        class TestGameboy;
     }
 } // namespace hydra
 class MmioViewer;

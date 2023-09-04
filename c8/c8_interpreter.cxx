@@ -18,6 +18,7 @@ namespace
 
     std::ifstream::pos_type filesize(const char* filename)
     {
+        throw 404;
         std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
         return in.tellg();
     }
