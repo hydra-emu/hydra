@@ -12,9 +12,6 @@
 #include <sstream>
 #include <str_hash.hxx>
 
-// For debugging purposes
-constexpr bool slow_assertions = true;
-
 hydra_inline static uint32_t irand(uint32_t* state)
 {
     *state = *state * 0x343fd + 0x269ec3;
@@ -54,7 +51,7 @@ static std::pair<int32_t, int32_t> perspective_correction(int32_t s, int32_t t, 
 
 static std::pair<int32_t, int32_t> no_perspective_correction(int32_t s, int32_t t, int32_t w)
 {
-    return {(int16_t)s >> 16, (int16_t)t >> 16};
+    return {(int16_t)(s >> 16), (int16_t)(t >> 16)};
 }
 
 namespace hydra::N64
@@ -284,24 +281,12 @@ namespace hydra::N64
             case RDPCommandType::TriangleShadeTexture:
             case RDPCommandType::TriangleShadeTextureDepth:
             {
-                // printf("custom_triangle({");
-                // for (size_t i = 0; i < data.size(); i++)
-                // {
-                //     printf("0x%016lx, ", data[i]);
-                // }
-                // printf("});\n");
                 uint8_t id8 = static_cast<uint8_t>(id);
                 bool depth = id8 & 0b1;
                 bool texture = id8 & 0b10;
                 bool shade = id8 & 0b100;
                 EdgewalkerInput input = triangle_get_edgewalker_input(data, shade, texture, depth);
                 Primitive primitive = edgewalker(input);
-
-                if (slow_assertions)
-                {
-                    check_primitive(primitive, input, data);
-                }
-
                 render_primitive(primitive);
                 break;
             }
@@ -309,12 +294,6 @@ namespace hydra::N64
             {
                 EdgewalkerInput input = rectangle_get_edgewalker_input<false, false>(data);
                 Primitive primitive = edgewalker(input);
-
-                if (slow_assertions)
-                {
-                    check_primitive(primitive, input, data);
-                }
-
                 render_primitive(primitive);
                 break;
             }
@@ -322,12 +301,6 @@ namespace hydra::N64
             {
                 EdgewalkerInput input = rectangle_get_edgewalker_input<true, false>(data);
                 Primitive primitive = edgewalker(input);
-
-                if (slow_assertions)
-                {
-                    check_primitive(primitive, input, data);
-                }
-
                 render_primitive(primitive);
                 break;
             }
@@ -382,21 +355,22 @@ namespace hydra::N64
                     }
                     case 32:
                     {
-                        // for (int i = sl; i < sh; i += 8)
-                        // {
-                        //     uint64_t src = *reinterpret_cast<uint64_t*>(
-                        //         &rdram_ptr_[texture_dram_address_latch_ + i]);
-                        //     // Write 8 bytes of texture data to TMEM, split across high and low
-                        //     banks uint8_t* dst =
-                        //         reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
-                        //     for (int j = 0; j < 4; j += 2)
-                        //     {
-                        //         dst[j + 0] = src >> (56 - j * 16);
-                        //         dst[j + 1] = src >> (48 - j * 16);
-                        //         dst[j + 2] = src >> (40 - j * 16);
-                        //         dst[j + 3] = src >> (32 - j * 16);
-                        //     }
-                        // }
+                        for (int i = sl; i < sh; i += 8)
+                        {
+                            uint64_t src = *reinterpret_cast<uint64_t*>(
+                                &rdram_ptr_[texture_dram_address_latch_ + i]);
+                            // Write 8 bytes of texture data to TMEM, split across high and low
+                            // banks
+                            uint8_t* dst =
+                                reinterpret_cast<uint8_t*>(&tmem_[tile.tmem_address + i]);
+                            for (int j = 0; j < 4; j += 2)
+                            {
+                                dst[j + 0] = src >> (56 - j * 16);
+                                dst[j + 1] = src >> (48 - j * 16);
+                                dst[j + 2] = src >> (40 - j * 16);
+                                dst[j + 3] = src >> (32 - j * 16);
+                            }
+                        }
                         break;
                     }
                     default:
@@ -479,6 +453,9 @@ namespace hydra::N64
 
                 image_read_en_ = command.image_read_en;
                 alpha_compare_en_ = command.alpha_compare_en;
+                antialias_en_ = command.antialias_en;
+                cvg_dest_ = static_cast<CoverageMode>(command.cvg_dest);
+                color_on_cvg_ = command.color_on_cvg;
                 if (command.persp_tex_en)
                 {
                     perspective_correction_func_ = &perspective_correction;
@@ -833,7 +810,7 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    *ptr = x & 1 ? fill_color_16_0_ : fill_color_16_1_;
+                    *ptr = (x & 1) ? fill_color_16_0_ : fill_color_16_1_;
                 }
                 else
                 {
@@ -905,13 +882,13 @@ namespace hydra::N64
         switch (blender_1b_[cycle] & 0b11)
         {
             case 0:
-                multiplier1 = combined_alpha_;
+                multiplier1 = combined_alpha_ >> 24;
                 break;
             case 1:
-                multiplier1 = fog_alpha_;
+                multiplier1 = fog_alpha_ >> 24;
                 break;
             case 2:
-                multiplier1 = shade_alpha_;
+                multiplier1 = shade_alpha_ >> 24;
                 break;
             case 3:
                 multiplier1 = 0x00;
@@ -924,10 +901,7 @@ namespace hydra::N64
                 multiplier2 = ~multiplier1;
                 break;
             case 1:
-                // Apparently this is coverage
-                // The bits in the framebuffer that are normally used for alpha are actually
-                // coverage use 0 for now
-                multiplier2 = 0x00;
+                multiplier2 = 0x00; //(uint8_t)(((float)old_coverage_ / 8.0f) * 0xFF);
                 break;
             case 2:
                 multiplier2 = 0xFF;
@@ -945,54 +919,83 @@ namespace hydra::N64
             multiplier1 = 0xFF;
         }
 
-        uint8_t r = (((color1 >> 0) & 0xFF) * multiplier1 + ((color2 >> 0) & 0xFF) * multiplier2) /
-                    (multiplier1 + multiplier2);
-        uint8_t g = (((color1 >> 8) & 0xFF) * multiplier1 + ((color2 >> 8) & 0xFF) * multiplier2) /
-                    (multiplier1 + multiplier2);
-        uint8_t b =
-            (((color1 >> 16) & 0xFF) * multiplier1 + ((color2 >> 16) & 0xFF) * multiplier2) /
-            (multiplier1 + multiplier2);
+        uint8_t r, g, b;
 
-        return (0xFF << 24) | (b << 16) | (g << 8) | r;
+        if (!color_on_cvg_ || coverage_overflow_)
+        {
+            r = (((color1 >> 0) & 0xFF) * multiplier1 + ((color2 >> 0) & 0xFF) * multiplier2) /
+                (multiplier1 + multiplier2);
+            g = (((color1 >> 8) & 0xFF) * multiplier1 + ((color2 >> 8) & 0xFF) * multiplier2) /
+                (multiplier1 + multiplier2);
+            b = (((color1 >> 16) & 0xFF) * multiplier1 + ((color2 >> 16) & 0xFF) * multiplier2) /
+                (multiplier1 + multiplier2);
+        }
+        else
+        {
+            r = color2 & 0xFF;
+            g = (color2 >> 8) & 0xFF;
+            b = (color2 >> 16) & 0xFF;
+        }
+
+        // uint8_t r_f = framebuffer_color_ & 0xFF;
+        // uint8_t g_f = (framebuffer_color_ >> 8) & 0xFF;
+        // uint8_t b_f = (framebuffer_color_ >> 16) & 0xFF;
+
+        if (current_coverage_ != 8)
+        {
+            // float cvg = (float)current_coverage_ / 8.0f;
+            // r = (r * cvg) + (r_f * (1 - cvg));
+            // g = (g * cvg) + (g_f * (1 - cvg));
+            // b = (b * cvg) + (b_f * (1 - cvg));
+        }
+
+        return (0 << 24) | (b << 16) | (g << 8) | r;
     }
 
-    bool RDP::depth_test(int x, int y, uint32_t z, uint16_t dz)
+    bool RDP::depth_test(int x, int y, int32_t z, int16_t dz)
     {
         enum DepthMode { Opaque, Interpenetrating, Transparent, Decal };
 
+        old_coverage_ = coverage_get(x, y);
+        coverage_overflow_ = ((old_coverage_ - 1) + current_coverage_) & 0b1000;
+
         if (z_compare_en_)
         {
-            uint32_t old_depth = z_get(x, y);
-            uint16_t old_dz = dz_get(x, y);
+            int32_t old_z = z_get(x, y);
+            int16_t old_dz = dz_get(x, y);
+            int16_t dz_max = std::max(old_dz, dz);
+            bool was_max = old_z == 0x3FFFF;
             bool pass = false;
 
+            bool farther = (z + dz_max) >= old_z;
+            bool nearer = (z - dz_max) <= old_z;
+            bool infront = z < old_z;
+
+            // See Color Blend Hardware in the programmers manual
             switch (z_mode_ & 0b11)
             {
-                // TODO: other depth modes
                 case Opaque:
                 {
-                    // TODO: there's also some coverage stuff going on here normally
-                    pass = (old_depth == 0x3ffff) || (z < old_depth);
+                    pass = was_max || (coverage_overflow_ ? infront : nearer);
                     break;
                 }
                 case Interpenetrating:
                 {
                     Logger::WarnOnce("Interpenetrating depth mode not implemented");
-                    pass = (old_depth == 0x3ffff) || (z < old_depth);
+                    pass = was_max || z < old_z;
                     break;
                 }
                 case Transparent:
                 {
-                    pass = (old_depth == 0x3ffff) || (z < old_depth);
+                    pass = was_max || infront;
                     break;
                 }
                 case Decal:
                 {
-                    pass = hydra::abs(z - old_depth) <= hydra::max(dz, old_dz);
+                    pass = farther && nearer && !was_max;
                     break;
                 }
             }
-            // TODO: std::unreachable
             return pass;
         }
         else
@@ -1010,12 +1013,104 @@ namespace hydra::N64
         return decompressed;
     }
 
-    uint8_t RDP::dz_get(int x, int y)
+    uint16_t RDP::dz_get(int x, int y)
     {
-        uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + zbuffer_dram_address_ +
-                            (y * framebuffer_width_ + x) * 2;
-        uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-        return *ptr & 0b11;
+        uintptr_t address = zbuffer_dram_address_ + (y * framebuffer_width_ + x) * 2;
+        uint16_t* ptr = reinterpret_cast<uint16_t*>(rdram_ptr_ + address);
+        bool hidden1 = rdram_9th_bit_[address];
+        bool hidden2 = rdram_9th_bit_[address + 1];
+        uint8_t dz_c = (*ptr & 0b11) | (hidden1 << 2) | (hidden2 << 3);
+        return dz_decompress(dz_c);
+    }
+
+    void RDP::dz_set(int x, int y, uint16_t dz)
+    {
+        uint8_t dz_c = dz_compress(dz);
+        uintptr_t address = zbuffer_dram_address_ + (y * framebuffer_width_ + x) * 2;
+        uint16_t* ptr = reinterpret_cast<uint16_t*>(rdram_ptr_ + address);
+        *ptr &= 0xFFFC;
+        *ptr |= dz_c & 0b11;
+        rdram_9th_bit_[address] = (dz_c >> 2) & 0b1;
+        rdram_9th_bit_[address + 1] = (dz_c >> 3) & 0b1;
+    }
+
+    uint8_t RDP::coverage_get(int x, int y)
+    {
+        uint8_t coverage = 0;
+        if (framebuffer_pixel_size_ == 16)
+        {
+            // Get coverage from hidden bits
+            uintptr_t address = framebuffer_dram_address_ + (y * framebuffer_width_ + x) * 2;
+            bool bit0 = rdram_9th_bit_[address];
+            bool bit1 = rdram_9th_bit_[address + 1];
+            bool bit2 = *reinterpret_cast<uint16_t*>(&rdram_ptr_[address]) & 0b1;
+            coverage = (bit2 << 2) | (bit1 << 1) | bit0;
+        }
+        else
+        {
+            // Coverage is top 3 bits of alpha
+            uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) +
+                                framebuffer_dram_address_ + (y * framebuffer_width_ + x) * 4;
+            uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
+            coverage = (*ptr >> 29) & 0b111;
+        }
+
+        coverage += 1;
+        return coverage;
+    }
+
+    void RDP::coverage_set(int x, int y, uint8_t coverage)
+    {
+        auto old_coverage = coverage_get(x, y);
+        switch (cvg_dest_)
+        {
+            case CoverageMode::Clamp:
+            {
+                coverage += old_coverage;
+                if (!(coverage & 8))
+                    coverage &= 7;
+                else
+                    coverage = 7;
+                break;
+            }
+            case CoverageMode::Wrap:
+            {
+                coverage += old_coverage;
+                coverage &= 7;
+                break;
+            }
+            case CoverageMode::Zap:
+            {
+                coverage = 7;
+                break;
+            }
+            case CoverageMode::Save:
+            {
+                coverage = old_coverage;
+                break;
+            }
+        }
+
+        if (framebuffer_pixel_size_ == 16)
+        {
+            bool bit0 = coverage & 0b1;
+            bool bit1 = coverage & 0b10;
+            bool bit2 = coverage & 0b100;
+            uintptr_t address = framebuffer_dram_address_ + (y * framebuffer_width_ + x) * 2;
+            rdram_9th_bit_[address] = bit0;
+            rdram_9th_bit_[address + 1] = bit1;
+            uint16_t* ptr = reinterpret_cast<uint16_t*>(&rdram_ptr_[address]);
+            *ptr &= 0xfffc;
+            *ptr |= bit2;
+        }
+        else
+        {
+            uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) +
+                                framebuffer_dram_address_ + (y * framebuffer_width_ + x) * 4;
+            uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
+            *ptr &= 0x1fffffff;
+            *ptr |= coverage << 29;
+        }
     }
 
     void RDP::z_set(int x, int y, uint32_t z)
@@ -1055,6 +1150,25 @@ namespace hydra::N64
         return bits & 0x3FFFF;
     }
 
+    uint8_t RDP::dz_compress(uint16_t dz)
+    {
+        int compressed = 0;
+        if (dz & 0xff00)
+            compressed |= 8;
+        if (dz & 0xf0f0)
+            compressed |= 4;
+        if (dz & 0xcccc)
+            compressed |= 2;
+        if (dz & 0xaaaa)
+            compressed |= 1;
+        return compressed;
+    }
+
+    uint16_t RDP::dz_decompress(uint8_t dz_c)
+    {
+        return 1 << dz_c;
+    }
+
     void RDP::fetch_texels(int texel, int tile, int32_t s, int32_t t)
     {
         TileDescriptor& td = tiles_[tile];
@@ -1063,14 +1177,22 @@ namespace hydra::N64
             auto max_s = ((td.sh >> 2) - (td.sl >> 2)) & 0x3ff;
             s = std::clamp(s, 0, max_s);
         }
-        else if (!td.mirror_s)
+        else if (td.mirror_s)
+        {
+            s = ((s & (td.mask_s + 1)) ? -s : s) & td.mask_s;
+        }
+        else
             s &= td.mask_s;
         if (td.clamp_t)
         {
             auto max_t = ((td.th >> 2) - (td.tl >> 2)) & 0x3ff;
             t = std::clamp(t, 0, max_t);
         }
-        else if (!td.mirror_t)
+        else if (td.mirror_t)
+        {
+            t = ((t & (td.mask_t + 1)) ? -t : t) & td.mask_t;
+        }
+        else
             t &= td.mask_t;
         switch (td.format)
         {
@@ -1081,16 +1203,11 @@ namespace hydra::N64
                     case 16:
                     {
                         uint16_t address = (td.tmem_address + (t * td.line_width) + s * 2) & 0xFFF;
-                        if (t & 1)
-                        {
-                            address ^= 0b10;
-                        }
                         uint8_t byte1 = tmem_[address & 0xFFF];
                         uint8_t byte2 = tmem_[(address + 1) & 0xFFF];
                         texel_color_[texel] = rgba16_to_rgba32((byte1 << 8) | byte2);
-                        texel_alpha_[texel] = (texel_color_[texel] >> 24) |
-                                              (texel_color_[texel] >> 16) |
-                                              (texel_color_[texel] >> 8) | texel_color_[texel];
+                        uint8_t alpha = texel_color_[texel] >> 24;
+                        texel_alpha_[texel] = (alpha << 24) | (alpha << 16) | (alpha << 8) | alpha;
                         break;
                     }
                     case 32:
@@ -1101,9 +1218,7 @@ namespace hydra::N64
                         uint8_t byte3 = tmem_[(address + 2) & 0xFFF];
                         uint8_t byte4 = tmem_[(address + 3) & 0xFFF];
                         texel_color_[texel] = (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
-                        texel_alpha_[texel] = (texel_color_[texel] >> 24) |
-                                              (texel_color_[texel] >> 16) |
-                                              (texel_color_[texel] >> 8) | texel_color_[texel];
+                        texel_alpha_[texel] = (byte1 << 24) | (byte1 << 16) | (byte1 << 8) | byte1;
                         break;
                     }
                     default:
@@ -1301,473 +1416,6 @@ namespace hydra::N64
             // the 2 lower bits along with 2 more from the rdrams 9th bit
             // are used to store the depth delta
             z_compress_lut_[i] = z_compress(i) << 2;
-        }
-    }
-
-    // Taken from angrylion's RDP, modified to use a vector of uint64_t
-    // and to return a Primitive, used to compare spans in real time
-    // for debugging purposes
-    // Code: https://github.com/ata4/angrylion-rdp-plus
-    Primitive RDP::get_angrylion_primitive(const EdgewalkerInput& input)
-    {
-        Primitive ret;
-
-        int j = 0;
-        int xleft = 0, xright = 0, xleft_inc = 0, xright_inc = 0;
-        int r = 0, g = 0, b = 0, a = 0, z = 0, s = 0, t = 0, w = 0;
-        int drdx = 0, dgdx = 0, dbdx = 0, dadx = 0, dzdx = 0, dsdx = 0, dtdx = 0, dwdx = 0;
-        int drdy = 0, dgdy = 0, dbdy = 0, dady = 0, dzdy = 0, dsdy = 0, dtdy = 0, dwdy = 0;
-        int drde = 0, dgde = 0, dbde = 0, dade = 0, dzde = 0, dsde = 0, dtde = 0, dwde = 0;
-        int flip = 0;
-        int32_t yl = 0, ym = 0, yh = 0;
-        int32_t xl = 0, xm = 0, xh = 0;
-        int32_t dxldy = 0, dxhdy = 0, dxmdy = 0;
-
-        flip = input.right_major;
-
-#define SIGN(x, numb) (((x) & ((1 << (numb)) - 1)) | -((x) & (1 << ((numb)-1))))
-        yl = input.yl;
-        ym = input.ym;
-        yh = input.yh;
-
-        xl = input.xl;
-        xh = input.xh;
-        xm = input.xm;
-
-        dxldy = input.slopel;
-        dxhdy = input.slopeh;
-        dxmdy = input.slopem;
-
-        r = input.r;
-        g = input.g;
-        b = input.b;
-        a = input.a;
-        drdx = input.DrDx;
-        dgdx = input.DgDx;
-        dbdx = input.DbDx;
-        dadx = input.DaDx;
-        drde = input.DrDe;
-        dgde = input.DgDe;
-        dbde = input.DbDe;
-        dade = input.DaDe;
-        drdy = input.DrDy;
-        dgdy = input.DgDy;
-        dbdy = input.DbDy;
-        dady = input.DaDy;
-
-        s = input.s;
-        t = input.t;
-        w = input.w;
-        dsdx = input.DsDx;
-        dtdx = input.DtDx;
-        dwdx = input.DwDx;
-        dsde = input.DsDe;
-        dtde = input.DtDe;
-        dwde = input.DwDe;
-        dsdy = input.DsDy;
-        dtdy = input.DtDy;
-        dwdy = input.DwDy;
-
-        z = input.z;
-        dzdx = input.DzDx;
-        dzde = input.DzDe;
-        dzdy = input.DzDy;
-
-        ret.DrDx = drdx & ~0x1F;
-        ret.DgDx = dgdx & ~0x1F;
-        ret.DbDx = dbdx & ~0x1F;
-        ret.DaDx = dadx & ~0x1F;
-        ret.DsDx = dsdx & ~0x1F;
-        ret.DtDx = dtdx & ~0x1F;
-        ret.DwDx = dwdx & ~0x1F;
-        ret.DzDx = dzdx;
-
-        xleft_inc = (dxmdy >> 2) & ~0x1;
-        xright_inc = (dxhdy >> 2) & ~0x1;
-
-        xright = xh & ~0x1;
-        xleft = xm & ~0x1;
-
-        int k = 0;
-
-        int dsdiff, dtdiff, dwdiff, drdiff, dgdiff, dbdiff, dadiff, dzdiff;
-        int sign_dxhdy = (input.slopeh & 0x80000000) != 0;
-
-        int dsdeh, dtdeh, dwdeh, drdeh, dgdeh, dbdeh, dadeh, dzdeh, dsdyh, dtdyh, dwdyh, drdyh,
-            dgdyh, dbdyh, dadyh, dzdyh;
-        int do_offset = !(sign_dxhdy ^ flip);
-
-        if (do_offset)
-        {
-            dsdeh = dsde & ~0x1ff;
-            dtdeh = dtde & ~0x1ff;
-            dwdeh = dwde & ~0x1ff;
-            drdeh = drde & ~0x1ff;
-            dgdeh = dgde & ~0x1ff;
-            dbdeh = dbde & ~0x1ff;
-            dadeh = dade & ~0x1ff;
-            dzdeh = dzde & ~0x1ff;
-
-            dsdyh = dsdy & ~0x1ff;
-            dtdyh = dtdy & ~0x1ff;
-            dwdyh = dwdy & ~0x1ff;
-            drdyh = drdy & ~0x1ff;
-            dgdyh = dgdy & ~0x1ff;
-            dbdyh = dbdy & ~0x1ff;
-            dadyh = dady & ~0x1ff;
-            dzdyh = dzdy & ~0x1ff;
-
-            dsdiff = dsdeh - (dsdeh >> 2) - dsdyh + (dsdyh >> 2);
-            dtdiff = dtdeh - (dtdeh >> 2) - dtdyh + (dtdyh >> 2);
-            dwdiff = dwdeh - (dwdeh >> 2) - dwdyh + (dwdyh >> 2);
-            drdiff = drdeh - (drdeh >> 2) - drdyh + (drdyh >> 2);
-            dgdiff = dgdeh - (dgdeh >> 2) - dgdyh + (dgdyh >> 2);
-            dbdiff = dbdeh - (dbdeh >> 2) - dbdyh + (dbdyh >> 2);
-            dadiff = dadeh - (dadeh >> 2) - dadyh + (dadyh >> 2);
-            dzdiff = dzdeh - (dzdeh >> 2) - dzdyh + (dzdyh >> 2);
-        }
-        else
-            dsdiff = dtdiff = dwdiff = drdiff = dgdiff = dbdiff = dadiff = dzdiff = 0;
-
-        int xfrac = 0;
-
-        int dsdxh, dtdxh, dwdxh, drdxh, dgdxh, dbdxh, dadxh, dzdxh;
-        if (cycle_type_ != CycleType::Copy)
-        {
-            dsdxh = (dsdx >> 8) & ~1;
-            dtdxh = (dtdx >> 8) & ~1;
-            dwdxh = (dwdx >> 8) & ~1;
-            drdxh = (drdx >> 8) & ~1;
-            dgdxh = (dgdx >> 8) & ~1;
-            dbdxh = (dbdx >> 8) & ~1;
-            dadxh = (dadx >> 8) & ~1;
-            dzdxh = (dzdx >> 8) & ~1;
-        }
-        else
-            dsdxh = dtdxh = dwdxh = drdxh = dgdxh = dbdxh = dadxh = dzdxh = 0;
-
-#define ADJUST_ATTR_PRIM()                                                   \
-    {                                                                        \
-        ret.spans[j].s = ((s & ~0x1ff) + dsdiff - (xfrac * dsdxh)) & ~0x3ff; \
-        ret.spans[j].t = ((t & ~0x1ff) + dtdiff - (xfrac * dtdxh)) & ~0x3ff; \
-        ret.spans[j].w = ((w & ~0x1ff) + dwdiff - (xfrac * dwdxh)) & ~0x3ff; \
-        ret.spans[j].r = ((r & ~0x1ff) + drdiff - (xfrac * drdxh)) & ~0x3ff; \
-        ret.spans[j].g = ((g & ~0x1ff) + dgdiff - (xfrac * dgdxh)) & ~0x3ff; \
-        ret.spans[j].b = ((b & ~0x1ff) + dbdiff - (xfrac * dbdxh)) & ~0x3ff; \
-        ret.spans[j].a = ((a & ~0x1ff) + dadiff - (xfrac * dadxh)) & ~0x3ff; \
-        ret.spans[j].z = ((z & ~0x1ff) + dzdiff - (xfrac * dzdxh)) & ~0x3ff; \
-    }
-
-#define ADDVALUES_PRIM() \
-    {                    \
-        s += dsde;       \
-        t += dtde;       \
-        w += dwde;       \
-        r += drde;       \
-        g += dgde;       \
-        b += dbde;       \
-        a += dade;       \
-        z += dzde;       \
-    }
-
-        int32_t maxxmx = 0, minxmx = 0, maxxhx = 0, minxhx = 0;
-
-        int spix = 0;
-        int ycur = yh & ~3;
-        int ldflag = (sign_dxhdy ^ flip) ? 0 : 3;
-        int invaly = 1;
-        // int length = 0;
-        int32_t xrsc = 0, xlsc = 0, stickybit = 0;
-        int32_t yllimit = 0, yhlimit = 0;
-        if (yl & 0x2000)
-            yllimit = 1;
-        else if (yl & 0x1000)
-            yllimit = 0;
-        else
-            yllimit = (yl & 0xfff) < scissor_yl_;
-        yllimit = yllimit ? yl : scissor_yl_;
-
-        int ylfar = yllimit | 3;
-        if ((yl >> 2) > (ylfar >> 2))
-            ylfar += 4;
-        else if ((yllimit >> 2) >= 0 && (yllimit >> 2) < 1023)
-            ret.spans[(yllimit >> 2) + 1].valid = 0;
-
-        if (yh & 0x2000)
-            yhlimit = 0;
-        else if (yh & 0x1000)
-            yhlimit = 1;
-        else
-            yhlimit = (yh >= scissor_yh_);
-        yhlimit = yhlimit ? yh : scissor_yh_;
-
-        int yhclose = yhlimit & ~3;
-
-        int32_t clipxlshift = scissor_xl_ << 1;
-        int32_t clipxhshift = scissor_xh_ << 1;
-        int allover = 1, allunder = 1, cur_over = 0, cur_under = 0;
-        int allinval = 1;
-        int32_t curcross = 0;
-
-        xfrac = ((xright >> 8) & 0xff);
-
-        if (flip)
-        {
-            for (k = ycur; k <= ylfar; k++)
-            {
-                if (k == ym)
-                {
-                    xleft = xl & ~1;
-                    xleft_inc = (dxldy >> 2) & ~1;
-                }
-
-                spix = k & 3;
-
-                if (k >= yhclose)
-                {
-                    invaly = k < yhlimit || k >= yllimit;
-
-                    j = k >> 2;
-
-                    if (spix == 0)
-                    {
-                        maxxmx = 0;
-                        minxhx = 0xfff;
-                        allover = allunder = 1;
-                        allinval = 1;
-                    }
-
-                    stickybit = ((xright >> 1) & 0x1fff) > 0;
-                    xrsc = ((xright >> 13) & 0x1ffe) | stickybit;
-
-                    cur_under =
-                        ((xright & 0x8000000) || (xrsc < clipxhshift && !(xright & 0x4000000)));
-
-                    xrsc = cur_under ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
-                    cur_over = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
-                    xrsc = cur_over ? clipxlshift : xrsc;
-                    allover &= cur_over;
-                    allunder &= cur_under;
-
-                    stickybit = ((xleft >> 1) & 0x1fff) > 0;
-                    xlsc = ((xleft >> 13) & 0x1ffe) | stickybit;
-                    cur_under =
-                        ((xleft & 0x8000000) || (xlsc < clipxhshift && !(xleft & 0x4000000)));
-                    xlsc = cur_under ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
-                    cur_over = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
-                    xlsc = cur_over ? clipxlshift : xlsc;
-                    allover &= cur_over;
-                    allunder &= cur_under;
-
-                    curcross = ((xleft ^ (1 << 27)) & (0x3fff << 14)) <
-                               ((xright ^ (1 << 27)) & (0x3fff << 14));
-
-                    invaly |= curcross;
-                    allinval &= invaly;
-
-                    if (!invaly)
-                    {
-                        maxxmx = (((xlsc >> 3) & 0xfff) > maxxmx) ? (xlsc >> 3) & 0xfff : maxxmx;
-                        minxhx = (((xrsc >> 3) & 0xfff) < minxhx) ? (xrsc >> 3) & 0xfff : minxhx;
-                    }
-
-                    if (spix == ldflag)
-                    {
-                        xfrac = (xright >> 8) & 0xff;
-                        ADJUST_ATTR_PRIM();
-                    }
-
-                    if (spix == 3)
-                    {
-                        ret.spans[j].max_x = maxxmx;
-                        ret.spans[j].min_x = minxhx;
-                        ret.spans[j].valid = !allinval && !allover && !allunder;
-                    }
-                }
-
-                if (spix == 3)
-                {
-                    ADDVALUES_PRIM();
-                }
-
-                xleft += xleft_inc;
-                xright += xright_inc;
-            }
-        }
-        else
-        {
-            for (k = ycur; k <= ylfar; k++)
-            {
-                if (k == ym)
-                {
-                    xleft = xl & ~1;
-                    xleft_inc = (dxldy >> 2) & ~1;
-                }
-
-                spix = k & 3;
-
-                if (k >= yhclose)
-                {
-                    invaly = k < yhlimit || k >= yllimit;
-                    j = k >> 2;
-
-                    if (spix == 0)
-                    {
-                        maxxhx = 0;
-                        minxmx = 0xfff;
-                        allover = allunder = 1;
-                        allinval = 1;
-                    }
-
-                    stickybit = ((xright >> 1) & 0x1fff) > 0;
-                    xrsc = ((xright >> 13) & 0x1ffe) | stickybit;
-                    cur_under =
-                        ((xright & 0x8000000) || (xrsc < clipxhshift && !(xright & 0x4000000)));
-                    xrsc = cur_under ? clipxhshift : (((xright >> 13) & 0x3ffe) | stickybit);
-                    cur_over = ((xrsc & 0x2000) || (xrsc & 0x1fff) >= clipxlshift);
-                    xrsc = cur_over ? clipxlshift : xrsc;
-                    allover &= cur_over;
-                    allunder &= cur_under;
-
-                    stickybit = ((xleft >> 1) & 0x1fff) > 0;
-                    xlsc = ((xleft >> 13) & 0x1ffe) | stickybit;
-                    cur_under =
-                        ((xleft & 0x8000000) || (xlsc < clipxhshift && !(xleft & 0x4000000)));
-                    xlsc = cur_under ? clipxhshift : (((xleft >> 13) & 0x3ffe) | stickybit);
-                    cur_over = ((xlsc & 0x2000) || (xlsc & 0x1fff) >= clipxlshift);
-                    xlsc = cur_over ? clipxlshift : xlsc;
-                    allover &= cur_over;
-                    allunder &= cur_under;
-
-                    curcross = ((xright ^ (1 << 27)) & (0x3fff << 14)) <
-                               ((xleft ^ (1 << 27)) & (0x3fff << 14));
-
-                    invaly |= curcross;
-                    allinval &= invaly;
-
-                    if (!invaly)
-                    {
-                        minxmx = (((xlsc >> 3) & 0xfff) < minxmx) ? (xlsc >> 3) & 0xfff : minxmx;
-                        maxxhx = (((xrsc >> 3) & 0xfff) > maxxhx) ? (xrsc >> 3) & 0xfff : maxxhx;
-                    }
-
-                    if (spix == ldflag)
-                    {
-                        xfrac = (xright >> 8) & 0xff;
-                        ADJUST_ATTR_PRIM();
-                    }
-
-                    if (spix == 3)
-                    {
-                        ret.spans[j].min_x = minxmx;
-                        ret.spans[j].max_x = maxxhx;
-                        ret.spans[j].valid = !allinval && !allover && !allunder;
-                    }
-                }
-
-                if (spix == 3)
-                {
-                    ADDVALUES_PRIM();
-                }
-
-                xleft += xleft_inc;
-                xright += xright_inc;
-            }
-        }
-#undef ADDVALUES_PRIM
-#undef ADJUST_ATTR_PRIM
-#undef SIGN
-        ret.y_start = yhlimit >> 2;
-        ret.y_end = yllimit >> 2;
-        return ret;
-    }
-
-    void RDP::check_primitive(const Primitive& my_primitive, const EdgewalkerInput& input,
-                              const std::vector<uint64_t>& data)
-    {
-        Primitive angrylion_primitive = get_angrylion_primitive(input);
-        if (my_primitive.y_start != angrylion_primitive.y_start)
-        {
-            Logger::Fatal("Primitive mismatch: y_start - expected: {}, actual: {}",
-                          angrylion_primitive.y_start, my_primitive.y_start);
-        }
-        if (my_primitive.y_end != angrylion_primitive.y_end)
-        {
-            Logger::Fatal("Primitive mismatch: y_end - expected: {}, actual: {}",
-                          angrylion_primitive.y_end, my_primitive.y_end);
-        }
-        for (int32_t i = angrylion_primitive.y_start; i < angrylion_primitive.y_end; i++)
-        {
-            std::string problem = "";
-            if (my_primitive.spans[i].min_x != angrylion_primitive.spans[i].min_x)
-            {
-                problem = "min_x";
-            }
-
-            if (my_primitive.spans[i].max_x != angrylion_primitive.spans[i].max_x)
-            {
-                problem = "max_x";
-            }
-
-            if (my_primitive.spans[i].valid != angrylion_primitive.spans[i].valid)
-            {
-                problem = "valid";
-            }
-
-            if (my_primitive.spans[i].r != angrylion_primitive.spans[i].r ||
-                my_primitive.spans[i].g != angrylion_primitive.spans[i].g ||
-                my_primitive.spans[i].b != angrylion_primitive.spans[i].b ||
-                my_primitive.spans[i].a != angrylion_primitive.spans[i].a ||
-                my_primitive.DrDx != angrylion_primitive.DrDx ||
-                my_primitive.DgDx != angrylion_primitive.DgDx ||
-                my_primitive.DbDx != angrylion_primitive.DbDx ||
-                my_primitive.DaDx != angrylion_primitive.DaDx)
-            {
-                Logger::Warn("Primitive mismatch: span {} color - expected: {:08x}, {:08x}, "
-                             "{:08x}, {:08x} actual: {:08x}, {:08x}, {:08x}, {:08x}",
-                             i, angrylion_primitive.spans[i].r, angrylion_primitive.spans[i].g,
-                             angrylion_primitive.spans[i].b, angrylion_primitive.spans[i].a,
-                             my_primitive.spans[i].r, my_primitive.spans[i].g,
-                             my_primitive.spans[i].b, my_primitive.spans[i].a);
-                printf("DrDx: %08x, DgDx: %08x, DbDx: %08x, DaDx: %08x\n", angrylion_primitive.DrDx,
-                       angrylion_primitive.DgDx, angrylion_primitive.DbDx,
-                       angrylion_primitive.DaDx);
-                printf("My DrDx: %08x, DgDx: %08x, DbDx: %08x, DaDx: %08x\n", my_primitive.DrDx,
-                       my_primitive.DgDx, my_primitive.DbDx, my_primitive.DaDx);
-            }
-
-            if (my_primitive.spans[i].s != angrylion_primitive.spans[i].s ||
-                my_primitive.spans[i].t != angrylion_primitive.spans[i].t ||
-                my_primitive.spans[i].w != angrylion_primitive.spans[i].w)
-            {
-                Logger::Fatal("Primitive mismatch: span {} texture - expected: {:08x}, {:08x}, "
-                              "{:08x}, actual: {:08x}, {:08x}, {:08x}",
-                              i, angrylion_primitive.spans[i].s, angrylion_primitive.spans[i].t,
-                              angrylion_primitive.spans[i].w, my_primitive.spans[i].s,
-                              my_primitive.spans[i].t, my_primitive.spans[i].w);
-            }
-
-            if (my_primitive.spans[i].z != angrylion_primitive.spans[i].z ||
-                my_primitive.DzDx != angrylion_primitive.DzDx)
-            {
-                problem = fmt::format("z expected: {:08x}, actual: {:08x}",
-                                      angrylion_primitive.spans[i].z, my_primitive.spans[i].z);
-            }
-
-            if (problem != "")
-            {
-                printf("Dumping problematic primitive:\n");
-                for (uint64_t block : data)
-                {
-                    printf("0x%016lx, ", block);
-                }
-                printf("\n");
-                printf("Scissor YH: %08x, YL: %08x, XH: %08x, XL: %08x\n", scissor_yh_, scissor_yl_,
-                       scissor_xh_, scissor_xl_);
-                printf("Cycle type: %d\n", cycle_type_);
-                printf("Y start: %d, Y end: %d\n", my_primitive.y_start, my_primitive.y_end);
-                Logger::Fatal("Primitive mismatch: span {} - {}", i, problem);
-            }
         }
     }
 
@@ -2047,6 +1695,10 @@ namespace hydra::N64
             DzDiff = dzdeh - (dzdeh >> 2) - dzdyh + (dzdyh >> 2);
         }
 
+        int16_t DzDyInt = DzDy >> 16;
+        int16_t DzDxInt = DzDx >> 16;
+        primitive.DzPix = std::abs(DzDxInt) + std::abs(DzDyInt);
+
         bool use_scissor_low = false, use_scissor_high = false;
 
         int32_t y_start = clear_subpixels(yh);
@@ -2172,6 +1824,9 @@ namespace hydra::N64
                 all_under &= cur_under;
                 all_over &= cur_over;
 
+                current_span.min_x_subpixel[subpixel] = x_left_clipped;
+                current_span.max_x_subpixel[subpixel] = x_right_clipped;
+
                 x_right_clipped >>= 3;
                 x_right_clipped &= 0xFFF;
                 x_left_clipped >>= 3;
@@ -2243,6 +1898,7 @@ namespace hydra::N64
                     if (input.right_major)
                     {
                         std::swap(current_span.min_x, current_span.max_x);
+                        std::swap(current_span.min_x_subpixel, current_span.max_x_subpixel);
                     }
                     current_span.valid = !all_invalid && !all_over && !all_under;
                     primitive.spans[integer_y] = current_span;
@@ -2298,6 +1954,61 @@ namespace hydra::N64
         }
     }
 
+    void RDP::compute_coverage(const Span& span)
+    {
+        std::memset(&coverage_mask_buffer_, 0xFFFF, sizeof(coverage_mask_buffer_));
+
+        for (int subpixel = 0; subpixel < 4; subpixel++)
+        {
+            uint8_t mask = 0xa >> (subpixel & 1);
+            // 12 8 4 0 shifts to place in the four top -> bottom bits
+            uint8_t shift = 12 - (subpixel * 4);
+
+            auto current_right = span.max_x_subpixel[subpixel];
+            auto current_right_int = current_right >> 3;
+            auto current_left = span.min_x_subpixel[subpixel];
+            auto current_left_int = current_left >> 3;
+
+            for (int i = span.min_x; i <= current_left_int; i++)
+            {
+                coverage_mask_buffer_[i] &= ~(mask << shift);
+            }
+
+            for (int i = span.max_x; i >= current_right_int; i--)
+            {
+                coverage_mask_buffer_[i] &= ~(mask << shift);
+            }
+
+            auto current_right_frac = current_right & 0b111;
+            // For fractional part 0->7, add 1 and divide by 2 to get a range 1->4
+            // After shifting, gives the coverage of
+            // 1: 1000
+            // 2: 1100
+            // 3: 1110
+            // 4: 1111
+            auto coverage_right = (0b1111'0000 >> ((current_right_frac + 1) >> 1)) & 0b1111;
+
+            auto current_left_frac = current_left & 0b111;
+            // For fractional part 0->7, add 1 and divide by 2 to get a range 1->4
+            // After shifting, gives the coverage of
+            // 1: 1111
+            // 2: 0111
+            // 3: 0011
+            // 4: 0001
+            auto coverage_left = 0b0000'1111 >> ((current_left_frac + 1) >> 1);
+
+            if (current_right_int == current_left_int)
+            {
+                coverage_mask_buffer_[current_right_int] |= (coverage_left & coverage_right)
+                                                            << shift;
+                continue;
+            }
+
+            coverage_mask_buffer_[current_right_int] |= coverage_right << shift;
+            coverage_mask_buffer_[current_left_int] |= coverage_left << shift;
+        }
+    }
+
     void RDP::render_primitive(const Primitive& primitive)
     {
         int32_t x_start = 0, x_inc = 0;
@@ -2307,9 +2018,12 @@ namespace hydra::N64
         int32_t DbDx = primitive.DbDx;
         int32_t DaDx = primitive.DaDx;
 
+        int32_t DzPix = primitive.DzPix;
+
         if (z_source_sel_)
         {
             DzDx = 0;
+            DzPix = primitive_depth_delta_;
         }
 
         for (int y = primitive.y_start; y <= primitive.y_end; y++)
@@ -2341,6 +2055,8 @@ namespace hydra::N64
             int32_t x = x_start;
             int length = span.max_x - span.min_x;
 
+            compute_coverage(span);
+
             for (int i = 0; i <= length; i++)
             {
                 uint8_t r8 = color_clamp(r >> 16);
@@ -2354,16 +2070,26 @@ namespace hydra::N64
                 get_noise();
 
                 int32_t z_cur = z_correct((z >> 10) & 0x3f'ffff);
-                if (depth_test(x, y, z_cur, 0))
+                current_coverage_ = std::popcount(coverage_mask_buffer_[x & 0x3ff] & 0xa5a5u);
+                if (depth_test(x, y, z_cur, DzPix))
                 {
                     auto [s_cur, t_cur] = perspective_correction_func_(s, t, w);
                     fetch_texels(0, primitive.tile_index, s_cur, t_cur);
                     fetch_texels(1, primitive.tile_index, s_cur, t_cur);
-                    draw_pixel(x, y);
+
+                    // 0xA5A5 is the checkerboard pattern the N64 uses as it has only 3 bits to
+                    // store coverage
+                    bool cvbit = coverage_mask_buffer_[x & 0x3ff] & 0x8000u;
+                    if (antialias_en_ ? current_coverage_ : cvbit)
+                    {
+                        draw_pixel(x, y);
+                    }
+                    coverage_set(x, y, current_coverage_);
 
                     if (z_update_en_)
                     {
                         z_set(x, y, z_cur);
+                        dz_set(x, y, DzPix);
                     }
                 }
 

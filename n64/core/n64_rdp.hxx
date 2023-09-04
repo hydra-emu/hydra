@@ -148,6 +148,8 @@ namespace hydra::N64
         int32_t r, g, b, a;
         int32_t s, t, w;
         int32_t z;
+        uint16_t min_x_subpixel[4];
+        uint16_t max_x_subpixel[4];
     };
 
     struct Primitive
@@ -158,9 +160,12 @@ namespace hydra::N64
         int32_t DrDx, DgDx, DbDx, DaDx;
         int32_t DsDx, DtDx, DwDx;
         int32_t DzDx;
+        int16_t DzPix;
         size_t tile_index;
         bool right_major;
     };
+
+    enum class CoverageMode { Clamp = 0, Wrap = 1, Zap = 2, Save = 3 };
 
     class RDP final
     {
@@ -214,6 +219,8 @@ namespace hydra::N64
         uint32_t shade_alpha_;
         uint32_t environment_alpha_;
         uint32_t fog_alpha_;
+        uint32_t current_coverage_;
+        uint32_t old_coverage_;
 
         uint32_t* color_sub_a_[2];
         uint32_t* color_sub_b_[2];
@@ -243,12 +250,17 @@ namespace hydra::N64
         std::vector<bool> rdram_9th_bit_;
         std::array<uint32_t, 0x4000> z_decompress_lut_;
         std::array<uint32_t, 0x40000> z_compress_lut_;
+        std::array<uint16_t, 1024> coverage_mask_buffer_;
 
         bool z_update_en_ = false;
         bool z_compare_en_ = false;
         bool z_source_sel_ = false;
         bool image_read_en_ = false;
         bool alpha_compare_en_ = false;
+        bool antialias_en_ = false;
+        bool color_on_cvg_ = false;
+        bool coverage_overflow_ = false;
+        CoverageMode cvg_dest_ = CoverageMode::Clamp;
         uint8_t z_mode_ : 2 = 0;
         uint32_t primitive_depth_ = 0;
         uint16_t primitive_depth_delta_ = 0;
@@ -270,13 +282,18 @@ namespace hydra::N64
         void color_combiner(int cycle);
         uint32_t blender(int cycle);
 
-        bool depth_test(int x, int y, uint32_t z, uint16_t dz);
+        bool depth_test(int x, int y, int32_t z, int16_t dz);
         inline uint32_t z_get(int x, int y);
-        inline uint8_t dz_get(int x, int y);
+        inline uint16_t dz_get(int x, int y);
+        inline uint8_t coverage_get(int x, int y);
         inline void z_set(int x, int y, uint32_t z);
-        inline void dz_set(int x, int y, uint8_t dz);
-        uint32_t z_compress(uint32_t z);
-        uint32_t z_decompress(uint32_t z);
+        inline void dz_set(int x, int y, uint16_t dz);
+        inline void coverage_set(int x, int y, uint8_t coverage);
+        void compute_coverage(const Span& span);
+        inline uint32_t z_compress(uint32_t z);
+        inline uint32_t z_decompress(uint32_t z);
+        inline uint8_t dz_compress(uint16_t dz);
+        inline uint16_t dz_decompress(uint8_t dz);
         void init_depth_luts();
         void fetch_texels(int texel, int tile, int32_t s, int32_t t);
         void get_noise();
@@ -297,10 +314,6 @@ namespace hydra::N64
 
         Primitive edgewalker(const EdgewalkerInput& data);
         void render_primitive(const Primitive& primitive);
-
-        Primitive get_angrylion_primitive(const EdgewalkerInput& data);
-        void check_primitive(const Primitive& primitive, const EdgewalkerInput& input,
-                             const std::vector<uint64_t>& data);
 
         friend class hydra::N64::RSP;
         friend class ::N64Debugger;
