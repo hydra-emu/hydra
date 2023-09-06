@@ -1588,6 +1588,7 @@ namespace hydra::N64
 
             if (cycle_type_ == CycleType::Copy)
             {
+                // Copy mode copies 4 pixels at a time, so we need to divide this by 4
                 DsDx >>= 2;
             }
 
