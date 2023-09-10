@@ -17,6 +17,20 @@
 #include <QSurfaceFormat>
 #include <QTimer>
 
+void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
+{
+    MainWindow* window = static_cast<MainWindow*>(device->pUserData);
+    if (window->queued_audio_.empty())
+    {
+        std::memset(out, 0, frames * sizeof(int16_t));
+        return;
+    }
+    frames = std::min(frames, static_cast<ma_uint32>(window->queued_audio_.size()));
+    std::memcpy(out, window->queued_audio_.data(), frames * sizeof(int16_t));
+    window->queued_audio_.erase(window->queued_audio_.begin(),
+                                window->queued_audio_.begin() + frames);
+}
+
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), tools_{}, tools_open_{}
 {
     setup_emulator_specific();
@@ -46,10 +60,24 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), tools_{}, tools_o
     enable_emulation_actions(false);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
     screen_->setMouseTracking(true);
+
+    ma_device_config config = ma_device_config_init(ma_device_type_playback);
+    config.playback.format = ma_format_s16;
+    config.playback.channels = 2;
+    config.sampleRate = 48000;
+    config.dataCallback = hungry_for_more;
+    config.pUserData = this;
+
+    if (ma_device_init(NULL, &config, &sound_device_) != MA_SUCCESS)
+    {
+        Logger::Fatal("Failed to open audio device");
+    }
+    ma_device_start(&sound_device_);
 }
 
 MainWindow::~MainWindow()
 {
+    ma_device_uninit(&sound_device_);
     stop_emulator();
 }
 
@@ -514,4 +542,6 @@ void MainWindow::emulator_frame()
 
     screen_->Redraw(vi.width, vi.height, vi.data.data());
     screen_->update();
+    queued_audio_.reserve(queued_audio_.size() + ai.data.size());
+    queued_audio_.insert(queued_audio_.end(), ai.data.begin(), ai.data.end());
 }

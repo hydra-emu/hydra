@@ -7,6 +7,7 @@
 #include <emulator_factory.hxx>
 #include <emulator_tool_factory.hxx>
 #include <memory>
+#include <miniaudio.h>
 #include <QFileDialog>
 #include <QLabel>
 #include <QMainWindow>
@@ -64,7 +65,9 @@ public:
     QAction* screenshot_act_;
     QAction* shaders_act_;
     ScreenWidget* screen_;
+    ma_device sound_device_{};
     std::unique_ptr<hydra::Core> emulator_;
+    std::vector<int16_t> queued_audio_;
     hydra::EmuType emulator_type_;
     std::thread emulator_thread_;
     bool settings_open_ = false;
@@ -75,4 +78,6 @@ public:
     std::array<QWidget*, EmulatorToolsSize> tools_;
     std::array<bool, EmulatorToolsSize> tools_open_;
     std::array<QAction*, EmulatorToolsSize> tools_actions_;
+
+    friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
 };

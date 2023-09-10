@@ -1,5 +1,6 @@
 #pragma once
 
+#include <miniaudio.h>
 #include <n64/core/n64_cpu.hxx>
 #include <n64/core/n64_rcp.hxx>
 #include <string>
@@ -70,17 +71,15 @@ namespace hydra::N64
             }
 
             ma_uint64 frames_in = rcp_.ai_.ai_frequency_ / 60;
-            ma_uint64 frames_out = 0;
-            std::vector<int16_t> buffer;
-            buffer.resize(frames_out * 2);
+            frames_in = std::min(frames_in, (ma_uint64)rcp_.ai_.ai_buffer_.size() >> 1);
+            ma_uint64 frames_out = 48000 / 60;
+            data.resize(frames_out * 2);
             ma_result result = ma_resampler_process_pcm_frames(
-                &resampler, rcp_.ai_.ai_buffer_.data(), &frames_in, buffer.data(), &frames_out);
+                &resampler, rcp_.ai_.ai_buffer_.data(), &frames_in, data.data(), &frames_out);
             if (result != MA_SUCCESS)
             {
                 Logger::Fatal("Failed to resample: {}", static_cast<int>(result));
             }
-            data.resize(frames_out * 2);
-            std::memcpy(data.data(), buffer.data(), frames_out * 2 * sizeof(int16_t));
             rcp_.ai_.ai_buffer_.erase(rcp_.ai_.ai_buffer_.begin(),
                                       rcp_.ai_.ai_buffer_.begin() + frames_in * 2);
         }
