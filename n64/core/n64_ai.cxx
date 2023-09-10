@@ -8,86 +8,6 @@
 
 namespace hydra::N64
 {
-    void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
-    {
-        auto& ai = *static_cast<Ai*>(device->pUserData);
-        if (ai.ai_frequency_ == 0)
-        {
-            return;
-        }
-        // frame: 2 channels * 2 bytes per sample
-        auto bytes_per_frame =
-            ma_get_bytes_per_frame(device->playback.format, device->playback.channels);
-        ma_resampler_config config = ma_resampler_config_init(ma_format_s16, 2,
-                                                              ai.ai_frequency_, // sample rate in
-                                                              HOST_SAMPLE_RATE, // sample rate out
-                                                              ma_resample_algorithm_linear);
-        ma_resampler resampler;
-
-        struct Deleter
-        {
-            Deleter(ma_resampler& resampler) : resampler_(resampler){};
-
-            ~Deleter()
-            {
-                ma_resampler_uninit(&resampler_, nullptr);
-            };
-
-        private:
-            ma_resampler& resampler_;
-        } deleter(resampler);
-
-        if (ma_result res = ma_resampler_init(&config, nullptr, &resampler))
-        {
-            Logger::Fatal("Failed to create resampler: {}", static_cast<int>(res));
-        }
-        ma_uint64 frames_in = static_cast<float>(frames * ai.ai_frequency_) / HOST_SAMPLE_RATE;
-        if (ai.ai_buffer_.size() * sizeof(int16_t) < frames_in * bytes_per_frame * 3)
-        {
-            ai.hungry_ = true;
-            if (ai.ai_buffer_.size() * sizeof(int16_t) < frames_in * bytes_per_frame)
-            {
-                return;
-            }
-        }
-        else
-        {
-            ai.hungry_ = false;
-        }
-        ma_uint64 frames_out = frames;
-        std::vector<int16_t> buffer;
-        buffer.resize(frames_out * 2);
-        ma_result result = ma_resampler_process_pcm_frames(&resampler, ai.ai_buffer_.data(),
-                                                           &frames_in, buffer.data(), &frames_out);
-        if (result != MA_SUCCESS)
-        {
-            Logger::Fatal("Failed to resample: {}", static_cast<int>(result));
-        }
-        std::memcpy(out, buffer.data(), frames_out * 2 * 2);
-        ai.ai_buffer_.erase(ai.ai_buffer_.begin(), ai.ai_buffer_.begin() + frames_in * 2);
-    }
-
-    Ai::Ai()
-    {
-        ma_device_config config = ma_device_config_init(ma_device_type_playback);
-        config.playback.format = ma_format_s16;
-        config.playback.channels = 2;
-        config.sampleRate = HOST_SAMPLE_RATE;
-        config.dataCallback = hungry_for_more;
-        config.pUserData = this;
-
-        if (ma_device_init(NULL, &config, &ai_device_) != MA_SUCCESS)
-        {
-            Logger::Fatal("Failed to open audio device");
-        }
-        ma_device_start(&ai_device_);
-    }
-
-    Ai::~Ai()
-    {
-        ma_device_uninit(&ai_device_);
-    }
-
     void Ai::Reset()
     {
         ai_dma_count_ = 0;
@@ -124,14 +44,14 @@ namespace hydra::N64
             case AI_CONTROL:
             {
                 ai_enabled_ = data & 1;
-                if (ai_enabled_)
-                {
-                    ma_device_start(&ai_device_);
-                }
-                else
-                {
-                    ma_device_stop(&ai_device_);
-                }
+                // if (ai_enabled_)
+                // {
+                //     ma_device_start(&ai_device_);
+                // }
+                // else
+                // {
+                //     ma_device_stop(&ai_device_);
+                // }
                 break;
             }
             case AI_DACRATE:

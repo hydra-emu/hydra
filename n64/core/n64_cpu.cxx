@@ -886,28 +886,25 @@ namespace hydra::N64
 
     void CPU::Tick()
     {
-        if (rcp_.ai_.IsHungry())
+        ++cpubus_.time_;
+        cpubus_.time_ &= 0x1FFFFFFFF;
+        if (cpubus_.time_ == (cp0_regs_[CP0_COMPARE].UD << 1)) [[unlikely]]
         {
-            ++cpubus_.time_;
-            cpubus_.time_ &= 0x1FFFFFFFF;
-            if (cpubus_.time_ == (cp0_regs_[CP0_COMPARE].UD << 1)) [[unlikely]]
-            {
-                CP0Cause.IP7 = true;
-            }
-            gpr_regs_[0].UD = 0;
-            prev_branch_ = was_branch_;
-            was_branch_ = false;
-            instruction_.full = load_word(pc_);
-            if (check_interrupts())
-            {
-                return;
-            }
-            log_cpu_state<CPU_LOGGING>(true, 30'000'000, 0);
-            prev_pc_ = pc_;
-            pc_ = next_pc_;
-            next_pc_ += 4;
-            execute_instruction();
+            CP0Cause.IP7 = true;
         }
+        gpr_regs_[0].UD = 0;
+        prev_branch_ = was_branch_;
+        was_branch_ = false;
+        instruction_.full = load_word(pc_);
+        if (check_interrupts())
+        {
+            return;
+        }
+        log_cpu_state<CPU_LOGGING>(true, 30'000'000, 0);
+        prev_pc_ = pc_;
+        pc_ = next_pc_;
+        next_pc_ += 4;
+        execute_instruction();
     }
 
     void CPU::check_vi_interrupt()
