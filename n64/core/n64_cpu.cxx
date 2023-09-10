@@ -645,9 +645,9 @@ namespace hydra::N64
         }
     }
 
-    CPU::CPU(CPUBus& cpubus, RCP& rcp, bool& should_draw)
+    CPU::CPU(CPUBus& cpubus, RCP& rcp)
         : gpr_regs_{}, fpr_regs_{}, instr_cache_(KB(16)), data_cache_(KB(8)), cpubus_(cpubus),
-          rcp_(rcp), should_draw_(should_draw)
+          rcp_(rcp)
     {
         rcp_.ai_.InstallBuses(&cpubus_.rdram_[0]);
         rcp_.vi_.InstallBuses(&cpubus_.rdram_[0]);

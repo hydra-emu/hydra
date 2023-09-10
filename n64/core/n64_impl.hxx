@@ -11,7 +11,7 @@ namespace hydra::N64
     class N64
     {
     public:
-        N64(bool& should_draw);
+        N64();
         bool LoadCartridge(std::string path);
         bool LoadIPL(std::string path);
         void Update();

@@ -275,7 +275,7 @@ namespace hydra::N64
     class CPU final
     {
     public:
-        CPU(CPUBus& cpubus, RCP& rcp, bool& should_draw);
+        CPU(CPUBus& cpubus, RCP& rcp);
         void Tick();
         void Reset();
 
@@ -307,7 +307,6 @@ namespace hydra::N64
         FCR31 fcr31_;
         uint32_t cp0_weirdness_;
         uint64_t cp2_weirdness_;
-        bool& should_draw_;
         bool prev_branch_ = false, was_branch_ = false;
         uint32_t tlb_offset_mask_ = 0;
         int pif_channel_ = 0;
