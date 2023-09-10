@@ -26,7 +26,6 @@ namespace hydra::N64
     {
     public:
         void Reset();
-        bool Redraw();
 
     private:
         Vi vi_;

@@ -23,7 +23,7 @@ namespace hydra::N64
         return false;
     }
 
-    void N64::Update()
+    void N64::RunFrame()
     {
         static int cycles = 0;
         for (int f = 0; f < 1; f++)

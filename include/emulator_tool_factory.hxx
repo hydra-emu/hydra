@@ -25,12 +25,6 @@ struct EmulatorToolFactory
             {
                 switch (emu_type)
                 {
-                    // case hydra::EmuType::N64:
-                    // {
-                    //     auto ret = new N64Debugger(open, nullptr);
-                    //     ret->SetEmulator(dynamic_cast<hydra::N64::N64_TKPWrapper*>(emulator));
-                    //     return ret;
-                    // }
                     default:
                     {
                         Logger::Warn("EmulatorToolFactory::CreateTool tried to create debugger for "

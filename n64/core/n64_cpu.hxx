@@ -144,7 +144,6 @@ namespace hydra
 {
     namespace N64
     {
-        class N64_TKPWrapper;
         class N64;
         class QA;
     } // namespace N64
@@ -481,6 +480,5 @@ namespace hydra::N64
         friend class ::N64Debugger;
         friend class ::MmioViewer;
         friend class hydra::N64::N64;
-        friend class N64_TKPWrapper;
     };
 } // namespace hydra::N64
