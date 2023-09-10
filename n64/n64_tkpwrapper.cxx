@@ -64,7 +64,7 @@ namespace hydra::N64
 {
     bool N64_TKPWrapper::ipl_loaded_ = false;
 
-    N64_TKPWrapper::N64_TKPWrapper() : n64_impl_(should_draw_)
+    N64_TKPWrapper::N64_TKPWrapper() : n64_impl_()
     {
         using namespace hydra::N64::Keys;
         instrs_per_frame_ = 1;

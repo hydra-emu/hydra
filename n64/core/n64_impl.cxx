@@ -4,7 +4,7 @@
 
 namespace hydra::N64
 {
-    N64::N64(bool& should_draw) : cpubus_(rcp_), cpu_(cpubus_, rcp_, should_draw)
+    N64::N64() : cpubus_(rcp_), cpu_(cpubus_, rcp_)
     {
         Reset();
     }
@@ -69,7 +69,6 @@ namespace hydra::N64
             // printf("VIs: %d\n", cpu_.vis_per_second_);
             rcp_.vi_.vis_counter_ = 0;
         }
-        cpu_.should_draw_ = rcp_.Redraw();
     }
 
     void N64::Reset()
