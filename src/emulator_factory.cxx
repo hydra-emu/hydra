@@ -6,7 +6,7 @@
 #include <error_factory.hxx>
 #include <gb/gb_tkpwrapper.hxx>
 #include <iostream>
-#include <n64/n64_tkpwrapper.hxx>
+#include <n64/n64_hc.hxx>
 #include <nes/nes_tkpwrapper.hxx>
 #include <str_hash.hxx>
 
@@ -70,31 +70,35 @@ namespace hydra
         }
     }
 
-    std::shared_ptr<Emulator> EmulatorFactory::Create(EmuType type)
+    std::unique_ptr<Core> EmulatorFactory::Create(EmuType type)
     {
-        std::shared_ptr<Emulator> emulator;
+        std::unique_ptr<Core> emulator;
         switch (type)
         {
-            case EmuType::Gameboy:
-            {
-                emulator = std::make_shared<Gameboy::Gameboy_TKPWrapper>();
-                break;
-            }
+            // case EmuType::Gameboy:
+            // {
+            //     break;
+            // }
             case EmuType::N64:
             {
-                emulator = std::make_shared<N64::N64_TKPWrapper>();
+                emulator = std::make_unique<hydra::HydraCore_N64>();
+                auto ipl_path =
+                    EmulatorSettings::GetEmulatorData(hydra::EmuType::N64).UserData.Get("IPLPath");
+                if (!emulator->LoadFile("ipl", ipl_path))
+                {
+                    throw ErrorFactory::generate_exception(__func__, __LINE__,
+                                                           "Failed to load IPL");
+                }
                 break;
             }
-            case EmuType::c8:
-            {
-                emulator = std::make_shared<c8::Chip8_TKPWrapper>();
-                break;
-            }
-            case EmuType::NES:
-            {
-                emulator = std::make_shared<NES::NES_TKPWrapper>();
-                break;
-            }
+            // case EmuType::c8:
+            // {
+            //     break;
+            // }
+            // case EmuType::NES:
+            // {
+            //     break;
+            // }
             default:
             {
                 throw ErrorFactory::generate_exception(__func__, __LINE__,

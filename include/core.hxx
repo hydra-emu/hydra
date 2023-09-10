@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <future>
+#include <vector>
 
 namespace hydra
 {
@@ -13,16 +14,14 @@ namespace hydra
 
     struct VideoInfo
     {
-        void* data;
-        uint32_t width, height;
-        uint32_t pitch;
+        std::vector<uint8_t> data{};
+        uint32_t width = 0, height = 0;
         VideoFormat format;
     };
 
     struct AudioInfo
     {
-        int16_t* data;
-        unsigned frames;
+        std::vector<int16_t> data{};
     };
 
     class Core

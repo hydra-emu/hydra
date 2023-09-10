@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), tools_{}, tools_o
 
     QTimer* timer = new QTimer(this);
     timer->start(16);
-    connect(timer, SIGNAL(timeout()), this, SLOT(redraw_screen()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(emulator_frame()));
     enable_emulation_actions(false);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
     screen_->setMouseTracking(true);
@@ -140,26 +140,26 @@ void MainWindow::create_menus()
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    if (emulator_)
-    {
-        emulator_->HandleKeyDown(event->key());
-    }
+    // if (emulator_)
+    // {
+    //     emulator_->HandleKeyDown(event->key());
+    // }
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    if (emulator_)
-    {
-        emulator_->HandleKeyUp(event->key());
-    }
+    // if (emulator_)
+    // {
+    //     emulator_->HandleKeyUp(event->key());
+    // }
 }
 
 void MainWindow::on_mouse_move(QMouseEvent* event)
 {
-    if (emulator_)
-    {
-        emulator_->HandleMouseMove(event->position().x(), event->position().y());
-    }
+    // if (emulator_)
+    // {
+    //     emulator_->HandleMouseMove(event->position().x(), event->position().y());
+    // }
 }
 
 void MainWindow::open_file()
@@ -222,16 +222,10 @@ void MainWindow::open_file_impl(const std::string& path)
         std::swap(emulator, emulator_);
         // Old emulator is destroyed here
     }
-    if (!emulator_->LoadFromFile(path))
+    if (!emulator_->LoadFile("rom", path))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
-    screen_->setMinimumSize(emulator_->GetWidth(), emulator_->GetHeight());
-    screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), GL_UNSIGNED_BYTE,
-                               emulator_->GetScreenData());
+    screen_->InitializeTexture(640, 320);
     screen_->show();
-    emulator_->Paused = pause_act_->isChecked();
-    auto func = [&]() { emulator_->Start(); };
-    emulator_thread_ = std::thread(func);
-    emulator_thread_.detach();
     emulator_type_ = type;
     enable_emulation_actions(true);
     for (size_t i = 0; i < tools_.size(); i++)
@@ -287,9 +281,10 @@ void MainWindow::open_tool(EmulatorTool tool)
             }
             else
             {
-                auto qw = EmulatorToolFactory::CreateTool(tool, tools_open_[tool], emulator_type_,
-                                                          emulator_.get());
-                tools_[tool] = qw;
+                // auto qw = EmulatorToolFactory::CreateTool(tool, tools_open_[tool],
+                // emulator_type_,
+                //                                           emulator_.get());
+                // tools_[tool] = qw;
             }
         }
     });
@@ -480,60 +475,43 @@ void MainWindow::setup_emulator_specific()
 
 void MainWindow::pause_emulator()
 {
-    if (emulator_->Paused.load())
-    {
-        emulator_->Paused.store(false);
-        std::lock_guard lock(emulator_->StepMutex);
-        emulator_->Step.store(true);
-        emulator_->StepCV.notify_all();
-    }
-    else
-    {
-        emulator_->Paused.store(true);
-    }
+    paused_ = !paused_;
 }
 
 void MainWindow::reset_emulator()
 {
-    empty_screen();
-    emulator_->Reset();
+    if (emulator_)
+        emulator_->Reset();
 }
 
 void MainWindow::stop_emulator()
 {
     if (emulator_)
     {
-        empty_screen();
-        emulator_->CloseAndWait();
         emulator_.reset();
         enable_emulation_actions(false);
     }
     screen_->hide();
 }
 
-void MainWindow::redraw_screen()
+void MainWindow::emulator_frame()
 {
     if (!emulator_)
     {
         return;
     }
-    std::shared_lock lock(emulator_->DataMutex);
-    if (!emulator_->IsReadyToDraw())
-    {
-        return;
-    }
-    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), GL_UNSIGNED_BYTE,
-                    emulator_->GetScreenData());
-    screen_->update();
-    emulator_->IsReadyToDraw() = false;
-}
 
-void MainWindow::empty_screen()
-{
-    std::vector<uint8_t> empty_screen;
-    empty_screen.resize(emulator_->GetWidth() * emulator_->GetHeight() * 4);
-    std::fill(empty_screen.begin(), empty_screen.end(), 0);
-    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), GL_UNSIGNED_BYTE,
-                    empty_screen.data());
+    std::future<void> frame = emulator_->RunFrameAsync();
+    frame.wait();
+
+    std::future<hydra::VideoInfo> video_info = emulator_->RenderFrameAsync();
+    std::future<hydra::AudioInfo> audio_info = emulator_->RenderAudioAsync();
+    video_info.wait();
+    audio_info.wait();
+
+    hydra::VideoInfo vi = video_info.get();
+    hydra::AudioInfo ai = audio_info.get();
+
+    screen_->Redraw(vi.width, vi.height, vi.data.data());
     screen_->update();
 }

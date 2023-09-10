@@ -12,31 +12,19 @@ namespace hydra::N64
         vi_v_intr_ = 0x100;
     }
 
-    bool Vi::Redraw()
+    bool Vi::Redraw(std::vector<uint8_t>& data)
     {
         auto new_width = vi_h_end_ - vi_h_start_;
         auto new_height = (vi_v_end_ - vi_v_start_) / 2;
         new_width *= vi_x_scale_ ? vi_x_scale_ : 512;
         new_height *= vi_y_scale_ ? vi_y_scale_ : 512;
-        if (new_width == 0 || new_height == 0 || !memory_ptr_ || pixel_mode_ == 0)
-        {
-            if (!blacked_out_)
-            {
-                std::fill(framebuffer_.begin(), framebuffer_.end(), 0);
-                blacked_out_ = true;
-            }
-            return true;
-        }
         blacked_out_ = false;
         new_width >>= 10;
         new_height >>= 10;
         width_ = new_width;
         height_ = new_height;
         size_t new_size = width_ * height_ * 4;
-        if (framebuffer_.size() != new_size)
-        {
-            framebuffer_.resize(new_size);
-        }
+        data.resize(new_size);
         switch (pixel_mode_)
         {
             case 0b11:
@@ -47,7 +35,7 @@ namespace hydra::N64
                     {
                         uint32_t color =
                             (reinterpret_cast<uint32_t*>(memory_ptr_))[(y * vi_width_) + x];
-                        set_pixel(x, y, color);
+                        memcpy(&data[(x + y * width_) * 4], &color, 4);
                     }
                 }
                 break;
@@ -67,7 +55,7 @@ namespace hydra::N64
                         g = (g << 3) | (g >> 2);
                         b = (b << 3) | (b >> 2);
                         uint32_t color = 0xffu << 24 | b << 16 | g << 8 | r;
-                        set_pixel(x, y, color);
+                        memcpy(&data[(x + y * width_) * 4], &color, 4);
                     }
                 }
                 break;
@@ -75,7 +63,6 @@ namespace hydra::N64
             default:
                 break;
         }
-        framebuffer_ptr_ = framebuffer_.data();
         return true;
     }
 
@@ -230,10 +217,5 @@ namespace hydra::N64
                 break;
             }
         }
-    }
-
-    void Vi::set_pixel(int x, int y, uint32_t color)
-    {
-        memcpy(&framebuffer_[(x + y * width_) * 4], &color, 4);
     }
 } // namespace hydra::N64

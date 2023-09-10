@@ -1,6 +1,7 @@
 #pragma once
 
 #include <any>
+#include <core.hxx>
 #include <emulator.hxx>
 #include <emulator_types.hxx>
 #include <filesystem>
@@ -17,7 +18,7 @@ namespace hydra
 
     public:
         static std::string GetSavePath();
-        static std::shared_ptr<Emulator> Create(EmuType type);
+        static std::unique_ptr<Core> Create(EmuType type);
         static EmuType GetEmulatorType(std::filesystem::path path);
         static const std::vector<std::string>& GetSupportedExtensions();
     };

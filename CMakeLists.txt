@@ -69,6 +69,7 @@ set(SRC_FILES
     src/emulator_factory.cxx
     src/emulator_user_data.cxx
     src/emulator_settings.cxx
+    src/core.cxx
 )
 
 set(C8_FILES
@@ -98,7 +99,7 @@ set(NES_FILES
 )
 
 set(N64_FILES
-    n64/n64_tkpwrapper.cxx
+    n64/n64_hc.cxx
     n64/core/n64_impl.cxx
     n64/core/n64_cpu.cxx
     n64/core/n64_cpubus.cxx

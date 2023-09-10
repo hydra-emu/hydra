@@ -19,8 +19,7 @@ namespace hydra::N64
     struct Vi
     {
         void Reset();
-        bool Redraw();
-        uint8_t* GetFramebufferPtr();
+        bool Redraw(std::vector<uint8_t>& data);
         int GetWidth();
         int GetHeight();
         uint32_t ReadWord(uint32_t addr);
@@ -62,9 +61,6 @@ namespace hydra::N64
         bool blacked_out_ = false;
 
         uint8_t pixel_mode_ = 0;
-        std::vector<uint8_t> framebuffer_;
-        std::vector<uint8_t> framebuffer_black_;
-        uint8_t* framebuffer_ptr_ = nullptr;
         uint8_t* memory_ptr_ = nullptr;
         uint8_t* rdram_ptr_ = nullptr;
         MIInterrupt* mi_interrupt_ = nullptr;

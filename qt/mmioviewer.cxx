@@ -2,7 +2,6 @@
 #include "c8/c8_tkpwrapper.hxx"
 #include "emulator_types.hxx"
 #include "gb/gb_tkpwrapper.hxx"
-#include "n64/n64_tkpwrapper.hxx"
 #include "nes/nes_tkpwrapper.hxx"
 #include "registered_mmio.hxx"
 
@@ -100,17 +99,17 @@ void MmioViewer::initialize_c8()
 
 void MmioViewer::initialize_n64()
 {
-    hydra::N64::N64_TKPWrapper* emulator = dynamic_cast<hydra::N64::N64_TKPWrapper*>(emulator_);
+    // hydra::N64::N64_TKPWrapper* emulator = dynamic_cast<hydra::N64::N64_TKPWrapper*>(emulator_);
     // components_["CPU"] = {};
     // components_["RSP"] = {};
     // components_["RDP"] = {};
     // components_["VI"] = {};
     // components_["AI"] = {};
     // components_["PI"] = {};
-    for (size_t i = 0; i < 32; i++)
-    {
-        FREGISTER64("CPU", "r" + std::to_string(i), emulator->n64_impl_.cpu_.gpr_regs_[i].UD);
-    }
+    // for (size_t i = 0; i < 32; i++)
+    // {
+    //     FREGISTER64("CPU", "r" + std::to_string(i), emulator->n64_impl_.cpu_.gpr_regs_[i].UD);
+    // }
 }
 
 #undef REGISTER

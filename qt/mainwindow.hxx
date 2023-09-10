@@ -2,6 +2,7 @@
 
 #include "screenwidget.hxx"
 #include <array>
+#include <core.hxx>
 #include <emulator.hxx>
 #include <emulator_factory.hxx>
 #include <emulator_tool_factory.hxx>
@@ -41,10 +42,9 @@ private:
     void stop_emulator();
     void enable_emulation_actions(bool should);
     void setup_emulator_specific();
-    void empty_screen();
 
 private slots:
-    void redraw_screen();
+    void emulator_frame();
     void on_mouse_move(QMouseEvent* event);
 
 public:
@@ -64,12 +64,13 @@ public:
     QAction* screenshot_act_;
     QAction* shaders_act_;
     ScreenWidget* screen_;
-    std::shared_ptr<hydra::Emulator> emulator_;
+    std::unique_ptr<hydra::Core> emulator_;
     hydra::EmuType emulator_type_;
     std::thread emulator_thread_;
     bool settings_open_ = false;
     bool about_open_ = false;
     bool shaders_open_ = false;
+    bool paused_ = false;
 
     std::array<QWidget*, EmulatorToolsSize> tools_;
     std::array<bool, EmulatorToolsSize> tools_open_;

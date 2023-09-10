@@ -10,6 +10,7 @@
 
 namespace hydra::N64
 {
+    class N64;
     class RCP;
     class CPU;
     class CPUBus;
@@ -62,6 +63,7 @@ namespace hydra::N64
         MIInterrupt* mi_interrupt_ = nullptr;
         std::vector<int16_t> ai_buffer_{};
 
+        friend class hydra::N64::N64;
         friend class hydra::N64::RCP;
         friend class hydra::N64::CPU;
         friend class hydra::N64::CPUBus;
