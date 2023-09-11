@@ -21,15 +21,11 @@
 void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
 {
     MainWindow* window = static_cast<MainWindow*>(device->pUserData);
-    static int frame_count = 0;
-    frame_count++;
+    std::unique_lock<std::mutex> lock(window->audio_mutex_);
     if (window->queued_audio_.empty())
     {
-        printf("frame %d starved\n", frame_count);
         return;
     }
-    printf("frame %d not starved - ", frame_count);
-    printf("frames have: %d, frames want: %d\n", (int)window->queued_audio_.size(), frames * 2);
     frames = std::min(frames * 2, static_cast<ma_uint32>(window->queued_audio_.size()));
     std::memcpy(out, window->queued_audio_.data(), frames * sizeof(int16_t));
     window->queued_audio_.erase(window->queued_audio_.begin(),
@@ -556,6 +552,8 @@ void MainWindow::emulator_frame()
 
     screen_->Redraw(vi.width, vi.height, vi.data.data());
     screen_->update();
+
+    std::unique_lock<std::mutex> lock(audio_mutex_);
     queued_audio_.reserve(queued_audio_.size() + ai.data.size());
     queued_audio_.insert(queued_audio_.end(), ai.data.begin(), ai.data.end());
 }
