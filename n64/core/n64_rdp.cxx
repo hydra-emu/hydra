@@ -256,7 +256,7 @@ namespace hydra::N64
             case RDPCommandType::SyncFull:
             {
                 Logger::Debug("Raising DP interrupt");
-                mi_interrupt_->DP = true;
+                interrupt_callback_(true);
                 status_.dma_busy = false;
                 status_.pipe_busy = false;
                 status_.start_gclk = false;

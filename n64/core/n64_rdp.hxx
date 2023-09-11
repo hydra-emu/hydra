@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <functional>
 #include <n64/core/n64_types.hxx>
 #include <utility>
 #include <vector>
@@ -173,9 +174,9 @@ namespace hydra::N64
         RDP();
         void InstallBuses(uint8_t* rdram_ptr, uint8_t* spmem_ptr);
 
-        void SetMIPtr(MIInterrupt* ptr)
+        void SetInterruptCallback(std::function<void(bool)> callback)
         {
-            mi_interrupt_ = ptr;
+            interrupt_callback_ = callback;
         }
 
         uint32_t ReadWord(uint32_t addr);
@@ -189,7 +190,6 @@ namespace hydra::N64
         RDPStatus status_;
         uint8_t* rdram_ptr_ = nullptr;
         uint8_t* spmem_ptr_ = nullptr;
-        MIInterrupt* mi_interrupt_ = nullptr;
         uint32_t start_address_;
         uint32_t end_address_;
         uint32_t current_address_;
@@ -251,6 +251,7 @@ namespace hydra::N64
         std::array<uint32_t, 0x4000> z_decompress_lut_;
         std::array<uint32_t, 0x40000> z_compress_lut_;
         std::array<uint16_t, 1024> coverage_mask_buffer_;
+        std::function<void(bool)> interrupt_callback_;
 
         bool z_update_en_ = false;
         bool z_compare_en_ = false;

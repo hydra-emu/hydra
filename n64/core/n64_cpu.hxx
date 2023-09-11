@@ -202,7 +202,7 @@ namespace hydra::N64
         void Reset();
 
     private:
-        uint8_t* redirect_paddress(uint32_t paddr);
+        hydra_inline uint8_t* redirect_paddress(uint32_t paddr);
         void map_direct_addresses();
 
         static std::vector<uint8_t> ipl_;
@@ -271,6 +271,8 @@ namespace hydra::N64
         (cpu->*MemberFunc)();
     }
 
+    enum class InterruptType { VI, AI, PI, SI, DP, SP };
+
     class CPU final
     {
     public:
@@ -314,6 +316,7 @@ namespace hydra::N64
         int32_t mouse_x_, mouse_y_;
         int32_t mouse_delta_x_, mouse_delta_y_;
         std::chrono::time_point<std::chrono::high_resolution_clock> last_second_time_;
+        bool should_service_interrupt_ = false;
 
         hydra_inline TranslatedAddress translate_vaddr(uint32_t vaddr);
         hydra_inline TranslatedAddress translate_vaddr_kernel(uint32_t vaddr);
@@ -419,6 +422,8 @@ namespace hydra::N64
         void store_doubleword(uint64_t address, uint64_t value);
 
         bool check_interrupts();
+        void update_interrupt_check();
+        hydra_inline void set_interrupt(InterruptType type, bool value);
         void handle_event();
         uint32_t timing_pi_access(uint8_t domain, uint32_t length);
         void check_vi_interrupt();

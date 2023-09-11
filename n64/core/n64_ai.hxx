@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <log.hxx>
 #include <n64/core/n64_types.hxx>
 #include <vector>
@@ -26,9 +27,9 @@ namespace hydra::N64
             rdram_ptr_ = rdram_ptr;
         }
 
-        void SetMIPtr(MIInterrupt* mi_interrupt)
+        void SetInterruptCallback(std::function<void(bool)> callback)
         {
-            mi_interrupt_ = mi_interrupt;
+            interrupt_callback_ = callback;
         }
 
         void Step();
@@ -43,14 +44,13 @@ namespace hydra::N64
         bool ai_enabled_ = false;
         uint8_t ai_dma_count_ = 0;
         uint32_t ai_cycles_ = 0;
-        bool hungry_ = true;
+        std::function<void(bool)> interrupt_callback_;
 
         std::array<uint32_t, 2> ai_dma_addresses_{};
         std::array<uint32_t, 2> ai_dma_lengths_{};
 
         uint8_t* rdram_ptr_ = nullptr;
 
-        MIInterrupt* mi_interrupt_ = nullptr;
         std::vector<int16_t> ai_buffer_{};
 
         friend class hydra::N64::N64;
