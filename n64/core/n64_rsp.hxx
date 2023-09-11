@@ -231,22 +231,9 @@ namespace hydra::N64
         RSP();
         void Tick();
         void Reset();
-
-        bool IsHalted()
-        {
-            return status_.halt;
-        }
-
-        void InstallBuses(uint8_t* rdram_ptr, RDP* rdp_ptr)
-        {
-            rdram_ptr_ = rdram_ptr;
-            rdp_ptr_ = rdp_ptr;
-        }
-
-        void SetInterruptCallback(std::function<void(bool)> callback)
-        {
-            interrupt_callback_ = callback;
-        }
+        bool IsHalted();
+        void InstallBuses(uint8_t* rdram_ptr, RDP* rdp_ptr);
+        void SetInterruptCallback(std::function<void(bool)> callback);
 
     private:
         using func_ptr = void (*)(RSP*);

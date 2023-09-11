@@ -21,17 +21,8 @@ namespace hydra::N64
     {
     public:
         void Reset();
-
-        void InstallBuses(uint8_t* rdram_ptr)
-        {
-            rdram_ptr_ = rdram_ptr;
-        }
-
-        void SetInterruptCallback(std::function<void(bool)> callback)
-        {
-            interrupt_callback_ = callback;
-        }
-
+        void InstallBuses(uint8_t* rdram_ptr);
+        void SetInterruptCallback(std::function<void(bool)> callback);
         void Step();
         uint32_t ReadWord(uint32_t addr);
         void WriteWord(uint32_t addr, uint32_t data);

@@ -218,4 +218,15 @@ namespace hydra::N64
             }
         }
     }
+
+    void Vi::InstallBuses(uint8_t* rdram_ptr)
+    {
+        rdram_ptr_ = rdram_ptr;
+    }
+
+    void Vi::SetInterruptCallback(std::function<void(bool)> callback)
+    {
+        interrupt_callback_ = callback;
+    }
+
 } // namespace hydra::N64

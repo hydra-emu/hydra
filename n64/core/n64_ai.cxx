@@ -75,6 +75,16 @@ namespace hydra::N64
         }
     }
 
+    void Ai::InstallBuses(uint8_t* rdram_ptr)
+    {
+        rdram_ptr_ = rdram_ptr;
+    }
+
+    void Ai::SetInterruptCallback(std::function<void(bool)> callback)
+    {
+        interrupt_callback_ = callback;
+    }
+
     uint32_t Ai::ReadWord(uint32_t addr)
     {
         switch (addr)
