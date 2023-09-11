@@ -406,4 +406,20 @@ namespace hydra::N64
             }
         }
     }
+
+    bool RSP::IsHalted()
+    {
+        return status_.halt;
+    }
+
+    void RSP::InstallBuses(uint8_t* rdram_ptr, RDP* rdp_ptr)
+    {
+        rdram_ptr_ = rdram_ptr;
+        rdp_ptr_ = rdp_ptr;
+    }
+
+    void RSP::SetInterruptCallback(std::function<void(bool)> callback)
+    {
+        interrupt_callback_ = callback;
+    }
 } // namespace hydra::N64
