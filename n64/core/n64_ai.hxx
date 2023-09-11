@@ -39,7 +39,7 @@ namespace hydra::N64
         uint32_t ai_control_ = 0;
         uint32_t ai_bitrate_ = 0;
         uint32_t ai_frequency_ = 0;
-        uint32_t ai_period_ = 93750000 / 44100;
+        uint32_t ai_period_ = 93750000 / 48000;
         bool ai_enabled_ = false;
         uint8_t ai_dma_count_ = 0;
         uint32_t ai_cycles_ = 0;

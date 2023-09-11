@@ -6,6 +6,7 @@
 #include "shadereditor.hxx"
 #include <emulator_settings.hxx>
 #include <error_factory.hxx>
+#include <fstream>
 #include <iostream>
 #include <QApplication>
 #include <QClipboard>
@@ -20,12 +21,16 @@
 void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
 {
     MainWindow* window = static_cast<MainWindow*>(device->pUserData);
+    static int frame_count = 0;
+    frame_count++;
     if (window->queued_audio_.empty())
     {
-        std::memset(out, 0, frames * sizeof(int16_t));
+        printf("frame %d starved\n", frame_count);
         return;
     }
-    frames = std::min(frames, static_cast<ma_uint32>(window->queued_audio_.size()));
+    printf("frame %d not starved - ", frame_count);
+    printf("frames have: %d, frames want: %d\n", (int)window->queued_audio_.size(), frames * 2);
+    frames = std::min(frames * 2, static_cast<ma_uint32>(window->queued_audio_.size()));
     std::memcpy(out, window->queued_audio_.data(), frames * sizeof(int16_t));
     window->queued_audio_.erase(window->queued_audio_.begin(),
                                 window->queued_audio_.begin() + frames);
@@ -55,23 +60,32 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), tools_{}, tools_o
     setWindowIcon(QIcon(":/images/hydra.png"));
 
     QTimer* timer = new QTimer(this);
-    timer->start(16);
     connect(timer, SIGNAL(timeout()), this, SLOT(emulator_frame()));
+    timer->start();
     enable_emulation_actions(false);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
     screen_->setMouseTracking(true);
+
+    ma_context context;
+    ma_context_config context_config = ma_context_config_init();
+    context_config.threadPriority = ma_thread_priority_realtime;
+    if (ma_context_init(NULL, 0, &context_config, &context) != MA_SUCCESS)
+    {
+        Logger::Fatal("Failed to initialize audio context");
+    }
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format = ma_format_s16;
     config.playback.channels = 2;
     config.sampleRate = 48000;
+    config.periodSizeInFrames = 48000 / 60;
     config.dataCallback = hungry_for_more;
     config.pUserData = this;
-
     if (ma_device_init(NULL, &config, &sound_device_) != MA_SUCCESS)
     {
         Logger::Fatal("Failed to open audio device");
     }
+
     ma_device_start(&sound_device_);
 }
 
@@ -524,7 +538,7 @@ void MainWindow::stop_emulator()
 
 void MainWindow::emulator_frame()
 {
-    if (!emulator_)
+    if (!emulator_ || paused_)
     {
         return;
     }

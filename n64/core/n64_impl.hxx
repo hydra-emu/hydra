@@ -39,50 +39,7 @@ namespace hydra::N64
             rcp_.vi_.Redraw(data);
         }
 
-        void RenderAudio(std::vector<int16_t>& data)
-        {
-            if (rcp_.ai_.ai_frequency_ == 0)
-            {
-                return;
-            }
-            ma_resampler_config config =
-                ma_resampler_config_init(ma_format_s16, 2,
-                                         rcp_.ai_.ai_frequency_, // sample rate in
-                                         HOST_SAMPLE_RATE,       // sample rate out
-                                         ma_resample_algorithm_linear);
-            ma_resampler resampler;
-
-            struct Deleter
-            {
-                Deleter(ma_resampler& resampler) : resampler_(resampler){};
-
-                ~Deleter()
-                {
-                    ma_resampler_uninit(&resampler_, nullptr);
-                };
-
-            private:
-                ma_resampler& resampler_;
-            } deleter(resampler);
-
-            if (ma_result res = ma_resampler_init(&config, nullptr, &resampler))
-            {
-                Logger::Fatal("Failed to create resampler: {}", static_cast<int>(res));
-            }
-
-            ma_uint64 frames_in = rcp_.ai_.ai_frequency_ / 60;
-            frames_in = std::min(frames_in, (ma_uint64)rcp_.ai_.ai_buffer_.size() >> 1);
-            ma_uint64 frames_out = 48000 / 60;
-            data.resize(frames_out * 2);
-            ma_result result = ma_resampler_process_pcm_frames(
-                &resampler, rcp_.ai_.ai_buffer_.data(), &frames_in, data.data(), &frames_out);
-            if (result != MA_SUCCESS)
-            {
-                Logger::Fatal("Failed to resample: {}", static_cast<int>(result));
-            }
-            rcp_.ai_.ai_buffer_.erase(rcp_.ai_.ai_buffer_.begin(),
-                                      rcp_.ai_.ai_buffer_.begin() + frames_in * 2);
-        }
+        void RenderAudio(std::vector<int16_t>& data);
 
     private:
         RCP rcp_;
