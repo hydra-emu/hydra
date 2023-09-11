@@ -7,6 +7,8 @@
 #include <emulator_factory.hxx>
 #include <emulator_tool_factory.hxx>
 #include <memory>
+#define MA_NO_DECODING
+#define MA_NO_ENCODING
 #include <miniaudio.h>
 #include <QFileDialog>
 #include <QLabel>
