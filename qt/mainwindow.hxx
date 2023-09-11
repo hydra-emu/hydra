@@ -76,6 +76,7 @@ public:
     bool about_open_ = false;
     bool shaders_open_ = false;
     bool paused_ = false;
+    std::mutex audio_mutex_;
 
     std::array<QWidget*, EmulatorToolsSize> tools_;
     std::array<bool, EmulatorToolsSize> tools_open_;
