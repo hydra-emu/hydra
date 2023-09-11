@@ -282,12 +282,12 @@ namespace hydra::N64
                 sp_write.full = data;
                 if (sp_write.clear_intr && !sp_write.set_intr)
                 {
-                    mi_interrupt_->SP = false;
+                    interrupt_callback_(false);
                 }
                 else if (!sp_write.clear_intr && sp_write.set_intr)
                 {
                     Logger::Debug("Raising SP interrupt");
-                    mi_interrupt_->SP = true;
+                    interrupt_callback_(true);
                 }
                 if (sp_write.clear_broke)
                 {

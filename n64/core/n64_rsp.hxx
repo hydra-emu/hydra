@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <n64/core/n64_types.hxx>
 
 namespace hydra::N64
@@ -242,9 +243,9 @@ namespace hydra::N64
             rdp_ptr_ = rdp_ptr;
         }
 
-        void SetMIPtr(MIInterrupt* ptr)
+        void SetInterruptCallback(std::function<void(bool)> callback)
         {
-            mi_interrupt_ = ptr;
+            interrupt_callback_ = callback;
         }
 
     private:
@@ -411,8 +412,8 @@ namespace hydra::N64
         uint32_t next_pc_;
         bool semaphore_;
         uint8_t* rdram_ptr_ = nullptr;
-        MIInterrupt* mi_interrupt_ = nullptr;
         RDP* rdp_ptr_ = nullptr;
+        std::function<void(bool)> interrupt_callback_;
 
         friend class hydra::N64::CPU;
         friend class hydra::N64::CPUBus;

@@ -171,7 +171,7 @@ namespace hydra::N64
             }
             case VI_V_CURRENT:
             {
-                mi_interrupt_->VI = false;
+                interrupt_callback_(false);
                 break;
             }
             case VI_H_SYNC:

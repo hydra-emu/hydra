@@ -96,7 +96,7 @@ namespace hydra::N64
         if (status_.intr_break)
         {
             Logger::Debug("Raising SP interrupt");
-            mi_interrupt_->SP = true;
+            interrupt_callback_(true);
         }
     }
 

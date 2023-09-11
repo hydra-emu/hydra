@@ -2,6 +2,14 @@
 #include <iostream>
 #include <n64/core/n64_impl.hxx>
 
+#define PROFILING
+#ifdef PROFILING
+#include <valgrind/callgrind.h>
+#else
+#define CALLGRIND_START_INSTRUMENTATION
+#define CALLGRIND_STOP_INSTRUMENTATION
+#endif
+
 namespace hydra::N64
 {
     N64::N64() : cpubus_(rcp_), cpu_(cpubus_, rcp_)
@@ -25,6 +33,7 @@ namespace hydra::N64
 
     void N64::RunFrame()
     {
+        CALLGRIND_START_INSTRUMENTATION;
         static int cycles = 0;
         for (int f = 0; f < 1; f++)
         { // fields
@@ -60,6 +69,7 @@ namespace hydra::N64
             }
             cpu_.check_vi_interrupt();
         }
+        CALLGRIND_STOP_INSTRUMENTATION;
     }
 
     void N64::Reset()

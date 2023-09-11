@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 namespace hydra::N64
@@ -14,7 +15,6 @@ namespace hydra::N64
     class RCP;
     class CPU;
     class CPUBus;
-    union MIInterrupt;
 
     struct Vi
     {
@@ -30,9 +30,9 @@ namespace hydra::N64
             rdram_ptr_ = rdram_ptr;
         }
 
-        void SetMIPtr(MIInterrupt* mi_interrupt)
+        void SetInterruptCallback(std::function<void(bool)> callback)
         {
-            mi_interrupt_ = mi_interrupt;
+            interrupt_callback_ = callback;
         }
 
     private:
@@ -63,7 +63,7 @@ namespace hydra::N64
         uint8_t pixel_mode_ = 0;
         uint8_t* memory_ptr_ = nullptr;
         uint8_t* rdram_ptr_ = nullptr;
-        MIInterrupt* mi_interrupt_ = nullptr;
+        std::function<void(bool)> interrupt_callback_;
 
         inline void set_pixel(int x, int y, uint32_t color);
         friend class hydra::N64::RCP;

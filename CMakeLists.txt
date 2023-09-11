@@ -102,7 +102,6 @@ set(N64_FILES
     n64/n64_hc.cxx
     n64/core/n64_impl.cxx
     n64/core/n64_cpu.cxx
-    n64/core/n64_cpubus.cxx
     n64/core/n64_rcp.cxx
     n64/core/n64_rsp.cxx
     n64/core/n64_rdp.cxx

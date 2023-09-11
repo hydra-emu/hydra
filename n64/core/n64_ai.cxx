@@ -19,7 +19,7 @@ namespace hydra::N64
         {
             case AI_STATUS:
             {
-                mi_interrupt_->AI = false;
+                interrupt_callback_(false);
                 break;
             }
             case AI_DRAM_ADDR:
@@ -126,7 +126,7 @@ namespace hydra::N64
             ai_dma_lengths_[0] -= 4;
             if (ai_dma_lengths_[0] == 0)
             {
-                mi_interrupt_->AI = true;
+                interrupt_callback_(true);
                 ai_dma_count_--;
                 if (ai_dma_count_ > 0)
                 {
