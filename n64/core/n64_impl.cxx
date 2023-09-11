@@ -2,7 +2,8 @@
 #include <iostream>
 #include <n64/core/n64_impl.hxx>
 
-#define PROFILING
+// TODO: cmake option
+// #define PROFILING
 #ifdef PROFILING
 #include <valgrind/callgrind.h>
 #else
