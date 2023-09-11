@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <emulator.hxx>
+#include <core.hxx>
 #include <gb/gb_addresses.hxx>
 #include <gb/gb_apu.hxx>
 #include <gb/gb_apu_ch.hxx>
@@ -11,26 +11,12 @@
 #include <gb/gb_ppu.hxx>
 #include <gb/gb_timer.hxx>
 
-namespace hydra
-{
-    namespace Applications
-    {
-        class GameboyRomData;
-    }
-
-    namespace Gameboy::QA
-    {
-        class TestGameboy;
-    }
-} // namespace hydra
 class MmioViewer;
 
-namespace hydra::Gameboy
+namespace hydra
 {
-    class Gameboy_TKPWrapper : public Emulator
+    class HydraCore_Gameboy : public Core
     {
-        TKP_EMULATOR(Gameboy_TKPWrapper);
-
     private:
         using GameboyPalettes = std::array<std::array<float, 3>, 4>;
         using GameboyKeys = std::array<uint32_t, 4>;
@@ -45,11 +31,7 @@ namespace hydra::Gameboy
         using GameboyBreakpoint = hydra::Gameboy::Utils::GameboyBreakpoint;
 
     public:
-        // Used by automated tests
-        void Update()
-        {
-            update();
-        }
+        HydraCore_Gameboy();
 
     private:
         ChannelArrayPtr channel_array_ptr_;
@@ -61,8 +43,12 @@ namespace hydra::Gameboy
         GameboyKeys direction_keys_;
         GameboyKeys action_keys_;
         uint8_t &joypad_, &interrupt_flag_;
-        inline void update_audio_sync();
-        friend class hydra::Gameboy::QA::TestGameboy;
         friend class ::MmioViewer;
+
+        bool load_file(const std::string& type, const std::string& path) override;
+        VideoInfo render_frame() override;
+        AudioInfo render_audio() override;
+        void run_frame() override;
+        void reset() override;
     };
-} // namespace hydra::Gameboy
+} // namespace hydra

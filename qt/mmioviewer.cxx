@@ -1,7 +1,7 @@
 #include "mmioviewer.hxx"
 #include "c8/c8_tkpwrapper.hxx"
 #include "emulator_types.hxx"
-#include "gb/gb_tkpwrapper.hxx"
+#include "gb/gb_hc.hxx"
 #include "nes/nes_tkpwrapper.hxx"
 #include "registered_mmio.hxx"
 
@@ -58,8 +58,7 @@ MmioViewer::MmioViewer(bool& open, hydra::Emulator* emulator, hydra::EmuType typ
 
 void MmioViewer::initialize_gb()
 {
-    hydra::Gameboy::Gameboy_TKPWrapper* emulator =
-        dynamic_cast<hydra::Gameboy::Gameboy_TKPWrapper*>(emulator_);
+    hydra::HydraCore_Gameboy* emulator = dynamic_cast<hydra::HydraCore_Gameboy*>(emulator_);
     FREGISTER("CPU", "A", emulator->cpu_.A, "xxxxxxxx");
     FREGISTER("CPU", "B", emulator->cpu_.B, "xxxxxxxx");
     FREGISTER("CPU", "C", emulator->cpu_.C, "xxxxxxxx");

@@ -3,12 +3,12 @@
 #include <emulator_settings.hxx>
 #include <emulator_user_data.hxx>
 #include <filesystem>
-#include <gb/gb_tkpwrapper.hxx>
+#include <gb/gb_hc.hxx>
 #include <iostream>
 
-namespace hydra::Gameboy
+namespace hydra
 {
-    Gameboy_TKPWrapper::Gameboy_TKPWrapper()
+    HydraCore_Gameboy::HydraCore_Gameboy()
         : channel_array_ptr_(std::make_shared<ChannelArray>()), bus_(channel_array_ptr_),
           apu_(channel_array_ptr_, bus_.GetReference(addr_NR52)), ppu_(bus_),
           timer_(channel_array_ptr_, bus_), cpu_(bus_, ppu_, apu_, timer_),
@@ -66,46 +66,23 @@ namespace hydra::Gameboy
                         bus_.BiosEnabled = true;
                     }
                 }
-                SkipBoot = !bus_.BiosEnabled;
             }
-            else
-            {
-                SkipBoot = true;
-            }
-        }
-        else
-        {
-            SkipBoot = true;
         }
         apu_.UseSound = true;
         apu_.InitSound();
-        instrs_per_frame_ = 70224;
-
-        width_ = 160;
-        height_ = 144;
     }
 
-    Gameboy_TKPWrapper::~Gameboy_TKPWrapper()
-    {
-        Stopped.store(true);
-    }
-
-    void Gameboy_TKPWrapper::reset()
+    void HydraCore_Gameboy::reset()
     {
         bus_.SoftReset();
-        cpu_.Reset(SkipBoot);
+        cpu_.Reset(true);
         timer_.Reset();
         ppu_.Reset();
     }
 
-    void Gameboy_TKPWrapper::update()
+    void HydraCore_Gameboy::run_frame()
     {
-        update_audio_sync();
-    }
-
-    void Gameboy_TKPWrapper::update_audio_sync()
-    {
-        if ((apu_.IsQueueEmpty()) || FastMode)
+        for (int i = 0; i < 70224; i++)
         {
             uint8_t old_if = interrupt_flag_;
             int clk = 0;
@@ -125,55 +102,34 @@ namespace hydra::Gameboy
             ppu_.Update(clk);
             apu_.Update(clk);
         }
-        else
-        {
-            // std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
     }
 
-    void Gameboy_TKPWrapper::HandleKeyDown(uint32_t key)
+    bool HydraCore_Gameboy::load_file(const std::string& type, const std::string& path)
     {
-        if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key);
-            it_dir != direction_keys_.end())
+        if (type == "rom")
         {
-            int index = it_dir - direction_keys_.begin();
-            bus_.DirectionKeys &= (~(1UL << index));
-            interrupt_flag_ |= IFInterrupt::JOYPAD;
+            auto loaded = bus_.LoadCartridge(path);
+            ppu_.UseCGB = bus_.UseCGB;
+            return loaded;
         }
-        if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key);
-            it_dir != action_keys_.end())
-        {
-            int index = it_dir - action_keys_.begin();
-            bus_.ActionKeys &= (~(1UL << index));
-            interrupt_flag_ |= IFInterrupt::JOYPAD;
-        }
+        return false;
     }
 
-    void Gameboy_TKPWrapper::HandleKeyUp(uint32_t key)
+    VideoInfo HydraCore_Gameboy::render_frame()
     {
-        if (auto it_dir = std::find(direction_keys_.begin(), direction_keys_.end(), key);
-            it_dir != direction_keys_.end())
-        {
-            int index = it_dir - direction_keys_.begin();
-            bus_.DirectionKeys |= (1UL << index);
-        }
-        if (auto it_dir = std::find(action_keys_.begin(), action_keys_.end(), key);
-            it_dir != action_keys_.end())
-        {
-            int index = it_dir - action_keys_.begin();
-            bus_.ActionKeys |= (1UL << index);
-        }
+        VideoInfo info;
+        info.width = 160;
+        info.height = 144;
+        info.data.resize(info.width * info.height * 4);
+        memcpy(info.data.data(), ppu_.GetScreenData(), info.data.size());
+        info.format = VideoFormat::RGBA8888;
+        return info;
     }
 
-    bool Gameboy_TKPWrapper::load_file(const std::string& path)
+    AudioInfo HydraCore_Gameboy::render_audio()
     {
-        auto loaded = bus_.LoadCartridge(path);
-        ppu_.UseCGB = bus_.UseCGB;
-        return loaded;
+        AudioInfo info;
+        return info;
     }
 
-    void* Gameboy_TKPWrapper::GetScreenData()
-    {
-        return ppu_.GetScreenData();
-    }
-} // namespace hydra::Gameboy
+} // namespace hydra
