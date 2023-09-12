@@ -6,8 +6,6 @@
 #include <mutex>
 #include <queue>
 
-class MmioViewer;
-
 namespace hydra::Gameboy
 {
     constexpr int FRAME_CYCLES = 70224;
@@ -47,7 +45,5 @@ namespace hydra::Gameboy
         PaletteColors& get_cur_obj_pal(uint8_t attributes);
         inline void render_tiles();
         inline void render_sprites();
-
-        friend class ::MmioViewer;
     };
 } // namespace hydra::Gameboy

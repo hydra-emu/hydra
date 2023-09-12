@@ -45,9 +45,6 @@
 
 using persp_func_ptr = std::pair<int32_t, int32_t> (*)(int32_t, int32_t, int32_t);
 
-class N64Debugger;
-class MmioViewer;
-
 namespace hydra::N64
 {
     class RSP;
@@ -317,7 +314,5 @@ namespace hydra::N64
         void render_primitive(const Primitive& primitive);
 
         friend class hydra::N64::RSP;
-        friend class ::N64Debugger;
-        friend class ::MmioViewer;
     };
 } // namespace hydra::N64
