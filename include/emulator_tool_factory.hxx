@@ -4,7 +4,8 @@
 #include <log.hxx>
 #include <memory>
 
-enum EmulatorTool : size_t {
+enum EmulatorTool : size_t
+{
     ET_Debugger,
     ET_Tracelogger,
     ET_MmioViewer,

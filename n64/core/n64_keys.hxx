@@ -2,7 +2,8 @@
 
 namespace hydra::N64::Keys
 {
-    enum {
+    enum
+    {
         A = 0,
         B,
         Z,

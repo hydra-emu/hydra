@@ -629,7 +629,8 @@ namespace hydra::N64
         return 0;
     }
 
-    enum class JoybusCommand : uint8_t {
+    enum class JoybusCommand : uint8_t
+    {
         RequestInfo = 0,
         ControllerState = 1,
         ReadMempack = 2,
@@ -3211,7 +3212,13 @@ namespace hydra::N64
         }
     }
 
-    enum { FMT_S = 16, FMT_D = 17, FMT_W = 20, FMT_L = 21 };
+    enum
+    {
+        FMT_S = 16,
+        FMT_D = 17,
+        FMT_W = 20,
+        FMT_L = 21
+    };
 
     bool CPU::check_fpu_exception()
     {

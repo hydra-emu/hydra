@@ -10,7 +10,8 @@
 
 namespace hydra::NES
 {
-    enum class Mapper {
+    enum class Mapper
+    {
         NROM = 0,
 
         MMC3 = 4,

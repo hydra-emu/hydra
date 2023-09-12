@@ -7,7 +7,8 @@
 namespace hydra
 {
 
-    enum class VideoFormat {
+    enum class VideoFormat
+    {
         RGBA8888,
         RGBA5551,
     };
