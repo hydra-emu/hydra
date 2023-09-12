@@ -149,9 +149,6 @@ namespace hydra
     } // namespace N64
 } // namespace hydra
 
-class N64Debugger;
-class MmioViewer;
-
 namespace hydra::N64
 {
     enum class CP0Instruction {
@@ -258,8 +255,6 @@ namespace hydra::N64
         RCP& rcp_;
         friend class CPU;
         friend class hydra::N64::N64;
-        friend class ::N64Debugger;
-        friend class ::MmioViewer;
     };
 
     template <auto MemberFunc>
@@ -482,8 +477,6 @@ namespace hydra::N64
         void dump_rdram();
         uint32_t get_dram_crc();
 
-        friend class ::N64Debugger;
-        friend class ::MmioViewer;
         friend class hydra::N64::N64;
     };
 } // namespace hydra::N64

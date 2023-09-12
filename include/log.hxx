@@ -3,7 +3,6 @@
 #include <fmt/color.h>
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include <global.hxx>
 #include <str_hash.hxx>
 #include <unordered_map>
 

@@ -50,7 +50,7 @@ add_subdirectory(vendored/fmt)
 # add_compile_options(-fsanitize=address -fsanitize=undefined)
 # add_link_options(-fsanitize=address -fsanitize=undefined)
 
-set(PROJECT_SOURCES
+set(QT_SOURCES
     data/resources.qrc
     qt/main.cxx
     qt/mainwindow.cxx
@@ -59,9 +59,7 @@ set(PROJECT_SOURCES
     qt/shadereditor.cxx
     qt/aboutwindow.cxx
     qt/keypicker.cxx
-    qt/nes_ppuviewer.cxx
-    qt/mmioviewer.cxx
-    src/global.cxx
+    vendored/miniaudio.c
 )
 
 set(SRC_FILES
@@ -78,7 +76,7 @@ set(C8_FILES
 )
 
 set(GB_FILES
-    gb/gb_tkpwrapper.cxx
+    gb/gb_hc.cxx
     gb/gb_apu_ch.cxx
     gb/gb_apu.cxx
     gb/gb_bus.cxx
@@ -109,7 +107,6 @@ set(N64_FILES
     n64/core/n64_rsp_vu.cxx
     n64/core/n64_vi.cxx
     n64/core/n64_ai.cxx
-    vendored/miniaudio.c
 )
 
 set(HYDRA_INCLUDE_DIRECTORIES
@@ -118,13 +115,9 @@ set(HYDRA_INCLUDE_DIRECTORIES
     vendored/fmt/include
 )
 
-if (APPLE)
-    include_directories(/usr/local/include /opt/homebrew/include)
-endif()
-
 qt_add_executable(hydra
     MANUAL_FINALIZATION
-    ${PROJECT_SOURCES}
+    ${QT_SOURCES}
 )
 
 add_library(src STATIC ${SRC_FILES})

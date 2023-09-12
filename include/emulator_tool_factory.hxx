@@ -1,10 +1,8 @@
 #pragma once
 
-#include "qt/mmioviewer.hxx"
 #include <emulator_types.hxx>
 #include <log.hxx>
 #include <memory>
-#include <qt/mmioviewer.hxx>
 
 enum EmulatorTool : size_t {
     ET_Debugger,
@@ -40,7 +38,7 @@ struct EmulatorToolFactory
             }
             case ET_MmioViewer:
             {
-                return new MmioViewer(open, emulator, emu_type, nullptr);
+                return nullptr;
             }
             default:
             {

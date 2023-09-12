@@ -5,8 +5,6 @@
 #include <n64/core/n64_rcp.hxx>
 #include <string>
 
-class MmioViewer;
-
 namespace hydra::N64
 {
     class N64
@@ -45,6 +43,5 @@ namespace hydra::N64
         RCP rcp_;
         CPUBus cpubus_;
         CPU cpu_;
-        friend class ::MmioViewer;
     };
 } // namespace hydra::N64

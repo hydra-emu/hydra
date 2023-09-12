@@ -405,6 +405,5 @@ namespace hydra::N64
         friend class hydra::N64::CPU;
         friend class hydra::N64::CPUBus;
         friend class hydra::N64::RCP;
-        friend class MmioViewer;
     };
 } // namespace hydra::N64

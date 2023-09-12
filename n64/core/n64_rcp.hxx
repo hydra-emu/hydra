@@ -17,8 +17,6 @@ namespace hydra::N64
         class CPU;
     } // namespace Devices
 } // namespace hydra::N64
-class N64Debugger;
-class MmioViewer;
 
 namespace hydra::N64
 {
@@ -36,7 +34,5 @@ namespace hydra::N64
         friend class hydra::N64::N64;
         friend class hydra::N64::CPUBus;
         friend class hydra::N64::CPU;
-        friend class ::N64Debugger;
-        friend class ::MmioViewer;
     };
 } // namespace hydra::N64

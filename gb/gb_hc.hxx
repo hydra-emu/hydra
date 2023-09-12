@@ -11,8 +11,6 @@
 #include <gb/gb_ppu.hxx>
 #include <gb/gb_timer.hxx>
 
-class MmioViewer;
-
 namespace hydra
 {
     class HydraCore_Gameboy : public Core
@@ -43,7 +41,6 @@ namespace hydra
         GameboyKeys direction_keys_;
         GameboyKeys action_keys_;
         uint8_t &joypad_, &interrupt_flag_;
-        friend class ::MmioViewer;
 
         bool load_file(const std::string& type, const std::string& path) override;
         VideoInfo render_frame() override;
