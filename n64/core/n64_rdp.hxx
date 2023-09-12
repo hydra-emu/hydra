@@ -50,7 +50,8 @@ namespace hydra::N64
     class RSP;
     union LoadTileCommand;
 
-    enum class RDPCommandType {
+    enum class RDPCommandType
+    {
 #define X(name, opcode, length) name = opcode,
         RDP_COMMANDS
 #undef X
@@ -101,7 +102,14 @@ namespace hydra::N64
 
     static_assert(sizeof(RDPStatusWrite) == sizeof(uint32_t));
 
-    enum class Format { RGBA, YUV, CI, IA, I };
+    enum class Format
+    {
+        RGBA,
+        YUV,
+        CI,
+        IA,
+        I
+    };
 
     struct TileDescriptor
     {
@@ -163,7 +171,13 @@ namespace hydra::N64
         bool right_major;
     };
 
-    enum class CoverageMode { Clamp = 0, Wrap = 1, Zap = 2, Save = 3 };
+    enum class CoverageMode
+    {
+        Clamp = 0,
+        Wrap = 1,
+        Zap = 2,
+        Save = 3
+    };
 
     class RDP final
     {
@@ -271,7 +285,13 @@ namespace hydra::N64
         uint32_t seed_;
         persp_func_ptr perspective_correction_func_;
 
-        enum CycleType { Cycle1, Cycle2, Copy, Fill } cycle_type_;
+        enum CycleType
+        {
+            Cycle1,
+            Cycle2,
+            Copy,
+            Fill
+        } cycle_type_;
 
         void process_commands();
         void execute_command(const std::vector<uint64_t>& data);

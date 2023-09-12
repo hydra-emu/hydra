@@ -5,7 +5,8 @@
 
 namespace hydra::N64
 {
-    enum class RSPHWIO {
+    enum class RSPHWIO
+    {
         Cache = 0,
         DramAddr = 1,
         RdLen = 2,

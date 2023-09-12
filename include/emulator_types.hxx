@@ -2,7 +2,8 @@
 
 namespace hydra
 {
-    enum class EmuType {
+    enum class EmuType
+    {
         Gameboy,
         NES,
         N64,

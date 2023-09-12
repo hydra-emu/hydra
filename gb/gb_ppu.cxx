@@ -5,7 +5,8 @@
 
 namespace hydra::Gameboy
 {
-    enum STATMode {
+    enum STATMode
+    {
         MODE_OAM_SCAN = 2,
         MODE_DRAW_PIXELS = 3,
         MODE_HBLANK = 0,

@@ -28,6 +28,7 @@ IndentAccessModifiers: false
 AccessModifierOffset: -4
 BreakStringLiterals: true
 BraceWrapping:
+  AfterEnum: true
   AfterFunction: true
   AfterClass: true
   AfterCaseLabel: true

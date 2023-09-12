@@ -3,7 +3,8 @@
 #include <log.hxx>
 #include <nes/NTSC_CRT/crt_core.h>
 
-enum ScanlineState {
+enum ScanlineState
+{
     NT_BYTE_LOW = 0,
     NT_BYTE_HIGH = 1,
     AT_BYTE_LOW = 2,

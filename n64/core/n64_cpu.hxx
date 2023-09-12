@@ -27,7 +27,8 @@ constexpr uint32_t KSEG0_END = 0x9FFF'FFFF;
 constexpr uint32_t KSEG1_START = 0xA000'0000;
 constexpr uint32_t KSEG1_END = 0xBFFF'FFFF;
 
-enum class ExceptionType {
+enum class ExceptionType
+{
     Interrupt = 0,
     TLBMissLoad = 2,
     AddressErrorLoad = 4,
@@ -41,7 +42,8 @@ enum class ExceptionType {
     FloatingPoint = 15,
 };
 
-enum class ControllerType : uint16_t {
+enum class ControllerType : uint16_t
+{
     Keyboard = 0x0500,
     Mouse = 0x0200,
 };
@@ -151,7 +153,8 @@ namespace hydra
 
 namespace hydra::N64
 {
-    enum class CP0Instruction {
+    enum class CP0Instruction
+    {
         TLBWI = 2,
         TLBP = 8,
         TLBR = 1,
@@ -170,7 +173,12 @@ namespace hydra::N64
     constexpr static uint64_t OperationMasks[2] = {std::numeric_limits<uint32_t>::max(),
                                                    std::numeric_limits<uint64_t>::max()};
     // Only kernel mode is used for (most?) n64 licensed games
-    enum class OperatingMode { User, Supervisor, Kernel };
+    enum class OperatingMode
+    {
+        User,
+        Supervisor,
+        Kernel
+    };
 
     struct TranslatedAddress
     {
@@ -266,7 +274,15 @@ namespace hydra::N64
         (cpu->*MemberFunc)();
     }
 
-    enum class InterruptType { VI, AI, PI, SI, DP, SP };
+    enum class InterruptType
+    {
+        VI,
+        AI,
+        PI,
+        SI,
+        DP,
+        SP
+    };
 
     class CPU final
     {

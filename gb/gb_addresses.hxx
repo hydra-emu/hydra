@@ -6,7 +6,8 @@
 using RegisterType = uint8_t;
 using BigRegisterType = uint16_t;
 
-enum LCDCFlag {
+enum LCDCFlag
+{
     BG_ENABLE = 1 << 0,
     OBJ_ENABLE = 1 << 1,
     OBJ_SIZE = 1 << 2,
@@ -17,7 +18,8 @@ enum LCDCFlag {
     LCD_ENABLE = 1 << 7
 };
 
-enum STATFlag {
+enum STATFlag
+{
     MODE = 0b11,
     COINCIDENCE = 1 << 2,
     MODE0_INTER = 1 << 3,
@@ -26,7 +28,8 @@ enum STATFlag {
     COINC_INTER = 1 << 6
 };
 
-enum IFInterrupt {
+enum IFInterrupt
+{
     VBLANK = 1 << 0,
     LCDSTAT = 1 << 1,
     TIMER = 1 << 2,

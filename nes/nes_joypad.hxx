@@ -2,7 +2,8 @@
 
 namespace hydra::NES
 {
-    enum class Button {
+    enum class Button
+    {
         Right = 0b10000000,
         Left = 0b01000000,
         Down = 0b00100000,

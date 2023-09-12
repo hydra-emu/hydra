@@ -955,7 +955,13 @@ namespace hydra::N64
 
     bool RDP::depth_test(int x, int y, int32_t z, int16_t dz)
     {
-        enum DepthMode { Opaque, Interpenetrating, Transparent, Decal };
+        enum DepthMode
+        {
+            Opaque,
+            Interpenetrating,
+            Transparent,
+            Decal
+        };
 
         old_coverage_ = coverage_get(x, y);
         coverage_overflow_ = ((old_coverage_ - 1) + current_coverage_) & 0b1000;
