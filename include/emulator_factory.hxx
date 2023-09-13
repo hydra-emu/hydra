@@ -2,10 +2,10 @@
 
 #include <any>
 #include <core.hxx>
-#include <emulator.hxx>
 #include <emulator_types.hxx>
 #include <filesystem>
 #include <type_traits>
+#include <unordered_map>
 
 using ExtensionMappings = std::unordered_map<std::string, hydra::EmuType>;
 

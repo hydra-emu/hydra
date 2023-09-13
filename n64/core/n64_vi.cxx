@@ -12,13 +12,12 @@ namespace hydra::N64
         vi_v_intr_ = 0x100;
     }
 
-    bool Vi::Redraw(std::vector<uint8_t>& data)
+    void Vi::Redraw(std::vector<uint8_t>& data)
     {
         auto new_width = vi_h_end_ - vi_h_start_;
         auto new_height = (vi_v_end_ - vi_v_start_) / 2;
         new_width *= vi_x_scale_ ? vi_x_scale_ : 512;
         new_height *= vi_y_scale_ ? vi_y_scale_ : 512;
-        blacked_out_ = false;
         new_width >>= 10;
         new_height >>= 10;
         width_ = new_width;
@@ -33,8 +32,8 @@ namespace hydra::N64
                 {
                     for (int x = 0; x < width_; x++)
                     {
-                        uint32_t color =
-                            (reinterpret_cast<uint32_t*>(memory_ptr_))[(y * vi_width_) + x];
+                        uint32_t color = (reinterpret_cast<uint32_t*>(
+                            &rdram_ptr_[vi_origin_]))[(y * vi_width_) + x];
                         memcpy(&data[(x + y * width_) * 4], &color, 4);
                     }
                 }
@@ -46,8 +45,8 @@ namespace hydra::N64
                 {
                     for (int x = 0; x < width_; x++)
                     {
-                        uint16_t color_temp =
-                            (reinterpret_cast<uint16_t*>(memory_ptr_))[(y * vi_width_) + x];
+                        uint16_t color_temp = (reinterpret_cast<uint16_t*>(
+                            &rdram_ptr_[vi_origin_]))[(y * vi_width_) + x];
                         uint8_t r = (color_temp >> 11) & 0x1F;
                         uint8_t g = (color_temp >> 6) & 0x1F;
                         uint8_t b = (color_temp >> 1) & 0x1F;
@@ -63,7 +62,6 @@ namespace hydra::N64
             default:
                 break;
         }
-        return true;
     }
 
     uint32_t Vi::ReadWord(uint32_t addr)
@@ -126,14 +124,6 @@ namespace hydra::N64
             {
                 return vi_y_scale_;
             }
-            case VI_TEST_ADDR:
-            {
-                return vi_test_addr_;
-            }
-            case VI_STAGED_DATA:
-            {
-                return vi_staged_data_;
-            }
             default:
             {
                 Logger::Warn("VI: Unhandled read from {:08x}", addr);
@@ -160,8 +150,7 @@ namespace hydra::N64
             case VI_ORIGIN:
             {
                 data &= 0x00FFFFFF;
-                memory_ptr_ = &rdram_ptr_[data];
-                vis_counter_ += 1;
+                vi_origin_ = data;
                 break;
             }
             case VI_WIDTH:

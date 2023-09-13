@@ -1,4 +1,3 @@
-#include <c8/c8_tkpwrapper.hxx>
 #include <emulator_data.hxx>
 #include <emulator_factory.hxx>
 #include <emulator_settings.hxx>
@@ -6,7 +5,6 @@
 #include <error_factory.hxx>
 #include <iostream>
 #include <n64/n64_hc.hxx>
-#include <nes/nes_tkpwrapper.hxx>
 #include <str_hash.hxx>
 
 namespace hydra

@@ -66,11 +66,27 @@ namespace hydra::N64
 
     void RSP::Reset()
     {
+        status_.full = 0;
+        status_.halt = true;
+        mem_.fill(0);
+        std::for_each(gpr_regs_.begin(), gpr_regs_.end(), [](auto& reg) { reg.UW = 0; });
+        std::for_each(vu_regs_.begin(), vu_regs_.end(), [](auto& reg) { reg.fill(0); });
+        std::for_each(accumulator_.begin(), accumulator_.end(), [](auto& reg) { reg.Set(0); });
+        vco_.Clear();
+        vce_.Clear();
+        vcc_.Clear();
+        div_in_ = 0;
+        div_out_ = 0;
+        div_in_ready_ = false;
+        instruction_.full = 0;
+        mem_addr_ = 0;
+        dma_imem_ = false;
+        rdram_addr_ = 0;
+        rd_len_ = 0;
+        wr_len_ = 0;
         pc_ = 0;
         next_pc_ = 4;
-        status_.halt = true;
-        std::fill(mem_.begin(), mem_.end(), 0);
-        div_in_ready_ = false;
+        semaphore_ = false;
     }
 
     void RSP::Tick()

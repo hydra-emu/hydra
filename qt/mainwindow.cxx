@@ -1,6 +1,5 @@
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
-#include "emulator_tool_factory.hxx"
 #include "qthelper.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
@@ -8,6 +7,7 @@
 #include <error_factory.hxx>
 #include <fstream>
 #include <iostream>
+#include <log.hxx>
 #include <QApplication>
 #include <QClipboard>
 #include <QGridLayout>
@@ -32,7 +32,7 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
                                 window->queued_audio_.begin() + frames);
 }
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), tools_{}, tools_open_{}
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
     setup_emulator_specific();
     QWidget* widget = new QWidget;
@@ -133,24 +133,6 @@ void MainWindow::create_actions()
     shaders_act_->setStatusTip("Open the shader editor");
     shaders_act_->setIcon(QIcon(":/images/shaders.png"));
     connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
-    tools_actions_[ET_Debugger] = new QAction(tr("&Debugger"), this);
-    tools_actions_[ET_Debugger]->setShortcut(Qt::Key_F2);
-    tools_actions_[ET_Debugger]->setStatusTip("Open the debugger");
-    tools_actions_[ET_Debugger]->setIcon(QIcon(":/images/debugger.png"));
-    connect(tools_actions_[ET_Debugger], &QAction::triggered, this,
-            std::bind(&MainWindow::open_tool, this, ET_Debugger));
-    tools_actions_[ET_Tracelogger] = new QAction(tr("&Tracelogger"), this);
-    tools_actions_[ET_Tracelogger]->setShortcut(Qt::Key_F3);
-    tools_actions_[ET_Tracelogger]->setStatusTip("Open the tracelogger");
-    tools_actions_[ET_Tracelogger]->setIcon(QIcon(":/images/tracelogger.png"));
-    connect(tools_actions_[ET_Tracelogger], &QAction::triggered, this,
-            std::bind(&MainWindow::open_tool, this, ET_Tracelogger));
-    tools_actions_[ET_MmioViewer] = new QAction(tr("&Mmio Viewer"), this);
-    tools_actions_[ET_MmioViewer]->setShortcut(Qt::Key_F4);
-    tools_actions_[ET_MmioViewer]->setStatusTip("Open the MMIO viewer");
-    tools_actions_[ET_MmioViewer]->setIcon(QIcon(":/images/mmioviewer.png"));
-    connect(tools_actions_[ET_MmioViewer], &QAction::triggered, this,
-            std::bind(&MainWindow::open_tool, this, ET_MmioViewer));
 }
 
 void MainWindow::create_menus()
@@ -167,11 +149,6 @@ void MainWindow::create_menus()
     emulation_menu_->addAction(stop_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
     tools_menu_->addAction(shaders_act_);
-    tools_menu_->addSeparator();
-    for (size_t i = 0; i < EmulatorToolsSize; i++)
-    {
-        tools_menu_->addAction(tools_actions_[i]);
-    }
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
 }
@@ -244,6 +221,7 @@ void MainWindow::open_file()
 
 void MainWindow::open_file_impl(const std::string& path)
 {
+    std::unique_lock<std::mutex> elock(emulator_mutex_);
     std::filesystem::path pathfs(path);
     if (!std::filesystem::is_regular_file(pathfs))
     {
@@ -251,15 +229,11 @@ void MainWindow::open_file_impl(const std::string& path)
     }
     std::string dirpath = pathfs.parent_path().string();
     EmulatorSettings::GetGeneralSettings().Set("last_path", dirpath);
-    close_tools();
     Logger::ClearWarnings();
     auto type = hydra::EmulatorFactory::GetEmulatorType(path);
-    {
-        stop_emulator();
-        auto emulator = hydra::EmulatorFactory::Create(type);
-        std::swap(emulator, emulator_);
-        // Old emulator is destroyed here
-    }
+    stop_emulator();
+    auto emulator = hydra::EmulatorFactory::Create(type);
+    std::swap(emulator, emulator_);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
     emulator_->SetVideoCallback(
@@ -275,16 +249,6 @@ void MainWindow::open_file_impl(const std::string& path)
     screen_->show();
     emulator_type_ = type;
     enable_emulation_actions(true);
-    for (size_t i = 0; i < tools_.size(); i++)
-    {
-        if (tools_[i])
-        {
-            delete tools_[i];
-        }
-        tools_[i] = nullptr;
-    }
-
-    std::fill(std::begin(tools_open_), std::end(tools_open_), false);
 }
 
 void MainWindow::open_settings()
@@ -310,39 +274,10 @@ void MainWindow::open_shaders()
     });
 }
 
-void MainWindow::open_tool(EmulatorTool tool)
-{
-    qt_may_throw([this, tool]() {
-        if (!tools_open_[tool])
-        {
-            if (tools_[tool])
-            {
-                if (tools_[tool]->isHidden())
-                {
-                    tools_[tool]->show();
-                }
-                else
-                {
-                    tools_[tool]->hide();
-                }
-            }
-            else
-            {
-                // auto qw = EmulatorToolFactory::CreateTool(tool, tools_open_[tool],
-                // emulator_type_,
-                //                                           emulator_.get());
-                // tools_[tool] = qw;
-            }
-        }
-    });
-}
-
 void MainWindow::screenshot()
 {
     // QApplication::clipboard()->setImage(texture_.toImage());
 }
-
-void MainWindow::close_tools() {}
 
 void MainWindow::open_about()
 {
@@ -359,14 +294,6 @@ void MainWindow::enable_emulation_actions(bool should)
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
-    std::fill(std::begin(tools_open_), std::end(tools_open_), false);
-    if (should)
-    {
-        const auto& emulator_data = EmulatorSettings::GetEmulatorData(emulator_type_);
-        tools_actions_[ET_Debugger]->setEnabled(emulator_data.HasDebugger);
-        tools_actions_[ET_Tracelogger]->setEnabled(emulator_data.HasTracelogger);
-        tools_actions_[ET_MmioViewer]->setEnabled(true);
-    }
 }
 
 void MainWindow::setup_emulator_specific()
@@ -528,21 +455,29 @@ void MainWindow::pause_emulator()
 void MainWindow::reset_emulator()
 {
     if (emulator_)
+    {
+        std::unique_lock<std::mutex> alock(audio_mutex_);
+        queued_audio_.clear();
         emulator_->Reset();
+    }
 }
 
 void MainWindow::stop_emulator()
 {
     if (emulator_)
     {
+        std::unique_lock<std::mutex> alock(audio_mutex_);
+        queued_audio_.clear();
         emulator_.reset();
         enable_emulation_actions(false);
+        video_info_ = {};
     }
     screen_->hide();
 }
 
 void MainWindow::emulator_frame()
 {
+    std::unique_lock<std::mutex> elock(emulator_mutex_);
     if (!emulator_ || paused_)
     {
         return;
