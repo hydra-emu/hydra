@@ -1,0 +1,7 @@
+{
+    "Name": "Chip 8",
+    "Extensions": [
+        ".ch8",
+        ".c8"
+    ]
+}

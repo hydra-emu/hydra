@@ -21,6 +21,7 @@ static constexpr float vertices_uvs[] =
 ScreenWidget::ScreenWidget(QWidget* parent)
     : QOpenGLWidget(parent), vbo_(QOpenGLBuffer::Type::VertexBuffer)
 {
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 ScreenWidget::~ScreenWidget()
@@ -32,17 +33,6 @@ ScreenWidget::~ScreenWidget()
     delete program_;
 }
 
-void ScreenWidget::InitializeTexture(int width, int height)
-{
-    setMinimumSize(width, height);
-    glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    initialized_ = true;
-}
-
 void ScreenWidget::Redraw(int width, int height, const void* tdata)
 {
     if (initialized_) [[likely]]
@@ -50,6 +40,7 @@ void ScreenWidget::Redraw(int width, int height, const void* tdata)
         glBindTexture(GL_TEXTURE_2D, texture_);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tdata);
         glBindTexture(GL_TEXTURE_2D, 0);
+        update();
     }
 }
 
@@ -137,6 +128,11 @@ void ScreenWidget::initializeGL()
     glClear(GL_COLOR_BUFFER_BIT);
     ResetProgram();
     hide();
+    glBindTexture(GL_TEXTURE_2D, texture_);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    initialized_ = true;
 }
 
 void ScreenWidget::resizeGL(int, int) {}
