@@ -38,11 +38,6 @@ namespace hydra::N64
             return rcp_.vi_.height_;
         }
 
-        void SetKeyState(uint32_t key, bool state)
-        {
-            cpu_.key_state_[key] = state;
-        }
-
         void RenderVideo(std::vector<uint8_t>& data)
         {
             rcp_.vi_.Redraw(data);

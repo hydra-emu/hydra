@@ -44,14 +44,6 @@ namespace hydra::N64
             case AI_CONTROL:
             {
                 ai_enabled_ = data & 1;
-                // if (ai_enabled_)
-                // {
-                //     ma_device_start(&ai_device_);
-                // }
-                // else
-                // {
-                //     ma_device_stop(&ai_device_);
-                // }
                 break;
             }
             case AI_DACRATE:
@@ -64,7 +56,7 @@ namespace hydra::N64
             }
             case AI_BITRATE:
             {
-                ai_bitrate_ = data & 0xf;
+                Logger::WarnOnce("AI: Unhandled bitrate write = {:08x}", addr, data);
                 break;
             }
             default:

@@ -63,7 +63,6 @@ set(QT_SOURCES
 )
 
 set(SRC_FILES
-    src/emulator.cxx
     src/emulator_factory.cxx
     src/emulator_user_data.cxx
     src/emulator_settings.cxx
@@ -72,7 +71,6 @@ set(SRC_FILES
 
 set(C8_FILES
     c8/c8_interpreter.cxx
-    c8/c8_tkpwrapper.cxx
 )
 
 set(GB_FILES
@@ -87,7 +85,6 @@ set(GB_FILES
 )
 
 set(NES_FILES
-    nes/nes_tkpwrapper.cxx
     nes/nes_cpu.cxx
     nes/nes_cpubus.cxx
     nes/nes_ppu.cxx

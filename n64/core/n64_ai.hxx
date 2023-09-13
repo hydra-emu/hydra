@@ -30,8 +30,6 @@ namespace hydra::N64
         void WriteWord(uint32_t addr, uint32_t data);
 
     private:
-        uint32_t ai_control_ = 0;
-        uint32_t ai_bitrate_ = 0;
         uint32_t ai_frequency_ = 0;
         uint32_t ai_period_ = 93750000 / 48000;
         bool ai_enabled_ = false;
@@ -44,7 +42,6 @@ namespace hydra::N64
         std::array<uint32_t, 2> ai_dma_lengths_{};
 
         uint8_t* rdram_ptr_ = nullptr;
-
         std::vector<int16_t> ai_buffer_{};
 
         friend class hydra::N64::N64;

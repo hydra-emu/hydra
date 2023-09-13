@@ -3,9 +3,7 @@
 #include "screenwidget.hxx"
 #include <array>
 #include <core.hxx>
-#include <emulator.hxx>
 #include <emulator_factory.hxx>
-#include <emulator_tool_factory.hxx>
 #include <memory>
 #define MA_NO_DECODING
 #define MA_NO_ENCODING
@@ -35,9 +33,7 @@ private:
     void open_settings();
     void open_about();
     void open_shaders();
-    void open_tool(EmulatorTool tool);
     void screenshot();
-    void close_tools();
 
     // Emulation functions
     void pause_emulator();
@@ -81,12 +77,9 @@ public:
     bool about_open_ = false;
     bool shaders_open_ = false;
     bool paused_ = false;
+    std::mutex emulator_mutex_;
     std::mutex audio_mutex_;
     hydra::VideoInfo video_info_;
-
-    std::array<QWidget*, EmulatorToolsSize> tools_;
-    std::array<bool, EmulatorToolsSize> tools_open_;
-    std::array<QAction*, EmulatorToolsSize> tools_actions_;
 
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
 };

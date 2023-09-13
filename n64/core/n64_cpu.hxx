@@ -42,7 +42,31 @@ enum class ExceptionType
 };
 
 #define X(name, value) constexpr auto CP0_##name = value;
-#include "cp0_regs.def"
+X(INDEX, 0)
+X(RANDOM, 1)
+X(ENTRYLO0, 2)
+X(ENTRYLO1, 3)
+X(CONTEXT, 4)
+X(PAGEMASK, 5)
+X(WIRED, 6)
+X(BADVADDR, 8)
+X(COUNT, 9)
+X(ENTRYHI, 10)
+X(COMPARE, 11)
+X(STATUS, 12)
+X(CAUSE, 13)
+X(EPC, 14)
+X(PRID, 15)
+X(CONFIG, 16)
+X(LLADDR, 17)
+X(WATCHLO, 18)
+X(WATCHHI, 19)
+X(XCONTEXT, 20)
+X(PARITYERROR, 26)
+X(CACHEERROR, 27)
+X(TAGLO, 28)
+X(TAGHI, 29)
+X(ERROREPC, 30)
 #undef X
 
 // TODO: endianess issues, switch to BitField< ... >

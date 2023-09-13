@@ -385,7 +385,7 @@ namespace hydra::N64
         VUControl16 vco_, vcc_;
         VUControl8 vce_;
         int16_t div_in_, div_out_;
-        bool div_in_ready_;
+        bool div_in_ready_ = false;
         std::array<AccumulatorLane, 8> accumulator_;
 
         // TODO: some are probably not needed
@@ -396,8 +396,8 @@ namespace hydra::N64
         uint32_t rd_len_;
         uint32_t wr_len_;
         RSPStatus status_;
-        uint32_t pc_;
-        uint32_t next_pc_;
+        uint32_t pc_ = 0;
+        uint32_t next_pc_ = 4;
         bool semaphore_;
         uint8_t* rdram_ptr_ = nullptr;
         RDP* rdp_ptr_ = nullptr;
