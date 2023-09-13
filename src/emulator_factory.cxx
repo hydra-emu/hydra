@@ -4,7 +4,6 @@
 #include <emulator_settings.hxx>
 #include <emulator_user_data.hxx>
 #include <error_factory.hxx>
-#include <gb/gb_hc.hxx>
 #include <iostream>
 #include <n64/n64_hc.hxx>
 #include <nes/nes_tkpwrapper.hxx>
@@ -77,7 +76,7 @@ namespace hydra
         {
             case EmuType::Gameboy:
             {
-                emulator = std::make_unique<hydra::HydraCore_Gameboy>();
+                // emulator = std::make_unique<hydra::HydraCore_Gameboy>();
                 break;
             }
             case EmuType::N64:

@@ -30,6 +30,7 @@ namespace hydra
 
     public:
         HydraCore_Gameboy();
+        bool LoadFile(const std::string& type, const std::string& path) override;
 
     private:
         ChannelArrayPtr channel_array_ptr_;
@@ -42,10 +43,6 @@ namespace hydra
         GameboyKeys action_keys_;
         uint8_t &joypad_, &interrupt_flag_;
 
-        bool load_file(const std::string& type, const std::string& path) override;
-        VideoInfo render_frame() override;
-        AudioInfo render_audio() override;
         void run_frame() override;
-        void reset() override;
     };
 } // namespace hydra

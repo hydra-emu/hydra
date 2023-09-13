@@ -260,6 +260,15 @@ void MainWindow::open_file_impl(const std::string& path)
         std::swap(emulator, emulator_);
         // Old emulator is destroyed here
     }
+    if (!emulator_)
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
+    emulator_->SetVideoCallback(
+        std::bind(&MainWindow::video_callback, this, std::placeholders::_1));
+    emulator_->SetAudioCallback(
+        std::bind(&MainWindow::audio_callback, this, std::placeholders::_1));
+    emulator_->SetPollInputCallback(std::bind(&MainWindow::poll_input_callback, this));
+    emulator_->SetReadInputCallback(
+        std::bind(&MainWindow::read_input_callback, this, std::placeholders::_1));
     if (!emulator_->LoadFile("rom", path))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
     screen_->InitializeTexture(640, 320);
@@ -542,18 +551,25 @@ void MainWindow::emulator_frame()
     std::future<void> frame = emulator_->RunFrameAsync();
     frame.wait();
 
-    std::future<hydra::VideoInfo> video_info = emulator_->RenderFrameAsync();
-    std::future<hydra::AudioInfo> audio_info = emulator_->RenderAudioAsync();
-    video_info.wait();
-    audio_info.wait();
-
-    hydra::VideoInfo vi = video_info.get();
-    hydra::AudioInfo ai = audio_info.get();
-
-    screen_->Redraw(vi.width, vi.height, vi.data.data());
+    screen_->Redraw(video_info_.width, video_info_.height, video_info_.data.data());
     screen_->update();
+}
 
+void MainWindow::video_callback(const hydra::VideoInfo& vi)
+{
+    video_info_ = vi;
+}
+
+void MainWindow::audio_callback(const hydra::AudioInfo& ai)
+{
     std::unique_lock<std::mutex> lock(audio_mutex_);
     queued_audio_.reserve(queued_audio_.size() + ai.data.size());
     queued_audio_.insert(queued_audio_.end(), ai.data.begin(), ai.data.end());
+}
+
+void MainWindow::poll_input_callback() {}
+
+int8_t MainWindow::read_input_callback(const hydra::InputInfo& ii)
+{
+    return 0;
 }

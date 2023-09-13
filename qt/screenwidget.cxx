@@ -43,7 +43,7 @@ void ScreenWidget::InitializeTexture(int width, int height)
     initialized_ = true;
 }
 
-void ScreenWidget::Redraw(int width, int height, void* tdata)
+void ScreenWidget::Redraw(int width, int height, const void* tdata)
 {
     if (initialized_) [[likely]]
     {

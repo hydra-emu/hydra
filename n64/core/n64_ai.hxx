@@ -23,6 +23,8 @@ namespace hydra::N64
         void Reset();
         void InstallBuses(uint8_t* rdram_ptr);
         void SetInterruptCallback(std::function<void(bool)> callback);
+        void SetAudioCallback(
+            std::function<void(const std::vector<int16_t>& in, int frequency_in)> callback);
         void Step();
         uint32_t ReadWord(uint32_t addr);
         void WriteWord(uint32_t addr, uint32_t data);
@@ -36,6 +38,7 @@ namespace hydra::N64
         uint8_t ai_dma_count_ = 0;
         uint32_t ai_cycles_ = 0;
         std::function<void(bool)> interrupt_callback_;
+        std::function<void(const std::vector<int16_t>&, int)> audio_callback_;
 
         std::array<uint32_t, 2> ai_dma_addresses_{};
         std::array<uint32_t, 2> ai_dma_lengths_{};

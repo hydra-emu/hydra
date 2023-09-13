@@ -149,6 +149,7 @@ namespace hydra::N64
 
     struct Span
     {
+        int32_t y;
         int32_t min_x, max_x;
         bool valid = false;
         int32_t r, g, b, a;

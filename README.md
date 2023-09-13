@@ -11,10 +11,12 @@
 <p align="center"><img src="./data/images/screen.png"></p>
 
 ## Current systems
+- Nintendo 64
+
+## Abandoned systems (maybe one day)
 - Chip 8
 - Gameboy / Gameboy Color
 - NES
-- Nintendo 64
 
 ## Building
 

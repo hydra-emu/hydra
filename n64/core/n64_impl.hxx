@@ -16,6 +16,17 @@ namespace hydra::N64
         void RunFrame();
         void Reset();
         void SetMousePos(int32_t x, int32_t y);
+        void SetAudioCallback(std::function<void(const std::vector<int16_t>&, int)> callback);
+
+        void SetPollInputCallback(std::function<void()> callback)
+        {
+            cpu_.poll_input_callback_ = callback;
+        }
+
+        void SetReadInputCallback(std::function<int8_t(int, int, int)> callback)
+        {
+            cpu_.read_input_callback_ = callback;
+        }
 
         int GetWidth()
         {
@@ -36,8 +47,6 @@ namespace hydra::N64
         {
             rcp_.vi_.Redraw(data);
         }
-
-        void RenderAudio(std::vector<int16_t>& data);
 
     private:
         RCP rcp_;

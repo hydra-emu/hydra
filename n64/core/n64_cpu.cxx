@@ -643,6 +643,7 @@ namespace hydra::N64
     void CPU::pif_command()
     {
         using namespace hydra::N64;
+        poll_input_callback_();
         auto command_byte = cpubus_.pif_ram_[63];
         if (command_byte & 0x1)
         {
@@ -772,7 +773,7 @@ namespace hydra::N64
                     return true;
                 }
 
-                get_controller_state(result, controller_type_);
+                get_controller_state(0, result, controller_type_);
                 break;
             }
             case JoybusCommand::WriteMempack:
@@ -793,49 +794,41 @@ namespace hydra::N64
         return false;
     }
 
-    void CPU::get_controller_state(std::vector<uint8_t>& result, ControllerType controller)
+    void CPU::get_controller_state(int player, std::vector<uint8_t>& result,
+                                   ControllerType controller)
     {
+        int controller_int = static_cast<int>(controller);
         switch (controller)
         {
-            case ControllerType::Keyboard:
+            case ControllerType::Joypad:
             {
-                result[0] = key_state_[Keys::A] << 7 | key_state_[Keys::B] << 6 |
-                            key_state_[Keys::Z] << 5 | key_state_[Keys::Start] << 4 |
-                            key_state_[Keys::KeypadUp] << 3 | key_state_[Keys::KeypadDown] << 2 |
-                            key_state_[Keys::KeypadLeft] << 1 | key_state_[Keys::KeypadRight];
-                result[1] = 0 | 0 | key_state_[Keys::L] << 5 | key_state_[Keys::R] << 4 |
-                            key_state_[Keys::CUp] << 3 | key_state_[Keys::CDown] << 2 |
-                            key_state_[Keys::CLeft] << 1 | key_state_[Keys::CRight];
-                int8_t x = 0, y = 0;
-                if (key_state_[Keys::Up])
-                {
-                    y = 127;
-                }
-                else if (key_state_[Keys::Down])
-                {
-                    y = -127;
-                }
-                if (key_state_[Keys::Left])
-                {
-                    x = -127;
-                }
-                else if (key_state_[Keys::Right])
-                {
-                    x = 127;
-                }
-                result[2] = x;
-                result[3] = y;
+                result[0] = read_input_callback_(player, controller_int, Keys::A) << 7 |
+                            read_input_callback_(player, controller_int, Keys::B) << 6 |
+                            read_input_callback_(player, controller_int, Keys::Z) << 5 |
+                            read_input_callback_(player, controller_int, Keys::Start) << 4 |
+                            read_input_callback_(player, controller_int, Keys::KeypadUp) << 3 |
+                            read_input_callback_(player, controller_int, Keys::KeypadDown) << 2 |
+                            read_input_callback_(player, controller_int, Keys::KeypadLeft) << 1 |
+                            read_input_callback_(player, controller_int, Keys::KeypadRight);
+                result[1] = 0 | 0 | read_input_callback_(player, controller_int, Keys::L) << 5 |
+                            read_input_callback_(player, controller_int, Keys::R) << 4 |
+                            read_input_callback_(player, controller_int, Keys::CUp) << 3 |
+                            read_input_callback_(player, controller_int, Keys::CDown) << 2 |
+                            read_input_callback_(player, controller_int, Keys::CLeft) << 1 |
+                            read_input_callback_(player, controller_int, Keys::CRight);
+                result[2] = read_input_callback_(player, controller_int, Keys::AnalogHorizontal);
+                result[3] = read_input_callback_(player, controller_int, Keys::AnalogVertical);
                 break;
             }
             case ControllerType::Mouse:
             {
-                result[0] = key_state_[Keys::A] << 7 | key_state_[Keys::B] << 6;
-                result[1] = 0;
-                result[2] = mouse_delta_x_ << 2;
-                result[3] = mouse_delta_y_ << 2;
+                // result[0] = key_state_[Keys::A] << 7 | key_state_[Keys::B] << 6;
+                // result[1] = 0;
+                // result[2] = mouse_delta_x_ << 2;
+                // result[3] = mouse_delta_y_ << 2;
 
-                mouse_delta_x_ = 0;
-                mouse_delta_y_ = 0;
+                // mouse_delta_x_ = 0;
+                // mouse_delta_y_ = 0;
                 break;
             }
         }

@@ -46,6 +46,11 @@ private:
     void enable_emulation_actions(bool should);
     void setup_emulator_specific();
 
+    void video_callback(const hydra::VideoInfo& info);
+    void audio_callback(const hydra::AudioInfo& info);
+    void poll_input_callback();
+    int8_t read_input_callback(const hydra::InputInfo& info);
+
 private slots:
     void emulator_frame();
     void on_mouse_move(QMouseEvent* event);
@@ -77,6 +82,7 @@ public:
     bool shaders_open_ = false;
     bool paused_ = false;
     std::mutex audio_mutex_;
+    hydra::VideoInfo video_info_;
 
     std::array<QWidget*, EmulatorToolsSize> tools_;
     std::array<bool, EmulatorToolsSize> tools_open_;

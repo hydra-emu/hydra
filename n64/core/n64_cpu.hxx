@@ -12,7 +12,6 @@
 #include <log.hxx>
 #include <memory>
 #include <n64/core/n64_addresses.hxx>
-#include <n64/core/n64_keys.hxx>
 #include <n64/core/n64_rcp.hxx>
 #include <n64/core/n64_types.hxx>
 #include <queue>
@@ -40,12 +39,6 @@ enum class ExceptionType
     IntegerOverflow = 12,
     Trap = 13,
     FloatingPoint = 15,
-};
-
-enum class ControllerType : uint16_t
-{
-    Keyboard = 0x0500,
-    Mouse = 0x0200,
 };
 
 #define X(name, value) constexpr auto CP0_##name = value;
@@ -153,6 +146,38 @@ namespace hydra
 
 namespace hydra::N64
 {
+    enum class ControllerType : uint16_t
+    {
+        Joypad = 0x0500,
+        Mouse = 0x0200,
+    };
+
+    namespace Keys
+    {
+        enum
+        {
+            A = 0,
+            B,
+            Z,
+            Start,
+            AnalogVertical,
+            AnalogHorizontal,
+            L,
+            R,
+            CUp,
+            CDown,
+            CLeft,
+            CRight,
+            KeypadUp,
+            KeypadDown,
+            KeypadLeft,
+            KeypadRight,
+
+            N64KeyCount,
+            ErrorKey = 0xFFFF'FFFF
+        };
+    }
+
     enum class CP0Instruction
     {
         TLBWI = 2,
@@ -323,7 +348,7 @@ namespace hydra::N64
         uint32_t tlb_offset_mask_ = 0;
         int pif_channel_ = 0;
         int vis_per_second_ = 0;
-        ControllerType controller_type_ = ControllerType::Keyboard;
+        ControllerType controller_type_ = ControllerType::Joypad;
         int32_t mouse_x_, mouse_y_;
         int32_t mouse_delta_x_, mouse_delta_y_;
         std::chrono::time_point<std::chrono::high_resolution_clock> last_second_time_;
@@ -479,8 +504,8 @@ namespace hydra::N64
 
         void pif_command();
         bool joybus_command(const std::vector<uint8_t>&, std::vector<uint8_t>&);
-        void get_controller_state(std::vector<uint8_t>& result, ControllerType controller);
-        std::array<bool, hydra::N64::Keys::N64KeyCount> key_state_{};
+        void get_controller_state(int player, std::vector<uint8_t>& result,
+                                  ControllerType controller);
         std::vector<DisassemblerInstruction> disassemble(uint64_t start_vaddr, uint64_t end_vaddr,
                                                          bool register_names);
 
@@ -492,6 +517,9 @@ namespace hydra::N64
         void dump_pif_ram();
         void dump_rdram();
         uint32_t get_dram_crc();
+
+        std::function<void()> poll_input_callback_;
+        std::function<int8_t(int, int, int)> read_input_callback_;
 
         friend class hydra::N64::N64;
     };
