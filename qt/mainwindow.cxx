@@ -223,10 +223,13 @@ void MainWindow::open_file_impl(const std::string& path)
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
     std::filesystem::path pathfs(path);
+
     if (!std::filesystem::is_regular_file(pathfs))
     {
+        Logger::Warn("Failed to open file: {}", path);
         return;
     }
+
     std::string dirpath = pathfs.parent_path().string();
     EmulatorSettings::GetGeneralSettings().Set("last_path", dirpath);
     Logger::ClearWarnings();
