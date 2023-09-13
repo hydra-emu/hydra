@@ -2017,98 +2017,100 @@ namespace hydra::N64
 
     void RDP::render_primitive(const Primitive& primitive)
     {
-        std::for_each(std::execution::par, primitive.spans.begin(), primitive.spans.end(),
-                      [this, &primitive](auto&& span) {
-                          if (!span.valid)
-                              return;
-                          int32_t y = span.y;
-                          int32_t x_start = 0, x_inc = 0;
-                          int32_t DzDx = primitive.DzDx;
-                          int32_t DrDx = primitive.DrDx;
-                          int32_t DgDx = primitive.DgDx;
-                          int32_t DbDx = primitive.DbDx;
-                          int32_t DaDx = primitive.DaDx;
+        // clang-format off
+        hydra::parallel_for(primitive.spans.begin(), primitive.spans.end(), [this, &primitive](auto&& span) {
+                if (!span.valid)
+                    return;
+                int32_t y = span.y;
+                int32_t x_start = 0, x_inc = 0;
+                int32_t DzDx = primitive.DzDx;
+                int32_t DrDx = primitive.DrDx;
+                int32_t DgDx = primitive.DgDx;
+                int32_t DbDx = primitive.DbDx;
+                int32_t DaDx = primitive.DaDx;
 
-                          int32_t DzPix = primitive.DzPix;
+                int32_t DzPix = primitive.DzPix;
 
-                          if (z_source_sel_)
-                          {
-                              DzDx = 0;
-                              DzPix = primitive_depth_delta_;
-                          }
+                if (z_source_sel_)
+                {
+                    DzDx = 0;
+                    DzPix = primitive_depth_delta_;
+                }
 
-                          int32_t r = span.r;
-                          int32_t g = span.g;
-                          int32_t b = span.b;
-                          int32_t a = span.a;
-                          int32_t s = span.s;
-                          int32_t t = span.t;
-                          int32_t w = span.w;
-                          int32_t z = z_source_sel_ ? primitive_depth_ : span.z;
+                int32_t r = span.r;
+                int32_t g = span.g;
+                int32_t b = span.b;
+                int32_t a = span.a;
+                int32_t s = span.s;
+                int32_t t = span.t;
+                int32_t w = span.w;
+                int32_t z = z_source_sel_ ? primitive_depth_ : span.z;
 
-                          if (primitive.right_major)
-                          {
-                              x_start = span.min_x;
-                              x_inc = 1;
-                          }
-                          else
-                          {
-                              x_start = span.max_x;
-                              x_inc = -1;
-                          }
+                if (primitive.right_major)
+                {
+                    x_start = span.min_x;
+                    x_inc = 1;
+                }
+                else
+                {
+                    x_start = span.max_x;
+                    x_inc = -1;
+                }
 
-                          int32_t x = x_start;
-                          int length = span.max_x - span.min_x;
+                int32_t x = x_start;
+                int length = span.max_x - span.min_x;
 
-                          compute_coverage(span);
+                compute_coverage(span);
 
-                          for (int i = 0; i <= length; i++)
-                          {
-                              uint8_t r8 = color_clamp(r >> 16);
-                              uint8_t g8 = color_clamp(g >> 16);
-                              uint8_t b8 = color_clamp(b >> 16);
-                              uint8_t a8 = color_clamp(a >> 16);
+                for (int i = 0; i <= length; i++)
+                {
+                    uint8_t r8 = color_clamp(r >> 16);
+                    uint8_t g8 = color_clamp(g >> 16);
+                    uint8_t b8 = color_clamp(b >> 16);
+                    uint8_t a8 = color_clamp(a >> 16);
 
-                              shade_color_ = (a8 << 24) | (b8 << 16) | (g8 << 8) | r8;
-                              shade_alpha_ = (a8 << 24) | (a8 << 16) | (a8 << 8) | a8;
+                    shade_color_ = (a8 << 24) | (b8 << 16) | (g8 << 8) | r8;
+                    shade_alpha_ = (a8 << 24) | (a8 << 16) | (a8 << 8) | a8;
 
-                              get_noise();
+                    get_noise();
 
-                              int32_t z_cur = z_correct((z >> 10) & 0x3f'ffff);
-                              current_coverage_ =
-                                  std::popcount(coverage_mask_buffer_[x & 0x3ff] & 0xa5a5u);
-                              if (depth_test(x, y, z_cur, DzPix))
-                              {
-                                  auto [s_cur, t_cur] = perspective_correction_func_(s, t, w);
-                                  fetch_texels(0, primitive.tile_index, s_cur, t_cur);
-                                  fetch_texels(1, primitive.tile_index, s_cur, t_cur);
+                    int32_t z_cur = z_correct((z >> 10) & 0x3f'ffff);
+                    current_coverage_ =
+                        std::popcount(coverage_mask_buffer_[x & 0x3ff] & 0xa5a5u);
+                    if (depth_test(x, y, z_cur, DzPix))
+                    {
+                        auto [s_cur, t_cur] = perspective_correction_func_(s, t, w);
+                        fetch_texels(0, primitive.tile_index, s_cur, t_cur);
+                        fetch_texels(1, primitive.tile_index, s_cur, t_cur);
 
-                                  // 0xA5A5 is the checkerboard pattern the N64 uses as it has only
-                                  // 3 bits to store coverage
-                                  bool cvbit = coverage_mask_buffer_[x & 0x3ff] & 0x8000u;
-                                  if (antialias_en_ ? current_coverage_ : cvbit)
-                                  {
-                                      draw_pixel(x, y);
-                                  }
-                                  coverage_set(x, y, current_coverage_);
+                        // 0xA5A5 is the checkerboard pattern the N64 uses as it has only
+                        // 3 bits to store coverage
+                        bool cvbit = coverage_mask_buffer_[x & 0x3ff] & 0x8000u;
+                        if (antialias_en_ ? current_coverage_ : cvbit)
+                        {
+                            draw_pixel(x, y);
+                        }
+                        coverage_set(x, y, current_coverage_);
 
-                                  if (z_update_en_)
-                                  {
-                                      z_set(x, y, z_cur);
-                                      dz_set(x, y, DzPix);
-                                  }
-                              }
+                        if (z_update_en_)
+                        {
+                            z_set(x, y, z_cur);
+                            dz_set(x, y, DzPix);
+                        }
+                    }
 
-                              z += DzDx * x_inc;
-                              r += DrDx * x_inc;
-                              g += DgDx * x_inc;
-                              b += DbDx * x_inc;
-                              a += DaDx * x_inc;
-                              s += primitive.DsDx * x_inc;
-                              t += primitive.DtDx * x_inc;
-                              w += primitive.DwDx * x_inc;
-                              x += x_inc;
-                          }
-                      });
+                    z += DzDx * x_inc;
+                    r += DrDx * x_inc;
+                    g += DgDx * x_inc;
+                    b += DbDx * x_inc;
+                    a += DaDx * x_inc;
+                    s += primitive.DsDx * x_inc;
+                    t += primitive.DtDx * x_inc;
+                    w += primitive.DwDx * x_inc;
+                    x += x_inc;
+                }
+            }
+        );
+        // clang-format on
     }
 } // namespace hydra::N64

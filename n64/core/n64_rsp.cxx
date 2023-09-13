@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <compatibility.hxx>
 #include <fmt/format.h>
 #include <fstream>
