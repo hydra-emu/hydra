@@ -7,6 +7,41 @@
 namespace hydra
 {
 
+    enum class InputDevice
+    {
+        Joypad,
+        Mouse,
+    };
+
+    enum class InputButton
+    {
+        AnalogHorizontal_0,
+        AnalogVertical_0,
+        AnalogHorizontal_1,
+        AnalogVertical_1,
+        DPadUp_0,
+        DPadDown_0,
+        DPadLeft_0,
+        DPadRight_0,
+        DPadUp_1,
+        DPadDown_1,
+        DPadLeft_1,
+        DPadRight_1,
+        A,
+        B,
+        Z,
+        X,
+        Y,
+        Start,
+        Select,
+        L1,
+        R1,
+        L2,
+        R2,
+        L3,
+        R3,
+    };
+
     enum class VideoFormat
     {
         RGBA8888,
@@ -25,6 +60,13 @@ namespace hydra
         std::vector<int16_t> data{};
     };
 
+    struct InputInfo
+    {
+        uint8_t player;
+        InputDevice device;
+        InputButton button;
+    };
+
     class Core
     {
     public:
@@ -33,18 +75,19 @@ namespace hydra
         Core(Core&&) = default;
         Core& operator=(Core&&) = default;
 
-        bool LoadFile(const std::string& type, const std::string& path);
-        std::future<VideoInfo> RenderFrameAsync();
-        std::future<AudioInfo> RenderAudioAsync();
+        virtual bool LoadFile(const std::string& type, const std::string& path) = 0;
         std::future<void> RunFrameAsync();
-        void Reset();
+        virtual void Reset() = 0;
+        virtual void SetVideoCallback(std::function<void(const VideoInfo&)> callback) = 0;
+        virtual void SetAudioCallback(std::function<void(const AudioInfo&)> callback) = 0;
+        virtual void SetPollInputCallback(std::function<void()> callback) = 0;
+        virtual void SetReadInputCallback(std::function<int8_t(const InputInfo&)> callback) = 0;
+
+    protected:
+        int host_sample_rate_ = 48000;
 
     private:
-        virtual bool load_file(const std::string& type, const std::string& path) = 0;
-        virtual VideoInfo render_frame() = 0;
-        virtual AudioInfo render_audio() = 0;
         virtual void run_frame() = 0;
-        virtual void reset() = 0;
 
         Core(const Core&) = delete;
         Core& operator=(const Core&) = delete;

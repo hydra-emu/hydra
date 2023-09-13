@@ -143,7 +143,14 @@ namespace hydra::N64
                     ai_dma_addresses_[0] = ai_dma_addresses_[1];
                     ai_dma_lengths_[0] = ai_dma_lengths_[1];
                 }
+                audio_callback_(ai_buffer_, ai_frequency_);
+                ai_buffer_.clear();
             }
         }
+    }
+
+    void Ai::SetAudioCallback(std::function<void(const std::vector<int16_t>&, int)> callback)
+    {
+        audio_callback_ = callback;
     }
 } // namespace hydra::N64

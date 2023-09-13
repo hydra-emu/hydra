@@ -76,7 +76,7 @@ set(C8_FILES
 )
 
 set(GB_FILES
-    gb/gb_hc.cxx
+    # gb/gb_hc.cxx
     gb/gb_apu_ch.cxx
     gb/gb_apu.cxx
     gb/gb_bus.cxx
