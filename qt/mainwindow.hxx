@@ -3,8 +3,8 @@
 #include "screenwidget.hxx"
 #include <array>
 #include <core.hxx>
-#include <emulator_factory.hxx>
 #include <memory>
+#include <ui_common.hxx>
 #define MA_NO_DECODING
 #define MA_NO_ENCODING
 #include <miniaudio.h>
@@ -14,12 +14,6 @@
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QVBoxLayout>
-
-struct EmulatorData
-{
-    std::string Name;
-    std::vector<std::string> Extensions;
-};
 
 class MainWindow : public QMainWindow
 {
@@ -53,7 +47,6 @@ private:
     void audio_callback(const hydra::AudioInfo& info);
     void poll_input_callback();
     int8_t read_input_callback(const hydra::InputInfo& info);
-    hydra::EmuType get_emulator_type(const std::filesystem::path& path);
 
 private slots:
     void emulator_frame();
@@ -88,7 +81,6 @@ public:
     std::mutex emulator_mutex_;
     std::mutex audio_mutex_;
     hydra::VideoInfo video_info_;
-    std::array<EmulatorData, EmuTypeSize> emulator_data_;
 
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
 };

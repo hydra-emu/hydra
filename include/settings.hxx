@@ -19,6 +19,7 @@ class Settings
 public:
     static void Open(const std::string& path)
     {
+        save_path_ = path;
         std::ifstream ifs(save_path_);
         if (ifs.good())
         {
@@ -36,29 +37,13 @@ public:
             throw ErrorFactory::generate_exception(__func__, __LINE__, "Settings not initialized");
         }
 
-        if (!Has(key))
+        if (map_.find(key) == map_.end())
         {
             Set(key, "");
             return "";
         }
 
-        try
-        {
-            return map_.at(key);
-        } catch (std::exception& ex)
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to get: " + key);
-        }
-    }
-
-    static bool Has(const std::string& key)
-    {
-        if (!initialized_)
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Settings not initialized");
-        }
-
-        return map_.find(key) != map_.end();
+        return map_[key];
     }
 
     static void Set(const std::string& key, const std::string& value)
@@ -72,7 +57,6 @@ public:
         std::ofstream ofs(save_path_, std::ios::trunc);
         json j_map(map_);
         ofs << j_map << std::endl;
-        printf("writing to %s\n", save_path_.c_str());
     }
 
     static bool IsEmpty()
