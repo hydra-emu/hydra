@@ -1170,7 +1170,7 @@ namespace hydra::N64
             return 0xFFFF0000;
         }
 
-        uint32_t shift = hydra::clz<int32_t>(input);
+        uint32_t shift = hydra::clz<uint32_t>(input);
         uint64_t dinput = (uint64_t)input;
         uint32_t index = ((dinput << shift) & 0x7FC00000) >> 22;
 
@@ -1200,7 +1200,7 @@ namespace hydra::N64
         int32_t mask = sinput >> 31;
         input ^= mask;
 
-        int shift = hydra::clz(input) + 1;
+        int shift = hydra::clz<uint32_t>(input) + 1;
 
         int index = (((input << shift) >> 24) | ((shift & 1) << 8));
         uint32_t rom = (((uint32_t)RSQ_TABLE[index]) << 14);

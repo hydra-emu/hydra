@@ -19,9 +19,11 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: 'true'
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
     - name: install-deps
       run: vcpkg install --triplet x64-windows gtest 
     - name: configure
       run: cmake -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -T ClangCL
     - name: make
-      run: cmake --build build --target hydra
+      run: cmake --build build --target hydra --config Release
