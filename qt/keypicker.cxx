@@ -1,4 +1,3 @@
-#include <emulator_factory.hxx>
 #include <iostream>
 #include <QKeyEvent>
 #include <qt/keypicker.hxx>

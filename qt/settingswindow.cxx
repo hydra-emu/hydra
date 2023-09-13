@@ -1,6 +1,5 @@
 #include "settingswindow.hxx"
 #include "keypicker.hxx"
-#include <emulator_factory.hxx>
 #include <emulator_types.hxx>
 #include <QCheckBox>
 #include <QFileDialog>
@@ -144,7 +143,8 @@ void SettingsWindow::create_tabs()
 
 void SettingsWindow::on_dmg_click()
 {
-    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
+    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)",
+                                             nullptr, QFileDialog::ReadOnly);
     if (!path.isEmpty())
     {
         Settings::Set("gb_dmg_path", path.toStdString());
@@ -154,7 +154,8 @@ void SettingsWindow::on_dmg_click()
 
 void SettingsWindow::on_cgb_click()
 {
-    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
+    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)",
+                                             nullptr, QFileDialog::ReadOnly);
     if (!path.isEmpty())
     {
         Settings::Set("gb_cgb_path", path.toStdString());
@@ -170,7 +171,8 @@ void SettingsWindow::on_gb_skip_bios_click(int state)
 
 void SettingsWindow::on_ipl_click()
 {
-    auto path = QFileDialog::getOpenFileName(this, tr("Open IPL"), "", "Binary files (*.bin)");
+    auto path = QFileDialog::getOpenFileName(this, tr("Open IPL"), "", "Binary files (*.bin)",
+                                             nullptr, QFileDialog::ReadOnly);
     if (!path.isEmpty())
     {
         Settings::Set("n64_ipl_path", path.toStdString());

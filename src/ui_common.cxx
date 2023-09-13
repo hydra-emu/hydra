@@ -1,15 +1,16 @@
-#include <emulator_factory.hxx>
+#include <core.hxx>
 #include <error_factory.hxx>
 #include <iostream>
 #include <n64/n64_hc.hxx>
 #include <settings.hxx>
 #include <str_hash.hxx>
+#include <ui_common.hxx>
 
 namespace hydra
 {
-    ExtensionMappings EmulatorFactory::extension_mappings_{};
+    std::array<emulator_data_t, EmuTypeSize> UiCommon::EmulatorData;
 
-    std::string EmulatorFactory::GetSavePath()
+    std::string UiCommon::GetSavePath()
     {
         static std::string dir;
         if (dir.empty())
@@ -39,7 +40,7 @@ namespace hydra
         return dir;
     }
 
-    std::unique_ptr<Core> EmulatorFactory::Create(EmuType type)
+    std::unique_ptr<Core> UiCommon::Create(EmuType type)
     {
         std::unique_ptr<Core> emulator;
         switch (type)
@@ -81,5 +82,22 @@ namespace hydra
             }
         }
         return emulator;
+    }
+
+    hydra::EmuType UiCommon::GetEmulatorType(const std::filesystem::path& path)
+    {
+        for (int i = 0; i < EmuTypeSize; i++)
+        {
+            const auto& emulator_data = EmulatorData[i];
+            for (const auto& str : emulator_data.Extensions)
+            {
+                if (path.extension() == str)
+                {
+                    return static_cast<hydra::EmuType>(i);
+                }
+            }
+        }
+
+        return hydra::EmuType::EmuTypeSize;
     }
 } // namespace hydra

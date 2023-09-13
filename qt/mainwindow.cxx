@@ -190,7 +190,7 @@ void MainWindow::open_file()
         extensions = "All supported types (";
         for (int i = 0; i < EmuTypeSize; i++)
         {
-            const auto& emulator_data = emulator_data_[i];
+            const auto& emulator_data = hydra::UiCommon::EmulatorData[i];
             indep += emulator_data.Name.c_str();
             indep += " (";
             for (const auto& str : emulator_data.Extensions)
@@ -207,11 +207,7 @@ void MainWindow::open_file()
         extensions += ");;";
         extensions += indep;
     }
-    std::string last_path = "";
-    if (Settings::Has("last_path"))
-    {
-        last_path = Settings::Get("last_path");
-    }
+    std::string last_path = Settings::Get("last_path");
     std::string path =
         QFileDialog::getOpenFileName(this, tr("Open ROM"), QString::fromStdString(last_path),
                                      extensions, nullptr, QFileDialog::ReadOnly)
@@ -221,23 +217,6 @@ void MainWindow::open_file()
         return;
     }
     qt_may_throw(std::bind(&MainWindow::open_file_impl, this, path));
-}
-
-hydra::EmuType MainWindow::get_emulator_type(const std::filesystem::path& path)
-{
-    for (int i = 0; i < EmuTypeSize; i++)
-    {
-        const auto& emulator_data = emulator_data_[i];
-        for (const auto& str : emulator_data.Extensions)
-        {
-            if (path.extension() == str)
-            {
-                return static_cast<hydra::EmuType>(i);
-            }
-        }
-    }
-
-    return hydra::EmuType::EmuTypeSize;
 }
 
 void MainWindow::open_file_impl(const std::string& path)
@@ -251,12 +230,12 @@ void MainWindow::open_file_impl(const std::string& path)
         return;
     }
 
+    stop_emulator();
     Settings::Set("last_path", pathfs.parent_path().string());
     Logger::ClearWarnings();
-    auto type = get_emulator_type(path);
-    stop_emulator();
-    auto emulator = hydra::EmulatorFactory::Create(type);
-    std::swap(emulator, emulator_);
+    auto type = hydra::UiCommon::GetEmulatorType(path);
+    emulator_type_ = type;
+    emulator_ = hydra::UiCommon::Create(type);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
     emulator_->SetVideoCallback(
@@ -268,7 +247,6 @@ void MainWindow::open_file_impl(const std::string& path)
         std::bind(&MainWindow::read_input_callback, this, std::placeholders::_1));
     if (!emulator_->LoadFile("rom", path))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
-    emulator_type_ = type;
     enable_emulation_actions(true);
     paused_ = false;
 }
@@ -316,12 +294,15 @@ void MainWindow::enable_emulation_actions(bool should)
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
-    screen_->setVisible(should);
+    if (should)
+        screen_->show();
+    else
+        screen_->hide();
 }
 
 void MainWindow::initialize_emulator_data()
 {
-    auto settings_path = hydra::EmulatorFactory::GetSavePath() + "settings.json";
+    auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
     Settings::Open(settings_path);
 
     for (int i = 0; i < EmuTypeSize; i++)
@@ -335,12 +316,13 @@ void MainWindow::initialize_emulator_data()
         {
             Logger::Fatal("Failed to open emulator data file: {}", path);
         }
-        std::string data = file.readAll().toStdString();
 
+        std::string data = file.readAll().toStdString();
         using json = nlohmann::json;
         json j = json::parse(data);
-        emulator_data_[i].Name = j["Name"].get<std::string>();
-        emulator_data_[i].Extensions = j["Extensions"].get<std::vector<std::string>>();
+        hydra::UiCommon::EmulatorData[i].Name = j["Name"].get<std::string>();
+        hydra::UiCommon::EmulatorData[i].Extensions =
+            j["Extensions"].get<std::vector<std::string>>();
     }
 }
 
