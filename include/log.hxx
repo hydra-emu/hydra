@@ -32,7 +32,7 @@ struct Logger
     template <typename... T>
     static void WarnOnce(fmt::format_string<T...> fmt, T&&... args)
     {
-        static std::unordered_map<uint32_t, bool> warnings = get_warnings();
+        std::unordered_map<uint32_t, bool>& warnings = get_warnings();
 
         std::string msg = fmt::format(fmt, std::forward<T>(args)...);
         uint32_t hash = str_hash(msg);

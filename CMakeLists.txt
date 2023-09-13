@@ -67,8 +67,7 @@ set(QT_SOURCES
 
 set(SRC_FILES
     src/emulator_factory.cxx
-    src/emulator_user_data.cxx
-    src/emulator_settings.cxx
+    src/settings.cxx
     src/core.cxx
 )
 

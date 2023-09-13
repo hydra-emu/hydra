@@ -1,7 +1,5 @@
 #include <atomic>
 #include <chrono>
-#include <emulator_settings.hxx>
-#include <emulator_user_data.hxx>
 #include <filesystem>
 #include <gb/gb_hc.hxx>
 #include <iostream>
@@ -15,64 +13,11 @@ namespace hydra
           joypad_(bus_.GetReference(addr_joy)), interrupt_flag_(bus_.GetReference(addr_if))
     {
         (*channel_array_ptr_.get())[0].HasSweep = true;
-        const EmulatorUserData& user_data =
-            EmulatorSettings::GetEmulatorData(EmuType::Gameboy).UserData;
-        KeyMappings& mappings = EmulatorSettings::GetEmulatorData(EmuType::Gameboy).Mappings;
-        if (!mappings.empty())
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                auto color = std::stoi(user_data.Get(std::string("dmg_c") + std::to_string(i)));
-                bus_.Palette[i][0] = color & 0xFF;
-                bus_.Palette[i][1] = (color >> 8) & 0xFF;
-                bus_.Palette[i][2] = color >> 16;
-            }
-            direction_keys_[0] = std::stoi(mappings["Right"]);
-            direction_keys_[1] = std::stoi(mappings["Left"]);
-            direction_keys_[2] = std::stoi(mappings["Up"]);
-            direction_keys_[3] = std::stoi(mappings["Down"]);
-            action_keys_[0] = std::stoi(mappings["A"]);
-            action_keys_[1] = std::stoi(mappings["B"]);
-            action_keys_[2] = std::stoi(mappings["Start"]);
-            action_keys_[3] = std::stoi(mappings["Select"]);
-        }
-        if (!user_data.IsEmpty())
-        {
-            if (user_data.Get("skip_bios") == "false")
-            {
-                auto dmg_path = user_data.Get("dmg_path");
-                auto cgb_path = user_data.Get("cgb_path");
-                if (std::filesystem::exists(dmg_path))
-                {
-                    std::ifstream ifs(dmg_path, std::ios::binary);
-                    if (ifs.is_open())
-                    {
-                        ifs.read(reinterpret_cast<char*>(&bus_.dmg_bios_[0]),
-                                 sizeof(bus_.dmg_bios_));
-                        ifs.close();
-                        bus_.dmg_bios_loaded_ = true;
-                        bus_.BiosEnabled = true;
-                    }
-                }
-                if (std::filesystem::exists(cgb_path))
-                {
-                    std::ifstream ifs(cgb_path, std::ios::binary);
-                    if (ifs.is_open())
-                    {
-                        ifs.read(reinterpret_cast<char*>(&bus_.cgb_bios_[0]),
-                                 sizeof(bus_.cgb_bios_));
-                        ifs.close();
-                        bus_.cgb_bios_loaded_ = true;
-                        bus_.BiosEnabled = true;
-                    }
-                }
-            }
-        }
         apu_.UseSound = true;
         apu_.InitSound();
     }
 
-    void HydraCore_Gameboy::reset()
+    void HydraCore_Gameboy::Reset()
     {
         bus_.SoftReset();
         cpu_.Reset(true);

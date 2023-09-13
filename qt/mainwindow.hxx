@@ -15,6 +15,12 @@
 #include <QStatusBar>
 #include <QVBoxLayout>
 
+struct EmulatorData
+{
+    std::string Name;
+    std::vector<std::string> Extensions;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -40,12 +46,14 @@ private:
     void reset_emulator();
     void stop_emulator();
     void enable_emulation_actions(bool should);
-    void setup_emulator_specific();
+    void initialize_emulator_data();
+    void initialize_audio();
 
     void video_callback(const hydra::VideoInfo& info);
     void audio_callback(const hydra::AudioInfo& info);
     void poll_input_callback();
     int8_t read_input_callback(const hydra::InputInfo& info);
+    hydra::EmuType get_emulator_type(const std::filesystem::path& path);
 
 private slots:
     void emulator_frame();
@@ -80,6 +88,7 @@ public:
     std::mutex emulator_mutex_;
     std::mutex audio_mutex_;
     hydra::VideoInfo video_info_;
+    std::array<EmulatorData, EmuTypeSize> emulator_data_;
 
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
 };

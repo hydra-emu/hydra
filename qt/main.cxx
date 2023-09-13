@@ -1,4 +1,5 @@
 #include "mainwindow.hxx"
+#include "qthelper.hxx"
 #include <log.hxx>
 #include <QApplication>
 #include <QSurfaceFormat>
@@ -19,5 +20,15 @@ int main(int argc, char* argv[])
     {
         w.OpenFile(argv[1]);
     }
-    return a.exec();
+
+    int ret = 0;
+    try
+    {
+        ret = a.exec();
+    } catch (...)
+    {
+        Logger::Warn("Caught unhandled exception. Please open an issue on Github.");
+        return 1;
+    }
+    return ret;
 }

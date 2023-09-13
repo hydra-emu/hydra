@@ -1,10 +1,8 @@
-#include <emulator_data.hxx>
 #include <emulator_factory.hxx>
-#include <emulator_settings.hxx>
-#include <emulator_user_data.hxx>
 #include <error_factory.hxx>
 #include <iostream>
 #include <n64/n64_hc.hxx>
+#include <settings.hxx>
 #include <str_hash.hxx>
 
 namespace hydra
@@ -41,32 +39,6 @@ namespace hydra
         return dir;
     }
 
-    // TODO: detect emutype by magic bytes instead of extension
-    EmuType EmulatorFactory::GetEmulatorType(std::filesystem::path path)
-    {
-        auto extension = path.extension().string();
-        std::transform(extension.begin(), extension.end(), extension.begin(),
-                       [](unsigned char c) { return std::tolower(c); });
-        if (extension_mappings_.empty())
-        {
-            for (int i = 0; i < EmuTypeSize; ++i)
-            {
-                auto& data = EmulatorSettings::GetEmulatorData(static_cast<EmuType>(i));
-                for (auto& ext : data.Extensions)
-                {
-                    extension_mappings_[ext] = static_cast<EmuType>(i);
-                }
-            }
-        }
-        try
-        {
-            return extension_mappings_.at(extension);
-        } catch (...)
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Unknown file extension");
-        }
-    }
-
     std::unique_ptr<Core> EmulatorFactory::Create(EmuType type)
     {
         std::unique_ptr<Core> emulator;
@@ -80,8 +52,13 @@ namespace hydra
             case EmuType::N64:
             {
                 emulator = std::make_unique<hydra::HydraCore_N64>();
-                auto ipl_path =
-                    EmulatorSettings::GetEmulatorData(hydra::EmuType::N64).UserData.Get("IPLPath");
+                auto ipl_path = Settings::Get("n64_ipl_path");
+                if (ipl_path.empty())
+                {
+                    throw ErrorFactory::generate_exception(__func__, __LINE__,
+                                                           "IPL path was not set");
+                }
+
                 if (!emulator->LoadFile("ipl", ipl_path))
                 {
                     throw ErrorFactory::generate_exception(__func__, __LINE__,
