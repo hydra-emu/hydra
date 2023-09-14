@@ -317,9 +317,9 @@ void MainWindow::initialize_emulator_data()
             Logger::Fatal("Failed to open emulator data file: {}", path);
         }
 
-        std::string data = file.readAll().toStdString();
+        std::string file_data = file.readAll().toStdString();
         using json = nlohmann::json;
-        json j = json::parse(data);
+        json j = json::parse(file_data);
         hydra::UiCommon::EmulatorData[i].Name = j["Name"].get<std::string>();
         hydra::UiCommon::EmulatorData[i].Extensions =
             j["Extensions"].get<std::vector<std::string>>();
