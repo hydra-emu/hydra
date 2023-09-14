@@ -12,31 +12,18 @@ namespace hydra::N64
         vi_v_intr_ = 0x100;
     }
 
-    bool Vi::Redraw()
+    void Vi::Redraw(std::vector<uint8_t>& data)
     {
         auto new_width = vi_h_end_ - vi_h_start_;
         auto new_height = (vi_v_end_ - vi_v_start_) / 2;
         new_width *= vi_x_scale_ ? vi_x_scale_ : 512;
         new_height *= vi_y_scale_ ? vi_y_scale_ : 512;
-        if (new_width == 0 || new_height == 0 || !memory_ptr_ || pixel_mode_ == 0)
-        {
-            if (!blacked_out_)
-            {
-                std::fill(framebuffer_.begin(), framebuffer_.end(), 0);
-                blacked_out_ = true;
-            }
-            return true;
-        }
-        blacked_out_ = false;
         new_width >>= 10;
         new_height >>= 10;
         width_ = new_width;
         height_ = new_height;
         size_t new_size = width_ * height_ * 4;
-        if (framebuffer_.size() != new_size)
-        {
-            framebuffer_.resize(new_size);
-        }
+        data.resize(new_size);
         switch (pixel_mode_)
         {
             case 0b11:
@@ -45,9 +32,9 @@ namespace hydra::N64
                 {
                     for (int x = 0; x < width_; x++)
                     {
-                        uint32_t color =
-                            (reinterpret_cast<uint32_t*>(memory_ptr_))[(y * vi_width_) + x];
-                        set_pixel(x, y, color);
+                        uint32_t color = (reinterpret_cast<uint32_t*>(
+                            &rdram_ptr_[vi_origin_]))[(y * vi_width_) + x];
+                        memcpy(&data[(x + y * width_) * 4], &color, 4);
                     }
                 }
                 break;
@@ -58,8 +45,8 @@ namespace hydra::N64
                 {
                     for (int x = 0; x < width_; x++)
                     {
-                        uint16_t color_temp =
-                            (reinterpret_cast<uint16_t*>(memory_ptr_))[(y * vi_width_) + x];
+                        uint16_t color_temp = (reinterpret_cast<uint16_t*>(
+                            &rdram_ptr_[vi_origin_]))[(y * vi_width_) + x];
                         uint8_t r = (color_temp >> 11) & 0x1F;
                         uint8_t g = (color_temp >> 6) & 0x1F;
                         uint8_t b = (color_temp >> 1) & 0x1F;
@@ -67,7 +54,7 @@ namespace hydra::N64
                         g = (g << 3) | (g >> 2);
                         b = (b << 3) | (b >> 2);
                         uint32_t color = 0xffu << 24 | b << 16 | g << 8 | r;
-                        set_pixel(x, y, color);
+                        memcpy(&data[(x + y * width_) * 4], &color, 4);
                     }
                 }
                 break;
@@ -75,8 +62,6 @@ namespace hydra::N64
             default:
                 break;
         }
-        framebuffer_ptr_ = framebuffer_.data();
-        return true;
     }
 
     uint32_t Vi::ReadWord(uint32_t addr)
@@ -139,14 +124,6 @@ namespace hydra::N64
             {
                 return vi_y_scale_;
             }
-            case VI_TEST_ADDR:
-            {
-                return vi_test_addr_;
-            }
-            case VI_STAGED_DATA:
-            {
-                return vi_staged_data_;
-            }
             default:
             {
                 Logger::Warn("VI: Unhandled read from {:08x}", addr);
@@ -173,8 +150,7 @@ namespace hydra::N64
             case VI_ORIGIN:
             {
                 data &= 0x00FFFFFF;
-                memory_ptr_ = &rdram_ptr_[data];
-                vis_counter_ += 1;
+                vi_origin_ = data;
                 break;
             }
             case VI_WIDTH:
@@ -184,7 +160,7 @@ namespace hydra::N64
             }
             case VI_V_CURRENT:
             {
-                mi_interrupt_->VI = false;
+                interrupt_callback_(false);
                 break;
             }
             case VI_H_SYNC:
@@ -232,8 +208,14 @@ namespace hydra::N64
         }
     }
 
-    void Vi::set_pixel(int x, int y, uint32_t color)
+    void Vi::InstallBuses(uint8_t* rdram_ptr)
     {
-        memcpy(&framebuffer_[(x + y * width_) * 4], &color, 4);
+        rdram_ptr_ = rdram_ptr;
     }
+
+    void Vi::SetInterruptCallback(std::function<void(bool)> callback)
+    {
+        interrupt_callback_ = callback;
+    }
+
 } // namespace hydra::N64

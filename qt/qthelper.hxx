@@ -12,8 +12,11 @@ static inline void qt_may_throw(Callable func)
     } catch (std::exception& ex)
     {
         QMessageBox messageBox;
-        messageBox.critical(0, "Error", ex.what());
-        messageBox.setFixedSize(500, 200);
+        messageBox.addButton(QMessageBox::tr("Sounds like a you problem"), QMessageBox::YesRole);
+        messageBox.setWindowTitle("Damn...");
+        messageBox.setText(ex.what());
+        messageBox.setIcon(QMessageBox::Critical);
+        messageBox.exec();
         return;
     }
 }

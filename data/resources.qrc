@@ -16,12 +16,11 @@
         <file>images/compile.png</file>
         <file>images/autocompile.png</file>
         <file>images/open.png</file>
-        <file>emulators.json</file>
         <file>mappings.json</file>
-        <file>gameboy.json</file>
-        <file>nes.json</file>
-        <file>n64.json</file>
-        <file>c8.json</file>
+        <file>emulators/gameboy.json</file>
+        <file>emulators/nes.json</file>
+        <file>emulators/n64.json</file>
+        <file>emulators/c8.json</file>
         <file>about.html</file>
         <file>shaders/simple.vs</file>
         <file>shaders/simple.fs</file>

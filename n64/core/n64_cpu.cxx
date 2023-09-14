@@ -4,6 +4,7 @@
 #include <cmath>
 #include <compatibility.hxx>
 #include <cstring>
+#include <fstream>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -14,6 +15,143 @@
 
 namespace hydra::N64
 {
+    std::vector<uint8_t> CPUBus::ipl_{};
+
+    CPUBus::CPUBus(RCP& rcp) : rcp_(rcp)
+    {
+        cart_rom_.resize(0xFC00000);
+        rdram_.resize(0x800000);
+        map_direct_addresses();
+    }
+
+    bool CPUBus::LoadCartridge(std::string path)
+    {
+        std::ifstream ifs(path, std::ios::in | std::ios::binary);
+        if (ifs.is_open())
+        {
+            ifs.unsetf(std::ios::skipws);
+            ifs.seekg(0, std::ios::end);
+            std::streampos size = ifs.tellg();
+            ifs.seekg(0, std::ios::beg);
+            ifs.read(reinterpret_cast<char*>(cart_rom_.data()), size);
+            rom_loaded_ = true;
+            Reset();
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+    }
+
+    bool CPUBus::LoadIPL(std::string path)
+    {
+        std::ifstream ifs(path, std::ios::in | std::ios::binary);
+        if (ifs.is_open())
+        {
+            if (CPUBus::ipl_.empty())
+            {
+                ifs.unsetf(std::ios::skipws);
+                ifs.seekg(0, std::ios::end);
+                std::streampos size = ifs.tellg();
+                ifs.seekg(0, std::ios::beg);
+                CPUBus::ipl_.resize(size);
+                ifs.read(reinterpret_cast<char*>(CPUBus::ipl_.data()), size);
+            }
+        }
+        else
+        {
+            return false;
+        }
+        ipl_loaded_ = !ipl_.empty();
+        return true;
+    }
+
+    // These resets are called multiple times - why?
+    void CPUBus::Reset()
+    {
+        pif_ram_.fill(0);
+        time_ = 0;
+
+        uint32_t crc = 0xFFFF'FFFF;
+        for (int i = 0; i < 0x9c0; i++)
+        {
+            crc = hydra::crc32_u8(crc, cart_rom_[i + 0x40]);
+        }
+        crc ^= 0xFFFF'FFFF;
+
+        switch (crc)
+        {
+            // CIC-NUS-6103
+            case 0xea8f8526:
+            {
+                pif_ram_[0x26] = 0x78;
+                break;
+            }
+            // CIC-NUS-6105
+            case 0x1abca43c:
+            {
+                pif_ram_[0x26] = 0x91;
+                break;
+            }
+            // CIC-NUS-6106
+            case 0x7d286472:
+            {
+                pif_ram_[0x26] = 0x85;
+                break;
+            }
+            default:
+            {
+                Logger::Warn("Unknown CIC: {:08X}", crc);
+                pif_ram_[0x26] = 0x3F;
+                break;
+            }
+        }
+
+        pif_ram_[0x27] = 0x3F;
+    }
+
+    uint8_t* CPUBus::redirect_paddress(uint32_t paddr)
+    {
+        uint8_t* ptr = page_table_[paddr >> 16];
+        if (ptr) [[likely]]
+        {
+            ptr += (paddr & static_cast<uint32_t>(0xFFFF));
+            return ptr;
+        }
+        else if (paddr - 0x1FC00000u < 1984u)
+        {
+            return &ipl_[paddr - 0x1FC00000u];
+        }
+        return nullptr;
+    }
+
+    void CPUBus::map_direct_addresses()
+    {
+        // https://wheremyfoodat.github.io/software-fastmem/
+        const uint32_t PAGE_SIZE = 0x10000;
+#define ADDR_TO_PAGE(addr) ((addr) >> 16)
+        // Map rdram
+        for (int i = 0; i < ADDR_TO_PAGE(0x800'000); i++)
+        {
+            page_table_[i] = &rdram_[PAGE_SIZE * i];
+        }
+        page_table_[ADDR_TO_PAGE(0x04000000)] = &rcp_.rsp_.mem_[0];
+
+        for (int i = ADDR_TO_PAGE(0x08000000); i <= ADDR_TO_PAGE(0x0FFF'0000); i++)
+        {
+            // page_table_[i] = &sram_[PAGE_SIZE * (i - ADDR_TO_PAGE(0x0800'0000))];
+        }
+
+        // Map cartridge rom
+        for (int i = ADDR_TO_PAGE(0x1000'0000); i <= ADDR_TO_PAGE(0x1FBF'0000); i++)
+        {
+            page_table_[i] = &cart_rom_[PAGE_SIZE * (i - ADDR_TO_PAGE(0x1000'0000))];
+        }
+        page_table_[ADDR_TO_PAGE(ISVIEWER_AREA_START)] = nullptr;
+#undef ADDR_TO_PAGE
+    }
+
     template <>
     void CPU::log_cpu_state<false>(bool, uint64_t, uint64_t)
     {
@@ -63,6 +201,44 @@ namespace hydra::N64
         printf("\n");
     }
 
+    void CPU::set_interrupt(InterruptType type, bool value)
+    {
+        switch (type)
+        {
+            case InterruptType::VI:
+            {
+                cpubus_.mi_interrupt_.VI = value;
+                break;
+            }
+            case InterruptType::SI:
+            {
+                cpubus_.mi_interrupt_.SI = value;
+                break;
+            }
+            case InterruptType::AI:
+            {
+                cpubus_.mi_interrupt_.AI = value;
+                break;
+            }
+            case InterruptType::PI:
+            {
+                cpubus_.mi_interrupt_.PI = value;
+                break;
+            }
+            case InterruptType::DP:
+            {
+                cpubus_.mi_interrupt_.DP = value;
+                break;
+            }
+            case InterruptType::SP:
+            {
+                cpubus_.mi_interrupt_.SP = value;
+                break;
+            }
+        }
+        update_interrupt_check();
+    }
+
     void CPU::write_hwio(uint32_t addr, uint32_t data)
     {
         // TODO: remove switch, turn into if chain
@@ -72,7 +248,7 @@ namespace hydra::N64
             {
                 if (data & 0b10)
                 {
-                    cpubus_.mi_interrupt_.PI = false;
+                    set_interrupt(InterruptType::PI, false);
                 }
                 return;
             }
@@ -91,7 +267,7 @@ namespace hydra::N64
                 // std::memcpy(&cpubus_.rdram_[hydra::bswap32(cpubus_.pi_cart_addr_)],
                 // cpubus_.redirect_paddress(hydra::bswap32(cpubus_.pi_dram_addr_)), data + 1);
                 Logger::Warn("PI_RD_LEN write");
-                cpubus_.mi_interrupt_.PI = true;
+                set_interrupt(InterruptType::PI, true);
                 return;
             }
             case PI_WR_LEN:
@@ -103,7 +279,7 @@ namespace hydra::N64
                 {
                     Logger::Warn("DMA to SRAM is unimplemented!");
                     cpubus_.dma_busy_ = false;
-                    cpubus_.mi_interrupt_.PI = true;
+                    set_interrupt(InterruptType::PI, true);
                     return;
                 }
                 std::memcpy(&cpubus_.rdram_[dram_addr], cpubus_.redirect_paddress(cart_addr),
@@ -121,7 +297,7 @@ namespace hydra::N64
                 // }
                 // auto cycles = timing_pi_access(domain, length);
                 cpubus_.dma_busy_ = false;
-                cpubus_.mi_interrupt_.PI = true;
+                set_interrupt(InterruptType::PI, true);
                 Logger::Debug("Raising PI interrupt");
                 return;
             }
@@ -172,7 +348,7 @@ namespace hydra::N64
 
                 if ((data >> 11) & 0b1)
                 {
-                    cpubus_.mi_interrupt_.DP = false;
+                    set_interrupt(InterruptType::DP, false);
                 }
                 return;
             }
@@ -194,6 +370,7 @@ namespace hydra::N64
                     }
                     j <<= 2;
                 }
+                update_interrupt_check();
                 return;
             }
             case SI_DRAM_ADDR:
@@ -206,7 +383,7 @@ namespace hydra::N64
                 std::memcpy(cpubus_.pif_ram_.data(),
                             &cpubus_.rdram_[cpubus_.si_dram_addr_ & 0xff'ffff], 64);
                 pif_command();
-                cpubus_.mi_interrupt_.SI = true;
+                set_interrupt(InterruptType::SI, true);
                 Logger::Debug("Raising SI interrupt");
                 return;
             }
@@ -215,42 +392,48 @@ namespace hydra::N64
                 pif_command();
                 std::memcpy(&cpubus_.rdram_[cpubus_.si_dram_addr_ & 0xff'ffff],
                             cpubus_.pif_ram_.data(), 64);
-                cpubus_.mi_interrupt_.SI = true;
+                set_interrupt(InterruptType::SI, true);
                 Logger::Debug("Raising SI interrupt");
                 return;
             }
             case SI_STATUS:
             {
-                cpubus_.mi_interrupt_.SI = false;
+                set_interrupt(InterruptType::SI, false);
                 return;
             }
         }
         // Video interface
         if (addr >= VI_AREA_START && addr <= VI_AREA_END)
         {
-            return rcp_.vi_.WriteWord(addr, data);
+            rcp_.vi_.WriteWord(addr, data);
         }
         // Audio interface
         else if (addr >= AI_AREA_START && addr <= AI_AREA_END)
         {
-            return rcp_.ai_.WriteWord(addr, data);
+            rcp_.ai_.WriteWord(addr, data);
         }
         else if (addr >= RSP_AREA_START && addr <= RSP_AREA_END)
         {
             switch (addr)
             {
                 case RSP_DMA_SPADDR:
-                    return rcp_.rsp_.write_hwio(RSPHWIO::Cache, data);
+                    rcp_.rsp_.write_hwio(RSPHWIO::Cache, data);
+                    break;
                 case RSP_DMA_RAMADDR:
-                    return rcp_.rsp_.write_hwio(RSPHWIO::DramAddr, data);
+                    rcp_.rsp_.write_hwio(RSPHWIO::DramAddr, data);
+                    break;
                 case RSP_DMA_RDLEN:
-                    return rcp_.rsp_.write_hwio(RSPHWIO::RdLen, data);
+                    rcp_.rsp_.write_hwio(RSPHWIO::RdLen, data);
+                    break;
                 case RSP_DMA_WRLEN:
-                    return rcp_.rsp_.write_hwio(RSPHWIO::WrLen, data);
+                    rcp_.rsp_.write_hwio(RSPHWIO::WrLen, data);
+                    break;
                 case RSP_STATUS:
-                    return rcp_.rsp_.write_hwio(RSPHWIO::Status, data);
+                    rcp_.rsp_.write_hwio(RSPHWIO::Status, data);
+                    break;
                 case RSP_SEMAPHORE:
-                    return rcp_.rsp_.write_hwio(RSPHWIO::Semaphore, data);
+                    rcp_.rsp_.write_hwio(RSPHWIO::Semaphore, data);
+                    break;
                 case RSP_PC:
                 {
                     if (!rcp_.rsp_.status_.halt)
@@ -446,7 +629,8 @@ namespace hydra::N64
         return 0;
     }
 
-    enum class JoybusCommand : uint8_t {
+    enum class JoybusCommand : uint8_t
+    {
         RequestInfo = 0,
         ControllerState = 1,
         ReadMempack = 2,
@@ -459,6 +643,7 @@ namespace hydra::N64
     void CPU::pif_command()
     {
         using namespace hydra::N64;
+        poll_input_callback_();
         auto command_byte = cpubus_.pif_ram_[63];
         if (command_byte & 0x1)
         {
@@ -527,6 +712,18 @@ namespace hydra::N64
         cpubus_.pif_ram_[63] = command_byte;
     }
 
+    void CPU::update_interrupt_check()
+    {
+        bool mi_interrupt = cpubus_.mi_interrupt_.full & cpubus_.mi_mask_;
+        CP0Cause.IP2 = mi_interrupt;
+        bool interrupts_pending = cp0_regs_[CP0_CAUSE].UB._1 & CP0Status.IM;
+        bool interrupts_enabled = CP0Status.IE;
+        bool currently_handling_exception = CP0Status.EXL;
+        bool currently_handling_error = CP0Status.ERL;
+        should_service_interrupt_ = interrupts_pending && interrupts_enabled &&
+                                    !currently_handling_exception && !currently_handling_error;
+    }
+
     bool CPU::joybus_command(const std::vector<uint8_t>& command, std::vector<uint8_t>& result)
     {
         if (result.size() == 0)
@@ -576,7 +773,7 @@ namespace hydra::N64
                     return true;
                 }
 
-                get_controller_state(result, controller_type_);
+                get_controller_state(0, result, controller_type_);
                 break;
             }
             case JoybusCommand::WriteMempack:
@@ -597,72 +794,69 @@ namespace hydra::N64
         return false;
     }
 
-    void CPU::get_controller_state(std::vector<uint8_t>& result, ControllerType controller)
+    void CPU::get_controller_state(int player, std::vector<uint8_t>& result,
+                                   ControllerType controller)
     {
+        int controller_int = static_cast<int>(controller);
         switch (controller)
         {
-            case ControllerType::Keyboard:
+            case ControllerType::Joypad:
             {
-                result[0] = key_state_[Keys::A] << 7 | key_state_[Keys::B] << 6 |
-                            key_state_[Keys::Z] << 5 | key_state_[Keys::Start] << 4 |
-                            key_state_[Keys::KeypadUp] << 3 | key_state_[Keys::KeypadDown] << 2 |
-                            key_state_[Keys::KeypadLeft] << 1 | key_state_[Keys::KeypadRight];
-                result[1] = 0 | 0 | key_state_[Keys::L] << 5 | key_state_[Keys::R] << 4 |
-                            key_state_[Keys::CUp] << 3 | key_state_[Keys::CDown] << 2 |
-                            key_state_[Keys::CLeft] << 1 | key_state_[Keys::CRight];
-                int8_t x = 0, y = 0;
-                if (key_state_[Keys::Up])
-                {
-                    y = 127;
-                }
-                else if (key_state_[Keys::Down])
-                {
-                    y = -127;
-                }
-                if (key_state_[Keys::Left])
-                {
-                    x = -127;
-                }
-                else if (key_state_[Keys::Right])
-                {
-                    x = 127;
-                }
-                result[2] = x;
-                result[3] = y;
+                result[0] = read_input_callback_(player, controller_int, Keys::A) << 7 |
+                            read_input_callback_(player, controller_int, Keys::B) << 6 |
+                            read_input_callback_(player, controller_int, Keys::Z) << 5 |
+                            read_input_callback_(player, controller_int, Keys::Start) << 4 |
+                            read_input_callback_(player, controller_int, Keys::KeypadUp) << 3 |
+                            read_input_callback_(player, controller_int, Keys::KeypadDown) << 2 |
+                            read_input_callback_(player, controller_int, Keys::KeypadLeft) << 1 |
+                            read_input_callback_(player, controller_int, Keys::KeypadRight);
+                result[1] = 0 | 0 | read_input_callback_(player, controller_int, Keys::L) << 5 |
+                            read_input_callback_(player, controller_int, Keys::R) << 4 |
+                            read_input_callback_(player, controller_int, Keys::CUp) << 3 |
+                            read_input_callback_(player, controller_int, Keys::CDown) << 2 |
+                            read_input_callback_(player, controller_int, Keys::CLeft) << 1 |
+                            read_input_callback_(player, controller_int, Keys::CRight);
+                result[2] = read_input_callback_(player, controller_int, Keys::AnalogHorizontal);
+                result[3] = read_input_callback_(player, controller_int, Keys::AnalogVertical);
                 break;
             }
             case ControllerType::Mouse:
             {
-                result[0] = key_state_[Keys::A] << 7 | key_state_[Keys::B] << 6;
-                result[1] = 0;
-                result[2] = mouse_delta_x_ << 2;
-                result[3] = mouse_delta_y_ << 2;
+                // result[0] = key_state_[Keys::A] << 7 | key_state_[Keys::B] << 6;
+                // result[1] = 0;
+                // result[2] = mouse_delta_x_ << 2;
+                // result[3] = mouse_delta_y_ << 2;
 
-                mouse_delta_x_ = 0;
-                mouse_delta_y_ = 0;
+                // mouse_delta_x_ = 0;
+                // mouse_delta_y_ = 0;
                 break;
             }
         }
     }
 
-    CPU::CPU(CPUBus& cpubus, RCP& rcp, bool& should_draw)
+    CPU::CPU(CPUBus& cpubus, RCP& rcp)
         : gpr_regs_{}, fpr_regs_{}, instr_cache_(KB(16)), data_cache_(KB(8)), cpubus_(cpubus),
-          rcp_(rcp), should_draw_(should_draw)
+          rcp_(rcp)
     {
         rcp_.ai_.InstallBuses(&cpubus_.rdram_[0]);
         rcp_.vi_.InstallBuses(&cpubus_.rdram_[0]);
         rcp_.rsp_.InstallBuses(&cpubus_.rdram_[0], &rcp_.rdp_);
         rcp_.rdp_.InstallBuses(&cpubus_.rdram_[0], &rcp_.rsp_.mem_[0]);
-        rcp_.ai_.SetMIPtr(&cpubus_.mi_interrupt_);
-        rcp_.vi_.SetMIPtr(&cpubus_.mi_interrupt_);
-        rcp_.rsp_.SetMIPtr(&cpubus_.mi_interrupt_);
-        rcp_.rdp_.SetMIPtr(&cpubus_.mi_interrupt_);
+        rcp_.ai_.SetInterruptCallback(
+            std::bind(&CPU::set_interrupt, this, InterruptType::AI, std::placeholders::_1));
+        rcp_.vi_.SetInterruptCallback(
+            std::bind(&CPU::set_interrupt, this, InterruptType::VI, std::placeholders::_1));
+        rcp_.rsp_.SetInterruptCallback(
+            std::bind(&CPU::set_interrupt, this, InterruptType::SP, std::placeholders::_1));
+        rcp_.rdp_.SetInterruptCallback(
+            std::bind(&CPU::set_interrupt, this, InterruptType::DP, std::placeholders::_1));
     }
 
     void CPU::Reset()
     {
         pc_ = 0xFFFF'FFFF'BFC0'0000;
         next_pc_ = pc_ + 4;
+        should_service_interrupt_ = false;
         for (auto& reg : gpr_regs_)
         {
             reg.UD = 0;
@@ -886,28 +1080,28 @@ namespace hydra::N64
 
     void CPU::Tick()
     {
-        if (rcp_.ai_.IsHungry())
+        ++cpubus_.time_;
+        cpubus_.time_ &= 0x1FFFFFFFF;
+        if (cpubus_.time_ == (cp0_regs_[CP0_COMPARE].UD << 1)) [[unlikely]]
         {
-            ++cpubus_.time_;
-            cpubus_.time_ &= 0x1FFFFFFFF;
-            if (cpubus_.time_ == (cp0_regs_[CP0_COMPARE].UD << 1)) [[unlikely]]
-            {
-                CP0Cause.IP7 = true;
-            }
-            gpr_regs_[0].UD = 0;
-            prev_branch_ = was_branch_;
-            was_branch_ = false;
-            instruction_.full = load_word(pc_);
-            if (check_interrupts())
-            {
-                return;
-            }
-            log_cpu_state<CPU_LOGGING>(true, 30'000'000, 0);
-            prev_pc_ = pc_;
-            pc_ = next_pc_;
-            next_pc_ += 4;
-            execute_instruction();
+            CP0Cause.IP7 = true;
+            update_interrupt_check();
         }
+        gpr_regs_[0].UD = 0;
+        prev_branch_ = was_branch_;
+        was_branch_ = false;
+        TranslatedAddress paddr = translate_vaddr(pc_);
+        uint8_t* ptr = cpubus_.redirect_paddress(paddr.paddr);
+        instruction_.full = hydra::bswap32(*reinterpret_cast<uint32_t*>(ptr));
+        if (check_interrupts())
+        {
+            return;
+        }
+        log_cpu_state<CPU_LOGGING>(true, 30'000'000, 0);
+        prev_pc_ = pc_;
+        pc_ = next_pc_;
+        next_pc_ += 4;
+        execute_instruction();
     }
 
     void CPU::check_vi_interrupt()
@@ -915,21 +1109,13 @@ namespace hydra::N64
         if ((rcp_.vi_.vi_v_current_ & 0x3fe) == rcp_.vi_.vi_v_intr_)
         {
             Logger::Debug("Raising VI interrupt");
-            cpubus_.mi_interrupt_.VI = true;
+            set_interrupt(InterruptType::VI, true);
         }
     }
 
     bool CPU::check_interrupts()
     {
-        bool mi_interrupt = cpubus_.mi_interrupt_.full & cpubus_.mi_mask_;
-        CP0Cause.IP2 = mi_interrupt;
-        bool interrupts_pending = cp0_regs_[CP0_CAUSE].UB._1 & CP0Status.IM;
-        bool interrupts_enabled = CP0Status.IE;
-        bool currently_handling_exception = CP0Status.EXL;
-        bool currently_handling_error = CP0Status.ERL;
-        bool should_service_interrupt = interrupts_pending && interrupts_enabled &&
-                                        !currently_handling_exception && !currently_handling_error;
-        if (should_service_interrupt)
+        if (should_service_interrupt_)
         {
             throw_exception(pc_, ExceptionType::Interrupt);
             return true;
@@ -1002,6 +1188,7 @@ namespace hydra::N64
                     }
                     next_pc_ = pc_ + 4;
                     llbit_ = 0;
+                    update_interrupt_check();
                     break;
                 }
                 case CP0Instruction::TLBWI:
@@ -1219,6 +1406,7 @@ namespace hydra::N64
         CP0Cause.ExCode = static_cast<uint8_t>(type);
         CP0Cause.CE = processor;
         CP0Status.EXL = true;
+        update_interrupt_check();
         switch (type)
         {
             case ExceptionType::CoprocessorUnusable:
@@ -2443,11 +2631,8 @@ namespace hydra::N64
                 return cpubus_.time_ >> 1;
             case CP0_CAUSE:
             {
-                // TODO: instead update whenever mi_interrupt changes
                 CP0CauseType newcause;
                 newcause.full = cp0_regs_[reg].UD;
-                bool interrupt = cpubus_.mi_interrupt_.full & cpubus_.mi_mask_;
-                newcause.IP2 = interrupt;
                 return newcause.full;
             }
             case CP0_RANDOM:
@@ -2545,6 +2730,7 @@ namespace hydra::N64
                 newcause.full = value;
                 CP0Cause.IP0 = newcause.IP0;
                 CP0Cause.IP1 = newcause.IP1;
+                update_interrupt_check();
                 break;
             }
             case CP0_COMPARE:
@@ -2584,6 +2770,7 @@ namespace hydra::N64
             {
                 CP0Status.full &= ~0xFF57FFFF;
                 CP0Status.full |= value & 0xFF57FFFF;
+                update_interrupt_check();
                 break;
             }
             case CP0_PARITYERROR:
@@ -2652,6 +2839,7 @@ namespace hydra::N64
                 newcause.full = value;
                 CP0Cause.IP0 = newcause.IP0;
                 CP0Cause.IP1 = newcause.IP1;
+                update_interrupt_check();
                 break;
             }
 
@@ -3017,7 +3205,13 @@ namespace hydra::N64
         }
     }
 
-    enum { FMT_S = 16, FMT_D = 17, FMT_W = 20, FMT_L = 21 };
+    enum
+    {
+        FMT_S = 16,
+        FMT_D = 17,
+        FMT_W = 20,
+        FMT_L = 21
+    };
 
     bool CPU::check_fpu_exception()
     {

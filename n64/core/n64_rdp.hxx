@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <functional>
 #include <n64/core/n64_types.hxx>
 #include <utility>
 #include <vector>
@@ -44,15 +45,13 @@
 
 using persp_func_ptr = std::pair<int32_t, int32_t> (*)(int32_t, int32_t, int32_t);
 
-class N64Debugger;
-class MmioViewer;
-
 namespace hydra::N64
 {
     class RSP;
     union LoadTileCommand;
 
-    enum class RDPCommandType {
+    enum class RDPCommandType
+    {
 #define X(name, opcode, length) name = opcode,
         RDP_COMMANDS
 #undef X
@@ -103,7 +102,14 @@ namespace hydra::N64
 
     static_assert(sizeof(RDPStatusWrite) == sizeof(uint32_t));
 
-    enum class Format { RGBA, YUV, CI, IA, I };
+    enum class Format
+    {
+        RGBA,
+        YUV,
+        CI,
+        IA,
+        I
+    };
 
     struct TileDescriptor
     {
@@ -143,6 +149,7 @@ namespace hydra::N64
 
     struct Span
     {
+        int32_t y;
         int32_t min_x, max_x;
         bool valid = false;
         int32_t r, g, b, a;
@@ -165,7 +172,13 @@ namespace hydra::N64
         bool right_major;
     };
 
-    enum class CoverageMode { Clamp = 0, Wrap = 1, Zap = 2, Save = 3 };
+    enum class CoverageMode
+    {
+        Clamp = 0,
+        Wrap = 1,
+        Zap = 2,
+        Save = 3
+    };
 
     class RDP final
     {
@@ -173,9 +186,9 @@ namespace hydra::N64
         RDP();
         void InstallBuses(uint8_t* rdram_ptr, uint8_t* spmem_ptr);
 
-        void SetMIPtr(MIInterrupt* ptr)
+        void SetInterruptCallback(std::function<void(bool)> callback)
         {
-            mi_interrupt_ = ptr;
+            interrupt_callback_ = callback;
         }
 
         uint32_t ReadWord(uint32_t addr);
@@ -189,7 +202,6 @@ namespace hydra::N64
         RDPStatus status_;
         uint8_t* rdram_ptr_ = nullptr;
         uint8_t* spmem_ptr_ = nullptr;
-        MIInterrupt* mi_interrupt_ = nullptr;
         uint32_t start_address_;
         uint32_t end_address_;
         uint32_t current_address_;
@@ -251,6 +263,7 @@ namespace hydra::N64
         std::array<uint32_t, 0x4000> z_decompress_lut_;
         std::array<uint32_t, 0x40000> z_compress_lut_;
         std::array<uint16_t, 1024> coverage_mask_buffer_;
+        std::function<void(bool)> interrupt_callback_;
 
         bool z_update_en_ = false;
         bool z_compare_en_ = false;
@@ -273,7 +286,13 @@ namespace hydra::N64
         uint32_t seed_;
         persp_func_ptr perspective_correction_func_;
 
-        enum CycleType { Cycle1, Cycle2, Copy, Fill } cycle_type_;
+        enum CycleType
+        {
+            Cycle1,
+            Cycle2,
+            Copy,
+            Fill
+        } cycle_type_;
 
         void process_commands();
         void execute_command(const std::vector<uint64_t>& data);
@@ -316,7 +335,5 @@ namespace hydra::N64
         void render_primitive(const Primitive& primitive);
 
         friend class hydra::N64::RSP;
-        friend class ::N64Debugger;
-        friend class ::MmioViewer;
     };
 } // namespace hydra::N64

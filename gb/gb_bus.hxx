@@ -15,9 +15,9 @@
 #include <unordered_map>
 #include <vector>
 
-namespace hydra::Gameboy
+namespace hydra
 {
-    class Gameboy_TKPWrapper;
+    class HydraCore_Gameboy;
 }
 
 namespace hydra::Gameboy
@@ -135,6 +135,6 @@ namespace hydra::Gameboy
         void disable_dac(int channel_no);
 
         friend class PPU;
-        friend class hydra::Gameboy::Gameboy_TKPWrapper;
+        friend class hydra::HydraCore_Gameboy;
     };
 } // namespace hydra::Gameboy

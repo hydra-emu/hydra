@@ -1,14 +1,12 @@
 #include "settingswindow.hxx"
 #include "keypicker.hxx"
-#include <emulator_factory.hxx>
-#include <emulator_settings.hxx>
 #include <emulator_types.hxx>
 #include <QCheckBox>
 #include <QFileDialog>
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
-#define emu_data(emu_type) EmulatorSettings::GetEmulatorData(emu_type).UserData
+#include <settings.hxx>
 
 SettingsWindow::SettingsWindow(bool& open, QWidget* parent)
     : open_(open), QWidget(parent, Qt::Window)
@@ -79,16 +77,16 @@ void SettingsWindow::create_tabs()
         tab_show_->addTab(key_picker, "Input");
     }
     {
-        auto dmg_path = emu_data(hydra::EmuType::Gameboy).Get("dmg_path");
-        auto cgb_path = emu_data(hydra::EmuType::Gameboy).Get("cgb_path");
-        auto skip_bios_val = emu_data(hydra::EmuType::Gameboy).Get("skip_bios") == "true";
+        // auto dmg_path = emu_data(hydra::EmuType::Gameboy).Get("dmg_path");
+        // auto cgb_path = emu_data(hydra::EmuType::Gameboy).Get("cgb_path");
+        // auto skip_bios_val = emu_data(hydra::EmuType::Gameboy).Get("skip_bios") == "true";
         QGridLayout* gb_layout = new QGridLayout;
         dmg_bios_path_ = new QLineEdit;
         dmg_bios_path_->setReadOnly(true);
-        dmg_bios_path_->setText(dmg_path.c_str());
+        dmg_bios_path_->setText(Settings::Get("gb_dmg_path").c_str());
         cgb_bios_path_ = new QLineEdit;
         cgb_bios_path_->setReadOnly(true);
-        cgb_bios_path_->setText(cgb_path.c_str());
+        cgb_bios_path_->setText(Settings::Get("gb_cgb_path").c_str());
         QPushButton* dmg_file_pick = new QPushButton;
         dmg_file_pick->setText("...");
         connect(dmg_file_pick, SIGNAL(clicked()), this, SLOT(on_dmg_click()));
@@ -103,7 +101,7 @@ void SettingsWindow::create_tabs()
         gb_layout->addWidget(cgb_bios_path_, 1, 1);
         gb_layout->addWidget(cgb_file_pick, 1, 2);
         QCheckBox* skip_bios = new QCheckBox("Skip bios?");
-        skip_bios->setChecked(skip_bios_val);
+        skip_bios->setChecked(Settings::Get("gb_skip_bios") == "true");
         connect(skip_bios, SIGNAL(stateChanged(int)), this, SLOT(on_gb_skip_bios_click(int)));
         gb_layout->addWidget(skip_bios, 2, 0);
         QWidget* empty = new QWidget();
@@ -119,7 +117,7 @@ void SettingsWindow::create_tabs()
         // nes_tab->setLayout(nes_layout);
         // tab_show_->addTab(nes_tab, "NES");
     } {
-        auto ipl_path = emu_data(hydra::EmuType::N64).Get("IPLPath");
+        auto ipl_path = Settings::Get("n64_ipl_path");
         ipl_path_ = new QLineEdit;
         ipl_path_->setReadOnly(true);
         ipl_path_->setText(ipl_path.c_str());
@@ -145,29 +143,41 @@ void SettingsWindow::create_tabs()
 
 void SettingsWindow::on_dmg_click()
 {
-    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
-    emu_data(hydra::EmuType::Gameboy).Set("dmg_path", path.toStdString());
-    dmg_bios_path_->setText(path);
+    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)",
+                                             nullptr, QFileDialog::ReadOnly);
+    if (!path.isEmpty())
+    {
+        Settings::Set("gb_dmg_path", path.toStdString());
+        dmg_bios_path_->setText(path);
+    }
 }
 
 void SettingsWindow::on_cgb_click()
 {
-    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)");
-    emu_data(hydra::EmuType::Gameboy).Set("cgb_path", path.toStdString());
-    cgb_bios_path_->setText(path);
+    auto path = QFileDialog::getOpenFileName(this, tr("Open ROM"), "", "Binary files (*.bin)",
+                                             nullptr, QFileDialog::ReadOnly);
+    if (!path.isEmpty())
+    {
+        Settings::Set("gb_cgb_path", path.toStdString());
+        cgb_bios_path_->setText(path);
+    }
 }
 
 void SettingsWindow::on_gb_skip_bios_click(int state)
 {
     auto str = (state == Qt::CheckState::Checked) ? "true" : "false";
-    emu_data(hydra::EmuType::Gameboy).Set("skip_bios", str);
+    Settings::Set("gb_skip_bios", str);
 }
 
 void SettingsWindow::on_ipl_click()
 {
-    auto path = QFileDialog::getOpenFileName(this, tr("Open IPL"), "", "Binary files (*.bin)");
-    emu_data(hydra::EmuType::N64).Set("IPLPath", path.toStdString());
-    ipl_path_->setText(path);
+    auto path = QFileDialog::getOpenFileName(this, tr("Open IPL"), "", "Binary files (*.bin)",
+                                             nullptr, QFileDialog::ReadOnly);
+    if (!path.isEmpty())
+    {
+        Settings::Set("n64_ipl_path", path.toStdString());
+        ipl_path_->setText(path);
+    }
 }
 
 void SettingsWindow::on_tab_change()

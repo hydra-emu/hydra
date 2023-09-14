@@ -2,9 +2,18 @@
 #include <iostream>
 #include <n64/core/n64_impl.hxx>
 
+// TODO: cmake option
+// #define PROFILING
+#ifdef PROFILING
+#include <valgrind/callgrind.h>
+#else
+#define CALLGRIND_START_INSTRUMENTATION
+#define CALLGRIND_STOP_INSTRUMENTATION
+#endif
+
 namespace hydra::N64
 {
-    N64::N64(bool& should_draw) : cpubus_(rcp_), cpu_(cpubus_, rcp_, should_draw)
+    N64::N64() : cpubus_(rcp_), cpu_(cpubus_, rcp_)
     {
         Reset();
     }
@@ -23,8 +32,9 @@ namespace hydra::N64
         return false;
     }
 
-    void N64::Update()
+    void N64::RunFrame()
     {
+        CALLGRIND_START_INSTRUMENTATION;
         static int cycles = 0;
         for (int f = 0; f < 1; f++)
         { // fields
@@ -60,16 +70,7 @@ namespace hydra::N64
             }
             cpu_.check_vi_interrupt();
         }
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::high_resolution_clock::now() - cpu_.last_second_time_)
-                .count() >= 1000)
-        {
-            cpu_.last_second_time_ = std::chrono::high_resolution_clock::now();
-            cpu_.vis_per_second_ = rcp_.vi_.vis_counter_;
-            // printf("VIs: %d\n", cpu_.vis_per_second_);
-            rcp_.vi_.vis_counter_ = 0;
-        }
-        cpu_.should_draw_ = rcp_.Redraw();
+        CALLGRIND_STOP_INSTRUMENTATION;
     }
 
     void N64::Reset()
@@ -85,4 +86,10 @@ namespace hydra::N64
         cpu_.mouse_x_ = x;
         cpu_.mouse_y_ = y;
     }
+
+    void N64::SetAudioCallback(std::function<void(const std::vector<int16_t>&, int)> callback)
+    {
+        rcp_.ai_.SetAudioCallback(callback);
+    }
+
 } // namespace hydra::N64

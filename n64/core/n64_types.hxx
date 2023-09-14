@@ -285,7 +285,8 @@ namespace hydra::N64
         "tge",    "tgeu",   "tlt",    "tltu",   "teq",     "s65err", "tne",    "s67err",
         "dsll",   "s71err", "dsrl",   "dsra",   "dsll32",  "s75err", "dsrl32", "dsra32",
     };
-    enum class InstructionType {
+    enum class InstructionType
+    {
         SPECIAL,
         REGIMM,
         J,

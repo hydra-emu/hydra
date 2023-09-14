@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <emulator.hxx>
+#include <core.hxx>
 #include <gb/gb_addresses.hxx>
 #include <gb/gb_apu.hxx>
 #include <gb/gb_apu_ch.hxx>
@@ -13,24 +13,8 @@
 
 namespace hydra
 {
-    namespace Applications
+    class HydraCore_Gameboy : public Core
     {
-        class GameboyRomData;
-    }
-
-    namespace Gameboy::QA
-    {
-        class TestGameboy;
-    }
-} // namespace hydra
-class MmioViewer;
-
-namespace hydra::Gameboy
-{
-    class Gameboy_TKPWrapper : public Emulator
-    {
-        TKP_EMULATOR(Gameboy_TKPWrapper);
-
     private:
         using GameboyPalettes = std::array<std::array<float, 3>, 4>;
         using GameboyKeys = std::array<uint32_t, 4>;
@@ -45,11 +29,8 @@ namespace hydra::Gameboy
         using GameboyBreakpoint = hydra::Gameboy::Utils::GameboyBreakpoint;
 
     public:
-        // Used by automated tests
-        void Update()
-        {
-            update();
-        }
+        HydraCore_Gameboy();
+        bool LoadFile(const std::string& type, const std::string& path) override;
 
     private:
         ChannelArrayPtr channel_array_ptr_;
@@ -61,8 +42,7 @@ namespace hydra::Gameboy
         GameboyKeys direction_keys_;
         GameboyKeys action_keys_;
         uint8_t &joypad_, &interrupt_flag_;
-        inline void update_audio_sync();
-        friend class hydra::Gameboy::QA::TestGameboy;
-        friend class ::MmioViewer;
+
+        void run_frame() override;
     };
-} // namespace hydra::Gameboy
+} // namespace hydra

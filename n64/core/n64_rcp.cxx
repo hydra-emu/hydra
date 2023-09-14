@@ -10,8 +10,4 @@ namespace hydra::N64
         vi_.Reset();
     }
 
-    bool RCP::Redraw()
-    {
-        return vi_.Redraw();
-    }
 } // namespace hydra::N64
