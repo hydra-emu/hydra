@@ -755,14 +755,14 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    framebuffer_color_ = rgba16_to_rgba32(*ptr);
-                    *ptr = rgba32_to_rgba16(blender(1));
+                    framebuffer_color_ = rgba16_to_rgba32(hydra::bswap16(*ptr));
+                    *ptr = hydra::bswap16(rgba32_to_rgba16(blender(1)));
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    framebuffer_color_ = *ptr;
-                    *ptr = blender(1);
+                    framebuffer_color_ = hydra::bswap32(*ptr);
+                    *ptr = hydra::bswap32(blender(1));
                 }
                 break;
             }
@@ -773,14 +773,14 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    framebuffer_color_ = rgba16_to_rgba32(*ptr);
-                    *ptr = rgba32_to_rgba16(blender(0));
+                    framebuffer_color_ = rgba16_to_rgba32(hydra::bswap16(*ptr));
+                    *ptr = hydra::bswap16(rgba32_to_rgba16(blender(0)));
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    framebuffer_color_ = *ptr;
-                    *ptr = blender(0);
+                    framebuffer_color_ = hydra::bswap32(*ptr);
+                    *ptr = hydra::bswap32(blender(0));
                 }
                 break;
             }
@@ -794,12 +794,12 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    *ptr = rgba32_to_rgba16(texel_color_[0]);
+                    *ptr = hydra::bswap16(rgba32_to_rgba16(texel_color_[0]));
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    *ptr = texel_color_[0];
+                    *ptr = hydra::bswap32(texel_color_[0]);
                 }
                 break;
             }
@@ -808,12 +808,12 @@ namespace hydra::N64
                 if (framebuffer_pixel_size_ == 16)
                 {
                     uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-                    *ptr = (x & 1) ? fill_color_16_0_ : fill_color_16_1_;
+                    *ptr = hydra::bswap16((x & 1) ? fill_color_16_0_ : fill_color_16_1_);
                 }
                 else
                 {
                     uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-                    *ptr = fill_color_32_;
+                    *ptr = hydra::bswap32(fill_color_32_);
                 }
                 break;
             }
@@ -1013,7 +1013,8 @@ namespace hydra::N64
         uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) + zbuffer_dram_address_ +
                             (y * framebuffer_width_ + x) * 2;
         uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
-        uint32_t decompressed = z_decompress_lut_[(*ptr >> 2) & 0x3FFF];
+        uint16_t z_compressed = (hydra::bswap16(*ptr) >> 2) & 0x3FFF;
+        uint32_t decompressed = z_decompress_lut_[z_compressed];
         return decompressed;
     }
 
@@ -1023,7 +1024,7 @@ namespace hydra::N64
         uint16_t* ptr = reinterpret_cast<uint16_t*>(rdram_ptr_ + address);
         bool hidden1 = rdram_9th_bit_[address];
         bool hidden2 = rdram_9th_bit_[address + 1];
-        uint8_t dz_c = (*ptr & 0b11) | (hidden1 << 2) | (hidden2 << 3);
+        uint8_t dz_c = (hydra::bswap16(*ptr) & 0b11) | (hidden1 << 2) | (hidden2 << 3);
         return dz_decompress(dz_c);
     }
 
@@ -1032,8 +1033,10 @@ namespace hydra::N64
         uint8_t dz_c = dz_compress(dz);
         uintptr_t address = zbuffer_dram_address_ + (y * framebuffer_width_ + x) * 2;
         uint16_t* ptr = reinterpret_cast<uint16_t*>(rdram_ptr_ + address);
-        *ptr &= 0xFFFC;
-        *ptr |= dz_c & 0b11;
+        uint16_t old = hydra::bswap16(*ptr);
+        old &= 0xFFFC;
+        old |= dz_c & 0b11;
+        *ptr = hydra::bswap16(old);
         rdram_9th_bit_[address] = (dz_c >> 2) & 0b1;
         rdram_9th_bit_[address + 1] = (dz_c >> 3) & 0b1;
     }
@@ -1047,7 +1050,7 @@ namespace hydra::N64
             uintptr_t address = framebuffer_dram_address_ + (y * framebuffer_width_ + x) * 2;
             bool bit0 = rdram_9th_bit_[address];
             bool bit1 = rdram_9th_bit_[address + 1];
-            bool bit2 = *reinterpret_cast<uint16_t*>(&rdram_ptr_[address]) & 0b1;
+            bool bit2 = hydra::bswap16(*reinterpret_cast<uint16_t*>(&rdram_ptr_[address])) & 0b1;
             coverage = (bit2 << 2) | (bit1 << 1) | bit0;
         }
         else
@@ -1056,7 +1059,7 @@ namespace hydra::N64
             uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) +
                                 framebuffer_dram_address_ + (y * framebuffer_width_ + x) * 4;
             uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-            coverage = (*ptr >> 29) & 0b111;
+            coverage = (hydra::bswap32(*ptr) >> 29) & 0b111;
         }
 
         coverage += 1;
@@ -1104,16 +1107,20 @@ namespace hydra::N64
             rdram_9th_bit_[address] = bit0;
             rdram_9th_bit_[address + 1] = bit1;
             uint16_t* ptr = reinterpret_cast<uint16_t*>(&rdram_ptr_[address]);
-            *ptr &= 0xfffc;
-            *ptr |= bit2;
+            uint16_t old = hydra::bswap16(*ptr);
+            old &= 0xFFFC;
+            old |= bit2;
+            *ptr = hydra::bswap16(old);
         }
         else
         {
             uintptr_t address = reinterpret_cast<uintptr_t>(rdram_ptr_) +
                                 framebuffer_dram_address_ + (y * framebuffer_width_ + x) * 4;
             uint32_t* ptr = reinterpret_cast<uint32_t*>(address);
-            *ptr &= 0x1fffffff;
-            *ptr |= coverage << 29;
+            uint32_t old = hydra::bswap32(*ptr);
+            old &= 0x1FFFFFFF;
+            old |= coverage << 29;
+            *ptr = hydra::bswap32(old);
         }
     }
 
@@ -1124,7 +1131,7 @@ namespace hydra::N64
                             (y * framebuffer_width_ + x) * 2;
         uint16_t* ptr = reinterpret_cast<uint16_t*>(address);
         uint16_t compressed = z_compress_lut_[z & 0x3FFFF];
-        *ptr = compressed;
+        *ptr = hydra::bswap16(compressed);
     }
 
     constexpr std::array<uint8_t, 8> z_shifts = {6, 5, 4, 3, 2, 1, 0, 0};
