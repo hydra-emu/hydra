@@ -102,8 +102,6 @@ set(N64_FILES
     n64/core/n64_rcp.cxx
     n64/core/n64_rsp.cxx
     n64/core/n64_rdp.cxx
-    n64/core/n64_rsp_su.cxx
-    n64/core/n64_rsp_vu.cxx
     n64/core/n64_vi.cxx
     n64/core/n64_ai.cxx
 )
