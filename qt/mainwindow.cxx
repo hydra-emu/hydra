@@ -1,12 +1,13 @@
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
-#include "emulator_tool_factory.hxx"
 #include "qthelper.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
-#include <emulator_settings.hxx>
 #include <error_factory.hxx>
+#include <fstream>
 #include <iostream>
+#include <json.hpp>
+#include <log.hxx>
 #include <QApplication>
 #include <QClipboard>
 #include <QGridLayout>
@@ -16,24 +17,38 @@
 #include <QMessageBox>
 #include <QSurfaceFormat>
 #include <QTimer>
+#include <settings.hxx>
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), tools_{}, tools_open_{}
+void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
 {
-    setup_emulator_specific();
+    MainWindow* window = static_cast<MainWindow*>(device->pUserData);
+    std::unique_lock<std::mutex> lock(window->audio_mutex_);
+    if (window->queued_audio_.empty())
+    {
+        return;
+    }
+    frames = std::min(frames * 2, static_cast<ma_uint32>(window->queued_audio_.size()));
+    std::memcpy(out, window->queued_audio_.data(), frames * sizeof(int16_t));
+    window->queued_audio_.erase(window->queued_audio_.begin(),
+                                window->queued_audio_.begin() + frames);
+}
+
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
+{
     QWidget* widget = new QWidget;
     setCentralWidget(widget);
+
     QVBoxLayout* layout = new QVBoxLayout;
-    layout->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     layout->setContentsMargins(5, 5, 5, 5);
     screen_ = new ScreenWidget(this);
-    screen_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    screen_->setVisible(true);
-    screen_->setMinimumSize(1, 1);
+    screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
+    screen_->setMouseTracking(true);
     layout->addWidget(screen_);
     widget->setLayout(layout);
     create_actions();
     create_menus();
-    QString message = tr("A context menu is available by right-clicking");
+
+    QString message = tr("Welcome to hydra!");
     statusBar()->showMessage(message);
     setMinimumSize(160, 160);
     resize(640, 480);
@@ -41,21 +56,48 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), tools_{}, tools_o
     setWindowIcon(QIcon(":/images/hydra.png"));
 
     QTimer* timer = new QTimer(this);
-    timer->start(16);
-    connect(timer, SIGNAL(timeout()), this, SLOT(redraw_screen()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(emulator_frame()));
+    timer->start();
+
+    initialize_emulator_data();
+    initialize_audio();
     enable_emulation_actions(false);
-    screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
-    screen_->setMouseTracking(true);
 }
 
 MainWindow::~MainWindow()
 {
+    ma_device_uninit(&sound_device_);
     stop_emulator();
 }
 
 void MainWindow::OpenFile(const std::string& file)
 {
     open_file_impl(file);
+}
+
+void MainWindow::initialize_audio()
+{
+    ma_context context;
+    ma_context_config context_config = ma_context_config_init();
+    context_config.threadPriority = ma_thread_priority_realtime;
+    if (ma_context_init(NULL, 0, &context_config, &context) != MA_SUCCESS)
+    {
+        Logger::Fatal("Failed to initialize audio context");
+    }
+
+    ma_device_config config = ma_device_config_init(ma_device_type_playback);
+    config.playback.format = ma_format_s16;
+    config.playback.channels = 2;
+    config.sampleRate = 48000;
+    config.periodSizeInFrames = 48000 / 60;
+    config.dataCallback = hungry_for_more;
+    config.pUserData = this;
+    if (ma_device_init(NULL, &config, &sound_device_) != MA_SUCCESS)
+    {
+        Logger::Fatal("Failed to open audio device");
+    }
+
+    ma_device_start(&sound_device_);
 }
 
 void MainWindow::create_actions()
@@ -80,7 +122,7 @@ void MainWindow::create_actions()
     connect(stop_act_, &QAction::triggered, this, &MainWindow::stop_emulator);
     reset_act_ = new QAction(tr("&Reset"), this);
     reset_act_->setShortcut(Qt::CTRL | Qt::Key_R);
-    reset_act_->setStatusTip(tr("Soft reset emulator"));
+    reset_act_->setStatusTip(tr("Reset emulator"));
     connect(reset_act_, &QAction::triggered, this, &MainWindow::reset_emulator);
     screenshot_act_ = new QAction(tr("S&creenshot"), this);
     screenshot_act_->setShortcut(Qt::Key_F12);
@@ -95,24 +137,6 @@ void MainWindow::create_actions()
     shaders_act_->setStatusTip("Open the shader editor");
     shaders_act_->setIcon(QIcon(":/images/shaders.png"));
     connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
-    tools_actions_[ET_Debugger] = new QAction(tr("&Debugger"), this);
-    tools_actions_[ET_Debugger]->setShortcut(Qt::Key_F2);
-    tools_actions_[ET_Debugger]->setStatusTip("Open the debugger");
-    tools_actions_[ET_Debugger]->setIcon(QIcon(":/images/debugger.png"));
-    connect(tools_actions_[ET_Debugger], &QAction::triggered, this,
-            std::bind(&MainWindow::open_tool, this, ET_Debugger));
-    tools_actions_[ET_Tracelogger] = new QAction(tr("&Tracelogger"), this);
-    tools_actions_[ET_Tracelogger]->setShortcut(Qt::Key_F3);
-    tools_actions_[ET_Tracelogger]->setStatusTip("Open the tracelogger");
-    tools_actions_[ET_Tracelogger]->setIcon(QIcon(":/images/tracelogger.png"));
-    connect(tools_actions_[ET_Tracelogger], &QAction::triggered, this,
-            std::bind(&MainWindow::open_tool, this, ET_Tracelogger));
-    tools_actions_[ET_MmioViewer] = new QAction(tr("&Mmio Viewer"), this);
-    tools_actions_[ET_MmioViewer]->setShortcut(Qt::Key_F4);
-    tools_actions_[ET_MmioViewer]->setStatusTip("Open the MMIO viewer");
-    tools_actions_[ET_MmioViewer]->setIcon(QIcon(":/images/mmioviewer.png"));
-    connect(tools_actions_[ET_MmioViewer], &QAction::triggered, this,
-            std::bind(&MainWindow::open_tool, this, ET_MmioViewer));
 }
 
 void MainWindow::create_menus()
@@ -129,37 +153,32 @@ void MainWindow::create_menus()
     emulation_menu_->addAction(stop_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
     tools_menu_->addAction(shaders_act_);
-    tools_menu_->addSeparator();
-    for (size_t i = 0; i < EmulatorToolsSize; i++)
-    {
-        tools_menu_->addAction(tools_actions_[i]);
-    }
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    if (emulator_)
-    {
-        emulator_->HandleKeyDown(event->key());
-    }
+    // if (emulator_)
+    // {
+    //     emulator_->HandleKeyDown(event->key());
+    // }
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    if (emulator_)
-    {
-        emulator_->HandleKeyUp(event->key());
-    }
+    // if (emulator_)
+    // {
+    //     emulator_->HandleKeyUp(event->key());
+    // }
 }
 
 void MainWindow::on_mouse_move(QMouseEvent* event)
 {
-    if (emulator_)
-    {
-        emulator_->HandleMouseMove(event->position().x(), event->position().y());
-    }
+    // if (emulator_)
+    // {
+    //     emulator_->HandleMouseMove(event->position().x(), event->position().y());
+    // }
 }
 
 void MainWindow::open_file()
@@ -171,8 +190,7 @@ void MainWindow::open_file()
         extensions = "All supported types (";
         for (int i = 0; i < EmuTypeSize; i++)
         {
-            const auto& emulator_data =
-                EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
+            const auto& emulator_data = hydra::UiCommon::EmulatorData[i];
             indep += emulator_data.Name.c_str();
             indep += " (";
             for (const auto& str : emulator_data.Extensions)
@@ -189,61 +207,48 @@ void MainWindow::open_file()
         extensions += ");;";
         extensions += indep;
     }
-    std::string lastpath = "";
-    if (EmulatorSettings::GetGeneralSettings().Has("last_path"))
-    {
-        lastpath = EmulatorSettings::GetGeneralSettings().Get("last_path");
-    }
-    std::string path = QFileDialog::getOpenFileName(this, tr("Open ROM"),
-                                                    QString::fromStdString(lastpath), extensions)
-                           .toStdString();
+    std::string last_path = Settings::Get("last_path");
+    std::string path =
+        QFileDialog::getOpenFileName(this, tr("Open ROM"), QString::fromStdString(last_path),
+                                     extensions, nullptr, QFileDialog::ReadOnly)
+            .toStdString();
     if (path.empty())
     {
         return;
     }
-    open_file_impl(path);
+    qt_may_throw(std::bind(&MainWindow::open_file_impl, this, path));
 }
 
 void MainWindow::open_file_impl(const std::string& path)
 {
+    std::unique_lock<std::mutex> elock(emulator_mutex_);
     std::filesystem::path pathfs(path);
+
     if (!std::filesystem::is_regular_file(pathfs))
     {
+        Logger::Warn("Failed to open file: {}", path);
         return;
     }
-    std::string dirpath = pathfs.parent_path().string();
-    EmulatorSettings::GetGeneralSettings().Set("last_path", dirpath);
-    close_tools();
-    Logger::ClearWarnings();
-    auto type = hydra::EmulatorFactory::GetEmulatorType(path);
-    {
-        stop_emulator();
-        auto emulator = hydra::EmulatorFactory::Create(type);
-        std::swap(emulator, emulator_);
-        // Old emulator is destroyed here
-    }
-    if (!emulator_->LoadFromFile(path))
-        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
-    screen_->setMinimumSize(emulator_->GetWidth(), emulator_->GetHeight());
-    screen_->InitializeTexture(emulator_->GetWidth(), emulator_->GetHeight(), GL_UNSIGNED_BYTE,
-                               emulator_->GetScreenData());
-    screen_->show();
-    emulator_->Paused = pause_act_->isChecked();
-    auto func = [&]() { emulator_->Start(); };
-    emulator_thread_ = std::thread(func);
-    emulator_thread_.detach();
-    emulator_type_ = type;
-    enable_emulation_actions(true);
-    for (size_t i = 0; i < tools_.size(); i++)
-    {
-        if (tools_[i])
-        {
-            delete tools_[i];
-        }
-        tools_[i] = nullptr;
-    }
 
-    std::fill(std::begin(tools_open_), std::end(tools_open_), false);
+    stop_emulator();
+    Settings::Set("last_path", pathfs.parent_path().string());
+    Logger::ClearWarnings();
+    auto type = hydra::UiCommon::GetEmulatorType(path);
+    emulator_type_ = type;
+    emulator_ = hydra::UiCommon::Create(type);
+    if (!emulator_)
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
+    emulator_->SetVideoCallback(
+        std::bind(&MainWindow::video_callback, this, std::placeholders::_1));
+    emulator_->SetAudioCallback(
+        std::bind(&MainWindow::audio_callback, this, std::placeholders::_1));
+    emulator_->SetPollInputCallback(std::bind(&MainWindow::poll_input_callback, this));
+    emulator_->SetReadInputCallback(
+        std::bind(&MainWindow::read_input_callback, this, std::placeholders::_1));
+    if (!emulator_->LoadFile("rom", path))
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
+    enable_emulation_actions(true);
+    paused_ = false;
 }
 
 void MainWindow::open_settings()
@@ -269,38 +274,10 @@ void MainWindow::open_shaders()
     });
 }
 
-void MainWindow::open_tool(EmulatorTool tool)
-{
-    qt_may_throw([this, tool]() {
-        if (!tools_open_[tool])
-        {
-            if (tools_[tool])
-            {
-                if (tools_[tool]->isHidden())
-                {
-                    tools_[tool]->show();
-                }
-                else
-                {
-                    tools_[tool]->hide();
-                }
-            }
-            else
-            {
-                auto qw = EmulatorToolFactory::CreateTool(tool, tools_open_[tool], emulator_type_,
-                                                          emulator_.get());
-                tools_[tool] = qw;
-            }
-        }
-    });
-}
-
 void MainWindow::screenshot()
 {
     // QApplication::clipboard()->setImage(texture_.toImage());
 }
-
-void MainWindow::close_tools() {}
 
 void MainWindow::open_about()
 {
@@ -317,223 +294,94 @@ void MainWindow::enable_emulation_actions(bool should)
     pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
-    std::fill(std::begin(tools_open_), std::end(tools_open_), false);
     if (should)
-    {
-        const auto& emulator_data = EmulatorSettings::GetEmulatorData(emulator_type_);
-        tools_actions_[ET_Debugger]->setEnabled(emulator_data.HasDebugger);
-        tools_actions_[ET_Tracelogger]->setEnabled(emulator_data.HasTracelogger);
-        tools_actions_[ET_MmioViewer]->setEnabled(true);
-    }
+        screen_->show();
+    else
+        screen_->hide();
 }
 
-void MainWindow::setup_emulator_specific()
+void MainWindow::initialize_emulator_data()
 {
-    QFile f(":/emulators.json");
-    if (!f.open(QIODevice::ReadOnly))
-    {
-        throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                               "Could not open default emulators.json");
-    }
-    auto mappings_path = hydra::EmulatorFactory::GetSavePath() + "mappings.json";
-    QString data_mappings;
-    if (std::filesystem::exists(mappings_path))
-    {
-        QFile f2(mappings_path.c_str());
-        if (!f2.open(QIODevice::ReadOnly))
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                   "Could not open mappings.json");
-        }
-        data_mappings = f2.readAll();
-    }
-    else
-    {
-        QFile f2(":/mappings.json");
-        if (!f2.open(QIODevice::ReadOnly))
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                   "Could not open default mappings.json");
-        }
-        data_mappings = f2.readAll();
-        std::ofstream ofs(mappings_path);
-        if (ofs.is_open())
-        {
-            ofs << data_mappings.toStdString();
-            ofs.close();
-        }
-        else
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                   "Could not open mappings.json");
-        }
-    }
-    QString options_str = f.readAll();
-    json json_options = json::parse(options_str.toStdString());
-    json json_mappings = json::parse(data_mappings.toStdString());
-    for (auto it = json_options.begin(); it != json_options.end(); ++it)
-    {
-        EmulatorData d;
-        json& o = it.value();
-        o.at("Name").get_to(d.Name);
-        o.at("SettingsFile").get_to(d.SettingsFile);
-        o.at("Extensions").get_to(d.Extensions);
-        o.at("HasDebugger").get_to(d.HasDebugger);
-        o.at("HasTracelogger").get_to(d.HasTracelogger);
-        o.at("LoggingOptions").get_to(d.LoggingOptions);
-        d.UserData = EmulatorUserData(hydra::EmulatorFactory::GetSavePath() + d.SettingsFile);
-        EmulatorData& constant_settings =
-            EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(std::stoi(it.key())));
-        constant_settings = d;
-    }
-    for (auto it = json_mappings.begin(); it != json_mappings.end(); ++it)
-    {
-        auto& d =
-            EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(std::stoi(it.key())));
-        json& o = it.value();
-        o.get_to(d.Mappings);
-    }
-    for (int i = 0; i < static_cast<int>(hydra::EmuType::EmuTypeSize); i++)
-    {
-        auto& d = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
-        for (auto& mapping : d.Mappings)
-        {
-            mapping.second =
-                std::to_string((QKeySequence::fromString(mapping.second.c_str()))[0].key());
-        }
-    }
-    // Write default emulator options if they dont exist
+    auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
+    Settings::Open(settings_path);
+
     for (int i = 0; i < EmuTypeSize; i++)
     {
-        const auto& e = EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
-        if (!std::filesystem::exists(hydra::EmulatorFactory::GetSavePath() + e.SettingsFile))
+        std::string file_name = hydra::serialize_emu_type(static_cast<hydra::EmuType>(i));
+        std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::tolower);
+        auto path = ":/emulators/" + file_name + ".json";
+
+        QFile file(QString::fromStdString(path));
+        if (!file.open(QIODevice::ReadOnly))
         {
-            std::ofstream ofs(hydra::EmulatorFactory::GetSavePath() + e.SettingsFile);
-            if (ofs.is_open())
-            {
-                QFile resource(std::string(":/" + e.SettingsFile).c_str());
-                if (!resource.open(QIODeviceBase::ReadOnly))
-                {
-                    throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                           "Could not open resource file");
-                }
-                ofs << resource.readAll().toStdString();
-                ofs.close();
-            }
-            else
-            {
-                throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                       "Could not create default options file");
-            }
+            Logger::Fatal("Failed to open emulator data file: {}", path);
         }
-    }
-    // Read emulator options
-    for (int i = 0; i < EmuTypeSize; i++)
-    {
-        std::map<std::string, std::string> temp;
-        EmulatorUserData& user_data =
-            EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).UserData;
-        auto path = hydra::EmulatorFactory::GetSavePath() +
-                    EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).SettingsFile;
-        std::ifstream ifs(path);
-        if (ifs.is_open())
-        {
-            std::stringstream buf;
-            buf << ifs.rdbuf();
-            json j = json::parse(buf.str());
-            for (auto it = j.begin(); it != j.end(); ++it)
-            {
-                user_data.Set(it.key(), it.value());
-            }
-        }
-        else
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                   "Could not open emulator options file");
-        }
-    }
-    // Read general options
-    {
-        auto path = hydra::EmulatorFactory::GetSavePath() + "settings.json";
-        std::map<std::string, std::string> temp;
-        if (std::filesystem::exists(path))
-        {
-            std::ifstream ifs(path);
-            if (ifs.is_open())
-            {
-                std::stringstream buf;
-                buf << ifs.rdbuf();
-                json json_general = json::parse(buf.str());
-                for (auto it = json_general.begin(); it != json_general.end(); ++it)
-                {
-                    temp[it.key()] = it.value();
-                }
-            }
-            else
-            {
-                throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                       "Could not open options file");
-            }
-        }
+
+        std::string file_data = file.readAll().toStdString();
+        using json = nlohmann::json;
+        json j = json::parse(file_data);
+        hydra::UiCommon::EmulatorData[i].Name = j["Name"].get<std::string>();
+        hydra::UiCommon::EmulatorData[i].Extensions =
+            j["Extensions"].get<std::vector<std::string>>();
     }
 }
 
 void MainWindow::pause_emulator()
 {
-    if (emulator_->Paused.load())
-    {
-        emulator_->Paused.store(false);
-        std::lock_guard lock(emulator_->StepMutex);
-        emulator_->Step.store(true);
-        emulator_->StepCV.notify_all();
-    }
-    else
-    {
-        emulator_->Paused.store(true);
-    }
+    paused_ = !paused_;
 }
 
 void MainWindow::reset_emulator()
 {
-    empty_screen();
-    emulator_->Reset();
+    if (emulator_)
+    {
+        std::unique_lock<std::mutex> alock(audio_mutex_);
+        queued_audio_.clear();
+        emulator_->Reset();
+    }
 }
 
 void MainWindow::stop_emulator()
 {
     if (emulator_)
     {
-        empty_screen();
-        emulator_->CloseAndWait();
+        std::unique_lock<std::mutex> alock(audio_mutex_);
+        queued_audio_.clear();
         emulator_.reset();
         enable_emulation_actions(false);
+        video_info_ = {};
     }
-    screen_->hide();
 }
 
-void MainWindow::redraw_screen()
+void MainWindow::emulator_frame()
 {
-    if (!emulator_)
+    std::unique_lock<std::mutex> elock(emulator_mutex_);
+    if (!emulator_ || paused_)
     {
         return;
     }
-    std::shared_lock lock(emulator_->DataMutex);
-    if (!emulator_->IsReadyToDraw())
-    {
-        return;
-    }
-    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), GL_UNSIGNED_BYTE,
-                    emulator_->GetScreenData());
-    screen_->update();
-    emulator_->IsReadyToDraw() = false;
+
+    std::future<void> frame = emulator_->RunFrameAsync();
+    frame.wait();
+
+    screen_->Redraw(video_info_.width, video_info_.height, video_info_.data.data());
 }
 
-void MainWindow::empty_screen()
+void MainWindow::video_callback(const hydra::VideoInfo& vi)
 {
-    std::vector<uint8_t> empty_screen;
-    empty_screen.resize(emulator_->GetWidth() * emulator_->GetHeight() * 4);
-    std::fill(empty_screen.begin(), empty_screen.end(), 0);
-    screen_->Redraw(emulator_->GetWidth(), emulator_->GetHeight(), GL_UNSIGNED_BYTE,
-                    empty_screen.data());
-    screen_->update();
+    video_info_ = vi;
+}
+
+void MainWindow::audio_callback(const hydra::AudioInfo& ai)
+{
+    std::unique_lock<std::mutex> lock(audio_mutex_);
+    queued_audio_.reserve(queued_audio_.size() + ai.data.size());
+    queued_audio_.insert(queued_audio_.end(), ai.data.begin(), ai.data.end());
+}
+
+void MainWindow::poll_input_callback() {}
+
+int8_t MainWindow::read_input_callback(const hydra::InputInfo& ii)
+{
+    return 0;
 }

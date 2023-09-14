@@ -2,10 +2,12 @@
 
 #include "screenwidget.hxx"
 #include <array>
-#include <emulator.hxx>
-#include <emulator_factory.hxx>
-#include <emulator_tool_factory.hxx>
+#include <core.hxx>
 #include <memory>
+#include <ui_common.hxx>
+#define MA_NO_DECODING
+#define MA_NO_ENCODING
+#include <miniaudio.h>
 #include <QFileDialog>
 #include <QLabel>
 #include <QMainWindow>
@@ -31,20 +33,23 @@ private:
     void open_settings();
     void open_about();
     void open_shaders();
-    void open_tool(EmulatorTool tool);
     void screenshot();
-    void close_tools();
 
     // Emulation functions
     void pause_emulator();
     void reset_emulator();
     void stop_emulator();
     void enable_emulation_actions(bool should);
-    void setup_emulator_specific();
-    void empty_screen();
+    void initialize_emulator_data();
+    void initialize_audio();
+
+    void video_callback(const hydra::VideoInfo& info);
+    void audio_callback(const hydra::AudioInfo& info);
+    void poll_input_callback();
+    int8_t read_input_callback(const hydra::InputInfo& info);
 
 private slots:
-    void redraw_screen();
+    void emulator_frame();
     void on_mouse_move(QMouseEvent* event);
 
 public:
@@ -64,14 +69,18 @@ public:
     QAction* screenshot_act_;
     QAction* shaders_act_;
     ScreenWidget* screen_;
-    std::shared_ptr<hydra::Emulator> emulator_;
+    ma_device sound_device_{};
+    std::unique_ptr<hydra::Core> emulator_;
+    std::vector<int16_t> queued_audio_;
     hydra::EmuType emulator_type_;
     std::thread emulator_thread_;
     bool settings_open_ = false;
     bool about_open_ = false;
     bool shaders_open_ = false;
+    bool paused_ = false;
+    std::mutex emulator_mutex_;
+    std::mutex audio_mutex_;
+    hydra::VideoInfo video_info_;
 
-    std::array<QWidget*, EmulatorToolsSize> tools_;
-    std::array<bool, EmulatorToolsSize> tools_open_;
-    std::array<QAction*, EmulatorToolsSize> tools_actions_;
+    friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
 };

@@ -1,8 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <bit>
 #include <cstdint>
 #include <cstring>
+#include <execution>
 #include <limits>
 #include <type_traits>
 #include <utility>
@@ -183,6 +185,17 @@ namespace hydra
         return __builtin_clz(num);
 #elif defined(__cpp_lib_bitops)
         return std::countl_zero(num);
+#endif
+    }
+
+    template <class Iterator, class Func>
+    constexpr void parallel_for(Iterator start, Iterator end, Func func)
+    {
+#ifdef __cpp_lib_execution
+        std::for_each(std::execution::par_unseq, start, end, func);
+#else
+        // TODO: implement parallel_for
+        std::for_each(start, end, func);
 #endif
     }
 

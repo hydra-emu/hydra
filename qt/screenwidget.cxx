@@ -21,6 +21,7 @@ static constexpr float vertices_uvs[] =
 ScreenWidget::ScreenWidget(QWidget* parent)
     : QOpenGLWidget(parent), vbo_(QOpenGLBuffer::Type::VertexBuffer)
 {
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 ScreenWidget::~ScreenWidget()
@@ -32,31 +33,14 @@ ScreenWidget::~ScreenWidget()
     delete program_;
 }
 
-void ScreenWidget::InitializeTexture(int width, int height, int bitdepth, void* tdata)
-{
-    glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, bitdepth, tdata);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    initialized_ = true;
-}
-
-void ScreenWidget::Redraw(int width, int height, int bitdepth, void* tdata)
+void ScreenWidget::Redraw(int width, int height, const void* tdata)
 {
     if (initialized_) [[likely]]
     {
-        if (bitdepth == GL_UNSIGNED_SHORT_5_5_5_1)
-        { // n64 (TODO: make a bool in this function that sets this)
-            glPixelStorei(GL_UNPACK_SWAP_BYTES, 1);
-        }
         glBindTexture(GL_TEXTURE_2D, texture_);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, bitdepth, tdata);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tdata);
         glBindTexture(GL_TEXTURE_2D, 0);
-        if (bitdepth == GL_UNSIGNED_SHORT_5_5_5_1)
-        {
-            glPixelStorei(GL_UNPACK_SWAP_BYTES, 0);
-        }
+        update();
     }
 }
 
@@ -143,7 +127,11 @@ void ScreenWidget::initializeGL()
     glClearColor(0.1, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     ResetProgram();
-    hide();
+    glBindTexture(GL_TEXTURE_2D, texture_);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    initialized_ = true;
 }
 
 void ScreenWidget::resizeGL(int, int) {}

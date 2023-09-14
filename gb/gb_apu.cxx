@@ -81,7 +81,6 @@ namespace hydra::Gameboy
             }
             else
             {
-                Logger::Warn("Sound buffer full, dropping samples");
             }
         }
     }

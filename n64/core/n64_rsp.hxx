@@ -1,10 +1,12 @@
 #pragma once
 
+#include <functional>
 #include <n64/core/n64_types.hxx>
 
 namespace hydra::N64
 {
-    enum class RSPHWIO {
+    enum class RSPHWIO
+    {
         Cache = 0,
         DramAddr = 1,
         RdLen = 2,
@@ -230,22 +232,9 @@ namespace hydra::N64
         RSP();
         void Tick();
         void Reset();
-
-        bool IsHalted()
-        {
-            return status_.halt;
-        }
-
-        void InstallBuses(uint8_t* rdram_ptr, RDP* rdp_ptr)
-        {
-            rdram_ptr_ = rdram_ptr;
-            rdp_ptr_ = rdp_ptr;
-        }
-
-        void SetMIPtr(MIInterrupt* ptr)
-        {
-            mi_interrupt_ = ptr;
-        }
+        bool IsHalted();
+        void InstallBuses(uint8_t* rdram_ptr, RDP* rdp_ptr);
+        void SetInterruptCallback(std::function<void(bool)> callback);
 
     private:
         using func_ptr = void (*)(RSP*);
@@ -396,7 +385,7 @@ namespace hydra::N64
         VUControl16 vco_, vcc_;
         VUControl8 vce_;
         int16_t div_in_, div_out_;
-        bool div_in_ready_;
+        bool div_in_ready_ = false;
         std::array<AccumulatorLane, 8> accumulator_;
 
         // TODO: some are probably not needed
@@ -407,16 +396,15 @@ namespace hydra::N64
         uint32_t rd_len_;
         uint32_t wr_len_;
         RSPStatus status_;
-        uint32_t pc_;
-        uint32_t next_pc_;
+        uint32_t pc_ = 0;
+        uint32_t next_pc_ = 4;
         bool semaphore_;
         uint8_t* rdram_ptr_ = nullptr;
-        MIInterrupt* mi_interrupt_ = nullptr;
         RDP* rdp_ptr_ = nullptr;
+        std::function<void(bool)> interrupt_callback_;
 
         friend class hydra::N64::CPU;
         friend class hydra::N64::CPUBus;
         friend class hydra::N64::RCP;
-        friend class MmioViewer;
     };
 } // namespace hydra::N64

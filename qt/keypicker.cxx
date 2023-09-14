@@ -1,5 +1,3 @@
-#include <emulator_factory.hxx>
-#include <emulator_settings.hxx>
 #include <iostream>
 #include <QKeyEvent>
 #include <qt/keypicker.hxx>
@@ -11,29 +9,27 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
     tab_show_ = new QTabWidget(this);
     for (int i = 0; i < EmuTypeSize; i++)
     {
-        emulator_picker_->addItem(QString::fromStdString(
-            EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).Name));
-        EmulatorData& emulator_data =
-            EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i));
+        emulator_picker_->addItem(QString::fromStdString("Placeholder"));
         QTableWidget* table = new QTableWidget(this);
         table->setColumnCount(2);
-        table->setRowCount(emulator_data.Mappings.size());
-        int j = 0;
-        for (auto pair : emulator_data.Mappings)
-        {
-            table->setItem(j, 0, new QTableWidgetItem(QString::fromStdString(pair.first)));
-            if (!pair.second.empty())
-            {
-                table->setItem(
-                    j, 1,
-                    new QTableWidgetItem(QKeySequence(std::atoi(pair.second.c_str())).toString()));
-            }
-            j++;
-        }
+        // table->setRowCount(emulator_data.Mappings.size());
+        // int j = 0;
+        // for (auto pair : emulator_data.Mappings)
+        // {
+        //     table->setItem(j, 0, new QTableWidgetItem(QString::fromStdString(pair.first)));
+        //     if (!pair.second.empty())
+        //     {
+        //         table->setItem(
+        //             j, 1,
+        //             new
+        //             QTableWidgetItem(QKeySequence(std::atoi(pair.second.c_str())).toString()));
+        //     }
+        //     j++;
+        // }
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         connect(table, SIGNAL(cellDoubleClicked(int, int)), this,
                 SLOT(onCellDoubleClicked(int, int)));
-        tab_show_->addTab(table, QString::fromStdString(emulator_data.Name));
+        // tab_show_->addTab(table, QString::fromStdString(emulator_data.Name));
     }
     tab_show_->tabBar()->hide();
     layout_ = new QVBoxLayout(this);
@@ -64,29 +60,29 @@ void KeyPickerPage::onCellDoubleClicked(int row, int column)
 void KeyPickerPage::keyPressEvent(QKeyEvent* event)
 {
     // FIXME: key doesnt trigger here it seems
-    if (waiting_input_)
-    {
-        waiting_input_ = false;
-        auto table = static_cast<QTableWidget*>(tab_show_->currentWidget());
-        table->setItem(row_waiting_, 1,
-                       new QTableWidgetItem(QKeySequence(event->key()).toString()));
-        EmulatorSettings::GetEmulatorData(
-            static_cast<hydra::EmuType>(emulator_picker_->currentIndex()))
-            .Mappings[table->currentItem()->text().toStdString()] = event->key();
-        saveKeySettings();
-    }
+    // if (waiting_input_)
+    // {
+    //     waiting_input_ = false;
+    //     auto table = static_cast<QTableWidget*>(tab_show_->currentWidget());
+    //     table->setItem(row_waiting_, 1,
+    //                    new QTableWidgetItem(QKeySequence(event->key()).toString()));
+    //     EmulatorSettings::GetEmulatorData(
+    //         static_cast<hydra::EmuType>(emulator_picker_->currentIndex()))
+    //         .Mappings[table->currentItem()->text().toStdString()] = event->key();
+    //     saveKeySettings();
+    // }
 }
 
 void KeyPickerPage::saveKeySettings()
 {
-    using emu_settings = std::map<std::string, std::map<std::string, std::string>>;
-    emu_settings es;
-    for (int i = 0; i < EmuTypeSize; i++)
-    {
-        es[std::to_string(i)] =
-            EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).Mappings;
-    }
-    std::ofstream ofs(hydra::EmulatorFactory::GetSavePath() + "mappings.json", std::ios::trunc);
-    json j_map(es);
-    ofs << j_map << std::endl;
+    // using emu_settings = std::map<std::string, std::map<std::string, std::string>>;
+    // emu_settings es;
+    // for (int i = 0; i < EmuTypeSize; i++)
+    // {
+    //     es[std::to_string(i)] =
+    //         EmulatorSettings::GetEmulatorData(static_cast<hydra::EmuType>(i)).Mappings;
+    // }
+    // std::ofstream ofs(hydra::EmulatorFactory::GetSavePath() + "mappings.json", std::ios::trunc);
+    // json j_map(es);
+    // ofs << j_map << std::endl;
 }

@@ -12,7 +12,6 @@
 #include <log.hxx>
 #include <memory>
 #include <n64/core/n64_addresses.hxx>
-#include <n64/core/n64_keys.hxx>
 #include <n64/core/n64_rcp.hxx>
 #include <n64/core/n64_types.hxx>
 #include <queue>
@@ -27,7 +26,8 @@ constexpr uint32_t KSEG0_END = 0x9FFF'FFFF;
 constexpr uint32_t KSEG1_START = 0xA000'0000;
 constexpr uint32_t KSEG1_END = 0xBFFF'FFFF;
 
-enum class ExceptionType {
+enum class ExceptionType
+{
     Interrupt = 0,
     TLBMissLoad = 2,
     AddressErrorLoad = 4,
@@ -41,13 +41,32 @@ enum class ExceptionType {
     FloatingPoint = 15,
 };
 
-enum class ControllerType : uint16_t {
-    Keyboard = 0x0500,
-    Mouse = 0x0200,
-};
-
 #define X(name, value) constexpr auto CP0_##name = value;
-#include "cp0_regs.def"
+X(INDEX, 0)
+X(RANDOM, 1)
+X(ENTRYLO0, 2)
+X(ENTRYLO1, 3)
+X(CONTEXT, 4)
+X(PAGEMASK, 5)
+X(WIRED, 6)
+X(BADVADDR, 8)
+X(COUNT, 9)
+X(ENTRYHI, 10)
+X(COMPARE, 11)
+X(STATUS, 12)
+X(CAUSE, 13)
+X(EPC, 14)
+X(PRID, 15)
+X(CONFIG, 16)
+X(LLADDR, 17)
+X(WATCHLO, 18)
+X(WATCHHI, 19)
+X(XCONTEXT, 20)
+X(PARITYERROR, 26)
+X(CACHEERROR, 27)
+X(TAGLO, 28)
+X(TAGHI, 29)
+X(ERROREPC, 30)
 #undef X
 
 // TODO: endianess issues, switch to BitField< ... >
@@ -144,18 +163,47 @@ namespace hydra
 {
     namespace N64
     {
-        class N64_TKPWrapper;
         class N64;
         class QA;
     } // namespace N64
 } // namespace hydra
 
-class N64Debugger;
-class MmioViewer;
-
 namespace hydra::N64
 {
-    enum class CP0Instruction {
+    enum class ControllerType : uint16_t
+    {
+        Joypad = 0x0500,
+        Mouse = 0x0200,
+    };
+
+    namespace Keys
+    {
+        enum
+        {
+            A = 0,
+            B,
+            Z,
+            Start,
+            AnalogVertical,
+            AnalogHorizontal,
+            L,
+            R,
+            CUp,
+            CDown,
+            CLeft,
+            CRight,
+            KeypadUp,
+            KeypadDown,
+            KeypadLeft,
+            KeypadRight,
+
+            N64KeyCount,
+            ErrorKey = 0xFFFF'FFFF
+        };
+    }
+
+    enum class CP0Instruction
+    {
         TLBWI = 2,
         TLBP = 8,
         TLBR = 1,
@@ -174,7 +222,12 @@ namespace hydra::N64
     constexpr static uint64_t OperationMasks[2] = {std::numeric_limits<uint32_t>::max(),
                                                    std::numeric_limits<uint64_t>::max()};
     // Only kernel mode is used for (most?) n64 licensed games
-    enum class OperatingMode { User, Supervisor, Kernel };
+    enum class OperatingMode
+    {
+        User,
+        Supervisor,
+        Kernel
+    };
 
     struct TranslatedAddress
     {
@@ -203,7 +256,7 @@ namespace hydra::N64
         void Reset();
 
     private:
-        uint8_t* redirect_paddress(uint32_t paddr);
+        hydra_inline uint8_t* redirect_paddress(uint32_t paddr);
         void map_direct_addresses();
 
         static std::vector<uint8_t> ipl_;
@@ -259,8 +312,6 @@ namespace hydra::N64
         RCP& rcp_;
         friend class CPU;
         friend class hydra::N64::N64;
-        friend class ::N64Debugger;
-        friend class ::MmioViewer;
     };
 
     template <auto MemberFunc>
@@ -272,10 +323,20 @@ namespace hydra::N64
         (cpu->*MemberFunc)();
     }
 
+    enum class InterruptType
+    {
+        VI,
+        AI,
+        PI,
+        SI,
+        DP,
+        SP
+    };
+
     class CPU final
     {
     public:
-        CPU(CPUBus& cpubus, RCP& rcp, bool& should_draw);
+        CPU(CPUBus& cpubus, RCP& rcp);
         void Tick();
         void Reset();
 
@@ -307,15 +368,15 @@ namespace hydra::N64
         FCR31 fcr31_;
         uint32_t cp0_weirdness_;
         uint64_t cp2_weirdness_;
-        bool& should_draw_;
         bool prev_branch_ = false, was_branch_ = false;
         uint32_t tlb_offset_mask_ = 0;
         int pif_channel_ = 0;
         int vis_per_second_ = 0;
-        ControllerType controller_type_ = ControllerType::Keyboard;
+        ControllerType controller_type_ = ControllerType::Joypad;
         int32_t mouse_x_, mouse_y_;
         int32_t mouse_delta_x_, mouse_delta_y_;
         std::chrono::time_point<std::chrono::high_resolution_clock> last_second_time_;
+        bool should_service_interrupt_ = false;
 
         hydra_inline TranslatedAddress translate_vaddr(uint32_t vaddr);
         hydra_inline TranslatedAddress translate_vaddr_kernel(uint32_t vaddr);
@@ -421,6 +482,8 @@ namespace hydra::N64
         void store_doubleword(uint64_t address, uint64_t value);
 
         bool check_interrupts();
+        void update_interrupt_check();
+        hydra_inline void set_interrupt(InterruptType type, bool value);
         void handle_event();
         uint32_t timing_pi_access(uint8_t domain, uint32_t length);
         void check_vi_interrupt();
@@ -465,8 +528,8 @@ namespace hydra::N64
 
         void pif_command();
         bool joybus_command(const std::vector<uint8_t>&, std::vector<uint8_t>&);
-        void get_controller_state(std::vector<uint8_t>& result, ControllerType controller);
-        std::array<bool, hydra::N64::Keys::N64KeyCount> key_state_{};
+        void get_controller_state(int player, std::vector<uint8_t>& result,
+                                  ControllerType controller);
         std::vector<DisassemblerInstruction> disassemble(uint64_t start_vaddr, uint64_t end_vaddr,
                                                          bool register_names);
 
@@ -479,9 +542,9 @@ namespace hydra::N64
         void dump_rdram();
         uint32_t get_dram_crc();
 
-        friend class ::N64Debugger;
-        friend class ::MmioViewer;
+        std::function<void()> poll_input_callback_;
+        std::function<int8_t(int, int, int)> read_input_callback_;
+
         friend class hydra::N64::N64;
-        friend class N64_TKPWrapper;
     };
 } // namespace hydra::N64

@@ -10,7 +10,8 @@
 namespace hydra::Gameboy
 {
     class Bus;
-    enum class CartridgeType {
+    enum class CartridgeType
+    {
         ERROR = 0x4,
         ROM_ONLY = 0x0,
         MBC1 = 0x1,
