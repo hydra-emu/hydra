@@ -1946,6 +1946,7 @@ namespace hydra::N64
 
     hydra_inline int32_t z_correct(int32_t z)
     {
+        // TODO: not quite right, there's some coverage shenanigans going on if cvg != 8
         z >>= 3;
 
         switch ((z >> 17) & 3)
@@ -2089,13 +2090,12 @@ namespace hydra::N64
                         if (antialias_en_ ? current_coverage_ : cvbit)
                         {
                             draw_pixel(x, y);
-                        }
-                        coverage_set(x, y, current_coverage_);
-
-                        if (z_update_en_)
-                        {
-                            z_set(x, y, z_cur);
-                            dz_set(x, y, DzPix);
+                            if (z_update_en_)
+                            {
+                                z_set(x, y, z_cur);
+                                dz_set(x, y, DzPix);
+                            }
+                            coverage_set(x, y, current_coverage_);
                         }
                     }
 
