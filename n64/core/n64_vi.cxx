@@ -32,8 +32,8 @@ namespace hydra::N64
                 {
                     for (int x = 0; x < width_; x++)
                     {
-                        uint32_t color = (reinterpret_cast<uint32_t*>(
-                            &rdram_ptr_[vi_origin_]))[(y * vi_width_) + x];
+                        uint32_t color = hydra::bswap32((reinterpret_cast<uint32_t*>(
+                            &rdram_ptr_[vi_origin_]))[(y * vi_width_) + x]);
                         memcpy(&data[(x + y * width_) * 4], &color, 4);
                     }
                 }
@@ -45,8 +45,8 @@ namespace hydra::N64
                 {
                     for (int x = 0; x < width_; x++)
                     {
-                        uint16_t color_temp = (reinterpret_cast<uint16_t*>(
-                            &rdram_ptr_[vi_origin_]))[(y * vi_width_) + x];
+                        uint16_t color_temp = hydra::bswap16((reinterpret_cast<uint16_t*>(
+                            &rdram_ptr_[vi_origin_]))[(y * vi_width_) + x]);
                         uint8_t r = (color_temp >> 11) & 0x1F;
                         uint8_t g = (color_temp >> 6) & 0x1F;
                         uint8_t b = (color_temp >> 1) & 0x1F;
