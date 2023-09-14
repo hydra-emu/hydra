@@ -14,6 +14,7 @@
 #endif
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <immintrin.h>
 #include <intrin.h>
 #pragma intrinsic(_mul128)
 #else
@@ -122,15 +123,27 @@ namespace hydra
         return (x >> 8) | (x << 8);
     }
 
-    inline uint32_t bswap32(uint32_t x)
+    __attribute__((target("movbe"))) inline uint32_t bswap32(uint32_t x)
     {
+#ifdef _load_be_u32
+        return _load_be_u32(&x);
+#else
         return (x >> 24) | ((x >> 8) & 0xff00) | ((x & 0xff00) << 8) | (x << 24);
+#endif
     }
 
-    inline uint64_t bswap64(uint64_t x)
+#ifdef __has_attribute
+    __attribute__((target("movbe")))
+#endif
+    inline uint64_t
+    bswap64(uint64_t x)
     {
+#ifdef _load_be_u64
+        return _load_be_u64(&x);
+#else
         return (x >> 56) | ((x >> 40) & 0xff00) | ((x >> 24) & 0xff0000) | ((x >> 8) & 0xff000000) |
                ((x & 0xff000000) << 8) | ((x & 0xff0000) << 24) | ((x & 0xff00) << 40) | (x << 56);
+#endif
     }
 
     inline uint32_t crc32_u8(uint32_t crc, uint8_t data)
