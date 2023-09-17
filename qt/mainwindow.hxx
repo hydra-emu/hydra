@@ -82,5 +82,7 @@ public:
     std::mutex audio_mutex_;
     hydra::VideoInfo video_info_;
 
+    std::array<int8_t, hydra::InputButton::InputCount> input_state_{};
+
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
 };
