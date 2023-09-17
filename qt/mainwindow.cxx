@@ -157,29 +157,94 @@ void MainWindow::create_menus()
     help_menu_->addAction(about_act_);
 }
 
+// Shitty input but cba
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    // if (emulator_)
-    // {
-    //     emulator_->HandleKeyDown(event->key());
-    // }
+    switch (event->key())
+    {
+        case Qt::Key_Right:
+        {
+            input_state_[hydra::InputButton::AnalogHorizontal_0] = 127;
+            break;
+        }
+        case Qt::Key_Left:
+        {
+            input_state_[hydra::InputButton::AnalogHorizontal_0] = -127;
+            break;
+        }
+        case Qt::Key_Up:
+        {
+            input_state_[hydra::InputButton::AnalogVertical_0] = 127;
+            break;
+        }
+        case Qt::Key_Down:
+        {
+            input_state_[hydra::InputButton::AnalogVertical_0] = -127;
+            break;
+        }
+        case Qt::Key_Z:
+        {
+            input_state_[hydra::InputButton::A] = 1;
+            break;
+        }
+        case Qt::Key_X:
+        {
+            input_state_[hydra::InputButton::B] = 1;
+            break;
+        }
+        case Qt::Key_C:
+        {
+            input_state_[hydra::InputButton::Z] = 1;
+            break;
+        }
+        case Qt::Key_Return:
+        {
+            input_state_[hydra::InputButton::Start] = 1;
+            break;
+        }
+    }
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    // if (emulator_)
-    // {
-    //     emulator_->HandleKeyUp(event->key());
-    // }
+    switch (event->key())
+    {
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+        {
+            input_state_[hydra::InputButton::AnalogHorizontal_0] = 0;
+            break;
+        }
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        {
+            input_state_[hydra::InputButton::AnalogVertical_0] = 0;
+            break;
+        }
+        case Qt::Key_Z:
+        {
+            input_state_[hydra::InputButton::A] = 0;
+            break;
+        }
+        case Qt::Key_X:
+        {
+            input_state_[hydra::InputButton::B] = 0;
+            break;
+        }
+        case Qt::Key_C:
+        {
+            input_state_[hydra::InputButton::Z] = 0;
+            break;
+        }
+        case Qt::Key_Return:
+        {
+            input_state_[hydra::InputButton::Start] = 0;
+            break;
+        }
+    }
 }
 
-void MainWindow::on_mouse_move(QMouseEvent* event)
-{
-    // if (emulator_)
-    // {
-    //     emulator_->HandleMouseMove(event->position().x(), event->position().y());
-    // }
-}
+void MainWindow::on_mouse_move(QMouseEvent* event) {}
 
 void MainWindow::open_file()
 {
@@ -383,5 +448,5 @@ void MainWindow::poll_input_callback() {}
 
 int8_t MainWindow::read_input_callback(const hydra::InputInfo& ii)
 {
-    return 0;
+    return input_state_[ii.button];
 }
