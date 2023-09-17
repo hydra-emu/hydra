@@ -86,12 +86,14 @@ namespace hydra
 
     hydra::EmuType UiCommon::GetEmulatorType(const std::filesystem::path& path)
     {
+        std::string extension = path.extension().string();
+        std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
         for (int i = 0; i < EmuTypeSize; i++)
         {
             const auto& emulator_data = EmulatorData[i];
             for (const auto& str : emulator_data.Extensions)
             {
-                if (path.extension() == str)
+                if (extension == str)
                 {
                     return static_cast<hydra::EmuType>(i);
                 }

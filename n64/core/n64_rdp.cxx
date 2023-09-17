@@ -909,17 +909,17 @@ namespace hydra::N64
                 break;
         }
 
-        if (multiplier1 + multiplier2 == 0)
+        bool zero_multipliers = multiplier1 + multiplier2 == 0;
+        if (zero_multipliers)
         {
             Logger::WarnOnce("Blender division by zero - blender settings: {} {} {} {}",
                              blender_1a_[cycle], blender_2a_[cycle], blender_1b_[cycle],
                              blender_2b_[cycle]);
-            multiplier1 = 0xFF;
         }
 
         uint8_t r, g, b;
 
-        if (!color_on_cvg_ || coverage_overflow_)
+        if ((!color_on_cvg_ || coverage_overflow_) && !zero_multipliers)
         {
             r = (((color1 >> 0) & 0xFF) * multiplier1 + ((color2 >> 0) & 0xFF) * multiplier2) /
                 (multiplier1 + multiplier2);
