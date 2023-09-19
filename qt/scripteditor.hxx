@@ -33,12 +33,9 @@ class ScriptEditor final : public QWidget
     Q_OBJECT
 
 public:
-    ScriptEditor(bool& open, std::function<void(const std::string&)> run_script_callback,
+    ScriptEditor(bool& open, std::function<void(const std::string&, bool)> run_script_callback,
                  QWidget* parent = nullptr);
     ~ScriptEditor();
-
-private slots:
-    void run_script();
 
 private:
     QTextEdit* editor_;
@@ -46,8 +43,14 @@ private:
     QAction* run_act_;
     QCheckBox* priviledged_mode_;
     ScriptHighlighter* highlighter_;
-    std::function<void(const std::string&)> run_script_callback_;
+    std::function<void(const std::string&, bool)> run_script_callback_;
     bool& open_;
+    bool safe_mode_ = true;
+
+    void run_script();
+    void open_script();
+    void save_script();
+    void safe_mode_changed(int state);
 
     ScriptEditor(const ScriptEditor&) = delete;
     ScriptEditor& operator=(const ScriptEditor&) = delete;
