@@ -19,6 +19,7 @@
 #include <QSurfaceFormat>
 #include <QTimer>
 #include <settings.hxx>
+#include <sol/sol.hpp>
 
 void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
 {
@@ -352,12 +353,61 @@ void MainWindow::open_scripts()
         if (!scripts_open_)
         {
             using namespace std::placeholders;
-            new ScriptEditor(scripts_open_, std::bind(&MainWindow::run_script, this, _1), this);
+            new ScriptEditor(scripts_open_, std::bind(&MainWindow::run_script, this, _1, _2), this);
         }
     });
 }
 
-void MainWindow::run_script(const std::string& script) {}
+void MainWindow::run_script(const std::string& script, bool safe_mode)
+{
+    static bool initialized = false;
+    static sol::state lua;
+    static auto environment = sol::environment(lua, sol::create);
+    if (!initialized)
+    {
+        lua.open_libraries();
+        const std::vector<std::string> whitelisted = {
+            "assert", "error",    "ipairs",   "next", "pairs",  "pcall",  "print",
+            "select", "tonumber", "tostring", "type", "unpack", "xpcall",
+        };
+
+        for (const auto& name : whitelisted)
+        {
+            environment[name] = lua[name];
+        }
+
+        std::vector<std::string> libraries = {"coroutine", "string", "table", "math"};
+
+        for (const auto& library : libraries)
+        {
+            sol::table copy(lua, sol::create);
+            for (auto [name, func] : lua[library].tbl)
+            {
+                copy[name] = func;
+            }
+            environment[library] = copy;
+        }
+
+        sol::table os(lua, sol::create);
+        os["clock"] = lua["os"]["clock"];
+        os["date"] = lua["os"]["date"];
+        os["difftime"] = lua["os"]["difftime"];
+        os["time"] = lua["os"]["time"];
+        environment["os"] = os;
+        initialized = true;
+    }
+
+    qt_may_throw([this, &script, &safe_mode]() {
+        if (safe_mode)
+        {
+            lua.script(script, environment);
+        }
+        else
+        {
+            lua.script(script);
+        }
+    });
+}
 
 void MainWindow::screenshot()
 {

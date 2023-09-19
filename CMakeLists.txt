@@ -47,6 +47,7 @@ set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
+find_package(Lua REQUIRED)
 
 add_subdirectory(vendored/fmt)
 
@@ -126,7 +127,7 @@ add_library(n64 STATIC ${N64_FILES})
 target_link_libraries(hydra PRIVATE src nes gb c8 n64
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
     Qt${QT_VERSION_MAJOR}::OpenGLWidgets ${CMAKE_DL_LIBS}
-    fmt::fmt)
+    fmt::fmt ${LUA_LIBRARIES})
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 target_include_directories(src PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 target_include_directories(c8 PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})

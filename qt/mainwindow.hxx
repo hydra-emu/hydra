@@ -34,7 +34,7 @@ private:
     void open_about();
     void open_shaders();
     void open_scripts();
-    void run_script(const std::string& script);
+    void run_script(const std::string& script, bool safe_mode);
     void screenshot();
 
     // Emulation functions
