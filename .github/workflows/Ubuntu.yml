@@ -27,7 +27,7 @@ jobs:
     - name: install-deps
       run: |
         sudo apt-get update
-        sudo apt-get install libgl-dev ninja-build
+        sudo apt-get install libgl-dev ninja-build liblua5.3-dev
     - name: configure
       run: CC=/usr/bin/gcc-12 CXX=/usr/bin/g++-12 cmake -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
     - name: make

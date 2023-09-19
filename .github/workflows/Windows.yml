@@ -22,7 +22,7 @@ jobs:
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
     - name: install-deps
-      run: vcpkg install --triplet x64-windows gtest 
+      run: vcpkg install --triplet x64-windows gtest lua
     - name: configure
       run: cmake -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -T ClangCL
     - name: make
