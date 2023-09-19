@@ -1,6 +1,7 @@
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
 #include "qthelper.hxx"
+#include "scripteditor.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
 #include <error_factory.hxx>
@@ -137,6 +138,11 @@ void MainWindow::create_actions()
     shaders_act_->setStatusTip("Open the shader editor");
     shaders_act_->setIcon(QIcon(":/images/shaders.png"));
     connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
+    scripts_act_ = new QAction(tr("S&cripts"), this);
+    scripts_act_->setShortcut(Qt::Key_F10);
+    scripts_act_->setStatusTip("Open the script editor");
+    scripts_act_->setIcon(QIcon(":/images/scripts.png"));
+    connect(scripts_act_, &QAction::triggered, this, &MainWindow::open_scripts);
 }
 
 void MainWindow::create_menus()
@@ -152,6 +158,7 @@ void MainWindow::create_menus()
     emulation_menu_->addAction(reset_act_);
     emulation_menu_->addAction(stop_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
+    tools_menu_->addAction(scripts_act_);
     tools_menu_->addAction(shaders_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
@@ -338,6 +345,19 @@ void MainWindow::open_shaders()
         }
     });
 }
+
+void MainWindow::open_scripts()
+{
+    qt_may_throw([this]() {
+        if (!scripts_open_)
+        {
+            using namespace std::placeholders;
+            new ScriptEditor(scripts_open_, std::bind(&MainWindow::run_script, this, _1), this);
+        }
+    });
+}
+
+void MainWindow::run_script(const std::string& script) {}
 
 void MainWindow::screenshot()
 {
