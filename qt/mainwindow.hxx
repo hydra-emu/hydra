@@ -33,6 +33,8 @@ private:
     void open_settings();
     void open_about();
     void open_shaders();
+    void open_scripts();
+    void run_script(const std::string& script);
     void screenshot();
 
     // Emulation functions
@@ -68,6 +70,7 @@ public:
     QAction* settings_act_;
     QAction* screenshot_act_;
     QAction* shaders_act_;
+    QAction* scripts_act_;
     ScreenWidget* screen_;
     ma_device sound_device_{};
     std::unique_ptr<hydra::Core> emulator_;
@@ -77,6 +80,7 @@ public:
     bool settings_open_ = false;
     bool about_open_ = false;
     bool shaders_open_ = false;
+    bool scripts_open_ = false;
     bool paused_ = false;
     std::mutex emulator_mutex_;
     std::mutex audio_mutex_;

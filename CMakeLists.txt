@@ -60,6 +60,7 @@ set(QT_SOURCES
     qt/screenwidget.cxx
     qt/settingswindow.cxx
     qt/shadereditor.cxx
+    qt/scripteditor.cxx
     qt/aboutwindow.cxx
     qt/keypicker.cxx
     vendored/miniaudio.c

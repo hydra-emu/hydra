@@ -136,17 +136,18 @@ ShaderHighlighter::ShaderHighlighter(QTextDocument* parent) : QSyntaxHighlighter
         QStringLiteral("\\busamplerCubeArray\\b"),
         QStringLiteral("\\bstruct\\b"),
     };
-    keyword_blue_format_.setForeground(Qt::darkBlue);
-    keyword_blue_format_.setFontWeight(QFont::Bold);
-    keyword_pink_format_.setForeground(QBrush(QColor(174, 50, 160)));
-    keyword_pink_format_.setFontWeight(QFont::Bold);
+    QTextCharFormat keyword_blue_format, keyword_pink_format;
+    keyword_blue_format.setForeground(Qt::darkBlue);
+    keyword_blue_format.setFontWeight(QFont::Bold);
+    keyword_pink_format.setForeground(QBrush(QColor(174, 50, 160)));
+    keyword_pink_format.setFontWeight(QFont::Bold);
     for (const QString& pattern : patterns_blue)
     {
-        highlighting_rules_.append({QRegularExpression(pattern), keyword_blue_format_});
+        highlighting_rules_.append({QRegularExpression(pattern), keyword_blue_format});
     }
     for (const QString& pattern : patterns_pink)
     {
-        highlighting_rules_.append({QRegularExpression(pattern), keyword_pink_format_});
+        highlighting_rules_.append({QRegularExpression(pattern), keyword_pink_format});
     }
     multiline_comment_format_.setForeground(Qt::darkGreen);
     singleline_comment_format_.setForeground(Qt::darkGreen);
