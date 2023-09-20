@@ -13,6 +13,8 @@
 #include <random>
 #include <sstream>
 
+#define CPU_LOGGING false
+
 namespace hydra::N64
 {
     std::vector<uint8_t> CPUBus::ipl_{};

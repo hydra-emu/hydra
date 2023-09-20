@@ -64,6 +64,7 @@ set(QT_SOURCES
     qt/scripteditor.cxx
     qt/aboutwindow.cxx
     qt/keypicker.cxx
+    qt/terminalwindow.cxx
     vendored/miniaudio.c
 )
 
