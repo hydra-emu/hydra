@@ -6,6 +6,7 @@
 #include <functional>
 #include <str_hash.hxx>
 #include <unordered_map>
+#include <vector>
 
 using LoggingCallbacks =
     std::unordered_map<std::string, std::vector<std::function<void(const std::string&)>>>;
