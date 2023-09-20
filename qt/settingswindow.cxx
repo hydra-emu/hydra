@@ -8,8 +8,9 @@
 #include <QVBoxLayout>
 #include <settings.hxx>
 
-SettingsWindow::SettingsWindow(bool& open, QWidget* parent)
-    : open_(open), QWidget(parent, Qt::Window)
+SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callback,
+                               QWidget* parent)
+    : open_(open), volume_callback_(volume_callback), QWidget(parent, Qt::Window)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle("Settings");
@@ -18,20 +19,15 @@ SettingsWindow::SettingsWindow(bool& open, QWidget* parent)
     right_group_box_ = new QGroupBox;
     {
         tab_list_ = new QListWidget;
-        QListWidgetItem* general =
-            new QListWidgetItem(QPixmap(":/images/support.png"), QString("General"));
+        QListWidgetItem* audio =
+            new QListWidgetItem(QPixmap(":/images/sound.png"), QString("Audio"));
         QListWidgetItem* input =
             new QListWidgetItem(QPixmap(":/images/input.png"), QString("Input"));
-        // QListWidgetItem* gameboy =
-        //     new QListWidgetItem(QPixmap(":/images/gameboy.png"), QString("Gameboy"));
         QListWidgetItem* n64 =
             new QListWidgetItem(QPixmap(":/images/n64.png"), QString("Nintendo 64"));
-        // QListWidgetItem* c8 = new QListWidgetItem(QPixmap(":/images/c8.png"), QString("Chip 8"));
-        tab_list_->addItem(general);
+        tab_list_->addItem(audio);
         tab_list_->addItem(input);
-        // tab_list_->addItem(gameboy);
         tab_list_->addItem(n64);
-        // tab_list_->addItem(c8);
         connect(tab_list_, SIGNAL(itemSelectionChanged()), this, SLOT(on_tab_change()));
         QVBoxLayout* layout = new QVBoxLayout;
         layout->addWidget(tab_list_);
@@ -67,10 +63,29 @@ SettingsWindow::~SettingsWindow()
 void SettingsWindow::create_tabs()
 {
     {
-        QGridLayout* general_layout = new QGridLayout;
-        QWidget* general_tab = new QWidget;
-        general_tab->setLayout(general_layout);
-        tab_show_->addTab(general_tab, "General");
+        QGridLayout* audio_layout = new QGridLayout;
+        audio_layout->setAlignment(Qt::AlignTop);
+        QWidget* audio_tab = new QWidget;
+        audio_tab->setLayout(audio_layout);
+        tab_show_->addTab(audio_tab, "Audio");
+        audio_layout->addWidget(new QLabel("Master volume:"), 0, 0);
+        QSlider* audio_slider = new QSlider(Qt::Horizontal);
+        audio_slider->setRange(0, 100);
+        std::string volume_str = Settings::Get("master_volume");
+        if (!volume_str.empty())
+        {
+            int volume = std::stoi(volume_str);
+            audio_slider->setValue(volume);
+        }
+        else
+        {
+            audio_slider->setValue(100);
+        }
+        connect(audio_slider, &QSlider::valueChanged, this, [this](int value) {
+            Settings::Set("master_volume", std::to_string(value));
+            volume_callback_(value);
+        });
+        audio_layout->addWidget(audio_slider, 0, 1);
     }
     {
         KeyPickerPage* key_picker = new KeyPickerPage(this);

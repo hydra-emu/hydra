@@ -13,14 +13,14 @@
 
 namespace hydra::N64
 {
-    N64::N64() : cpubus_(rcp_), cpu_(cpubus_, rcp_)
-    {
-        Reset();
-    }
+    N64::N64() : cpubus_(rcp_), cpu_(cpubus_, rcp_) {}
 
     bool N64::LoadCartridge(std::string path)
     {
-        return cpu_.cpubus_.LoadCartridge(path);
+        bool loaded = cpu_.cpubus_.LoadCartridge(path);
+        if (loaded)
+            Reset();
+        return loaded;
     }
 
     bool N64::LoadIPL(std::string path)
