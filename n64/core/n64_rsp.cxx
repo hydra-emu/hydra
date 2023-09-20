@@ -10,6 +10,8 @@
 #include <n64/core/n64_rsp.hxx>
 #include <sstream>
 
+#define RSP_LOGGING false
+
 bool is_sign_extension(int16_t high, int16_t low)
 {
     if (high == 0)

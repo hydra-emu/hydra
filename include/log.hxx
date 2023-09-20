@@ -3,14 +3,12 @@
 #include <fmt/color.h>
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <functional>
 #include <str_hash.hxx>
 #include <unordered_map>
 
-// TODO: move to cpp file
-#define ENABLE_LOGGING true
-#define ENABLE_DEBUG 0
-#define RSP_LOGGING false
-#define CPU_LOGGING false
+using LoggingCallbacks =
+    std::unordered_map<std::string, std::vector<std::function<void(const std::string&)>>>;
 
 struct Logger
 {
@@ -18,15 +16,14 @@ struct Logger
     static void Fatal(fmt::format_string<T...> fmt, T&&... args)
     {
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
-        printf("%s\n", str.c_str());
-        exit(1);
+        log_impl("Fatal", str);
     }
 
     template <typename... T>
     static void Warn(fmt::format_string<T...> fmt, T&&... args)
     {
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
-        log_impl<LogWarning, ConsoleNormal>(str);
+        log_impl("Warn", str);
     }
 
     template <typename... T>
@@ -43,65 +40,45 @@ struct Logger
         warnings[hash] = true;
     }
 
-    static void ClearWarnings()
-    {
-        get_warnings().clear();
-    }
-
     template <typename... T>
     static void Info(fmt::format_string<T...> fmt, T&&... args)
     {
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
-        log_impl<LogInfo, ConsoleNormal>(str);
+        log_impl("Info", str);
     }
 
     template <typename... T>
     static void Debug([[maybe_unused]] fmt::format_string<T...> fmt, [[maybe_unused]] T&&... args)
     {
-#if ENABLE_DEBUG == 1
         std::string str = fmt::format(fmt, std::forward<T>(args)...);
-        printf("%s\n", str.c_str());
-#endif
+        log_impl("Debug", str);
+    }
+
+    static void ClearWarnings()
+    {
+        get_warnings().clear();
+    }
+
+    static LoggingCallbacks& GetCallbacks()
+    {
+        static LoggingCallbacks callbacks;
+        return callbacks;
+    }
+
+    static void HookCallback(const std::string& group,
+                             std::function<void(const std::string&)> callback)
+    {
+        GetCallbacks()[group].push_back(callback);
     }
 
 private:
-    static inline std::string LogInfo()
+    static inline void log_impl(const std::string& group, const std::string& message)
     {
-        return fmt::format(fg(fmt::color::green), "[INFO]");
-    }
-
-    static inline std::string LogWarning()
-    {
-        return fmt::format(fg(fmt::color::yellow), "[WARNING]");
-    }
-
-    static inline std::string LogFatal()
-    {
-        return fmt::format(fg(fmt::color::red), "[FATAL]");
-    }
-
-    static inline std::string LogDebug()
-    {
-        return fmt::format(fg(fmt::color::magenta), "[DEBUG]");
-    }
-
-    static inline void ConsoleNormal(std::string message)
-    {
-        fmt::print("{}", message);
-    }
-
-    template <auto PrefixFunction, auto OutputFunction>
-    static inline void log_impl(std::string message)
-    {
-#if ENABLE_LOGGING == 1
-        std::string prefix = PrefixFunction();
-        if (prefix.empty())
+        std::vector<std::function<void(const std::string&)>>& callbacks = GetCallbacks()[group];
+        for (auto& callback : callbacks)
         {
-            return;
+            callback(message + "\n");
         }
-        std::string messagef = fmt::format(" {}\n", message);
-        OutputFunction(prefix + messagef);
-#endif
     }
 
     static std::unordered_map<uint32_t, bool>& get_warnings()

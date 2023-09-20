@@ -34,6 +34,7 @@ private:
     void open_about();
     void open_shaders();
     void open_scripts();
+    void open_terminal();
     void run_script(const std::string& script, bool safe_mode);
     void screenshot();
 
@@ -71,6 +72,7 @@ public:
     QAction* screenshot_act_;
     QAction* shaders_act_;
     QAction* scripts_act_;
+    QAction* terminal_act_;
     ScreenWidget* screen_;
     ma_device sound_device_{};
     std::unique_ptr<hydra::Core> emulator_;
@@ -81,6 +83,7 @@ public:
     bool about_open_ = false;
     bool shaders_open_ = false;
     bool scripts_open_ = false;
+    bool terminal_open_ = false;
     bool paused_ = false;
     std::mutex emulator_mutex_;
     std::mutex audio_mutex_;

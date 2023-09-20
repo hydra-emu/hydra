@@ -4,6 +4,7 @@
 #include "scripteditor.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
+#include "terminalwindow.hxx"
 #include <error_factory.hxx>
 #include <fstream>
 #include <iostream>
@@ -60,6 +61,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     QTimer* timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(emulator_frame()));
     timer->start();
+
+    TerminalWindow::Init();
+    Logger::HookCallback("Fatal", [this](const std::string& message) {
+        printf("Fatal: %s\n", message.c_str());
+        exit(1);
+    });
 
     initialize_emulator_data();
     initialize_audio();
@@ -144,6 +151,11 @@ void MainWindow::create_actions()
     scripts_act_->setStatusTip("Open the script editor");
     scripts_act_->setIcon(QIcon(":/images/scripts.png"));
     connect(scripts_act_, &QAction::triggered, this, &MainWindow::open_scripts);
+    terminal_act_ = new QAction(tr("&Terminal"), this);
+    terminal_act_->setShortcut(Qt::Key_F9);
+    terminal_act_->setStatusTip("Open the terminal");
+    terminal_act_->setIcon(QIcon(":/images/terminal.png"));
+    connect(terminal_act_, &QAction::triggered, this, &MainWindow::open_terminal);
 }
 
 void MainWindow::create_menus()
@@ -159,6 +171,7 @@ void MainWindow::create_menus()
     emulation_menu_->addAction(reset_act_);
     emulation_menu_->addAction(stop_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
+    tools_menu_->addAction(terminal_act_);
     tools_menu_->addAction(scripts_act_);
     tools_menu_->addAction(shaders_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
@@ -354,6 +367,16 @@ void MainWindow::open_scripts()
         {
             using namespace std::placeholders;
             new ScriptEditor(scripts_open_, std::bind(&MainWindow::run_script, this, _1, _2), this);
+        }
+    });
+}
+
+void MainWindow::open_terminal()
+{
+    qt_may_throw([this]() {
+        if (!terminal_open_)
+        {
+            new TerminalWindow(terminal_open_, this);
         }
     });
 }
