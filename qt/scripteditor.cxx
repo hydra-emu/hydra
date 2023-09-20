@@ -120,7 +120,8 @@ void ScriptEditor::open_script()
     {
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open file");
     }
-    Settings::Set("last_script_path", std::filesystem::path(filename.toStdString()).parent_path());
+    Settings::Set("last_script_path",
+                  std::filesystem::path(filename.toStdString()).parent_path().string());
     editor_->setPlainText(file.readAll());
 }
 
@@ -139,7 +140,8 @@ void ScriptEditor::save_script()
     {
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open file");
     }
-    Settings::Set("last_script_path", std::filesystem::path(filename.toStdString()).parent_path());
+    Settings::Set("last_script_path",
+                  std::filesystem::path(filename.toStdString()).parent_path().string());
     file.write(editor_->toPlainText().toUtf8());
 }
 
