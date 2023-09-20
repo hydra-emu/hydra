@@ -1,5 +1,5 @@
-#ifndef SHADEREDITOR_H
-#define SHADEREDITOR_H
+#pragma once
+
 #include <functional>
 #include <QFile>
 #include <QList>
@@ -26,14 +26,14 @@ private:
     };
 
     void highlightBlock(const QString& text) override;
+
+    // TODO: Do these need to be private member variables?
     QRegularExpression comment_start_expression_;
     QRegularExpression comment_end_expression_;
     QTextCharFormat multiline_comment_format_;
     QTextCharFormat singleline_comment_format_;
     QTextCharFormat hashtag_format_;
     QList<HighlightingRule> highlighting_rules_;
-    QTextCharFormat keyword_blue_format_;
-    QTextCharFormat keyword_pink_format_;
 };
 
 class ShaderEditor final : public QWidget
@@ -44,14 +44,14 @@ public:
     ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback,
                  QWidget* parent = nullptr);
     ~ShaderEditor();
-    ShaderEditor(const ShaderEditor&) = delete;
-    ShaderEditor& operator=(const ShaderEditor&) = delete;
+
 private slots:
     void compile();
     void autocompile();
     void open_shader();
 
 private:
+    // TODO: Do these need to be private member variables?
     QTextEdit* editor_;
     QToolBar* toolbar_;
     QAction* compile_act_;
@@ -61,5 +61,7 @@ private:
     std::function<void(QString*, QString*)> callback_;
     bool& open_;
     bool autocompile_ = false;
+
+    ShaderEditor(const ShaderEditor&) = delete;
+    ShaderEditor& operator=(const ShaderEditor&) = delete;
 };
-#endif

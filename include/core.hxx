@@ -13,7 +13,7 @@ namespace hydra
         Mouse,
     };
 
-    enum class InputButton
+    enum InputButton
     {
         AnalogHorizontal_0,
         AnalogVertical_0,
@@ -40,6 +40,8 @@ namespace hydra
         R2,
         L3,
         R3,
+
+        InputCount,
     };
 
     enum class VideoFormat

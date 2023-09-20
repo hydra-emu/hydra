@@ -1,6 +1,7 @@
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
 #include "qthelper.hxx"
+#include "scripteditor.hxx"
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
 #include <error_factory.hxx>
@@ -18,6 +19,7 @@
 #include <QSurfaceFormat>
 #include <QTimer>
 #include <settings.hxx>
+#include <sol/sol.hpp>
 
 void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
 {
@@ -137,6 +139,11 @@ void MainWindow::create_actions()
     shaders_act_->setStatusTip("Open the shader editor");
     shaders_act_->setIcon(QIcon(":/images/shaders.png"));
     connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
+    scripts_act_ = new QAction(tr("S&cripts"), this);
+    scripts_act_->setShortcut(Qt::Key_F10);
+    scripts_act_->setStatusTip("Open the script editor");
+    scripts_act_->setIcon(QIcon(":/images/scripts.png"));
+    connect(scripts_act_, &QAction::triggered, this, &MainWindow::open_scripts);
 }
 
 void MainWindow::create_menus()
@@ -152,34 +159,100 @@ void MainWindow::create_menus()
     emulation_menu_->addAction(reset_act_);
     emulation_menu_->addAction(stop_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
+    tools_menu_->addAction(scripts_act_);
     tools_menu_->addAction(shaders_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
 }
 
+// Shitty input but cba
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    // if (emulator_)
-    // {
-    //     emulator_->HandleKeyDown(event->key());
-    // }
+    switch (event->key())
+    {
+        case Qt::Key_Right:
+        {
+            input_state_[hydra::InputButton::AnalogHorizontal_0] = 127;
+            break;
+        }
+        case Qt::Key_Left:
+        {
+            input_state_[hydra::InputButton::AnalogHorizontal_0] = -127;
+            break;
+        }
+        case Qt::Key_Up:
+        {
+            input_state_[hydra::InputButton::AnalogVertical_0] = 127;
+            break;
+        }
+        case Qt::Key_Down:
+        {
+            input_state_[hydra::InputButton::AnalogVertical_0] = -127;
+            break;
+        }
+        case Qt::Key_Z:
+        {
+            input_state_[hydra::InputButton::A] = 1;
+            break;
+        }
+        case Qt::Key_X:
+        {
+            input_state_[hydra::InputButton::B] = 1;
+            break;
+        }
+        case Qt::Key_C:
+        {
+            input_state_[hydra::InputButton::Z] = 1;
+            break;
+        }
+        case Qt::Key_Return:
+        {
+            input_state_[hydra::InputButton::Start] = 1;
+            break;
+        }
+    }
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    // if (emulator_)
-    // {
-    //     emulator_->HandleKeyUp(event->key());
-    // }
+    switch (event->key())
+    {
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+        {
+            input_state_[hydra::InputButton::AnalogHorizontal_0] = 0;
+            break;
+        }
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        {
+            input_state_[hydra::InputButton::AnalogVertical_0] = 0;
+            break;
+        }
+        case Qt::Key_Z:
+        {
+            input_state_[hydra::InputButton::A] = 0;
+            break;
+        }
+        case Qt::Key_X:
+        {
+            input_state_[hydra::InputButton::B] = 0;
+            break;
+        }
+        case Qt::Key_C:
+        {
+            input_state_[hydra::InputButton::Z] = 0;
+            break;
+        }
+        case Qt::Key_Return:
+        {
+            input_state_[hydra::InputButton::Start] = 0;
+            break;
+        }
+    }
 }
 
-void MainWindow::on_mouse_move(QMouseEvent* event)
-{
-    // if (emulator_)
-    // {
-    //     emulator_->HandleMouseMove(event->position().x(), event->position().y());
-    // }
-}
+void MainWindow::on_mouse_move(QMouseEvent* event) {}
 
 void MainWindow::open_file()
 {
@@ -270,6 +343,68 @@ void MainWindow::open_shaders()
             std::function<void(QString*, QString*)> callback =
                 std::bind(&ScreenWidget::ResetProgram, screen_, _1, _2);
             new ShaderEditor(shaders_open_, callback, this);
+        }
+    });
+}
+
+void MainWindow::open_scripts()
+{
+    qt_may_throw([this]() {
+        if (!scripts_open_)
+        {
+            using namespace std::placeholders;
+            new ScriptEditor(scripts_open_, std::bind(&MainWindow::run_script, this, _1, _2), this);
+        }
+    });
+}
+
+void MainWindow::run_script(const std::string& script, bool safe_mode)
+{
+    static bool initialized = false;
+    static sol::state lua;
+    static auto environment = sol::environment(lua, sol::create);
+    if (!initialized)
+    {
+        lua.open_libraries();
+        const std::vector<std::string> whitelisted = {
+            "assert", "error",    "ipairs",   "next", "pairs",  "pcall",  "print",
+            "select", "tonumber", "tostring", "type", "unpack", "xpcall",
+        };
+
+        for (const auto& name : whitelisted)
+        {
+            environment[name] = lua[name];
+        }
+
+        std::vector<std::string> libraries = {"coroutine", "string", "table", "math"};
+
+        for (const auto& library : libraries)
+        {
+            sol::table copy(lua, sol::create);
+            for (auto [name, func] : lua[library].tbl)
+            {
+                copy[name] = func;
+            }
+            environment[library] = copy;
+        }
+
+        sol::table os(lua, sol::create);
+        os["clock"] = lua["os"]["clock"];
+        os["date"] = lua["os"]["date"];
+        os["difftime"] = lua["os"]["difftime"];
+        os["time"] = lua["os"]["time"];
+        environment["os"] = os;
+        initialized = true;
+    }
+
+    qt_may_throw([this, &script, &safe_mode]() {
+        if (safe_mode)
+        {
+            lua.script(script, environment);
+        }
+        else
+        {
+            lua.script(script);
         }
     });
 }
@@ -383,5 +518,5 @@ void MainWindow::poll_input_callback() {}
 
 int8_t MainWindow::read_input_callback(const hydra::InputInfo& ii)
 {
-    return 0;
+    return input_state_[ii.button];
 }
