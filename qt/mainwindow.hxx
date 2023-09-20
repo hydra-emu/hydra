@@ -68,6 +68,7 @@ public:
     QAction* reset_act_;
     QAction* about_act_;
     QAction* stop_act_;
+    QAction* close_act_;
     QAction* settings_act_;
     QAction* screenshot_act_;
     QAction* shaders_act_;
