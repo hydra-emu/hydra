@@ -13,6 +13,9 @@
         <file>images/nes.png</file>
         <file>images/nes_ppuviewer.png</file>
         <file>images/shaders.png</file>
+        <file>images/scripts.png</file>
+        <file>images/run.png</file>
+        <file>images/save.png</file>
         <file>images/compile.png</file>
         <file>images/autocompile.png</file>
         <file>images/open.png</file>

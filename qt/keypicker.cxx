@@ -1,4 +1,5 @@
 #include <iostream>
+#include <QHeaderView>
 #include <QKeyEvent>
 #include <qt/keypicker.hxx>
 #include <QTableWidget>
@@ -7,11 +8,13 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
 {
     emulator_picker_ = new QComboBox(this);
     tab_show_ = new QTabWidget(this);
-    for (int i = 0; i < EmuTypeSize; i++)
+    // TODO: change to i = 0 -> EmuTypeSize
+    for (int i = (int)hydra::EmuType::N64; i < (int)hydra::EmuType::N64 + 1; i++)
     {
         emulator_picker_->addItem(QString::fromStdString("Placeholder"));
         QTableWidget* table = new QTableWidget(this);
         table->setColumnCount(2);
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         // table->setRowCount(emulator_data.Mappings.size());
         // int j = 0;
         // for (auto pair : emulator_data.Mappings)
@@ -29,7 +32,7 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         connect(table, SIGNAL(cellDoubleClicked(int, int)), this,
                 SLOT(onCellDoubleClicked(int, int)));
-        // tab_show_->addTab(table, QString::fromStdString(emulator_data.Name));
+        tab_show_->addTab(table, QString::fromStdString("Placeholder"));
     }
     tab_show_->tabBar()->hide();
     layout_ = new QVBoxLayout(this);
