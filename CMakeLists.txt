@@ -112,6 +112,7 @@ set(HYDRA_INCLUDE_DIRECTORIES
     include
     vendored
     vendored/fmt/include
+    ${LUA_INCLUDE_DIR}
 )
 
 qt_add_executable(hydra
