@@ -205,6 +205,7 @@ ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> c
     : open_(open), callback_(callback), QWidget(parent, Qt::Window)
 {
     setAttribute(Qt::WA_DeleteOnClose);
+    setWindowFlag(Qt::WindowStaysOnTopHint);
     QFont font;
     font.setFamily("Courier");
     font.setFixedPitch(true);

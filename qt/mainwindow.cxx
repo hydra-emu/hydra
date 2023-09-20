@@ -38,6 +38,9 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
+    auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
+    Settings::Open(settings_path);
+
     QWidget* widget = new QWidget;
     setCentralWidget(widget);
 
@@ -63,8 +66,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     timer->start();
 
     TerminalWindow::Init();
-    Logger::HookCallback("Fatal", [this](const std::string& message) {
-        printf("Fatal: %s\n", message.c_str());
+    Logger::HookCallback("Fatal", [this](const std::string& fatal_msg) {
+        printf("Fatal: %s\n", fatal_msg.c_str());
         exit(1);
     });
 
@@ -120,6 +123,10 @@ void MainWindow::create_actions()
     settings_act_->setShortcut(Qt::CTRL | Qt::Key_Comma);
     settings_act_->setStatusTip(tr("Emulator settings"));
     connect(settings_act_, &QAction::triggered, this, &MainWindow::open_settings);
+    close_act_ = new QAction(tr("&Exit"), this);
+    close_act_->setShortcut(QKeySequence::Close);
+    close_act_->setStatusTip(tr("Exit hydra"));
+    connect(close_act_, &QAction::triggered, this, &MainWindow::close);
     pause_act_ = new QAction(tr("&Pause"), this);
     pause_act_->setShortcut(Qt::CTRL | Qt::Key_P);
     pause_act_->setCheckable(true);
@@ -166,6 +173,8 @@ void MainWindow::create_menus()
     file_menu_->addAction(screenshot_act_);
     file_menu_->addSeparator();
     file_menu_->addAction(settings_act_);
+    file_menu_->addSeparator();
+    file_menu_->addAction(close_act_);
     emulation_menu_ = menuBar()->addMenu(tr("&Emulation"));
     emulation_menu_->addAction(pause_act_);
     emulation_menu_->addAction(reset_act_);
@@ -460,9 +469,6 @@ void MainWindow::enable_emulation_actions(bool should)
 
 void MainWindow::initialize_emulator_data()
 {
-    auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
-    Settings::Open(settings_path);
-
     for (int i = 0; i < EmuTypeSize; i++)
     {
         std::string file_name = hydra::serialize_emu_type(static_cast<hydra::EmuType>(i));

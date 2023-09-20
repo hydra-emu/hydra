@@ -62,6 +62,7 @@ ScriptEditor::ScriptEditor(bool& open,
     : QWidget(parent, Qt::Window), open_(open), run_script_callback_(run_script_callback)
 {
     setAttribute(Qt::WA_DeleteOnClose);
+    setWindowFlag(Qt::WindowStaysOnTopHint);
     setWindowTitle("Script Editor");
     QFont font;
     font.setFamily("Courier");
