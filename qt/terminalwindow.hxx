@@ -3,6 +3,7 @@
 #include <QComboBox>
 #include <QTextEdit>
 #include <QWidget>
+#include <unordered_map>
 
 class TerminalWindow : public QWidget
 {
