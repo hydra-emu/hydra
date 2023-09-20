@@ -25,4 +25,5 @@ private:
 
     static void log(const std::string& group, const std::string& message);
     static std::unordered_map<std::string, std::string> logs_;
+    static bool changed_;
 };

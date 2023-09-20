@@ -108,8 +108,19 @@ void MainWindow::initialize_audio()
     {
         Logger::Fatal("Failed to open audio device");
     }
-
     ma_device_start(&sound_device_);
+
+    std::string volume_str = Settings::Get("master_volume");
+    if (!volume_str.empty())
+    {
+        int volume = std::stoi(volume_str);
+        float volume_f = static_cast<float>(volume) / 100.0f;
+        ma_device_set_master_volume(&sound_device_, volume_f);
+    }
+    else
+    {
+        ma_device_set_master_volume(&sound_device_, 1.0f);
+    }
 }
 
 void MainWindow::create_actions()
@@ -136,6 +147,30 @@ void MainWindow::create_actions()
     stop_act_->setShortcut(Qt::CTRL | Qt::Key_Q);
     stop_act_->setStatusTip(tr("Stop emulation immediately"));
     connect(stop_act_, &QAction::triggered, this, &MainWindow::stop_emulator);
+    mute_act_ = new QAction(tr("&Mute"), this);
+    mute_act_->setShortcut(Qt::CTRL | Qt::Key_M);
+    mute_act_->setCheckable(true);
+    mute_act_->setStatusTip(tr("Mute audio"));
+    connect(mute_act_, &QAction::triggered, this, [this]() {
+        if (mute_act_->isChecked())
+        {
+            ma_device_set_master_volume(&sound_device_, 0.0f);
+        }
+        else
+        {
+            std::string volume_str = Settings::Get("master_volume");
+            if (!volume_str.empty())
+            {
+                int volume = std::stoi(volume_str);
+                float volume_f = static_cast<float>(volume) / 100.0f;
+                ma_device_set_master_volume(&sound_device_, volume_f);
+            }
+            else
+            {
+                ma_device_set_master_volume(&sound_device_, 1.0f);
+            }
+        }
+    });
     reset_act_ = new QAction(tr("&Reset"), this);
     reset_act_->setShortcut(Qt::CTRL | Qt::Key_R);
     reset_act_->setStatusTip(tr("Reset emulator"));
@@ -179,6 +214,8 @@ void MainWindow::create_menus()
     emulation_menu_->addAction(pause_act_);
     emulation_menu_->addAction(reset_act_);
     emulation_menu_->addAction(stop_act_);
+    emulation_menu_->addSeparator();
+    emulation_menu_->addAction(mute_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
     tools_menu_->addAction(terminal_act_);
     tools_menu_->addAction(scripts_act_);
@@ -343,7 +380,6 @@ void MainWindow::open_file_impl(const std::string& path)
     if (!emulator_->LoadFile("rom", path))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
     enable_emulation_actions(true);
-    paused_ = false;
 }
 
 void MainWindow::open_settings()
@@ -351,7 +387,8 @@ void MainWindow::open_settings()
     qt_may_throw([this]() {
         if (!settings_open_)
         {
-            new SettingsWindow(settings_open_, this);
+            using namespace std::placeholders;
+            new SettingsWindow(settings_open_, std::bind(&MainWindow::set_volume, this, _1), this);
         }
     });
 }
@@ -446,6 +483,11 @@ void MainWindow::screenshot()
     // QApplication::clipboard()->setImage(texture_.toImage());
 }
 
+void MainWindow::set_volume(int volume)
+{
+    ma_device_set_master_volume(&sound_device_, volume / 100.0f);
+}
+
 void MainWindow::open_about()
 {
     qt_may_throw([this]() {
@@ -458,7 +500,6 @@ void MainWindow::open_about()
 
 void MainWindow::enable_emulation_actions(bool should)
 {
-    pause_act_->setEnabled(should);
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
     if (should)

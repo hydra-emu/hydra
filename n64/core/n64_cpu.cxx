@@ -37,7 +37,6 @@ namespace hydra::N64
             ifs.seekg(0, std::ios::beg);
             ifs.read(reinterpret_cast<char*>(cart_rom_.data()), size);
             rom_loaded_ = true;
-            Reset();
         }
         else
         {
@@ -74,6 +73,9 @@ namespace hydra::N64
     {
         pif_ram_.fill(0);
         time_ = 0;
+
+        if (cart_rom_.empty())
+            return;
 
         uint32_t crc = 0xFFFF'FFFF;
         for (int i = 0; i < 0x9c0; i++)

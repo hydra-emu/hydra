@@ -250,6 +250,12 @@ namespace hydra::N64
         // Logger::Info("RDP: {}", get_rdp_command_name(id));
         switch (id)
         {
+            case RDPCommandType::SyncTile:
+            case RDPCommandType::SyncLoad:
+            case RDPCommandType::SyncPipe:
+            {
+                break;
+            }
             case RDPCommandType::SyncFull:
             {
                 Logger::Debug("Raising DP interrupt");

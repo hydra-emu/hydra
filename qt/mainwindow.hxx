@@ -45,6 +45,7 @@ private:
     void enable_emulation_actions(bool should);
     void initialize_emulator_data();
     void initialize_audio();
+    void set_volume(int volume);
 
     void video_callback(const hydra::VideoInfo& info);
     void audio_callback(const hydra::AudioInfo& info);
@@ -66,6 +67,7 @@ public:
     QAction* open_act_;
     QAction* pause_act_;
     QAction* reset_act_;
+    QAction* mute_act_;
     QAction* about_act_;
     QAction* stop_act_;
     QAction* close_act_;
