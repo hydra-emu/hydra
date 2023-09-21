@@ -2,6 +2,7 @@
 
 #include <emulator_types.hxx>
 #include <QComboBox>
+#include <QLabel>
 #include <QTableWidget>
 #include <QTabWidget>
 #include <QVBoxLayout>
@@ -13,16 +14,20 @@ class KeyPickerPage : public QWidget
 
 public:
     KeyPickerPage(QWidget* parent = 0);
+    void KeyPressed(QKeyEvent* event);
+
 private slots:
     void onComboBoxChange(int index);
     void onCellDoubleClicked(int row, int column);
 
 private:
-    void keyPressEvent(QKeyEvent* event) override;
     bool waiting_input_ = false;
     int row_waiting_ = 0;
     QComboBox* emulator_picker_;
     QTabWidget* tab_show_;
     QVBoxLayout* layout_;
     void saveKeySettings();
+    std::string get_key(const std::string& emulator_name, const std::string& key);
+    void set_key(const std::string& emulator_name, const std::string& key,
+                 const std::string& value);
 };

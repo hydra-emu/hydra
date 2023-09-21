@@ -624,10 +624,8 @@ void MainWindow::add_recent(const std::string& path)
     if (it != recent_files_.end())
     {
         recent_files_.erase(it);
-        printf("erasing: %s\n", path.c_str());
     }
     recent_files_.push_front(path);
-    printf("adding: %s\n", path.c_str());
     if (recent_files_.size() > 10)
     {
         recent_files_.pop_back();
@@ -645,5 +643,7 @@ void MainWindow::update_recent_files()
         std::string path = recent_files_[i];
         menu->addAction(path.c_str(), [this, path]() { open_file_impl(path); });
     }
+    if (recent_act_->menu())
+        recent_act_->menu()->deleteLater();
     recent_act_->setMenu(menu);
 }

@@ -45,11 +45,6 @@ namespace hydra
         std::unique_ptr<Core> emulator;
         switch (type)
         {
-            case EmuType::Gameboy:
-            {
-                // emulator = std::make_unique<hydra::HydraCore_Gameboy>();
-                break;
-            }
             case EmuType::N64:
             {
                 emulator = std::make_unique<hydra::HydraCore_N64>();
@@ -57,7 +52,7 @@ namespace hydra
                 if (ipl_path.empty())
                 {
                     throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                           "IPL path was not set");
+                                                           "IPL path was not set in the settings");
                 }
 
                 if (!emulator->LoadFile("ipl", ipl_path))
@@ -67,14 +62,6 @@ namespace hydra
                 }
                 break;
             }
-            // case EmuType::c8:
-            // {
-            //     break;
-            // }
-            // case EmuType::NES:
-            // {
-            //     break;
-            // }
             default:
             {
                 throw ErrorFactory::generate_exception(__func__, __LINE__,

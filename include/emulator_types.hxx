@@ -2,17 +2,13 @@
 
 #include <string>
 
-#define EMULATORS \
-    X(Gameboy)    \
-    X(NES)        \
-    X(N64)        \
-    X(c8)
+#define EMULATORS X(N64, "Nintendo 64")
 
 namespace hydra
 {
     enum class EmuType
     {
-#define X(name) name,
+#define X(name, _) name,
         EMULATORS
 #undef X
 
@@ -24,9 +20,23 @@ namespace hydra
     {
         switch (type)
         {
-#define X(name)         \
-    case EmuType::name: \
+#define X(name, str_name) \
+    case EmuType::name:   \
         return #name;
+            EMULATORS
+#undef X
+            default:
+                return "Unknown";
+        }
+    }
+
+    inline std::string get_emu_type_name(EmuType type)
+    {
+        switch (type)
+        {
+#define X(name, str_name) \
+    case EmuType::name:   \
+        return str_name;
             EMULATORS
 #undef X
             default:

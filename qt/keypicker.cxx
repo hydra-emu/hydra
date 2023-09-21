@@ -6,15 +6,21 @@
 
 KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
 {
-    emulator_picker_ = new QComboBox(this);
-    tab_show_ = new QTabWidget(this);
-    // TODO: change to i = 0 -> EmuTypeSize
-    for (int i = (int)hydra::EmuType::N64; i < (int)hydra::EmuType::N64 + 1; i++)
+    emulator_picker_ = new QComboBox;
+    tab_show_ = new QTabWidget;
+    for (int i = 0; i < EmuTypeSize; i++)
     {
-        emulator_picker_->addItem(QString::fromStdString("Placeholder"));
-        QTableWidget* table = new QTableWidget(this);
+        emulator_picker_->addItem(
+            QString::fromStdString(hydra::get_emu_type_name(static_cast<hydra::EmuType>(i))));
+        QTableWidget* table = new QTableWidget;
         table->setColumnCount(2);
         table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        table->setHorizontalHeaderLabels(QStringList() << "Key"
+                                                       << "Binding");
+        QHeaderView* header = new QHeaderView(Qt::Vertical);
+        header->hide();
+        table->verticalHeader()->deleteLater();
+        table->setVerticalHeader(header);
         // table->setRowCount(emulator_data.Mappings.size());
         // int j = 0;
         // for (auto pair : emulator_data.Mappings)
@@ -29,13 +35,22 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
         //     }
         //     j++;
         // }
+        table->setRowCount(1);
+        QTableWidgetItem* item = new QTableWidgetItem("Key");
+        item->setFlags(Qt::NoItemFlags);
+        item->setForeground(Qt::white);
+        table->setItem(0, 0, item);
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        table->setItem(0, 1, new QTableWidgetItem("Some binding"));
+        table->setFocusPolicy(Qt::NoFocus);
         connect(table, SIGNAL(cellDoubleClicked(int, int)), this,
                 SLOT(onCellDoubleClicked(int, int)));
-        tab_show_->addTab(table, QString::fromStdString("Placeholder"));
+        tab_show_->addTab(table, QString::fromStdString(
+                                     hydra::get_emu_type_name(static_cast<hydra::EmuType>(i))));
     }
     tab_show_->tabBar()->hide();
-    layout_ = new QVBoxLayout(this);
+    tab_show_->setFocusPolicy(Qt::NoFocus);
+    layout_ = new QVBoxLayout;
     layout_->addWidget(emulator_picker_);
     layout_->addWidget(tab_show_);
     setLayout(layout_);
@@ -51,29 +66,35 @@ void KeyPickerPage::onComboBoxChange(int index)
 
 void KeyPickerPage::onCellDoubleClicked(int row, int column)
 {
-    if (column == 1 && !waiting_input_)
+    if (column != 1)
+        return;
+
+    QTableWidgetItem* item = static_cast<QTableWidget*>(tab_show_->currentWidget())->item(row, 1);
+    if (!waiting_input_)
     {
         waiting_input_ = true;
         row_waiting_ = row;
-        static_cast<QTableWidget*>(tab_show_->currentWidget())
-            ->setItem(row_waiting_, 1, new QTableWidgetItem("Press a key..."));
+
+        item->setText("Press a key");
+    }
+    else
+    {
+        if (row == row_waiting_)
+        {
+            waiting_input_ = false;
+            item->setText("Some binding");
+        }
     }
 }
 
-void KeyPickerPage::keyPressEvent(QKeyEvent* event)
+void KeyPickerPage::KeyPressed(QKeyEvent* event)
 {
-    // FIXME: key doesnt trigger here it seems
-    // if (waiting_input_)
-    // {
-    //     waiting_input_ = false;
-    //     auto table = static_cast<QTableWidget*>(tab_show_->currentWidget());
-    //     table->setItem(row_waiting_, 1,
-    //                    new QTableWidgetItem(QKeySequence(event->key()).toString()));
-    //     EmulatorSettings::GetEmulatorData(
-    //         static_cast<hydra::EmuType>(emulator_picker_->currentIndex()))
-    //         .Mappings[table->currentItem()->text().toStdString()] = event->key();
-    //     saveKeySettings();
-    // }
+    if (waiting_input_)
+    {
+        waiting_input_ = false;
+        auto item = static_cast<QTableWidget*>(tab_show_->currentWidget())->item(row_waiting_, 1);
+        item->setText(QKeySequence(event->key()).toString());
+    }
 }
 
 void KeyPickerPage::saveKeySettings()
