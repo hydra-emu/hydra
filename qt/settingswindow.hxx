@@ -27,7 +27,7 @@ private:
                         const std::string& extension, int row, int column);
     void keyPressEvent(QKeyEvent* event);
 private slots:
-    void on_tab_change();
+    void on_tab_change(int tab);
 
 public:
     SettingsWindow(bool& open, std::function<void(int)> volume_callback, QWidget* parent = nullptr);

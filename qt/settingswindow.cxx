@@ -29,7 +29,10 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
         tab_list_->addItem(audio);
         tab_list_->addItem(input);
         tab_list_->addItem(n64);
-        connect(tab_list_, SIGNAL(itemSelectionChanged()), this, SLOT(on_tab_change()));
+        tab_list_->setCurrentRow(0);
+        tab_list_->setDragEnabled(false);
+        tab_list_->setSelectionMode(QAbstractItemView::SingleSelection);
+        connect(tab_list_, SIGNAL(currentRowChanged(int)), this, SLOT(on_tab_change(int)));
         QVBoxLayout* layout = new QVBoxLayout;
         layout->addWidget(tab_list_);
         left_group_box_->setLayout(layout);
@@ -43,6 +46,7 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
         QVBoxLayout* layout = new QVBoxLayout;
         layout->setContentsMargins(5, 5, 5, 5);
         layout->addWidget(tab_show_);
+        layout->setContentsMargins(0, 0, 0, 0);
         right_group_box_->setLayout(layout);
         right_group_box_->setMinimumWidth(500);
         right_group_box_->setMinimumHeight(400);
@@ -97,6 +101,31 @@ void SettingsWindow::create_tabs()
         n64_layout->setColumnStretch(1, 3);
         n64_layout->setAlignment(Qt::AlignTop);
         add_filepicker(n64_layout, "IPL path", "n64_ipl_path", "Binary files (*.bin)", 0, 0);
+        QFrame* separator = new QFrame(this);
+        separator->setLineWidth(1);
+        separator->setMidLineWidth(1);
+        separator->setFrameShape(QFrame::HLine);
+        separator->setPalette(QPalette(QColor(0, 0, 0)));
+        n64_layout->addWidget(separator, 1, 0, 1, 0);
+        for (int i = 1; i <= 4; i++)
+        {
+            n64_layout->addWidget(new QLabel("Controller port " + QString::number(i) + ":"), i + 1,
+                                  0);
+            QCheckBox* active = new QCheckBox("Active");
+            std::string is_active =
+                Settings::Get("n64_controller_" + std::to_string(i) + "_active");
+            active->setChecked(is_active == "true");
+            connect(active, &QCheckBox::stateChanged, this, [this, i](int state) {
+                Settings::Set("n64_controller_" + std::to_string(i) + "_active",
+                              state == Qt::Checked ? "true" : "false");
+            });
+            if (is_active.empty() && i == 1)
+            {
+                active->setChecked(true);
+            }
+            n64_layout->addWidget(new QComboBox, i + 1, 1);
+            n64_layout->addWidget(active, i + 1, 2);
+        }
         QWidget* n64_tab = new QWidget;
         n64_tab->setLayout(n64_layout);
         tab_show_->addTab(n64_tab, "N64");
@@ -132,9 +161,9 @@ void SettingsWindow::add_filepicker(QGridLayout* layout, const std::string& name
     layout->addWidget(button, row, column + 2);
 }
 
-void SettingsWindow::on_tab_change()
+void SettingsWindow::on_tab_change(int tab)
 {
-    tab_show_->setCurrentIndex(tab_list_->currentRow());
+    tab_show_->setCurrentIndex(tab);
 }
 
 void SettingsWindow::keyPressEvent(QKeyEvent* event)
