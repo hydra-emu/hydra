@@ -20,8 +20,8 @@
 #else
 #ifdef __x86_64__
 #include <x86intrin.h>
-#elif __arm__
-#include <intrin.h>
+#elif defined(__arm__) or defined(__aarch64__) or defined(__arm64__)
+#include <arm_acle.h>
 #endif
 #endif
 
@@ -148,25 +148,41 @@ namespace hydra
 
     inline uint32_t crc32_u8(uint32_t crc, uint8_t data)
     {
+#if defined(__arm__) or defined(__aarch64__) or defined(__arm64__)
+        crc = __crc32cb(crc, data);
+#else
         crc = _mm_crc32_u8(crc, data);
+#endif
         return crc;
     }
 
     inline uint32_t crc32_u16(uint32_t crc, uint16_t data)
     {
+#if defined(__arm__) or defined(__aarch64__) or defined(__arm64__)
+        crc = __crc32ch(crc, data);
+#else
         crc = _mm_crc32_u16(crc, data);
+#endif
         return crc;
     }
 
     inline uint32_t crc32_u32(uint32_t crc, uint32_t data)
     {
+#if defined(__arm__) or defined(__aarch64__) or defined(__arm64__)
+        crc = __crc32cw(crc, data);
+#else
         crc = _mm_crc32_u32(crc, data);
+#endif
         return crc;
     }
 
     inline uint32_t crc32_u64(uint32_t crc, uint64_t data)
     {
+#if defined(__arm__) or defined(__aarch64__) or defined(__arm64__)
+        crc = __crc32cd(crc, data);
+#else
         crc = _mm_crc32_u64(crc, data);
+#endif
         return crc;
     }
 
