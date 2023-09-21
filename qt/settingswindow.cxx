@@ -20,15 +20,23 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
     right_group_box_ = new QGroupBox;
     {
         tab_list_ = new QListWidget;
-        QListWidgetItem* audio =
-            new QListWidgetItem(QPixmap(":/images/sound.png"), QString("Audio"));
-        QListWidgetItem* input =
-            new QListWidgetItem(QPixmap(":/images/input.png"), QString("Input"));
-        QListWidgetItem* n64 =
-            new QListWidgetItem(QPixmap(":/images/n64.png"), QString("Nintendo 64"));
-        tab_list_->addItem(audio);
-        tab_list_->addItem(input);
-        tab_list_->addItem(n64);
+#define add_item(var_name, name, image)                                                         \
+    QListWidgetItem* var_name = new QListWidgetItem(QPixmap(":/images/" image), QString(name)); \
+    tab_list_->addItem(var_name)
+
+        add_item(general, "General", "support.png");
+        add_item(audio, "Audio", "sound.png");
+        add_item(input, "Input", "input.png");
+        add_item(n64, "Nintendo 64", "n64.png");
+#undef add_item
+        // clang-format off
+        tab_list_->setStyleSheet(R"(
+            QListWidget::item:selected
+            {
+                background: rgb(180,85,85);
+            }
+        )");
+        // clang-format on
         tab_list_->setCurrentRow(0);
         tab_list_->setDragEnabled(false);
         tab_list_->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -67,6 +75,14 @@ SettingsWindow::~SettingsWindow()
 
 void SettingsWindow::create_tabs()
 {
+    {
+        QGridLayout* general_layout = new QGridLayout;
+        general_layout->setAlignment(Qt::AlignTop);
+        QWidget* general_tab = new QWidget;
+        general_tab->setLayout(general_layout);
+        tab_show_->addTab(general_tab, "General");
+        add_filepicker(general_layout, "Screenshot directory", "screenshot_path", "", 0, 0, true);
+    }
     {
         QGridLayout* audio_layout = new QGridLayout;
         audio_layout->setAlignment(Qt::AlignTop);
@@ -132,20 +148,33 @@ void SettingsWindow::create_tabs()
     }
 }
 
-void SettingsWindow::on_open_file_click(const std::string& setting, const std::string& extension)
+void SettingsWindow::on_open_file_click(QLineEdit* edit, const std::string& name,
+                                        const std::string& setting, const std::string& extension)
 {
-    auto path = QFileDialog::getOpenFileName(this, tr("Open IPL"), "", extension.c_str(), nullptr,
+    auto path = QFileDialog::getOpenFileName(this, name.c_str(), "", extension.c_str(), nullptr,
                                              QFileDialog::ReadOnly);
     if (!path.isEmpty())
     {
         Settings::Set(setting, path.toStdString());
-        ipl_path_->setText(path);
+        edit->setText(path);
+    }
+}
+
+void SettingsWindow::on_open_dir_click(QLineEdit* edit, const std::string& name,
+                                       const std::string& setting)
+{
+    auto path = QFileDialog::getExistingDirectory(this, name.c_str(), "", QFileDialog::ReadOnly);
+
+    if (!path.isEmpty())
+    {
+        Settings::Set(setting, path.toStdString());
+        edit->setText(path);
     }
 }
 
 void SettingsWindow::add_filepicker(QGridLayout* layout, const std::string& name,
                                     const std::string& setting, const std::string& extension,
-                                    int row, int column)
+                                    int row, int column, bool dir)
 {
     auto path = Settings::Get(setting);
     QLineEdit* edit = new QLineEdit;
@@ -154,8 +183,17 @@ void SettingsWindow::add_filepicker(QGridLayout* layout, const std::string& name
     QPushButton* button = new QPushButton;
     button->setFixedWidth(50);
     button->setIcon(QIcon(":/images/open.png"));
-    connect(button, &QPushButton::clicked, this,
-            std::bind(&SettingsWindow::on_open_file_click, this, setting, extension));
+    if (!dir)
+    {
+        connect(
+            button, &QPushButton::clicked, this,
+            std::bind(&SettingsWindow::on_open_file_click, this, edit, name, setting, extension));
+    }
+    else
+    {
+        connect(button, &QPushButton::clicked, this,
+                std::bind(&SettingsWindow::on_open_dir_click, this, edit, name, setting));
+    }
     layout->addWidget(new QLabel(QString::fromStdString(name + ": ")), row, column);
     layout->addWidget(edit, row, column + 1);
     layout->addWidget(button, row, column + 2);

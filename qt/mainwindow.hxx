@@ -80,6 +80,7 @@ public:
     QAction* scripts_act_;
     QAction* terminal_act_;
     QAction* recent_act_;
+    QTimer* emulator_timer_;
     ScreenWidget* screen_;
     ma_device sound_device_{};
     std::unique_ptr<hydra::Core> emulator_;
