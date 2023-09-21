@@ -12,6 +12,7 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
                                QWidget* parent)
     : open_(open), volume_callback_(volume_callback), QWidget(parent, Qt::Window)
 {
+    setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle("Settings");
     QGridLayout* main_layout = new QGridLayout;
@@ -88,8 +89,8 @@ void SettingsWindow::create_tabs()
         audio_layout->addWidget(audio_slider, 0, 1);
     }
     {
-        KeyPickerPage* key_picker = new KeyPickerPage(this);
-        tab_show_->addTab(key_picker, "Input");
+        key_picker_ = new KeyPickerPage;
+        tab_show_->addTab(key_picker_, "Input");
     }
     {
         QGridLayout* n64_layout = new QGridLayout;
@@ -134,4 +135,9 @@ void SettingsWindow::add_filepicker(QGridLayout* layout, const std::string& name
 void SettingsWindow::on_tab_change()
 {
     tab_show_->setCurrentIndex(tab_list_->currentRow());
+}
+
+void SettingsWindow::keyPressEvent(QKeyEvent* event)
+{
+    key_picker_->KeyPressed(event);
 }
