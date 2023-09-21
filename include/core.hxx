@@ -42,6 +42,10 @@ namespace hydra
         R3,
 
         InputCount,
+
+        // Special input, used to connect/disconnect joypads
+        Connect,
+        Disconnect,
     };
 
     enum class VideoFormat
