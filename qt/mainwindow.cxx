@@ -75,6 +75,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     initialize_emulator_data();
     initialize_audio();
     enable_emulation_actions(false);
+
+    widget->setStyleSheet(R"(
+        background-repeat: no-repeat;
+        background-position: center;
+        background-image: url(:/images/hydra.png);
+    )");
 }
 
 MainWindow::~MainWindow()

@@ -38,7 +38,6 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
         table->setRowCount(1);
         QTableWidgetItem* item = new QTableWidgetItem("Key");
         item->setFlags(Qt::NoItemFlags);
-        item->setForeground(Qt::white);
         table->setItem(0, 0, item);
         table->setEditTriggers(QAbstractItemView::NoEditTriggers);
         table->setItem(0, 1, new QTableWidgetItem("Some binding"));
