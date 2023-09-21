@@ -22,9 +22,11 @@ private:
     KeyPickerPage* key_picker_;
     std::function<void(int)> volume_callback_;
     void create_tabs();
-    void on_open_file_click(const std::string& setting, const std::string& extension);
+    void on_open_file_click(QLineEdit* edit, const std::string& name, const std::string& setting,
+                            const std::string& extension);
+    void on_open_dir_click(QLineEdit* edit, const std::string& name, const std::string& setting);
     void add_filepicker(QGridLayout* layout, const std::string& name, const std::string& setting,
-                        const std::string& extension, int row, int column);
+                        const std::string& extension, int row, int column, bool dir = false);
     void keyPressEvent(QKeyEvent* event);
 private slots:
     void on_tab_change(int tab);

@@ -21,6 +21,8 @@
 #include <QTimer>
 #include <settings.hxx>
 #include <sol/sol.hpp>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.hxx>
 
 void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
 {
@@ -61,9 +63,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     setWindowTitle("hydra");
     setWindowIcon(QIcon(":/images/hydra.png"));
 
-    QTimer* timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(emulator_frame()));
-    timer->start();
+    emulator_timer_ = new QTimer(this);
+    connect(emulator_timer_, SIGNAL(timeout()), this, SLOT(emulator_frame()));
 
     TerminalWindow::Init();
     Logger::HookCallback("Fatal", [this](const std::string& fatal_msg) {
@@ -380,6 +381,7 @@ void MainWindow::open_file()
 void MainWindow::open_file_impl(const std::string& path)
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
+    emulator_timer_->stop();
     std::filesystem::path pathfs(path);
 
     if (!std::filesystem::is_regular_file(pathfs))
@@ -407,6 +409,11 @@ void MainWindow::open_file_impl(const std::string& path)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
     enable_emulation_actions(true);
     add_recent(path);
+
+    if (!paused_)
+    {
+        emulator_timer_->start();
+    }
 }
 
 void MainWindow::open_settings()
@@ -507,7 +514,26 @@ void MainWindow::run_script(const std::string& script, bool safe_mode)
 
 void MainWindow::screenshot()
 {
-    // QApplication::clipboard()->setImage(texture_.toImage());
+    std::unique_lock<std::mutex> elock(emulator_mutex_);
+    std::filesystem::path screenshot_path = Settings::Get("screenshot_path");
+    if (screenshot_path.empty())
+    {
+        screenshot_path = std::filesystem::current_path();
+    }
+
+    int screenshot_index = 0;
+    std::string screenshot_name = "hydra_screenshot";
+    std::string screenshot_extension = ".png";
+    while (std::filesystem::exists(screenshot_path / (screenshot_name + screenshot_extension)))
+    {
+        screenshot_index++;
+        screenshot_name = "hydra_screenshot_" + std::to_string(screenshot_index);
+    }
+
+    std::filesystem::path screenshot_full_path =
+        screenshot_path / (screenshot_name + screenshot_extension);
+    stbi_write_png(screenshot_full_path.string().c_str(), video_info_.width, video_info_.height, 4,
+                   video_info_.data.data(), video_info_.width * 4);
 }
 
 void MainWindow::set_volume(int volume)
@@ -561,6 +587,14 @@ void MainWindow::initialize_emulator_data()
 void MainWindow::pause_emulator()
 {
     paused_ = !paused_;
+    if (paused_)
+    {
+        emulator_timer_->stop();
+    }
+    else
+    {
+        emulator_timer_->start();
+    }
 }
 
 void MainWindow::reset_emulator()
@@ -578,6 +612,7 @@ void MainWindow::stop_emulator()
     if (emulator_)
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
+        emulator_timer_->stop();
         queued_audio_.clear();
         emulator_.reset();
         enable_emulation_actions(false);
@@ -588,11 +623,6 @@ void MainWindow::stop_emulator()
 void MainWindow::emulator_frame()
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
-    if (!emulator_ || paused_)
-    {
-        return;
-    }
-
     std::future<void> frame = emulator_->RunFrameAsync();
     frame.wait();
 
