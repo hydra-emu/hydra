@@ -82,6 +82,32 @@ void SettingsWindow::create_tabs()
         general_tab->setLayout(general_layout);
         tab_show_->addTab(general_tab, "General");
         add_filepicker(general_layout, "Screenshot directory", "screenshot_path", "", 0, 0, true);
+        QCheckBox* use_cwd = new QCheckBox("...or use current working directory");
+        connect(use_cwd, &QCheckBox::stateChanged, this, [general_layout](int state) {
+            static std::string last_path = Settings::Get("screenshot_path");
+            QLineEdit* path_edit = (QLineEdit*)(general_layout->itemAtPosition(0, 1)->widget());
+            if (state == Qt::Checked)
+            {
+                last_path = Settings::Get("screenshot_path");
+                Settings::Set("screenshot_path", "");
+                general_layout->itemAtPosition(0, 1)->widget()->setEnabled(false);
+                general_layout->itemAtPosition(0, 2)->widget()->setEnabled(false);
+                path_edit->setText(std::filesystem::current_path().string().c_str());
+            }
+            else
+            {
+                if (Settings::Get("screenshot_path").empty())
+                {
+                    Settings::Set("screenshot_path", last_path);
+                    path_edit->setText(last_path.c_str());
+                }
+                general_layout->itemAtPosition(0, 1)->widget()->setEnabled(true);
+                general_layout->itemAtPosition(0, 2)->widget()->setEnabled(true);
+            }
+        });
+        use_cwd->setCheckState(Settings::Get("screenshot_path").empty() ? Qt::Checked
+                                                                        : Qt::Unchecked);
+        general_layout->addWidget(use_cwd, 1, 0, 1, 2);
     }
     {
         QGridLayout* audio_layout = new QGridLayout;
