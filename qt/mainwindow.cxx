@@ -198,12 +198,38 @@ void MainWindow::create_actions()
     terminal_act_->setStatusTip("Open the terminal");
     terminal_act_->setIcon(QIcon(":/images/terminal.png"));
     connect(terminal_act_, &QAction::triggered, this, &MainWindow::open_terminal);
+    recent_act_ = new QAction(tr("&Recent files"), this);
+    for (int i = 0; i < 10; i++)
+    {
+        std::string path = Settings::Get("recent_" + std::to_string(i));
+        if (!path.empty())
+        {
+            recent_files_.push_back(path);
+        }
+        else
+        {
+            break;
+        }
+    }
+    if (recent_files_.size() == 0)
+    {
+        QMenu* empty_menu = new QMenu;
+        QAction* empty_act = new QAction(tr("No recent files"));
+        empty_act->setEnabled(false);
+        empty_menu->addAction(empty_act);
+        recent_act_->setMenu(empty_menu);
+    }
+    else
+    {
+        update_recent_files();
+    }
 }
 
 void MainWindow::create_menus()
 {
     file_menu_ = menuBar()->addMenu(tr("&File"));
     file_menu_->addAction(open_act_);
+    file_menu_->addAction(recent_act_);
     file_menu_->addSeparator();
     file_menu_->addAction(screenshot_act_);
     file_menu_->addSeparator();
@@ -380,6 +406,7 @@ void MainWindow::open_file_impl(const std::string& path)
     if (!emulator_->LoadFile("rom", path))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
     enable_emulation_actions(true);
+    add_recent(path);
 }
 
 void MainWindow::open_settings()
@@ -589,4 +616,34 @@ void MainWindow::poll_input_callback() {}
 int8_t MainWindow::read_input_callback(const hydra::InputInfo& ii)
 {
     return input_state_[ii.button];
+}
+
+void MainWindow::add_recent(const std::string& path)
+{
+    auto it = std::find(recent_files_.begin(), recent_files_.end(), path);
+    if (it != recent_files_.end())
+    {
+        recent_files_.erase(it);
+        printf("erasing: %s\n", path.c_str());
+    }
+    recent_files_.push_front(path);
+    printf("adding: %s\n", path.c_str());
+    if (recent_files_.size() > 10)
+    {
+        recent_files_.pop_back();
+    }
+
+    update_recent_files();
+}
+
+void MainWindow::update_recent_files()
+{
+    QMenu* menu = new QMenu;
+    for (size_t i = 0; i < recent_files_.size(); i++)
+    {
+        Settings::Set("recent_" + std::to_string(i), recent_files_[i]);
+        std::string path = recent_files_[i];
+        menu->addAction(path.c_str(), [this, path]() { open_file_impl(path); });
+    }
+    recent_act_->setMenu(menu);
 }

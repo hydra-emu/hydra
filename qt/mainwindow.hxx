@@ -3,6 +3,7 @@
 #include "screenwidget.hxx"
 #include <array>
 #include <core.hxx>
+#include <deque>
 #include <memory>
 #include <ui_common.hxx>
 #define MA_NO_DECODING
@@ -37,6 +38,7 @@ private:
     void open_terminal();
     void run_script(const std::string& script, bool safe_mode);
     void screenshot();
+    void add_recent(const std::string& path);
 
     // Emulation functions
     void pause_emulator();
@@ -46,6 +48,7 @@ private:
     void initialize_emulator_data();
     void initialize_audio();
     void set_volume(int volume);
+    void update_recent_files();
 
     void video_callback(const hydra::VideoInfo& info);
     void audio_callback(const hydra::AudioInfo& info);
@@ -76,6 +79,7 @@ public:
     QAction* shaders_act_;
     QAction* scripts_act_;
     QAction* terminal_act_;
+    QAction* recent_act_;
     ScreenWidget* screen_;
     ma_device sound_device_{};
     std::unique_ptr<hydra::Core> emulator_;
@@ -93,6 +97,7 @@ public:
     hydra::VideoInfo video_info_;
 
     std::array<int8_t, hydra::InputButton::InputCount> input_state_{};
+    std::deque<std::string> recent_files_;
 
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
 };
