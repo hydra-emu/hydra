@@ -1,6 +1,9 @@
+#include "emulator_types.hxx"
+#include "nds/nds_hc.hxx"
 #include <core.hxx>
 #include <error_factory.hxx>
 #include <iostream>
+#include <memory>
 #include <n64/n64_hc.hxx>
 #include <settings.hxx>
 #include <str_hash.hxx>
@@ -62,6 +65,11 @@ namespace hydra
                 }
                 break;
             }
+            case EmuType::NDS: 
+            {
+                emulator = std::make_unique<hydra::HydraCore_NDS>();
+                break;
+            } 
             default:
             {
                 throw ErrorFactory::generate_exception(__func__, __LINE__,

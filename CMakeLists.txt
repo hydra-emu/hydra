@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 
+include(ExternalProject)
+
 project(hydra VERSION 0.2.0 LANGUAGES CXX)
 project(src)
 project(c8)
 project(gb)
 project(nes)
 project(n64)
+project(nds)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -114,6 +117,21 @@ set(N64_FILES
     n64/core/n64_ai.cxx
 )
 
+ExternalProject_Add(
+    nds_rust_core
+    DOWNLOAD_COMMAND ""
+    CONFIGURE_COMMAND ""
+    INSTALL_COMMAND ""
+    BUILD_COMMAND cargo build COMMAND cargo build --release 
+    BINARY_DIR "${CMAKE_SOURCE_DIR}/nds"
+    BUILD_ALWAYS true
+    LOG_BUILD ON
+)
+
+set(NDS_FILES
+    nds/nds_hc.cxx
+)
+
 set(HYDRA_INCLUDE_DIRECTORIES
     include
     vendored
@@ -131,7 +149,14 @@ add_library(c8 STATIC ${C8_FILES})
 add_library(gb STATIC ${GB_FILES})
 add_library(nes STATIC ${NES_FILES})
 add_library(n64 STATIC ${N64_FILES})
-target_link_libraries(hydra PRIVATE src nes gb c8 n64
+add_library(nds STATIC ${NDS_FILES})
+
+target_link_libraries(nds
+    debug "${CMAKE_SOURCE_DIR}/nds/target/libhydra_nds.a"
+    optimized "${CMAKE_SOURCE_DIR}/nds/target/libhydra_nds.a"
+)
+
+target_link_libraries(hydra PRIVATE src nes gb c8 n64 nds
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
     Qt${QT_VERSION_MAJOR}::OpenGLWidgets ${CMAKE_DL_LIBS}
     fmt::fmt ${LUA_LIBRARIES})
@@ -141,6 +166,7 @@ target_include_directories(c8 PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 target_include_directories(gb PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 target_include_directories(nes PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 target_include_directories(n64 PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
+target_include_directories(nds PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 set_target_properties(hydra PROPERTIES hydra_properties
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.hydra.com
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
