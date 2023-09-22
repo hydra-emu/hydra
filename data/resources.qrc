@@ -26,6 +26,7 @@
         <file>emulators/gameboy.json</file>
         <file>emulators/nes.json</file>
         <file>emulators/n64.json</file>
+        <file>emulators/nds.json</file>
         <file>emulators/c8.json</file>
         <file>about.html</file>
         <file>shaders/simple.vs</file>

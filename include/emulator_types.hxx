@@ -2,7 +2,8 @@
 
 #include <string>
 
-#define EMULATORS X(N64, "Nintendo 64")
+#define EMULATORS   X(N64, "Nintendo 64")\
+                    X(NDS, "Nintendo DS")
 
 namespace hydra
 {
