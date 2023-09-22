@@ -352,6 +352,7 @@ cmake_install.cmake
 Makefile
 CMakeCache.txt
 background.jpg
+nds/target
 
 # imgui specific files, we download these with cmake
 imconfig.h 
