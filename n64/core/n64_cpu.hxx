@@ -5,15 +5,15 @@
 #include <cfloat>
 #include <chrono>
 #include <cmath>
-#include <compatibility.hxx>
+#include <common/compatibility.hxx>
+#include <common/log.hxx>
 #include <concepts>
+#include <core/n64_addresses.hxx>
+#include <core/n64_rcp.hxx>
+#include <core/n64_types.hxx>
 #include <cstdint>
 #include <limits>
-#include <log.hxx>
 #include <memory>
-#include <n64/core/n64_addresses.hxx>
-#include <n64/core/n64_rcp.hxx>
-#include <n64/core/n64_types.hxx>
 #include <queue>
 #include <vector>
 

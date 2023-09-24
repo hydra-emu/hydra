@@ -1,6 +1,6 @@
 #include <chrono>
+#include <core/n64_impl.hxx>
 #include <iostream>
-#include <n64/core/n64_impl.hxx>
 
 // TODO: cmake option
 // #define PROFILING

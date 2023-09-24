@@ -1,11 +1,11 @@
 #pragma once
 
 #include <array>
+#include <core/n64_ai.hxx>
+#include <core/n64_rdp.hxx>
+#include <core/n64_rsp.hxx>
+#include <core/n64_vi.hxx>
 #include <cstdint>
-#include <n64/core/n64_ai.hxx>
-#include <n64/core/n64_rdp.hxx>
-#include <n64/core/n64_rsp.hxx>
-#include <n64/core/n64_vi.hxx>
 
 namespace hydra::N64
 {

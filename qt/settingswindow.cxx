@@ -1,6 +1,5 @@
 #include "settingswindow.hxx"
 #include "keypicker.hxx"
-#include <emulator_types.hxx>
 #include <QCheckBox>
 #include <QFileDialog>
 #include <QLabel>
@@ -108,6 +107,11 @@ void SettingsWindow::create_tabs()
         use_cwd->setCheckState(Settings::Get("screenshot_path").empty() ? Qt::Checked
                                                                         : Qt::Unchecked);
         general_layout->addWidget(use_cwd, 1, 0, 1, 2);
+        if (Settings::Get("core_path").empty())
+        {
+            Settings::Set("core_path", (std::filesystem::current_path() / "cores").string());
+        }
+        add_filepicker(general_layout, "Core directory", "core_path", "", 2, 0, true);
     }
     {
         QGridLayout* audio_layout = new QGridLayout;

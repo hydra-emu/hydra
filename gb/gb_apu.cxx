@@ -1,7 +1,7 @@
+#include <common/log.hxx>
 #include <gb/gb_addresses.hxx>
 #include <gb/gb_apu.hxx>
 #include <iostream>
-#include <log.hxx>
 
 constexpr int SAMPLE_RATE = 48000;
 constexpr int AMPLITUDE = 8000;

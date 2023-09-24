@@ -1,10 +1,10 @@
 #include <algorithm>
-#include <compatibility.hxx>
+#include <common/compatibility.hxx>
+#include <core/n64_addresses.hxx>
+#include <core/n64_ai.hxx>
 #include <fmt/format.h>
 #include <fstream>
 #include <miniaudio.h>
-#include <n64/core/n64_addresses.hxx>
-#include <n64/core/n64_ai.hxx>
 
 namespace hydra::N64
 {

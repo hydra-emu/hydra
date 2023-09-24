@@ -1,15 +1,14 @@
-#include "n64/core/n64_addresses.hxx"
+#include "core/n64_addresses.hxx"
 #include <bitset>
 #include <cassert>
 #include <cmath>
-#include <compatibility.hxx>
+#include <core/n64_cpu.hxx>
 #include <cstring>
 #include <fstream>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <n64/core/n64_cpu.hxx>
 #include <random>
 #include <sstream>
 

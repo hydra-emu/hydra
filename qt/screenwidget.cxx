@@ -1,6 +1,6 @@
 #include "screenwidget.hxx"
+#include <common/log.hxx>
 #include <iostream>
-#include <log.hxx>
 #include <QFile>
 #include <QSurfaceFormat>
 

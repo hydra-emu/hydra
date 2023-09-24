@@ -1,8 +1,8 @@
 #pragma once
 
+#include <core/n64_types.hxx>
 #include <cstring>
 #include <functional>
-#include <n64/core/n64_types.hxx>
 #include <utility>
 #include <vector>
 

@@ -1,6 +1,6 @@
 #include "nes_tkpwrapper.hxx"
+#include <common/log.hxx>
 #include <emulator_settings.hxx>
-#include <log.hxx>
 
 namespace hydra::NES
 {

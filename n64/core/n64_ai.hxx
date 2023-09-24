@@ -1,11 +1,11 @@
 #pragma once
 
 #include <array>
+#include <common/log.hxx>
+#include <core/n64_types.hxx>
 #include <cstdint>
 #include <cstring>
 #include <functional>
-#include <log.hxx>
-#include <n64/core/n64_types.hxx>
 #include <vector>
 
 namespace hydra::N64

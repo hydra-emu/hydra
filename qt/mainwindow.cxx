@@ -5,11 +5,11 @@
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
 #include "terminalwindow.hxx"
+#include <common/log.hxx>
 #include <error_factory.hxx>
 #include <fstream>
 #include <iostream>
 #include <json.hpp>
-#include <log.hxx>
 #include <QApplication>
 #include <QClipboard>
 #include <QGridLayout>
@@ -23,6 +23,8 @@
 #include <sol/sol.hpp>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.hxx>
+
+MainWindow* main_window = nullptr;
 
 void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
 {
@@ -40,6 +42,7 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
+    main_window = this;
     auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
     Settings::Open(settings_path);
 
@@ -264,42 +267,42 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     {
         case Qt::Key_Right:
         {
-            input_state_[hydra::InputButton::AnalogHorizontal_0] = 127;
+            input_state_[InputButton::AnalogHorizontal_0] = 127;
             break;
         }
         case Qt::Key_Left:
         {
-            input_state_[hydra::InputButton::AnalogHorizontal_0] = -127;
+            input_state_[InputButton::AnalogHorizontal_0] = -127;
             break;
         }
         case Qt::Key_Up:
         {
-            input_state_[hydra::InputButton::AnalogVertical_0] = 127;
+            input_state_[InputButton::AnalogVertical_0] = 127;
             break;
         }
         case Qt::Key_Down:
         {
-            input_state_[hydra::InputButton::AnalogVertical_0] = -127;
+            input_state_[InputButton::AnalogVertical_0] = -127;
             break;
         }
         case Qt::Key_Z:
         {
-            input_state_[hydra::InputButton::A] = 1;
+            input_state_[InputButton::A] = 1;
             break;
         }
         case Qt::Key_X:
         {
-            input_state_[hydra::InputButton::B] = 1;
+            input_state_[InputButton::B] = 1;
             break;
         }
         case Qt::Key_C:
         {
-            input_state_[hydra::InputButton::Z] = 1;
+            input_state_[InputButton::Z] = 1;
             break;
         }
         case Qt::Key_Return:
         {
-            input_state_[hydra::InputButton::Start] = 1;
+            input_state_[InputButton::Start] = 1;
             break;
         }
     }
@@ -312,33 +315,33 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
         case Qt::Key_Left:
         case Qt::Key_Right:
         {
-            input_state_[hydra::InputButton::AnalogHorizontal_0] = 0;
+            input_state_[InputButton::AnalogHorizontal_0] = 0;
             break;
         }
         case Qt::Key_Up:
         case Qt::Key_Down:
         {
-            input_state_[hydra::InputButton::AnalogVertical_0] = 0;
+            input_state_[InputButton::AnalogVertical_0] = 0;
             break;
         }
         case Qt::Key_Z:
         {
-            input_state_[hydra::InputButton::A] = 0;
+            input_state_[InputButton::A] = 0;
             break;
         }
         case Qt::Key_X:
         {
-            input_state_[hydra::InputButton::B] = 0;
+            input_state_[InputButton::B] = 0;
             break;
         }
         case Qt::Key_C:
         {
-            input_state_[hydra::InputButton::Z] = 0;
+            input_state_[InputButton::Z] = 0;
             break;
         }
         case Qt::Key_Return:
         {
-            input_state_[hydra::InputButton::Start] = 0;
+            input_state_[InputButton::Start] = 0;
             break;
         }
     }
@@ -348,40 +351,40 @@ void MainWindow::on_mouse_move(QMouseEvent* event) {}
 
 void MainWindow::open_file()
 {
-    static QString extensions;
-    if (extensions.isEmpty())
-    {
-        QString indep;
-        extensions = "All supported types (";
-        for (int i = 0; i < EmuTypeSize; i++)
-        {
-            const auto& emulator_data = hydra::UiCommon::EmulatorData[i];
-            indep += emulator_data.Name.c_str();
-            indep += " (";
-            for (const auto& str : emulator_data.Extensions)
-            {
-                extensions += "*";
-                extensions += str.c_str();
-                extensions += " ";
-                indep += "*";
-                indep += str.c_str();
-                indep += " ";
-            }
-            indep += ");;";
-        }
-        extensions += ");;";
-        extensions += indep;
-    }
-    std::string last_path = Settings::Get("last_path");
-    std::string path =
-        QFileDialog::getOpenFileName(this, tr("Open ROM"), QString::fromStdString(last_path),
-                                     extensions, nullptr, QFileDialog::ReadOnly)
-            .toStdString();
-    if (path.empty())
-    {
-        return;
-    }
-    qt_may_throw(std::bind(&MainWindow::open_file_impl, this, path));
+    // static QString extensions;
+    // if (extensions.isEmpty())
+    // {
+    //     QString indep;
+    //     extensions = "All supported types (";
+    //     for (int i = 0; i < EmuTypeSize; i++)
+    //     {
+    //         const auto& emulator_data = hydra::UiCommon::EmulatorData[i];
+    //         indep += emulator_data.Name.c_str();
+    //         indep += " (";
+    //         for (const auto& str : emulator_data.Extensions)
+    //         {
+    //             extensions += "*";
+    //             extensions += str.c_str();
+    //             extensions += " ";
+    //             indep += "*";
+    //             indep += str.c_str();
+    //             indep += " ";
+    //         }
+    //         indep += ");;";
+    //     }
+    //     extensions += ");;";
+    //     extensions += indep;
+    // }
+    // std::string last_path = Settings::Get("last_path");
+    // std::string path =
+    //     QFileDialog::getOpenFileName(this, tr("Open ROM"), QString::fromStdString(last_path),
+    //                                  extensions, nullptr, QFileDialog::ReadOnly)
+    //         .toStdString();
+    // if (path.empty())
+    // {
+    //     return;
+    // }
+    // qt_may_throw(std::bind(&MainWindow::open_file_impl, this, path));
 }
 
 void MainWindow::open_file_impl(const std::string& path)
@@ -399,19 +402,16 @@ void MainWindow::open_file_impl(const std::string& path)
     stop_emulator();
     Settings::Set("last_path", pathfs.parent_path().string());
     Logger::ClearWarnings();
-    auto type = hydra::UiCommon::GetEmulatorType(path);
-    emulator_type_ = type;
-    emulator_ = hydra::UiCommon::Create(type);
+    std::string core_path = "/home/offtkp/libn64.so";
+    emulator_ = hydra::UiCommon::Create(core_path);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
-    emulator_->SetVideoCallback(
-        std::bind(&MainWindow::video_callback, this, std::placeholders::_1));
-    emulator_->SetAudioCallback(
-        std::bind(&MainWindow::audio_callback, this, std::placeholders::_1));
-    emulator_->SetPollInputCallback(std::bind(&MainWindow::poll_input_callback, this));
-    emulator_->SetReadInputCallback(
-        std::bind(&MainWindow::read_input_callback, this, std::placeholders::_1));
-    if (!emulator_->LoadFile("rom", path))
+    using namespace std::placeholders;
+    emulator_->hc_set_video_callback(video_callback);
+    emulator_->hc_set_audio_callback(audio_callback);
+    emulator_->hc_set_poll_input_callback(poll_input_callback);
+    emulator_->hc_set_read_input_callback(read_input_callback);
+    if (!emulator_->hc_load_file("rom", path.c_str()))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
     enable_emulation_actions(true);
     add_recent(path);
@@ -538,8 +538,8 @@ void MainWindow::screenshot()
 
     std::filesystem::path screenshot_full_path =
         screenshot_path / (screenshot_name + screenshot_extension);
-    stbi_write_png(screenshot_full_path.string().c_str(), video_info_.width, video_info_.height, 4,
-                   video_info_.data.data(), video_info_.width * 4);
+    stbi_write_png(screenshot_full_path.string().c_str(), video_width_, video_height_, 4,
+                   video_buffer_.data(), video_width_ * 4);
 }
 
 void MainWindow::set_volume(int volume)
@@ -569,25 +569,25 @@ void MainWindow::enable_emulation_actions(bool should)
 
 void MainWindow::initialize_emulator_data()
 {
-    for (int i = 0; i < EmuTypeSize; i++)
-    {
-        std::string file_name = hydra::serialize_emu_type(static_cast<hydra::EmuType>(i));
-        std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::tolower);
-        auto path = ":/emulators/" + file_name + ".json";
+    // for (int i = 0; i < EmuTypeSize; i++)
+    // {
+    //     std::string file_name = hydra::serialize_emu_type(static_cast<hydra::EmuType>(i));
+    //     std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::tolower);
+    //     auto path = ":/emulators/" + file_name + ".json";
 
-        QFile file(QString::fromStdString(path));
-        if (!file.open(QIODevice::ReadOnly))
-        {
-            Logger::Fatal("Failed to open emulator data file: {}", path);
-        }
+    //     QFile file(QString::fromStdString(path));
+    //     if (!file.open(QIODevice::ReadOnly))
+    //     {
+    //         Logger::Fatal("Failed to open emulator data file: {}", path);
+    //     }
 
-        std::string file_data = file.readAll().toStdString();
-        using json = nlohmann::json;
-        json j = json::parse(file_data);
-        hydra::UiCommon::EmulatorData[i].Name = j["Name"].get<std::string>();
-        hydra::UiCommon::EmulatorData[i].Extensions =
-            j["Extensions"].get<std::vector<std::string>>();
-    }
+    //     std::string file_data = file.readAll().toStdString();
+    //     using json = nlohmann::json;
+    //     json j = json::parse(file_data);
+    //     hydra::UiCommon::EmulatorData[i].Name = j["Name"].get<std::string>();
+    //     hydra::UiCommon::EmulatorData[i].Extensions =
+    //         j["Extensions"].get<std::vector<std::string>>();
+    // }
 }
 
 void MainWindow::pause_emulator()
@@ -609,7 +609,7 @@ void MainWindow::reset_emulator()
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
         queued_audio_.clear();
-        emulator_->Reset();
+        emulator_->hc_reset();
     }
 }
 
@@ -622,36 +622,36 @@ void MainWindow::stop_emulator()
         queued_audio_.clear();
         emulator_.reset();
         enable_emulation_actions(false);
-        video_info_ = {};
     }
 }
 
 void MainWindow::emulator_frame()
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
-    std::future<void> frame = emulator_->RunFrameAsync();
-    frame.wait();
-
-    screen_->Redraw(video_info_.width, video_info_.height, video_info_.data.data());
+    emulator_->hc_run_frame();
+    screen_->Redraw(video_width_, video_height_, video_buffer_.data());
 }
 
-void MainWindow::video_callback(const hydra::VideoInfo& vi)
+void MainWindow::video_callback(const uint8_t* data, uint32_t width, uint32_t height)
 {
-    video_info_ = vi;
+    main_window->video_width_ = width;
+    main_window->video_height_ = height;
+    main_window->video_buffer_.resize(width * height * 4);
+    std::memcpy(main_window->video_buffer_.data(), data, main_window->video_buffer_.size());
 }
 
-void MainWindow::audio_callback(const hydra::AudioInfo& ai)
+void MainWindow::audio_callback(const int16_t* data, uint32_t frames)
 {
-    std::unique_lock<std::mutex> lock(audio_mutex_);
-    queued_audio_.reserve(queued_audio_.size() + ai.data.size());
-    queued_audio_.insert(queued_audio_.end(), ai.data.begin(), ai.data.end());
+    std::unique_lock<std::mutex> lock(main_window->audio_mutex_);
+    main_window->queued_audio_.reserve(main_window->queued_audio_.size() + frames * 2);
+    main_window->queued_audio_.insert(main_window->queued_audio_.end(), data, data + frames * 2);
 }
 
 void MainWindow::poll_input_callback() {}
 
-int8_t MainWindow::read_input_callback(const hydra::InputInfo& ii)
+int8_t MainWindow::read_input_callback(uint8_t player, uint8_t button)
 {
-    return input_state_[ii.button];
+    return main_window->input_state_[button];
 }
 
 void MainWindow::add_recent(const std::string& path)
