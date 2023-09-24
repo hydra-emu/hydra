@@ -1,13 +1,13 @@
 #include <algorithm>
-#include <compatibility.hxx>
+#include <common/compatibility.hxx>
+#include <common/log.hxx>
+#include <core/n64_addresses.hxx>
+#include <core/n64_rdp.hxx>
+#include <core/n64_rsp.hxx>
 #include <fmt/format.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <log.hxx>
-#include <n64/core/n64_addresses.hxx>
-#include <n64/core/n64_rdp.hxx>
-#include <n64/core/n64_rsp.hxx>
 #include <sstream>
 
 #define RSP_LOGGING false

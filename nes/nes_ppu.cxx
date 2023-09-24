@@ -1,6 +1,6 @@
 #include "nes_ppu.hxx"
+#include <common/log.hxx>
 #include <iostream>
-#include <log.hxx>
 #include <nes/NTSC_CRT/crt_core.h>
 
 enum ScanlineState

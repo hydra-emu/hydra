@@ -1,6 +1,6 @@
 #include "terminalwindow.hxx"
+#include <common/log.hxx>
 #include <iostream>
-#include <log.hxx>
 #include <QCheckBox>
 #include <QFileDialog>
 #include <QIODevice>

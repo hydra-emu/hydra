@@ -1,9 +1,9 @@
-#include <compatibility.hxx>
+#include <common/compatibility.hxx>
+#include <common/log.hxx>
+#include <core/n64_addresses.hxx>
+#include <core/n64_types.hxx>
+#include <core/n64_vi.hxx>
 #include <fmt/format.h>
-#include <log.hxx>
-#include <n64/core/n64_addresses.hxx>
-#include <n64/core/n64_types.hxx>
-#include <n64/core/n64_vi.hxx>
 
 namespace hydra::N64
 {
@@ -32,7 +32,7 @@ namespace hydra::N64
                 {
                     for (int x = 0; x < width_; x++)
                     {
-                        uint32_t color = hydra::bswap32((reinterpret_cast<uint32_t*>(
+                        uint32_t color = ((reinterpret_cast<uint32_t*>(
                             &rdram_ptr_[vi_origin_]))[(y * vi_width_) + x]);
                         memcpy(&data[(x + y * width_) * 4], &color, 4);
                     }

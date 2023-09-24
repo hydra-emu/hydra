@@ -2,15 +2,15 @@
 #include <bit>
 #include <bitset>
 #include <cassert>
-#include <compatibility.hxx>
+#include <common/compatibility.hxx>
+#include <common/log.hxx>
+#include <core/n64_addresses.hxx>
+#include <core/n64_rdp.hxx>
+#include <core/n64_rdp_commands.hxx>
 #include <execution>
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <log.hxx>
-#include <n64/core/n64_addresses.hxx>
-#include <n64/core/n64_rdp.hxx>
-#include <n64/core/n64_rdp_commands.hxx>
 #include <sstream>
 #include <str_hash.hxx>
 

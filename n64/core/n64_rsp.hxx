@@ -1,7 +1,7 @@
 #pragma once
 
+#include <core/n64_types.hxx>
 #include <functional>
-#include <n64/core/n64_types.hxx>
 
 namespace hydra::N64
 {

@@ -1,9 +1,9 @@
 #include "nes_cpubus.hxx"
+#include <common/log.hxx>
 #include <error_factory.hxx>
 #include <fmt/format.h>
 #include <fstream>
 #include <iostream>
-#include <log.hxx>
 #define kb16 0x4000
 #define kb8 0x2000
 

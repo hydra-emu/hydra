@@ -1,6 +1,6 @@
 #include <bit>
 #include <c8/c8_interpreter.hxx>
-#include <compatibility.hxx>
+#include <common/compatibility.hxx>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>

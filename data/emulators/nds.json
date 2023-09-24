@@ -1,8 +1,0 @@
-{
-    "Name": "Nintendo DS",
-    "Extensions": [
-        ".nds"
-    ],
-    "PlayerMin": 1,
-    "PlayerMax": 1
-}

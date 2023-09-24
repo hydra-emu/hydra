@@ -1,8 +1,8 @@
 #pragma once
 
+#include <core/n64_cpu.hxx>
+#include <core/n64_rcp.hxx>
 #include <miniaudio.h>
-#include <n64/core/n64_cpu.hxx>
-#include <n64/core/n64_rcp.hxx>
 #include <string>
 
 namespace hydra::N64
