@@ -1,5 +1,6 @@
 #pragma once
 
+#include <common/compatibility.hxx>
 #include <error_factory.hxx>
 #include <fstream>
 #include <json.hpp>
@@ -7,6 +8,20 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <ui_common.hxx>
+
+struct core_info
+{
+    std::string path;
+    std::string core_name;
+    std::string system_name;
+    std::string author;
+    std::string version;
+    std::string description;
+    std::string license;
+    std::string url;
+    std::vector<std::string> extensions;
+};
 
 // Essentially a wrapper around a std::map<std::string, std::string> that locks a mutex
 // upon access and has a save function that saves as a json to file
@@ -69,9 +84,44 @@ public:
         return map_.empty();
     }
 
+    static void InitCoreInfo()
+    {
+        if (core_info_initialized_)
+            return;
+        core_info_initialized_ = true;
+        std::filesystem::directory_iterator it(Settings::Get("core_path"));
+        std::filesystem::directory_iterator end;
+        while (it != end)
+        {
+            if (it->path().extension() == ".so")
+            {
+                hydra::core_wrapper_t core(it->path());
+                core.hc_get_emulator_info = reinterpret_cast<decltype(core.hc_get_emulator_info)>(
+                    dlsym(core.dlhandle, "hc_get_emulator_info"));
+                core_info info;
+                info.path = it->path().string();
+                info.core_name = core.hc_get_emulator_info(hc_emu_info::HC_INFO_CORE_NAME);
+                info.system_name = core.hc_get_emulator_info(hc_emu_info::HC_INFO_SYSTEM_NAME);
+                info.version = core.hc_get_emulator_info(hc_emu_info::HC_INFO_VERSION);
+                info.author = core.hc_get_emulator_info(hc_emu_info::HC_INFO_AUTHOR);
+                info.description = core.hc_get_emulator_info(hc_emu_info::HC_INFO_DESCRIPTION);
+                info.extensions =
+                    hydra::split(core.hc_get_emulator_info(hc_emu_info::HC_INFO_EXTENSIONS), ',');
+                info.url = core.hc_get_emulator_info(hc_emu_info::HC_INFO_URL);
+                info.license = core.hc_get_emulator_info(hc_emu_info::HC_INFO_LICENSE);
+                CoreInfo.push_back(info);
+            }
+
+            ++it;
+        }
+    }
+
+    static std::vector<core_info> CoreInfo;
+
 private:
     static std::map<std::string, std::string> map_;
     static std::string save_path_;
 
     static bool initialized_;
+    static bool core_info_initialized_;
 };

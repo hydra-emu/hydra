@@ -1,6 +1,5 @@
 #include "mainwindow.hxx"
-#include "qthelper.hxx"
-#include <common/log.hxx>
+#include <log.h>
 #include <QApplication>
 #include <QSurfaceFormat>
 
@@ -22,12 +21,12 @@ int main(int argc, char* argv[])
     }
 
     int ret = 0;
+    ret = a.exec();
     try
     {
-        ret = a.exec();
     } catch (...)
     {
-        Logger::Warn("Caught unhandled exception. Please open an issue on Github.");
+        log_fatal("Caught unhandled exception. Please open an issue on Github.");
         return 1;
     }
     return ret;

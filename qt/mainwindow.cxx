@@ -5,11 +5,13 @@
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
 #include "terminalwindow.hxx"
-#include <common/log.hxx>
+#include <common/compatibility.hxx>
 #include <error_factory.hxx>
+#include <fmt/format.h>
 #include <fstream>
 #include <iostream>
 #include <json.hpp>
+#include <log.h>
 #include <QApplication>
 #include <QClipboard>
 #include <QGridLayout>
@@ -69,13 +71,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     emulator_timer_ = new QTimer(this);
     connect(emulator_timer_, SIGNAL(timeout()), this, SLOT(emulator_frame()));
 
-    TerminalWindow::Init();
-    Logger::HookCallback("Fatal", [this](const std::string& fatal_msg) {
-        printf("Fatal: %s\n", fatal_msg.c_str());
-        exit(1);
-    });
-
-    initialize_emulator_data();
     initialize_audio();
     enable_emulation_actions(false);
 
@@ -104,7 +99,7 @@ void MainWindow::initialize_audio()
     context_config.threadPriority = ma_thread_priority_realtime;
     if (ma_context_init(NULL, 0, &context_config, &context) != MA_SUCCESS)
     {
-        Logger::Fatal("Failed to initialize audio context");
+        log_fatal("Failed to initialize audio context");
     }
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -116,7 +111,7 @@ void MainWindow::initialize_audio()
     config.pUserData = this;
     if (ma_device_init(NULL, &config, &sound_device_) != MA_SUCCESS)
     {
-        Logger::Fatal("Failed to open audio device");
+        log_fatal("Failed to open audio device");
     }
     ma_device_start(&sound_device_);
 
@@ -351,40 +346,44 @@ void MainWindow::on_mouse_move(QMouseEvent* event) {}
 
 void MainWindow::open_file()
 {
-    // static QString extensions;
-    // if (extensions.isEmpty())
-    // {
-    //     QString indep;
-    //     extensions = "All supported types (";
-    //     for (int i = 0; i < EmuTypeSize; i++)
-    //     {
-    //         const auto& emulator_data = hydra::UiCommon::EmulatorData[i];
-    //         indep += emulator_data.Name.c_str();
-    //         indep += " (";
-    //         for (const auto& str : emulator_data.Extensions)
-    //         {
-    //             extensions += "*";
-    //             extensions += str.c_str();
-    //             extensions += " ";
-    //             indep += "*";
-    //             indep += str.c_str();
-    //             indep += " ";
-    //         }
-    //         indep += ");;";
-    //     }
-    //     extensions += ");;";
-    //     extensions += indep;
-    // }
-    // std::string last_path = Settings::Get("last_path");
-    // std::string path =
-    //     QFileDialog::getOpenFileName(this, tr("Open ROM"), QString::fromStdString(last_path),
-    //                                  extensions, nullptr, QFileDialog::ReadOnly)
-    //         .toStdString();
-    // if (path.empty())
-    // {
-    //     return;
-    // }
-    // qt_may_throw(std::bind(&MainWindow::open_file_impl, this, path));
+    Settings::InitCoreInfo();
+    static QString extensions;
+    if (extensions.isEmpty())
+    {
+        QString indep;
+        extensions = "All supported types (";
+        for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+        {
+            const auto& core_data = Settings::CoreInfo[i];
+            indep += core_data.core_name;
+            indep += " (";
+            for (size_t j = 0; j < core_data.extensions.size(); j++)
+            {
+                std::string ext = core_data.extensions[j];
+                extensions += "*.";
+                extensions += ext.c_str();
+                if (j != core_data.extensions.size() - 1)
+                    extensions += " ";
+                indep += "*.";
+                indep += ext.c_str();
+                if (j != core_data.extensions.size() - 1)
+                    indep += " ";
+            }
+            indep += ");;";
+        }
+        extensions += ");;";
+        extensions += indep;
+    }
+    std::string last_path = Settings::Get("last_path");
+    QFileDialog dialog(this, tr("Open File"), last_path.c_str(), extensions);
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.show();
+    if (dialog.exec() != QDialog::Accepted)
+    {
+        return;
+    }
+    std::string path = dialog.selectedFiles().first().toStdString();
+    qt_may_throw(std::bind(&MainWindow::open_file_impl, this, path));
 }
 
 void MainWindow::open_file_impl(const std::string& path)
@@ -395,22 +394,35 @@ void MainWindow::open_file_impl(const std::string& path)
 
     if (!std::filesystem::is_regular_file(pathfs))
     {
-        Logger::Warn("Failed to open file: {}", path);
+        log_warn(fmt::format("Failed to open file: {}", path).c_str());
         return;
     }
 
     stop_emulator();
     Settings::Set("last_path", pathfs.parent_path().string());
-    Logger::ClearWarnings();
-    std::string core_path = "/home/offtkp/libn64.so";
+    std::string core_path;
+    for (const auto& core : Settings::CoreInfo)
+    {
+        for (const auto& ext : core.extensions)
+        {
+            if (pathfs.extension().string().substr(1) == ext)
+            {
+                core_path = core.path;
+                break;
+            }
+        }
+        if (!core_path.empty())
+            break;
+    }
+    if (core_path.empty())
+    {
+        log_warn(fmt::format("Failed to find core for file: {}", path).c_str());
+        return;
+    }
     emulator_ = hydra::UiCommon::Create(core_path);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
-    using namespace std::placeholders;
-    emulator_->hc_set_video_callback(video_callback);
-    emulator_->hc_set_audio_callback(audio_callback);
-    emulator_->hc_set_poll_input_callback(poll_input_callback);
-    emulator_->hc_set_read_input_callback(read_input_callback);
+    init_emulator();
     if (!emulator_->hc_load_file("rom", path.c_str()))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
     enable_emulation_actions(true);
@@ -567,29 +579,6 @@ void MainWindow::enable_emulation_actions(bool should)
         screen_->hide();
 }
 
-void MainWindow::initialize_emulator_data()
-{
-    // for (int i = 0; i < EmuTypeSize; i++)
-    // {
-    //     std::string file_name = hydra::serialize_emu_type(static_cast<hydra::EmuType>(i));
-    //     std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::tolower);
-    //     auto path = ":/emulators/" + file_name + ".json";
-
-    //     QFile file(QString::fromStdString(path));
-    //     if (!file.open(QIODevice::ReadOnly))
-    //     {
-    //         Logger::Fatal("Failed to open emulator data file: {}", path);
-    //     }
-
-    //     std::string file_data = file.readAll().toStdString();
-    //     using json = nlohmann::json;
-    //     json j = json::parse(file_data);
-    //     hydra::UiCommon::EmulatorData[i].Name = j["Name"].get<std::string>();
-    //     hydra::UiCommon::EmulatorData[i].Extensions =
-    //         j["Extensions"].get<std::vector<std::string>>();
-    // }
-}
-
 void MainWindow::pause_emulator()
 {
     paused_ = !paused_;
@@ -613,6 +602,38 @@ void MainWindow::reset_emulator()
     }
 }
 
+void MainWindow::init_emulator()
+{
+    if (emulator_)
+        log_fatal("Double emulator init");
+
+    emulator_->hc_create();
+    emulator_->hc_set_video_callback(video_callback);
+    emulator_->hc_set_audio_callback(audio_callback);
+    emulator_->hc_set_poll_input_callback(poll_input_callback);
+    emulator_->hc_set_read_input_callback(read_input_callback);
+    std::string firmware = emulator_->hc_get_emulator_info(hc_emu_info::HC_INFO_FIRMWARE_FILES);
+    std::vector<std::string> firmware_files = hydra::split(firmware, ';');
+    for (const auto& file : firmware_files)
+    {
+        std::string path = Settings::Get(file);
+        if (path.empty())
+        {
+            log_fatal(fmt::format("Firmware file {} not set in settings", file).c_str());
+        }
+        emulator_->hc_load_file(file.c_str(), path.c_str());
+    }
+    emulator_->hc_add_log_callback("warn", TerminalWindow::log_warn);
+    emulator_->hc_add_log_callback("info", TerminalWindow::log_info);
+    emulator_->hc_add_log_callback("debug", TerminalWindow::log_debug);
+    if (Settings::Get("print_to_native_terminal") == "true")
+    {
+        emulator_->hc_add_log_callback("warn", log_warn);
+        emulator_->hc_add_log_callback("info", log_info);
+        emulator_->hc_add_log_callback("fatal", log_fatal);
+    }
+}
+
 void MainWindow::stop_emulator()
 {
     if (emulator_)
@@ -620,6 +641,7 @@ void MainWindow::stop_emulator()
         std::unique_lock<std::mutex> alock(audio_mutex_);
         emulator_timer_->stop();
         queued_audio_.clear();
+        emulator_->hc_destroy();
         emulator_.reset();
         enable_emulation_actions(false);
     }
