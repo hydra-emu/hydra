@@ -2,7 +2,7 @@
 
 #include "screenwidget.hxx"
 #include <array>
-#include <core.h>
+#include <common/core.h>
 #include <deque>
 #include <memory>
 #include <ui_common.hxx>
@@ -44,9 +44,9 @@ private:
     // Emulation functions
     void pause_emulator();
     void reset_emulator();
+    void init_emulator();
     void stop_emulator();
     void enable_emulation_actions(bool should);
-    void initialize_emulator_data();
     void initialize_audio();
     void set_volume(int volume);
     void update_recent_files();

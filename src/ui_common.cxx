@@ -1,9 +1,9 @@
+#include <common/str_hash.hxx>
 #include <error_factory.hxx>
 #include <filesystem>
 #include <iostream>
 #include <memory>
 #include <settings.hxx>
-#include <str_hash.hxx>
 #include <ui_common.hxx>
 
 namespace hydra

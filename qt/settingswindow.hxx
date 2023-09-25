@@ -28,6 +28,7 @@ private:
     void add_filepicker(QGridLayout* layout, const std::string& name, const std::string& setting,
                         const std::string& extension, int row, int column, bool dir = false);
     void keyPressEvent(QKeyEvent* event);
+
 private slots:
     void on_tab_change(int tab);
 

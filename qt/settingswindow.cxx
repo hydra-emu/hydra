@@ -1,11 +1,14 @@
 #include "settingswindow.hxx"
 #include "keypicker.hxx"
+#include <common/compatibility.hxx>
+#include <fmt/format.h>
 #include <QCheckBox>
 #include <QFileDialog>
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <settings.hxx>
+#include <ui_common.hxx>
 
 SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callback,
                                QWidget* parent)
@@ -24,6 +27,7 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
     tab_list_->addItem(var_name)
 
         add_item(general, "General", "support.png");
+        add_item(cores, "Cores", "core.png");
         add_item(audio, "Audio", "sound.png");
         add_item(input, "Input", "input.png");
         add_item(n64, "Nintendo 64", "n64.png");
@@ -107,11 +111,42 @@ void SettingsWindow::create_tabs()
         use_cwd->setCheckState(Settings::Get("screenshot_path").empty() ? Qt::Checked
                                                                         : Qt::Unchecked);
         general_layout->addWidget(use_cwd, 1, 0, 1, 2);
+    }
+    {
+        Settings::InitCoreInfo();
+        QGridLayout* cores_layout = new QGridLayout;
+        cores_layout->setAlignment(Qt::AlignTop);
+        QWidget* cores_tab = new QWidget;
+        cores_tab->setLayout(cores_layout);
+        tab_show_->addTab(cores_tab, "Cores");
         if (Settings::Get("core_path").empty())
         {
             Settings::Set("core_path", (std::filesystem::current_path() / "cores").string());
         }
-        add_filepicker(general_layout, "Core directory", "core_path", "", 2, 0, true);
+        QListWidget* core_list = new QListWidget;
+        core_list->setDragEnabled(false);
+        QFile file(":/core.html");
+        file.open(QIODevice::ReadOnly);
+        QString html = file.readAll();
+        file.close();
+        for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+        {
+            QListWidgetItem* item = new QListWidgetItem;
+            core_list->addItem(item);
+            QLabel* label = new QLabel;
+            label->setTextFormat(Qt::RichText);
+            label->setTextInteractionFlags(Qt::TextBrowserInteraction);
+            label->setOpenExternalLinks(true);
+            const auto& core = Settings::CoreInfo[i];
+            label->setText(fmt::format(fmt::runtime(html.toStdString()), core.core_name,
+                                       core.version, core.system_name, core.license,
+                                       core.description, core.author, core.url)
+                               .c_str());
+            item->setSizeHint(label->sizeHint());
+            core_list->setItemWidget(item, label);
+        }
+        cores_layout->addWidget(core_list, 0, 0, 1, 0);
+        add_filepicker(cores_layout, "Core directory", "core_path", "", 1, 0, true);
     }
     {
         QGridLayout* audio_layout = new QGridLayout;
@@ -146,7 +181,7 @@ void SettingsWindow::create_tabs()
         QGridLayout* n64_layout = new QGridLayout;
         n64_layout->setColumnStretch(1, 3);
         n64_layout->setAlignment(Qt::AlignTop);
-        add_filepicker(n64_layout, "IPL path", "n64_ipl_path", "Binary files (*.bin)", 0, 0);
+        add_filepicker(n64_layout, "IPL path", "IPL", "Binary files (*.bin)", 0, 0);
         QFrame* separator = new QFrame(this);
         separator->setLineWidth(1);
         separator->setMidLineWidth(1);

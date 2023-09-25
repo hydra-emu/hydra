@@ -1,6 +1,6 @@
 #include "screenwidget.hxx"
-#include <common/log.hxx>
 #include <iostream>
+#include <log.h>
 #include <QFile>
 #include <QSurfaceFormat>
 
@@ -95,7 +95,7 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment)
     GLint tex = glGetUniformLocation(program_->programId(), "tex");
     if (tex == -1)
     {
-        Logger::Fatal("Could not find uniform tex");
+        log_fatal("Could not find uniform tex");
     }
     glUniform1i(tex, 0);
     delete fshader;
@@ -110,8 +110,6 @@ void ScreenWidget::mouseMoveEvent(QMouseEvent* event)
 void ScreenWidget::initializeGL()
 {
     initializeOpenGLFunctions();
-    const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    Logger::Info("OpenGL version: {}", version);
     vao_.create();
     vao_.bind();
     vbo_.create();
