@@ -20,6 +20,8 @@ struct core_info
     std::string description;
     std::string license;
     std::string url;
+    std::string firmware_files;
+    int max_players;
     std::vector<std::string> extensions;
 };
 
@@ -109,6 +111,10 @@ public:
                     hydra::split(core.hc_get_emulator_info(hc_emu_info::HC_INFO_EXTENSIONS), ',');
                 info.url = core.hc_get_emulator_info(hc_emu_info::HC_INFO_URL);
                 info.license = core.hc_get_emulator_info(hc_emu_info::HC_INFO_LICENSE);
+                info.firmware_files =
+                    core.hc_get_emulator_info(hc_emu_info::HC_INFO_FIRMWARE_FILES);
+                info.max_players =
+                    std::stoi(core.hc_get_emulator_info(hc_emu_info::HC_INFO_MAX_PLAYERS));
                 CoreInfo.push_back(info);
             }
 

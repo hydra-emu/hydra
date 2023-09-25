@@ -616,7 +616,8 @@ void MainWindow::init_emulator()
     std::vector<std::string> firmware_files = hydra::split(firmware, ';');
     for (const auto& file : firmware_files)
     {
-        std::string path = Settings::Get(file);
+        std::string core_name = emulator_->hc_get_emulator_info(hc_emu_info::HC_INFO_CORE_NAME);
+        std::string path = Settings::Get(core_name + "_" + file);
         if (path.empty())
         {
             log_fatal(fmt::format("Firmware file {} not set in settings", file).c_str());
