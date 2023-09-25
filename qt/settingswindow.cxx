@@ -14,6 +14,7 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
                                QWidget* parent)
     : open_(open), volume_callback_(volume_callback), QWidget(parent, Qt::Window)
 {
+    Settings::InitCoreInfo();
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle("Settings");
@@ -22,15 +23,29 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
     right_group_box_ = new QGroupBox;
     {
         tab_list_ = new QListWidget;
-#define add_item(var_name, name, image)                                                         \
-    QListWidgetItem* var_name = new QListWidgetItem(QPixmap(":/images/" image), QString(name)); \
+#define add_item(var_name, name, image)                                            \
+    QListWidgetItem* var_name =                                                    \
+        new QListWidgetItem(QPixmap(QString(":/images/") + image), QString(name)); \
     tab_list_->addItem(var_name)
 
         add_item(general, "General", "support.png");
         add_item(cores, "Cores", "core.png");
         add_item(audio, "Audio", "sound.png");
         add_item(input, "Input", "input.png");
-        add_item(n64, "Nintendo 64", "n64.png");
+        for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+        {
+            if (QFile::exists(
+                    fmt::format(":/images/{}.png", Settings::CoreInfo[i].system_name.c_str())
+                        .c_str()))
+            {
+                add_item(core, Settings::CoreInfo[i].core_name.c_str(),
+                         fmt::format("{}.png", Settings::CoreInfo[i].system_name.c_str()).c_str());
+            }
+            else
+            {
+                add_item(core, Settings::CoreInfo[i].core_name.c_str(), "core.png");
+            }
+        }
 #undef add_item
         // clang-format off
         tab_list_->setStyleSheet(R"(
@@ -113,7 +128,6 @@ void SettingsWindow::create_tabs()
         general_layout->addWidget(use_cwd, 1, 0, 1, 2);
     }
     {
-        Settings::InitCoreInfo();
         QGridLayout* cores_layout = new QGridLayout;
         cores_layout->setAlignment(Qt::AlignTop);
         QWidget* cores_tab = new QWidget;
@@ -177,39 +191,63 @@ void SettingsWindow::create_tabs()
         key_picker_ = new KeyPickerPage;
         tab_show_->addTab(key_picker_, "Input");
     }
+    // {
+    //     QGridLayout* n64_layout = new QGridLayout;
+    //     n64_layout->setColumnStretch(1, 3);
+    //     n64_layout->setAlignment(Qt::AlignTop);
+    //     add_filepicker(n64_layout, "IPL path", "IPL", "Binary files (*.bin)", 0, 0);
+    //     QFrame* separator = new QFrame(this);
+    //     separator->setLineWidth(1);
+    //     separator->setMidLineWidth(1);
+    //     separator->setFrameShape(QFrame::HLine);
+    //     separator->setPalette(QPalette(QColor(0, 0, 0)));
+    //     n64_layout->addWidget(separator, 1, 0, 1, 0);
+    //     for (int i = 1; i <= 4; i++)
+    //     {
+    //         n64_layout->addWidget(new QLabel("Controller port " + QString::number(i) + ":"), i +
+    //         1,
+    //                               0);
+    //         QCheckBox* active = new QCheckBox("Active");
+    //         std::string is_active =
+    //             Settings::Get("n64_controller_" + std::to_string(i) + "_active");
+    //         active->setChecked(is_active == "true");
+    //         connect(active, &QCheckBox::stateChanged, this, [this, i](int state) {
+    //             Settings::Set("n64_controller_" + std::to_string(i) + "_active",
+    //                           state == Qt::Checked ? "true" : "false");
+    //         });
+    //         if (is_active.empty() && i == 1)
+    //         {
+    //             active->setChecked(true);
+    //         }
+    //         n64_layout->addWidget(new QComboBox, i + 1, 1);
+    //         n64_layout->addWidget(active, i + 1, 2);
+    //     }
+    //     QWidget* n64_tab = new QWidget;
+    //     n64_tab->setLayout(n64_layout);
+    //     tab_show_->addTab(n64_tab, "N64");
+    // }
+
+    for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
     {
-        QGridLayout* n64_layout = new QGridLayout;
-        n64_layout->setColumnStretch(1, 3);
-        n64_layout->setAlignment(Qt::AlignTop);
-        add_filepicker(n64_layout, "IPL path", "IPL", "Binary files (*.bin)", 0, 0);
+        const auto& core = Settings::CoreInfo[i];
+        QGridLayout* core_layout = new QGridLayout;
+        core_layout->setAlignment(Qt::AlignTop);
+        std::vector<std::string> firmware_files = hydra::split(core.firmware_files, ';');
+        for (size_t j = 0; j < firmware_files.size(); j++)
+        {
+            add_filepicker(core_layout,
+                           firmware_files[j] + " path: ", core.core_name + "_" + firmware_files[j],
+                           "", j, 0);
+        }
         QFrame* separator = new QFrame(this);
         separator->setLineWidth(1);
         separator->setMidLineWidth(1);
         separator->setFrameShape(QFrame::HLine);
         separator->setPalette(QPalette(QColor(0, 0, 0)));
-        n64_layout->addWidget(separator, 1, 0, 1, 0);
-        for (int i = 1; i <= 4; i++)
-        {
-            n64_layout->addWidget(new QLabel("Controller port " + QString::number(i) + ":"), i + 1,
-                                  0);
-            QCheckBox* active = new QCheckBox("Active");
-            std::string is_active =
-                Settings::Get("n64_controller_" + std::to_string(i) + "_active");
-            active->setChecked(is_active == "true");
-            connect(active, &QCheckBox::stateChanged, this, [this, i](int state) {
-                Settings::Set("n64_controller_" + std::to_string(i) + "_active",
-                              state == Qt::Checked ? "true" : "false");
-            });
-            if (is_active.empty() && i == 1)
-            {
-                active->setChecked(true);
-            }
-            n64_layout->addWidget(new QComboBox, i + 1, 1);
-            n64_layout->addWidget(active, i + 1, 2);
-        }
-        QWidget* n64_tab = new QWidget;
-        n64_tab->setLayout(n64_layout);
-        tab_show_->addTab(n64_tab, "N64");
+        core_layout->addWidget(separator, 1, 0, 1, 0);
+        QWidget* core_tab = new QWidget;
+        core_tab->setLayout(core_layout);
+        tab_show_->addTab(core_tab, core.core_name.c_str());
     }
 }
 
