@@ -375,8 +375,9 @@ void MainWindow::open_file()
             else
                 indep += ")";
         }
-        extensions += ");;";
-        extensions += indep;
+        extensions += ")";
+        if (indep != "")
+            extensions += ";;" + indep;
     }
     std::string last_path = Settings::Get("last_path");
     QFileDialog dialog(this, tr("Open File"), last_path.c_str(), extensions);

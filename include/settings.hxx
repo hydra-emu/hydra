@@ -116,7 +116,12 @@ public:
                 info.url = core.hc_get_info_p(hc_info::HC_INFO_URL);
                 info.license = core.hc_get_info_p(hc_info::HC_INFO_LICENSE);
                 info.firmware_files = core.hc_get_info_p(hc_info::HC_INFO_FIRMWARE_FILES);
-                info.max_players = std::stoi(core.hc_get_info_p(hc_info::HC_INFO_MAX_PLAYERS));
+                info.max_players = std::atoi(core.hc_get_info_p(hc_info::HC_INFO_MAX_PLAYERS));
+                if (info.max_players == 0)
+                {
+                    info.max_players = 1;
+                    log_warn("Could not get HC_INFO_MAX_PLAYERS for core, setting to 1");
+                }
                 CoreInfo.push_back(info);
             }
 
