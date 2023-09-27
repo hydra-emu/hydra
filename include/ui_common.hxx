@@ -30,7 +30,7 @@ namespace hydra
             }
         }
 
-#define X(name) decltype(name)* name;
+#define X(name) decltype(name)* name##_p;
         HC_SYMBOLS
 #undef X
 

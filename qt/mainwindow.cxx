@@ -370,7 +370,10 @@ void MainWindow::open_file()
                 if (j != core_data.extensions.size() - 1)
                     indep += " ";
             }
-            indep += ");;";
+            if (i != Settings::CoreInfo.size() - 1)
+                indep += ");;";
+            else
+                indep += ")";
         }
         extensions += ");;";
         extensions += indep;
@@ -424,7 +427,7 @@ void MainWindow::open_file_impl(const std::string& path)
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
     init_emulator();
-    if (!emulator_->hc_load_file(emulator_->core_handle, "rom", path.c_str()))
+    if (!emulator_->hc_load_file_p(emulator_->core_handle, "rom", path.c_str()))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
     enable_emulation_actions(true);
     add_recent(path);
@@ -599,7 +602,7 @@ void MainWindow::reset_emulator()
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
         queued_audio_.clear();
-        emulator_->hc_reset(emulator_->core_handle);
+        emulator_->hc_reset_p(emulator_->core_handle);
     }
 }
 
@@ -615,33 +618,33 @@ void MainWindow::init_emulator()
     if (emulator_)
         log_warn("Double emulator init");
 
-    emulator_->core_handle = emulator_->hc_create();
-    emulator_->hc_set_other(emulator_->core_handle, hc_other::HC_OTHER_GL_GET_PROC_ADDRESS,
-                            (void*)&get_proc_address);
-    emulator_->hc_set_video_callback(emulator_->core_handle, video_callback);
-    emulator_->hc_set_audio_callback(emulator_->core_handle, audio_callback);
-    emulator_->hc_set_poll_input_callback(emulator_->core_handle, poll_input_callback);
-    emulator_->hc_set_read_input_callback(emulator_->core_handle, read_input_callback);
-    std::string firmware = emulator_->hc_get_info(hc_info::HC_INFO_FIRMWARE_FILES);
+    emulator_->core_handle = emulator_->hc_create_p();
+    emulator_->hc_set_other_p(emulator_->core_handle, hc_other::HC_OTHER_GL_GET_PROC_ADDRESS,
+                              (void*)&get_proc_address);
+    emulator_->hc_set_video_callback_p(emulator_->core_handle, video_callback);
+    emulator_->hc_set_audio_callback_p(emulator_->core_handle, audio_callback);
+    emulator_->hc_set_poll_input_callback_p(emulator_->core_handle, poll_input_callback);
+    emulator_->hc_set_read_input_callback_p(emulator_->core_handle, read_input_callback);
+    std::string firmware = emulator_->hc_get_info_p(hc_info::HC_INFO_FIRMWARE_FILES);
     std::vector<std::string> firmware_files = hydra::split(firmware, ';');
     for (const auto& file : firmware_files)
     {
-        std::string core_name = emulator_->hc_get_info(hc_info::HC_INFO_CORE_NAME);
+        std::string core_name = emulator_->hc_get_info_p(hc_info::HC_INFO_CORE_NAME);
         std::string path = Settings::Get(core_name + "_" + file);
         if (path.empty())
         {
             log_fatal(fmt::format("Firmware file {} not set in settings", file).c_str());
         }
-        emulator_->hc_load_file(emulator_->core_handle, file.c_str(), path.c_str());
+        emulator_->hc_load_file_p(emulator_->core_handle, file.c_str(), path.c_str());
     }
-    emulator_->hc_add_log_callback(emulator_->core_handle, "warn", TerminalWindow::log_warn);
-    emulator_->hc_add_log_callback(emulator_->core_handle, "info", TerminalWindow::log_info);
-    emulator_->hc_add_log_callback(emulator_->core_handle, "debug", TerminalWindow::log_debug);
+    emulator_->hc_add_log_callback_p(emulator_->core_handle, "warn", TerminalWindow::log_warn);
+    emulator_->hc_add_log_callback_p(emulator_->core_handle, "info", TerminalWindow::log_info);
+    emulator_->hc_add_log_callback_p(emulator_->core_handle, "debug", TerminalWindow::log_debug);
     if (Settings::Get("print_to_native_terminal") == "true")
     {
-        emulator_->hc_add_log_callback(emulator_->core_handle, "warn", log_warn);
-        emulator_->hc_add_log_callback(emulator_->core_handle, "info", log_info);
-        emulator_->hc_add_log_callback(emulator_->core_handle, "fatal", log_fatal);
+        emulator_->hc_add_log_callback_p(emulator_->core_handle, "warn", log_warn);
+        emulator_->hc_add_log_callback_p(emulator_->core_handle, "info", log_info);
+        emulator_->hc_add_log_callback_p(emulator_->core_handle, "fatal", log_fatal);
     }
 }
 
@@ -652,7 +655,7 @@ void MainWindow::stop_emulator()
         std::unique_lock<std::mutex> alock(audio_mutex_);
         emulator_timer_->stop();
         queued_audio_.clear();
-        emulator_->hc_destroy(emulator_->core_handle);
+        emulator_->hc_destroy_p(emulator_->core_handle);
         emulator_->core_handle = nullptr;
         emulator_.reset();
         enable_emulation_actions(false);
@@ -662,7 +665,7 @@ void MainWindow::stop_emulator()
 void MainWindow::emulator_frame()
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
-    emulator_->hc_run_frame(emulator_->core_handle);
+    emulator_->hc_run_frame_p(emulator_->core_handle);
     screen_->Redraw(video_width_, video_height_, video_buffer_.data());
 }
 
@@ -725,6 +728,6 @@ void MainWindow::update_fbo(unsigned fbo)
 {
     if (emulator_)
     {
-        emulator_->hc_set_other(emulator_->core_handle, hc_other::HC_OTHER_GL_FBO, (void*)&fbo);
+        emulator_->hc_set_other_p(emulator_->core_handle, hc_other::HC_OTHER_GL_FBO, (void*)&fbo);
     }
 }
