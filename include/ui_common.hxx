@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <common/core.h>
+#include <core/core.h>
 #include <dlfcn.h>
 #include <filesystem>
 #include <log.h>
@@ -13,9 +13,10 @@ namespace hydra
     {
         core_wrapper_t(const std::filesystem::path& path)
         {
-            dlhandle = dlopen(path.c_str(), RTLD_LAZY);
-            if (!dlhandle)
+            dl_handle = dlopen(path.c_str(), RTLD_LAZY);
+            if (!dl_handle)
             {
+                printf("Error while trying to load core: %s, %s\n", path.c_str(), dlerror());
                 log_fatal("Failed to dlopen core!");
                 return;
             }
@@ -23,17 +24,18 @@ namespace hydra
 
         ~core_wrapper_t()
         {
-            if (dlhandle)
+            if (dl_handle)
             {
-                dlclose(dlhandle);
+                dlclose(dl_handle);
             }
         }
 
 #define X(name) decltype(name)* name;
-        HYDRA_CORE_SYMBOLS
+        HC_SYMBOLS
 #undef X
 
-        void* dlhandle;
+        void* core_handle = nullptr;
+        void* dl_handle;
     };
 
     struct emulator_data_t
