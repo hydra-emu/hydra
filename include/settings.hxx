@@ -91,6 +91,10 @@ public:
         if (core_info_initialized_)
             return;
         core_info_initialized_ = true;
+        if (Settings::Get("core_path").empty())
+        {
+            Settings::Set("core_path", (std::filesystem::current_path()).string());
+        }
         std::filesystem::directory_iterator it(Settings::Get("core_path"));
         std::filesystem::directory_iterator end;
         while (it != end)

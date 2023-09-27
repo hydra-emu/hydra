@@ -133,10 +133,6 @@ void SettingsWindow::create_tabs()
         QWidget* cores_tab = new QWidget;
         cores_tab->setLayout(cores_layout);
         tab_show_->addTab(cores_tab, "Cores");
-        if (Settings::Get("core_path").empty())
-        {
-            Settings::Set("core_path", (std::filesystem::current_path() / "cores").string());
-        }
         QListWidget* core_list = new QListWidget;
         core_list->setStyleSheet("QListWidget::item { border-bottom: 1px solid black; }");
         core_list->setDragEnabled(false);
