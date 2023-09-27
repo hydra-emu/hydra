@@ -53,7 +53,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
     QVBoxLayout* layout = new QVBoxLayout;
     layout->setContentsMargins(5, 5, 5, 5);
-    screen_ = new ScreenWidget(this);
+    screen_ =
+        new ScreenWidget(std::bind(&MainWindow::update_fbo, this, std::placeholders::_1), this);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
     screen_->setMouseTracking(true);
     layout->addWidget(screen_);
@@ -262,42 +263,42 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     {
         case Qt::Key_Right:
         {
-            input_state_[InputButton::AnalogHorizontal_0] = 127;
+            //            input_state_[InputButton::AnalogHorizontal_0] = 127;
             break;
         }
         case Qt::Key_Left:
         {
-            input_state_[InputButton::AnalogHorizontal_0] = -127;
+            //            input_state_[InputButton::AnalogHorizontal_0] = -127;
             break;
         }
         case Qt::Key_Up:
         {
-            input_state_[InputButton::AnalogVertical_0] = 127;
+            //            input_state_[InputButton::AnalogVertical_0] = 127;
             break;
         }
         case Qt::Key_Down:
         {
-            input_state_[InputButton::AnalogVertical_0] = -127;
+            //            input_state_[InputButton::AnalogVertical_0] = -127;
             break;
         }
         case Qt::Key_Z:
         {
-            input_state_[InputButton::A] = 1;
+            //            input_state_[InputButton::A] = 1;
             break;
         }
         case Qt::Key_X:
         {
-            input_state_[InputButton::B] = 1;
+            //            input_state_[InputButton::B] = 1;
             break;
         }
         case Qt::Key_C:
         {
-            input_state_[InputButton::Z] = 1;
+            //            input_state_[InputButton::Z] = 1;
             break;
         }
         case Qt::Key_Return:
         {
-            input_state_[InputButton::Start] = 1;
+            //            input_state_[InputButton::Start] = 1;
             break;
         }
     }
@@ -310,33 +311,33 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
         case Qt::Key_Left:
         case Qt::Key_Right:
         {
-            input_state_[InputButton::AnalogHorizontal_0] = 0;
+            //            input_state_[InputButton::AnalogHorizontal_0] = 0;
             break;
         }
         case Qt::Key_Up:
         case Qt::Key_Down:
         {
-            input_state_[InputButton::AnalogVertical_0] = 0;
+            //            input_state_[InputButton::AnalogVertical_0] = 0;
             break;
         }
         case Qt::Key_Z:
         {
-            input_state_[InputButton::A] = 0;
+            //            input_state_[InputButton::A] = 0;
             break;
         }
         case Qt::Key_X:
         {
-            input_state_[InputButton::B] = 0;
+            //            input_state_[InputButton::B] = 0;
             break;
         }
         case Qt::Key_C:
         {
-            input_state_[InputButton::Z] = 0;
+            //            input_state_[InputButton::Z] = 0;
             break;
         }
         case Qt::Key_Return:
         {
-            input_state_[InputButton::Start] = 0;
+            //            input_state_[InputButton::Start] = 0;
             break;
         }
     }
@@ -423,7 +424,7 @@ void MainWindow::open_file_impl(const std::string& path)
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
     init_emulator();
-    if (!emulator_->hc_load_file("rom", path.c_str()))
+    if (!emulator_->hc_load_file(emulator_->core_handle, "rom", path.c_str()))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
     enable_emulation_actions(true);
     add_recent(path);
@@ -598,40 +599,49 @@ void MainWindow::reset_emulator()
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
         queued_audio_.clear();
-        emulator_->hc_reset();
+        emulator_->hc_reset(emulator_->core_handle);
     }
+}
+
+using fptr = void (*)();
+
+fptr get_proc_address(const char* name)
+{
+    return QOpenGLContext::currentContext()->getProcAddress(name);
 }
 
 void MainWindow::init_emulator()
 {
     if (emulator_)
-        log_fatal("Double emulator init");
+        log_warn("Double emulator init");
 
-    emulator_->hc_create();
-    emulator_->hc_set_video_callback(video_callback);
-    emulator_->hc_set_audio_callback(audio_callback);
-    emulator_->hc_set_poll_input_callback(poll_input_callback);
-    emulator_->hc_set_read_input_callback(read_input_callback);
-    std::string firmware = emulator_->hc_get_emulator_info(hc_emu_info::HC_INFO_FIRMWARE_FILES);
+    emulator_->core_handle = emulator_->hc_create();
+    emulator_->hc_set_other(emulator_->core_handle, hc_other::HC_OTHER_GL_GET_PROC_ADDRESS,
+                            (void*)&get_proc_address);
+    emulator_->hc_set_video_callback(emulator_->core_handle, video_callback);
+    emulator_->hc_set_audio_callback(emulator_->core_handle, audio_callback);
+    emulator_->hc_set_poll_input_callback(emulator_->core_handle, poll_input_callback);
+    emulator_->hc_set_read_input_callback(emulator_->core_handle, read_input_callback);
+    std::string firmware = emulator_->hc_get_info(hc_info::HC_INFO_FIRMWARE_FILES);
     std::vector<std::string> firmware_files = hydra::split(firmware, ';');
     for (const auto& file : firmware_files)
     {
-        std::string core_name = emulator_->hc_get_emulator_info(hc_emu_info::HC_INFO_CORE_NAME);
+        std::string core_name = emulator_->hc_get_info(hc_info::HC_INFO_CORE_NAME);
         std::string path = Settings::Get(core_name + "_" + file);
         if (path.empty())
         {
             log_fatal(fmt::format("Firmware file {} not set in settings", file).c_str());
         }
-        emulator_->hc_load_file(file.c_str(), path.c_str());
+        emulator_->hc_load_file(emulator_->core_handle, file.c_str(), path.c_str());
     }
-    emulator_->hc_add_log_callback("warn", TerminalWindow::log_warn);
-    emulator_->hc_add_log_callback("info", TerminalWindow::log_info);
-    emulator_->hc_add_log_callback("debug", TerminalWindow::log_debug);
+    emulator_->hc_add_log_callback(emulator_->core_handle, "warn", TerminalWindow::log_warn);
+    emulator_->hc_add_log_callback(emulator_->core_handle, "info", TerminalWindow::log_info);
+    emulator_->hc_add_log_callback(emulator_->core_handle, "debug", TerminalWindow::log_debug);
     if (Settings::Get("print_to_native_terminal") == "true")
     {
-        emulator_->hc_add_log_callback("warn", log_warn);
-        emulator_->hc_add_log_callback("info", log_info);
-        emulator_->hc_add_log_callback("fatal", log_fatal);
+        emulator_->hc_add_log_callback(emulator_->core_handle, "warn", log_warn);
+        emulator_->hc_add_log_callback(emulator_->core_handle, "info", log_info);
+        emulator_->hc_add_log_callback(emulator_->core_handle, "fatal", log_fatal);
     }
 }
 
@@ -642,7 +652,8 @@ void MainWindow::stop_emulator()
         std::unique_lock<std::mutex> alock(audio_mutex_);
         emulator_timer_->stop();
         queued_audio_.clear();
-        emulator_->hc_destroy();
+        emulator_->hc_destroy(emulator_->core_handle);
+        emulator_->core_handle = nullptr;
         emulator_.reset();
         enable_emulation_actions(false);
     }
@@ -651,7 +662,7 @@ void MainWindow::stop_emulator()
 void MainWindow::emulator_frame()
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
-    emulator_->hc_run_frame();
+    emulator_->hc_run_frame(emulator_->core_handle);
     screen_->Redraw(video_width_, video_height_, video_buffer_.data());
 }
 
@@ -659,8 +670,11 @@ void MainWindow::video_callback(const uint8_t* data, uint32_t width, uint32_t he
 {
     main_window->video_width_ = width;
     main_window->video_height_ = height;
-    main_window->video_buffer_.resize(width * height * 4);
-    std::memcpy(main_window->video_buffer_.data(), data, main_window->video_buffer_.size());
+    if (data)
+    {
+        main_window->video_buffer_.resize(width * height * 4);
+        std::memcpy(main_window->video_buffer_.data(), data, main_window->video_buffer_.size());
+    }
 }
 
 void MainWindow::audio_callback(const int16_t* data, uint32_t frames)
@@ -705,4 +719,12 @@ void MainWindow::update_recent_files()
     if (recent_act_->menu())
         recent_act_->menu()->deleteLater();
     recent_act_->setMenu(menu);
+}
+
+void MainWindow::update_fbo(unsigned fbo)
+{
+    if (emulator_)
+    {
+        emulator_->hc_set_other(emulator_->core_handle, hc_other::HC_OTHER_GL_FBO, (void*)&fbo);
+    }
 }

@@ -138,6 +138,7 @@ void SettingsWindow::create_tabs()
             Settings::Set("core_path", (std::filesystem::current_path() / "cores").string());
         }
         QListWidget* core_list = new QListWidget;
+        core_list->setStyleSheet("QListWidget::item { border-bottom: 1px solid black; }");
         core_list->setDragEnabled(false);
         QFile file(":/core.html");
         file.open(QIODevice::ReadOnly);

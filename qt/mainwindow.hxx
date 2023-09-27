@@ -2,7 +2,7 @@
 
 #include "screenwidget.hxx"
 #include <array>
-#include <common/core.h>
+#include <core/core.h>
 #include <deque>
 #include <memory>
 #include <ui_common.hxx>
@@ -50,6 +50,7 @@ private:
     void initialize_audio();
     void set_volume(int volume);
     void update_recent_files();
+    void update_fbo(unsigned fbo);
 
     static void video_callback(const uint8_t* data, uint32_t width, uint32_t height);
     static void audio_callback(const int16_t* data, uint32_t frames);
@@ -84,9 +85,8 @@ public:
     QTimer* emulator_timer_;
     ScreenWidget* screen_;
     ma_device sound_device_{};
-    std::unique_ptr<hydra::core_wrapper_t> emulator_;
+    std::unique_ptr<hydra::core_wrapper_t> emulator_ = nullptr;
     std::vector<int16_t> queued_audio_;
-    std::thread emulator_thread_;
     bool settings_open_ = false;
     bool about_open_ = false;
     bool shaders_open_ = false;
@@ -100,7 +100,7 @@ public:
     uint32_t video_width_ = 0;
     uint32_t video_height_ = 0;
 
-    std::array<int8_t, InputButton::InputCount> input_state_{};
+    std::array<int8_t, 100> input_state_{};
     std::deque<std::string> recent_files_;
 
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);

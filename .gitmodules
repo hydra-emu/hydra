@@ -4,3 +4,6 @@
 [submodule "common"]
 	path = common
 	url = https://github.com/hydra-emu/common
+[submodule "core"]
+	path = core
+	url = https://github.com/hydra-emu/core

@@ -98,23 +98,20 @@ public:
             if (it->path().extension() == ".so")
             {
                 hydra::core_wrapper_t core(it->path());
-                core.hc_get_emulator_info = reinterpret_cast<decltype(core.hc_get_emulator_info)>(
-                    dlsym(core.dlhandle, "hc_get_emulator_info"));
+                core.hc_get_info = reinterpret_cast<decltype(core.hc_get_info)>(
+                    dlsym(core.dl_handle, "hc_get_info"));
                 core_info info;
                 info.path = it->path().string();
-                info.core_name = core.hc_get_emulator_info(hc_emu_info::HC_INFO_CORE_NAME);
-                info.system_name = core.hc_get_emulator_info(hc_emu_info::HC_INFO_SYSTEM_NAME);
-                info.version = core.hc_get_emulator_info(hc_emu_info::HC_INFO_VERSION);
-                info.author = core.hc_get_emulator_info(hc_emu_info::HC_INFO_AUTHOR);
-                info.description = core.hc_get_emulator_info(hc_emu_info::HC_INFO_DESCRIPTION);
-                info.extensions =
-                    hydra::split(core.hc_get_emulator_info(hc_emu_info::HC_INFO_EXTENSIONS), ',');
-                info.url = core.hc_get_emulator_info(hc_emu_info::HC_INFO_URL);
-                info.license = core.hc_get_emulator_info(hc_emu_info::HC_INFO_LICENSE);
-                info.firmware_files =
-                    core.hc_get_emulator_info(hc_emu_info::HC_INFO_FIRMWARE_FILES);
-                info.max_players =
-                    std::stoi(core.hc_get_emulator_info(hc_emu_info::HC_INFO_MAX_PLAYERS));
+                info.core_name = core.hc_get_info(hc_info::HC_INFO_CORE_NAME);
+                info.system_name = core.hc_get_info(hc_info::HC_INFO_SYSTEM_NAME);
+                info.version = core.hc_get_info(hc_info::HC_INFO_VERSION);
+                info.author = core.hc_get_info(hc_info::HC_INFO_AUTHOR);
+                info.description = core.hc_get_info(hc_info::HC_INFO_DESCRIPTION);
+                info.extensions = hydra::split(core.hc_get_info(hc_info::HC_INFO_EXTENSIONS), ',');
+                info.url = core.hc_get_info(hc_info::HC_INFO_URL);
+                info.license = core.hc_get_info(hc_info::HC_INFO_LICENSE);
+                info.firmware_files = core.hc_get_info(hc_info::HC_INFO_FIRMWARE_FILES);
+                info.max_players = std::stoi(core.hc_get_info(hc_info::HC_INFO_MAX_PLAYERS));
                 CoreInfo.push_back(info);
             }
 

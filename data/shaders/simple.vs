@@ -9,6 +9,4 @@ void main()
 {
     gl_Position = vec4(pos, 0.0, 1.0);
     frag_uv = uv;
-    // I hate this but whatever
-    frag_uv.y = 1.0 - frag_uv.y;
 }
