@@ -1,7 +1,7 @@
 #ifndef SCREENWIDGET_H
 #define SCREENWIDGET_H
 #include <QOpenGLBuffer>
-#include <QOpenGLFunctions_4_4_Core>
+#include <QOpenGLFunctions>
 #include <QOpenGLShader>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
@@ -10,7 +10,7 @@
 #include <QResizeEvent>
 #include <QString>
 
-class ScreenWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_4_Core
+class ScreenWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
 
