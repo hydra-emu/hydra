@@ -1,11 +1,14 @@
 #include "mainwindow.hxx"
-#include "qthelper.hxx"
-#include <log.hxx>
+#include <log.h>
 #include <QApplication>
 #include <QSurfaceFormat>
+#include <settings.hxx>
 
 int main(int argc, char* argv[])
 {
+    auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
+    Settings::Open(settings_path);
+    Settings::InitCoreInfo();
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
     format.setProfile(QSurfaceFormat::CoreProfile);
@@ -22,12 +25,12 @@ int main(int argc, char* argv[])
     }
 
     int ret = 0;
+    ret = a.exec();
     try
     {
-        ret = a.exec();
     } catch (...)
     {
-        Logger::Warn("Caught unhandled exception. Please open an issue on Github.");
+        log_fatal("Caught unhandled exception. Please open an issue on Github.");
         return 1;
     }
     return ret;

@@ -8,10 +8,10 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
 {
     emulator_picker_ = new QComboBox;
     tab_show_ = new QTabWidget;
-    for (int i = 0; i < EmuTypeSize; i++)
+    for (int i = 0; i < 1; i++)
     {
-        emulator_picker_->addItem(
-            QString::fromStdString(hydra::get_emu_type_name(static_cast<hydra::EmuType>(i))));
+        // emulator_picker_->addItem(
+        //     QString::fromStdString(hydra::get_emu_type_name(static_cast<hydra::EmuType>(i))));
         QTableWidget* table = new QTableWidget;
         table->setColumnCount(2);
         table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -44,8 +44,8 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
         table->setFocusPolicy(Qt::NoFocus);
         connect(table, SIGNAL(cellDoubleClicked(int, int)), this,
                 SLOT(onCellDoubleClicked(int, int)));
-        tab_show_->addTab(table, QString::fromStdString(
-                                     hydra::get_emu_type_name(static_cast<hydra::EmuType>(i))));
+        // tab_show_->addTab(table, QString::fromStdString(
+        //                              hydra::get_emu_type_name(static_cast<hydra::EmuType>(i))));
     }
     tab_show_->tabBar()->hide();
     tab_show_->setFocusPolicy(Qt::NoFocus);

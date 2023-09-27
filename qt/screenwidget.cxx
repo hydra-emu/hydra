@@ -1,6 +1,6 @@
 #include "screenwidget.hxx"
 #include <iostream>
-#include <log.hxx>
+#include <log.h>
 #include <QFile>
 #include <QSurfaceFormat>
 
@@ -18,8 +18,9 @@ static constexpr float vertices_uvs[] =
 
 // clang-format on
 
-ScreenWidget::ScreenWidget(QWidget* parent)
-    : QOpenGLWidget(parent), vbo_(QOpenGLBuffer::Type::VertexBuffer)
+ScreenWidget::ScreenWidget(std::function<void(unsigned)> set_fbo_callback, QWidget* parent)
+    : set_fbo_callback_(set_fbo_callback), QOpenGLWidget(parent),
+      vbo_(QOpenGLBuffer::Type::VertexBuffer)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
@@ -37,9 +38,33 @@ void ScreenWidget::Redraw(int width, int height, const void* tdata)
 {
     if (initialized_) [[likely]]
     {
-        glBindTexture(GL_TEXTURE_2D, texture_);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tdata);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        if (width != current_width_ || height != current_height_)
+        {
+            current_width_ = width;
+            current_height_ = height;
+            if (texture_ != 0)
+                glDeleteTextures(1, &texture_);
+            glGenTextures(1, &texture_);
+            glBindTexture(GL_TEXTURE_2D, texture_);
+            glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, width, height);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            if (fbo_ != 0)
+                glDeleteFramebuffers(1, &fbo_);
+            glGenFramebuffers(1, &fbo_);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_,
+                                   0);
+            set_fbo_callback_(fbo_);
+        }
+        if (tdata)
+        {
+            glBindTexture(GL_TEXTURE_2D, texture_);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE,
+                            tdata);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
         update();
     }
 }
@@ -95,7 +120,7 @@ void ScreenWidget::ResetProgram(QString* vertex, QString* fragment)
     GLint tex = glGetUniformLocation(program_->programId(), "tex");
     if (tex == -1)
     {
-        Logger::Fatal("Could not find uniform tex");
+        log_fatal("Could not find uniform tex");
     }
     glUniform1i(tex, 0);
     delete fshader;
@@ -110,8 +135,6 @@ void ScreenWidget::mouseMoveEvent(QMouseEvent* event)
 void ScreenWidget::initializeGL()
 {
     initializeOpenGLFunctions();
-    const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    Logger::Info("OpenGL version: {}", version);
     vao_.create();
     vao_.bind();
     vbo_.create();
@@ -123,14 +146,7 @@ void ScreenWidget::initializeGL()
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnable(GL_TEXTURE_2D);
-    glGenTextures(1, &texture_);
-    glClearColor(0.1, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
     ResetProgram();
-    glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glBindTexture(GL_TEXTURE_2D, 0);
     initialized_ = true;
 }
 
@@ -138,7 +154,6 @@ void ScreenWidget::resizeGL(int, int) {}
 
 void ScreenWidget::paintGL()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
     program_->bind();
     if (initialized_)
     {

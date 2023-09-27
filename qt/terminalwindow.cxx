@@ -1,6 +1,5 @@
 #include "terminalwindow.hxx"
 #include <iostream>
-#include <log.hxx>
 #include <QCheckBox>
 #include <QFileDialog>
 #include <QIODevice>
@@ -109,25 +108,24 @@ void TerminalWindow::on_timeout()
     changed_ = false;
 }
 
-void TerminalWindow::log(const std::string& group, const std::string& message)
+void TerminalWindow::log(const char* group, const char* message)
 {
     logs_[group] += message;
+    logs_[group] += "\n";
     changed_ = true;
 }
 
-void TerminalWindow::Init()
+void TerminalWindow::log_warn(const char* message)
 {
-    Logger::HookCallback("Warn", [](const std::string& message) { log("Warn", message); });
-    Logger::HookCallback("Info", [](const std::string& message) { log("Info", message); });
-    Logger::HookCallback("Debug", [](const std::string& message) { log("Debug", message); });
+    log("Warn", message);
+}
 
-    if (Settings::Get("print_to_native_terminal") == "true")
-    {
-        Logger::HookCallback("Warn", [](const std::string& message) {
-            std::cout << "[Warn] " << message << std::flush;
-        });
-        Logger::HookCallback("Info", [](const std::string& message) {
-            std::cout << "[Info] " << message << std::flush;
-        });
-    }
+void TerminalWindow::log_info(const char* message)
+{
+    log("Info", message);
+}
+
+void TerminalWindow::log_debug(const char* message)
+{
+    log("Debug", message);
 }

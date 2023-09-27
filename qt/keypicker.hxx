@@ -1,6 +1,5 @@
 #pragma once
 
-#include <emulator_types.hxx>
 #include <QComboBox>
 #include <QLabel>
 #include <QTableWidget>

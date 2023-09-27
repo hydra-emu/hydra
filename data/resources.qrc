@@ -9,9 +9,9 @@
         <file>images/logo.png</file>
         <file>images/gameboy.png</file>
         <file>images/c8.png</file>
-        <file>images/n64.png</file>
+        <file>images/Nintendo 64.png</file>
         <file>images/nes.png</file>
-        <file>images/nes_ppuviewer.png</file>
+        <file>images/core.png</file>
         <file>images/trash.png</file>
         <file>images/sound.png</file>
         <file>images/shaders.png</file>
@@ -22,12 +22,7 @@
         <file>images/compile.png</file>
         <file>images/autocompile.png</file>
         <file>images/open.png</file>
-        <file>mappings.json</file>
-        <file>emulators/gameboy.json</file>
-        <file>emulators/nes.json</file>
-        <file>emulators/n64.json</file>
-        <file>emulators/nds.json</file>
-        <file>emulators/c8.json</file>
+        <file>core.html</file>
         <file>about.html</file>
         <file>shaders/simple.vs</file>
         <file>shaders/simple.fs</file>

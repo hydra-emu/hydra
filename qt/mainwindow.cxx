@@ -5,11 +5,13 @@
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
 #include "terminalwindow.hxx"
+#include <common/compatibility.hxx>
 #include <error_factory.hxx>
+#include <fmt/format.h>
 #include <fstream>
 #include <iostream>
 #include <json.hpp>
-#include <log.hxx>
+#include <log.h>
 #include <QApplication>
 #include <QClipboard>
 #include <QGridLayout>
@@ -21,8 +23,9 @@
 #include <QTimer>
 #include <settings.hxx>
 #include <sol/sol.hpp>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.hxx>
+#include <stb_image_write.h>
+
+MainWindow* main_window = nullptr;
 
 void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
 {
@@ -40,15 +43,15 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
-    auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
-    Settings::Open(settings_path);
+    main_window = this;
 
     QWidget* widget = new QWidget;
     setCentralWidget(widget);
 
     QVBoxLayout* layout = new QVBoxLayout;
     layout->setContentsMargins(5, 5, 5, 5);
-    screen_ = new ScreenWidget(this);
+    screen_ =
+        new ScreenWidget(std::bind(&MainWindow::update_fbo, this, std::placeholders::_1), this);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
     screen_->setMouseTracking(true);
     layout->addWidget(screen_);
@@ -66,13 +69,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     emulator_timer_ = new QTimer(this);
     connect(emulator_timer_, SIGNAL(timeout()), this, SLOT(emulator_frame()));
 
-    TerminalWindow::Init();
-    Logger::HookCallback("Fatal", [this](const std::string& fatal_msg) {
-        printf("Fatal: %s\n", fatal_msg.c_str());
-        exit(1);
-    });
-
-    initialize_emulator_data();
     initialize_audio();
     enable_emulation_actions(false);
 
@@ -101,7 +97,7 @@ void MainWindow::initialize_audio()
     context_config.threadPriority = ma_thread_priority_realtime;
     if (ma_context_init(NULL, 0, &context_config, &context) != MA_SUCCESS)
     {
-        Logger::Fatal("Failed to initialize audio context");
+        log_fatal("Failed to initialize audio context");
     }
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
@@ -113,7 +109,7 @@ void MainWindow::initialize_audio()
     config.pUserData = this;
     if (ma_device_init(NULL, &config, &sound_device_) != MA_SUCCESS)
     {
-        Logger::Fatal("Failed to open audio device");
+        log_fatal("Failed to open audio device");
     }
     ma_device_start(&sound_device_);
 
@@ -264,42 +260,42 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     {
         case Qt::Key_Right:
         {
-            input_state_[hydra::InputButton::AnalogHorizontal_0] = 127;
+            //            input_state_[InputButton::AnalogHorizontal_0] = 127;
             break;
         }
         case Qt::Key_Left:
         {
-            input_state_[hydra::InputButton::AnalogHorizontal_0] = -127;
+            //            input_state_[InputButton::AnalogHorizontal_0] = -127;
             break;
         }
         case Qt::Key_Up:
         {
-            input_state_[hydra::InputButton::AnalogVertical_0] = 127;
+            //            input_state_[InputButton::AnalogVertical_0] = 127;
             break;
         }
         case Qt::Key_Down:
         {
-            input_state_[hydra::InputButton::AnalogVertical_0] = -127;
+            //            input_state_[InputButton::AnalogVertical_0] = -127;
             break;
         }
         case Qt::Key_Z:
         {
-            input_state_[hydra::InputButton::A] = 1;
+            //            input_state_[InputButton::A] = 1;
             break;
         }
         case Qt::Key_X:
         {
-            input_state_[hydra::InputButton::B] = 1;
+            //            input_state_[InputButton::B] = 1;
             break;
         }
         case Qt::Key_C:
         {
-            input_state_[hydra::InputButton::Z] = 1;
+            //            input_state_[InputButton::Z] = 1;
             break;
         }
         case Qt::Key_Return:
         {
-            input_state_[hydra::InputButton::Start] = 1;
+            //            input_state_[InputButton::Start] = 1;
             break;
         }
     }
@@ -312,33 +308,33 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
         case Qt::Key_Left:
         case Qt::Key_Right:
         {
-            input_state_[hydra::InputButton::AnalogHorizontal_0] = 0;
+            //            input_state_[InputButton::AnalogHorizontal_0] = 0;
             break;
         }
         case Qt::Key_Up:
         case Qt::Key_Down:
         {
-            input_state_[hydra::InputButton::AnalogVertical_0] = 0;
+            //            input_state_[InputButton::AnalogVertical_0] = 0;
             break;
         }
         case Qt::Key_Z:
         {
-            input_state_[hydra::InputButton::A] = 0;
+            //            input_state_[InputButton::A] = 0;
             break;
         }
         case Qt::Key_X:
         {
-            input_state_[hydra::InputButton::B] = 0;
+            //            input_state_[InputButton::B] = 0;
             break;
         }
         case Qt::Key_C:
         {
-            input_state_[hydra::InputButton::Z] = 0;
+            //            input_state_[InputButton::Z] = 0;
             break;
         }
         case Qt::Key_Return:
         {
-            input_state_[hydra::InputButton::Start] = 0;
+            //            input_state_[InputButton::Start] = 0;
             break;
         }
     }
@@ -353,34 +349,41 @@ void MainWindow::open_file()
     {
         QString indep;
         extensions = "All supported types (";
-        for (int i = 0; i < EmuTypeSize; i++)
+        for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
         {
-            const auto& emulator_data = hydra::UiCommon::EmulatorData[i];
-            indep += emulator_data.Name.c_str();
+            const auto& core_data = Settings::CoreInfo[i];
+            indep += core_data.core_name;
             indep += " (";
-            for (const auto& str : emulator_data.Extensions)
+            for (size_t j = 0; j < core_data.extensions.size(); j++)
             {
-                extensions += "*";
-                extensions += str.c_str();
-                extensions += " ";
-                indep += "*";
-                indep += str.c_str();
-                indep += " ";
+                std::string ext = core_data.extensions[j];
+                extensions += "*.";
+                extensions += ext.c_str();
+                if (j != core_data.extensions.size() - 1)
+                    extensions += " ";
+                indep += "*.";
+                indep += ext.c_str();
+                if (j != core_data.extensions.size() - 1)
+                    indep += " ";
             }
-            indep += ");;";
+            if (i != Settings::CoreInfo.size() - 1)
+                indep += ");;";
+            else
+                indep += ")";
         }
-        extensions += ");;";
-        extensions += indep;
+        extensions += ")";
+        if (indep != "")
+            extensions += ";;" + indep;
     }
     std::string last_path = Settings::Get("last_path");
-    std::string path =
-        QFileDialog::getOpenFileName(this, tr("Open ROM"), QString::fromStdString(last_path),
-                                     extensions, nullptr, QFileDialog::ReadOnly)
-            .toStdString();
-    if (path.empty())
+    QFileDialog dialog(this, tr("Open File"), last_path.c_str(), extensions);
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.show();
+    if (dialog.exec() != QDialog::Accepted)
     {
         return;
     }
+    std::string path = dialog.selectedFiles().first().toStdString();
     qt_may_throw(std::bind(&MainWindow::open_file_impl, this, path));
 }
 
@@ -392,26 +395,36 @@ void MainWindow::open_file_impl(const std::string& path)
 
     if (!std::filesystem::is_regular_file(pathfs))
     {
-        Logger::Warn("Failed to open file: {}", path);
+        log_warn(fmt::format("Failed to open file: {}", path).c_str());
         return;
     }
 
     stop_emulator();
     Settings::Set("last_path", pathfs.parent_path().string());
-    Logger::ClearWarnings();
-    auto type = hydra::UiCommon::GetEmulatorType(path);
-    emulator_type_ = type;
-    emulator_ = hydra::UiCommon::Create(type);
+    std::string core_path;
+    for (const auto& core : Settings::CoreInfo)
+    {
+        for (const auto& ext : core.extensions)
+        {
+            if (pathfs.extension().string().substr(1) == ext)
+            {
+                core_path = core.path;
+                break;
+            }
+        }
+        if (!core_path.empty())
+            break;
+    }
+    if (core_path.empty())
+    {
+        log_warn(fmt::format("Failed to find core for file: {}", path).c_str());
+        return;
+    }
+    emulator_ = hydra::UiCommon::Create(core_path);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
-    emulator_->SetVideoCallback(
-        std::bind(&MainWindow::video_callback, this, std::placeholders::_1));
-    emulator_->SetAudioCallback(
-        std::bind(&MainWindow::audio_callback, this, std::placeholders::_1));
-    emulator_->SetPollInputCallback(std::bind(&MainWindow::poll_input_callback, this));
-    emulator_->SetReadInputCallback(
-        std::bind(&MainWindow::read_input_callback, this, std::placeholders::_1));
-    if (!emulator_->LoadFile("rom", path))
+    init_emulator();
+    if (!emulator_->hc_load_file_p(emulator_->core_handle, "rom", path.c_str()))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
     enable_emulation_actions(true);
     add_recent(path);
@@ -538,8 +551,8 @@ void MainWindow::screenshot()
 
     std::filesystem::path screenshot_full_path =
         screenshot_path / (screenshot_name + screenshot_extension);
-    stbi_write_png(screenshot_full_path.string().c_str(), video_info_.width, video_info_.height, 4,
-                   video_info_.data.data(), video_info_.width * 4);
+    stbi_write_png(screenshot_full_path.string().c_str(), video_width_, video_height_, 4,
+                   video_buffer_.data(), video_width_ * 4);
 }
 
 void MainWindow::set_volume(int volume)
@@ -567,29 +580,6 @@ void MainWindow::enable_emulation_actions(bool should)
         screen_->hide();
 }
 
-void MainWindow::initialize_emulator_data()
-{
-    for (int i = 0; i < EmuTypeSize; i++)
-    {
-        std::string file_name = hydra::serialize_emu_type(static_cast<hydra::EmuType>(i));
-        std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::tolower);
-        auto path = ":/emulators/" + file_name + ".json";
-
-        QFile file(QString::fromStdString(path));
-        if (!file.open(QIODevice::ReadOnly))
-        {
-            Logger::Fatal("Failed to open emulator data file: {}", path);
-        }
-
-        std::string file_data = file.readAll().toStdString();
-        using json = nlohmann::json;
-        json j = json::parse(file_data);
-        hydra::UiCommon::EmulatorData[i].Name = j["Name"].get<std::string>();
-        hydra::UiCommon::EmulatorData[i].Extensions =
-            j["Extensions"].get<std::vector<std::string>>();
-    }
-}
-
 void MainWindow::pause_emulator()
 {
     paused_ = !paused_;
@@ -609,7 +599,49 @@ void MainWindow::reset_emulator()
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
         queued_audio_.clear();
-        emulator_->Reset();
+        emulator_->hc_reset_p(emulator_->core_handle);
+    }
+}
+
+using fptr = void (*)();
+
+fptr get_proc_address(const char* name)
+{
+    return QOpenGLContext::currentContext()->getProcAddress(name);
+}
+
+void MainWindow::init_emulator()
+{
+    if (emulator_)
+        log_warn("Double emulator init");
+
+    emulator_->core_handle = emulator_->hc_create_p();
+    emulator_->hc_set_other_p(emulator_->core_handle, hc_other::HC_OTHER_GL_GET_PROC_ADDRESS,
+                              (void*)&get_proc_address);
+    emulator_->hc_set_video_callback_p(emulator_->core_handle, video_callback);
+    emulator_->hc_set_audio_callback_p(emulator_->core_handle, audio_callback);
+    emulator_->hc_set_poll_input_callback_p(emulator_->core_handle, poll_input_callback);
+    emulator_->hc_set_read_input_callback_p(emulator_->core_handle, read_input_callback);
+    std::string firmware = emulator_->hc_get_info_p(hc_info::HC_INFO_FIRMWARE_FILES);
+    std::vector<std::string> firmware_files = hydra::split(firmware, ';');
+    for (const auto& file : firmware_files)
+    {
+        std::string core_name = emulator_->hc_get_info_p(hc_info::HC_INFO_CORE_NAME);
+        std::string path = Settings::Get(core_name + "_" + file);
+        if (path.empty())
+        {
+            log_fatal(fmt::format("Firmware file {} not set in settings", file).c_str());
+        }
+        emulator_->hc_load_file_p(emulator_->core_handle, file.c_str(), path.c_str());
+    }
+    emulator_->hc_add_log_callback_p(emulator_->core_handle, "warn", TerminalWindow::log_warn);
+    emulator_->hc_add_log_callback_p(emulator_->core_handle, "info", TerminalWindow::log_info);
+    emulator_->hc_add_log_callback_p(emulator_->core_handle, "debug", TerminalWindow::log_debug);
+    if (Settings::Get("print_to_native_terminal") == "true")
+    {
+        emulator_->hc_add_log_callback_p(emulator_->core_handle, "warn", log_warn);
+        emulator_->hc_add_log_callback_p(emulator_->core_handle, "info", log_info);
+        emulator_->hc_add_log_callback_p(emulator_->core_handle, "fatal", log_fatal);
     }
 }
 
@@ -620,38 +652,43 @@ void MainWindow::stop_emulator()
         std::unique_lock<std::mutex> alock(audio_mutex_);
         emulator_timer_->stop();
         queued_audio_.clear();
+        emulator_->hc_destroy_p(emulator_->core_handle);
+        emulator_->core_handle = nullptr;
         emulator_.reset();
         enable_emulation_actions(false);
-        video_info_ = {};
     }
 }
 
 void MainWindow::emulator_frame()
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
-    std::future<void> frame = emulator_->RunFrameAsync();
-    frame.wait();
-
-    screen_->Redraw(video_info_.width, video_info_.height, video_info_.data.data());
+    emulator_->hc_run_frame_p(emulator_->core_handle);
+    screen_->Redraw(video_width_, video_height_, video_buffer_.data());
 }
 
-void MainWindow::video_callback(const hydra::VideoInfo& vi)
+void MainWindow::video_callback(const uint8_t* data, uint32_t width, uint32_t height)
 {
-    video_info_ = vi;
+    main_window->video_width_ = width;
+    main_window->video_height_ = height;
+    if (data)
+    {
+        main_window->video_buffer_.resize(width * height * 4);
+        std::memcpy(main_window->video_buffer_.data(), data, main_window->video_buffer_.size());
+    }
 }
 
-void MainWindow::audio_callback(const hydra::AudioInfo& ai)
+void MainWindow::audio_callback(const int16_t* data, uint32_t frames)
 {
-    std::unique_lock<std::mutex> lock(audio_mutex_);
-    queued_audio_.reserve(queued_audio_.size() + ai.data.size());
-    queued_audio_.insert(queued_audio_.end(), ai.data.begin(), ai.data.end());
+    std::unique_lock<std::mutex> lock(main_window->audio_mutex_);
+    main_window->queued_audio_.reserve(main_window->queued_audio_.size() + frames * 2);
+    main_window->queued_audio_.insert(main_window->queued_audio_.end(), data, data + frames * 2);
 }
 
 void MainWindow::poll_input_callback() {}
 
-int8_t MainWindow::read_input_callback(const hydra::InputInfo& ii)
+int8_t MainWindow::read_input_callback(uint8_t player, uint8_t button)
 {
-    return input_state_[ii.button];
+    return main_window->input_state_[button];
 }
 
 void MainWindow::add_recent(const std::string& path)
@@ -682,4 +719,12 @@ void MainWindow::update_recent_files()
     if (recent_act_->menu())
         recent_act_->menu()->deleteLater();
     recent_act_->setMenu(menu);
+}
+
+void MainWindow::update_fbo(unsigned fbo)
+{
+    if (emulator_)
+    {
+        emulator_->hc_set_other_p(emulator_->core_handle, hc_other::HC_OTHER_GL_FBO, (void*)&fbo);
+    }
 }

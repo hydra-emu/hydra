@@ -13,7 +13,10 @@ public:
     TerminalWindow(bool& open, QWidget* parent = nullptr);
     ~TerminalWindow();
 
-    static void Init();
+    static void log(const char* group, const char* message);
+    static void log_warn(const char* message);
+    static void log_info(const char* message);
+    static void log_debug(const char* message);
 
 private:
     QComboBox* groups_combo_box_;
@@ -23,7 +26,6 @@ private:
     void on_group_changed(const QString& group);
     void on_timeout();
 
-    static void log(const std::string& group, const std::string& message);
     static std::unordered_map<std::string, std::string> logs_;
     static bool changed_;
 };
