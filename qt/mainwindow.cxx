@@ -347,7 +347,6 @@ void MainWindow::on_mouse_move(QMouseEvent* event) {}
 
 void MainWindow::open_file()
 {
-    Settings::InitCoreInfo();
     static QString extensions;
     if (extensions.isEmpty())
     {
@@ -393,6 +392,7 @@ void MainWindow::open_file()
 
 void MainWindow::open_file_impl(const std::string& path)
 {
+    Settings::InitCoreInfo();
     std::unique_lock<std::mutex> elock(emulator_mutex_);
     emulator_timer_->stop();
     std::filesystem::path pathfs(path);
