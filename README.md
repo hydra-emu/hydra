@@ -24,6 +24,7 @@ You can load cores by placing them in the core directory specified in Hydras set
   - [SkyEmu](https://github.com/hydra-emu/SkyEmu)
 - Nintendo DS
   - [SkyEmu](https://github.com/hydra-emu/SkyEmu)
+  - [vargds](https://github.com/hydra-emu/vargds) (WIP)
 - Nintendo 3DS
   - [Panda3DS](https://github.com/hydra-emu/Panda3DS)
 
