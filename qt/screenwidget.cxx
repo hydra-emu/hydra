@@ -46,7 +46,7 @@ void ScreenWidget::Redraw(int width, int height, const void* tdata)
                 glDeleteTextures(1, &texture_);
             glGenTextures(1, &texture_);
             glBindTexture(GL_TEXTURE_2D, texture_);
-            glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, width, height);
+            //glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, width, height);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glBindTexture(GL_TEXTURE_2D, 0);
