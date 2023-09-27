@@ -146,19 +146,18 @@ void SettingsWindow::create_tabs()
         file.close();
         for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
         {
-            QListWidgetItem* item = new QListWidgetItem;
-            core_list->addItem(item);
-            QLabel* label = new QLabel;
-            label->setTextFormat(Qt::RichText);
-            label->setTextInteractionFlags(Qt::TextBrowserInteraction);
-            label->setOpenExternalLinks(true);
             const auto& core = Settings::CoreInfo[i];
-            label->setText(fmt::format(fmt::runtime(html.toStdString()), core.core_name,
-                                       core.version, core.system_name, core.license,
-                                       core.description, core.author, core.url)
-                               .c_str());
-            item->setSizeHint(label->sizeHint());
-            core_list->setItemWidget(item, label);
+            QListWidgetItem* item = new QListWidgetItem(core.core_name.c_str());
+            core_list->addItem(item);
+            // QLabel* label = new QLabel;
+            // label->setTextFormat(Qt::RichText);
+            // label->setTextInteractionFlags(Qt::TextBrowserInteraction);
+            // label->setOpenExternalLinks(true);
+            // label->setText(fmt::format(fmt::runtime(html.toStdString()), core.core_name,
+            //                            core.version, core.system_name, core.license,
+            //                            core.description, core.author, core.url)
+            //    .c_str());
+            // core_list->setItemWidget(item, label);
         }
         cores_layout->addWidget(core_list, 0, 0, 1, 0);
         add_filepicker(cores_layout, "Core directory", "core_path", "", 1, 0, true);
