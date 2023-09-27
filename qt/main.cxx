@@ -2,9 +2,11 @@
 #include <log.h>
 #include <QApplication>
 #include <QSurfaceFormat>
+#include <settings.hxx>
 
 int main(int argc, char* argv[])
 {
+    Settings::InitCoreInfo();
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
     format.setProfile(QSurfaceFormat::CoreProfile);
