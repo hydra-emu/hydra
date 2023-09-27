@@ -14,7 +14,6 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
                                QWidget* parent)
     : open_(open), volume_callback_(volume_callback), QWidget(parent, Qt::Window)
 {
-    Settings::InitCoreInfo();
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle("Settings");

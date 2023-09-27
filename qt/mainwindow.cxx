@@ -45,8 +45,6 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
     main_window = this;
-    auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
-    Settings::Open(settings_path);
 
     QWidget* widget = new QWidget;
     setCentralWidget(widget);

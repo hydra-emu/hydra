@@ -6,6 +6,8 @@
 
 int main(int argc, char* argv[])
 {
+    auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
+    Settings::Open(settings_path);
     Settings::InitCoreInfo();
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
