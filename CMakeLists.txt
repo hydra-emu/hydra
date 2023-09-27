@@ -69,23 +69,13 @@ set(QT_SOURCES
     qt/keypicker.cxx
     qt/terminalwindow.cxx
     vendored/miniaudio.c
+    vendored/stb_image_write.c
 )
 
 set(SRC_FILES
     src/ui_common.cxx
     src/settings.cxx
 )
-
-# ExternalProject_Add(
-#     nds_rust_core
-#     DOWNLOAD_COMMAND ""
-#     CONFIGURE_COMMAND ""
-#     INSTALL_COMMAND ""
-#     BUILD_COMMAND cargo build COMMAND cargo build --release 
-#     BINARY_DIR "${CMAKE_SOURCE_DIR}/nds"
-#     BUILD_ALWAYS true
-#     LOG_BUILD ON
-# )
 
 set(HYDRA_INCLUDE_DIRECTORIES
     include
@@ -100,11 +90,6 @@ qt_add_executable(hydra
 )
 
 add_library(src STATIC ${SRC_FILES})
-
-# target_link_libraries(nds
-#     debug "${CMAKE_SOURCE_DIR}/nds/target/libhydra_nds.a"
-#     optimized "${CMAKE_SOURCE_DIR}/nds/target/libhydra_nds.a"
-# )
 
 target_link_libraries(hydra PRIVATE src 
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL

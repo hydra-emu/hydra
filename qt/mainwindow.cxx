@@ -23,8 +23,7 @@
 #include <QTimer>
 #include <settings.hxx>
 #include <sol/sol.hpp>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.hxx>
+#include <stb_image_write.h>
 
 MainWindow* main_window = nullptr;
 
