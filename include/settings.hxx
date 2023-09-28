@@ -2,6 +2,7 @@
 
 #include <common/compatibility.hxx>
 #include <error_factory.hxx>
+#include <fmt/format.h>
 #include <fstream>
 #include <json.hpp>
 #include <map>
@@ -103,7 +104,14 @@ public:
             {
                 hydra::core_wrapper_t core(it->path());
                 core.hc_get_info_p = reinterpret_cast<decltype(core.hc_get_info_p)>(
-                    dlsym(core.dl_handle, "hc_get_info"));
+                    dynlib_get_symbol(core.dl_handle, "hc_get_info"));
+                if (!core.hc_get_info_p)
+                {
+                    log_warn(fmt::format("Could not find symbol hc_get_info in core {}",
+                                         it->path().string())
+                                 .c_str());
+                    continue;
+                }
                 core_info info;
                 info.path = it->path().string();
                 info.core_name = core.hc_get_info_p(hc_info::HC_INFO_CORE_NAME);

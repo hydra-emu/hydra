@@ -18,9 +18,8 @@ static constexpr float vertices_uvs[] =
 
 // clang-format on
 
-ScreenWidget::ScreenWidget(std::function<void(unsigned)> set_fbo_callback, QWidget* parent)
-    : set_fbo_callback_(set_fbo_callback), QOpenGLWidget(parent),
-      vbo_(QOpenGLBuffer::Type::VertexBuffer)
+ScreenWidget::ScreenWidget(QWidget* parent)
+    : QOpenGLWidget(parent), vbo_(QOpenGLBuffer::Type::VertexBuffer)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
@@ -56,13 +55,17 @@ void ScreenWidget::Redraw(int width, int height, const void* tdata)
             glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_,
                                    0);
-            set_fbo_callback_(fbo_);
         }
         if (tdata)
         {
+            // Flip texture upside down when copying
             glBindTexture(GL_TEXTURE_2D, texture_);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE,
-                            tdata);
+            for (int i = 0; i < height; i++)
+            {
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, height - i - 1, width, 1, GL_RGBA,
+                                GL_UNSIGNED_BYTE,
+                                static_cast<const uint8_t*>(tdata) + width * 4 * i);
+            }
             glBindTexture(GL_TEXTURE_2D, 0);
         }
         update();

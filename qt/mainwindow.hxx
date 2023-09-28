@@ -56,6 +56,7 @@ private:
     static void audio_callback(const int16_t* data, uint32_t frames);
     static void poll_input_callback();
     static int8_t read_input_callback(uint8_t player, uint8_t button);
+    static void* read_other_callback(hc_other_e other);
 
 private slots:
     void emulator_frame();
@@ -85,7 +86,7 @@ public:
     QTimer* emulator_timer_;
     ScreenWidget* screen_;
     ma_device sound_device_{};
-    std::unique_ptr<hydra::core_wrapper_t> emulator_ = nullptr;
+    std::unique_ptr<hydra::core_wrapper_t> emulator_;
     std::vector<int16_t> queued_audio_;
     bool settings_open_ = false;
     bool about_open_ = false;

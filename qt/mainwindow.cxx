@@ -50,8 +50,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
     QVBoxLayout* layout = new QVBoxLayout;
     layout->setContentsMargins(5, 5, 5, 5);
-    screen_ =
-        new ScreenWidget(std::bind(&MainWindow::update_fbo, this, std::placeholders::_1), this);
+    screen_ = new ScreenWidget(this);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
     screen_->setMouseTracking(true);
     layout->addWidget(screen_);
@@ -361,6 +360,8 @@ void MainWindow::open_file()
                 extensions += ext.c_str();
                 if (j != core_data.extensions.size() - 1)
                     extensions += " ";
+                else if (i != Settings::CoreInfo.size() - 1)
+                    extensions += " ";
                 indep += "*.";
                 indep += ext.c_str();
                 if (j != core_data.extensions.size() - 1)
@@ -612,12 +613,8 @@ fptr get_proc_address(const char* name)
 
 void MainWindow::init_emulator()
 {
-    if (emulator_)
-        log_warn("Double emulator init");
-
+    emulator_->hc_set_read_other_callback_p(read_other_callback);
     emulator_->core_handle = emulator_->hc_create_p();
-    emulator_->hc_set_other_p(emulator_->core_handle, hc_other::HC_OTHER_GL_GET_PROC_ADDRESS,
-                              (void*)&get_proc_address);
     emulator_->hc_set_video_callback_p(emulator_->core_handle, video_callback);
     emulator_->hc_set_audio_callback_p(emulator_->core_handle, audio_callback);
     emulator_->hc_set_poll_input_callback_p(emulator_->core_handle, poll_input_callback);
@@ -655,6 +652,7 @@ void MainWindow::stop_emulator()
         emulator_->hc_destroy_p(emulator_->core_handle);
         emulator_->core_handle = nullptr;
         emulator_.reset();
+        std::fill(video_buffer_.begin(), video_buffer_.end(), 0);
         enable_emulation_actions(false);
     }
 }
@@ -691,6 +689,21 @@ int8_t MainWindow::read_input_callback(uint8_t player, uint8_t button)
     return main_window->input_state_[button];
 }
 
+void* MainWindow::read_other_callback(hc_other_e other)
+{
+    switch (other)
+    {
+        case hc_other_e::HC_OTHER_GL_GET_PROC_ADDRESS:
+            return reinterpret_cast<void*>(&get_proc_address);
+        case hc_other_e::HC_OTHER_GL_CONTEXT:
+            return nullptr;
+        case hc_other_e::HC_OTHER_GL_FBO:
+            return reinterpret_cast<void*>(&main_window->screen_->fbo_);
+    }
+
+    return nullptr;
+}
+
 void MainWindow::add_recent(const std::string& path)
 {
     auto it = std::find(recent_files_.begin(), recent_files_.end(), path);
@@ -719,12 +732,4 @@ void MainWindow::update_recent_files()
     if (recent_act_->menu())
         recent_act_->menu()->deleteLater();
     recent_act_->setMenu(menu);
-}
-
-void MainWindow::update_fbo(unsigned fbo)
-{
-    if (emulator_)
-    {
-        emulator_->hc_set_other_p(emulator_->core_handle, hc_other::HC_OTHER_GL_FBO, (void*)&fbo);
-    }
 }

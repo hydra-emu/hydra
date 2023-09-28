@@ -15,7 +15,7 @@ class ScreenWidget : public QOpenGLWidget, protected QOpenGLExtraFunctions
     Q_OBJECT
 
 public:
-    ScreenWidget(std::function<void(unsigned)> set_fbo_callback, QWidget* parent = nullptr);
+    ScreenWidget(QWidget* parent = nullptr);
     ~ScreenWidget();
     void Redraw(int width, int height, const void* data);
     void ResetProgram(QString* vertex = nullptr, QString* fragment = nullptr);
@@ -43,7 +43,6 @@ private:
     int current_height_ = 0;
 
     std::function<void(QMouseEvent*)> mouse_move_callback_;
-    std::function<void(unsigned)> set_fbo_callback_;
 
     friend class MainWindow;
 };

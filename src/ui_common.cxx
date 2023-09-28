@@ -41,16 +41,6 @@ namespace hydra
     std::unique_ptr<core_wrapper_t> UiCommon::Create(const std::filesystem::path& path)
     {
         auto core = std::make_unique<core_wrapper_t>(path);
-#define X(symbol)                                                                      \
-    core->symbol##_p =                                                                 \
-        reinterpret_cast<decltype(core->symbol##_p)>(dlsym(core->dl_handle, #symbol)); \
-    if (!core->symbol##_p)                                                             \
-    {                                                                                  \
-        std::cerr << "Failed to load " << #symbol << ": " << dlerror() << std::endl;   \
-        return nullptr;                                                                \
-    }
-        HC_SYMBOLS
-#undef X
         return core;
     }
 

@@ -1,9 +1,11 @@
 #pragma once
 
 #include <array>
+#include <common/core_loader.hxx>
 #include <core/core.h>
 #include <dlfcn.h>
 #include <filesystem>
+#include <fmt/format.h>
 #include <log.h>
 #include <vector>
 
@@ -13,20 +15,26 @@ namespace hydra
     {
         core_wrapper_t(const std::filesystem::path& path)
         {
-            dl_handle = dlopen(path.c_str(), RTLD_LAZY);
+            dl_handle = dynlib_open(path.c_str());
             if (!dl_handle)
             {
-                printf("Error while trying to load core: %s, %s\n", path.c_str(), dlerror());
+                printf("Error while trying to load core: %s\n", path.c_str());
                 log_fatal("Failed to dlopen core!");
                 return;
             }
+#define X(symbol)                                                                               \
+    symbol##_p = reinterpret_cast<decltype(symbol##_p)>(dynlib_get_symbol(dl_handle, #symbol)); \
+    if (!symbol##_p)                                                                            \
+        log_fatal(fmt::format("No symbol {} in core {}", #symbol, path.string()).c_str());
+            HC_SYMBOLS
+#undef X
         }
 
         ~core_wrapper_t()
         {
             if (dl_handle)
             {
-                dlclose(dl_handle);
+                dynlib_close(dl_handle);
             }
         }
 
