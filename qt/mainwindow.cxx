@@ -333,7 +333,7 @@ void MainWindow::open_file()
         for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
         {
             const auto& core_data = Settings::CoreInfo[i];
-            indep += core_data.core_name;
+            indep += core_data.core_name.c_str();
             indep += " (";
             for (size_t j = 0; j < core_data.extensions.size(); j++)
             {
