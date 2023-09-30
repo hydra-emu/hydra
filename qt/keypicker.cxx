@@ -1,8 +1,46 @@
+#include <core/core.h>
 #include <iostream>
 #include <QHeaderView>
 #include <QKeyEvent>
 #include <qt/keypicker.hxx>
 #include <QTableWidget>
+
+constexpr std::string serialize_key(hc_input_e input)
+{
+    std::string out;
+    switch (input)
+    {
+#define X(key) out = #key;
+        HC_INPUTS
+#undef X
+        default:
+            return "";
+    }
+
+    std::string sub = out.substr(strlen("HC_INPUT_"));
+    bool first_letter = true;
+    for (auto& c : sub)
+    {
+        if (c == '_')
+        {
+            c = ' ';
+            first_letter = true;
+        }
+        else
+        {
+            if (first_letter)
+            {
+                c = toupper(c);
+                first_letter = false;
+            }
+            else
+            {
+                c = tolower(c);
+            }
+        }
+    }
+    return sub.c_str();
+}
 
 KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
 {

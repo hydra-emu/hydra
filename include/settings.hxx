@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/compatibility.hxx>
+#include <core/core.h>
 #include <error_factory.hxx>
 #include <fmt/format.h>
 #include <fstream>
