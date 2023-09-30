@@ -75,9 +75,5 @@ cmake.exe --build build --target hydra -j %NUMBER_OF_PROCESSORS%
 ## Contributing
 Any contribution is welcome. Fork, open an issue or work on existing ones, or work on improving the documentation
 
-## License
-hydra is licensed under the MIT license    
-Copyright (C) 2021-2023 Paris Oplopoios
-
 ## Contributors
 [![GitHub contributors](https://contrib.rocks/image?repo=OFFTKP/hydra)](https://github.com/OFFTKP/hydra/graphs/contributors)

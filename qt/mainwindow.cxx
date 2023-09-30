@@ -311,7 +311,6 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 {
     if (current_mappings_.find(event->key()) == current_mappings_.end())
         return;
-    printf("pressed %d %d\n", event->key(), current_mappings_[event->key()]);
     input_state_[current_mappings_[event->key()]] = 127;
 }
 
@@ -319,7 +318,6 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
     if (current_mappings_.find(event->key()) == current_mappings_.end())
         return;
-    printf("released %d %d\n", event->key(), current_mappings_[event->key()]);
     input_state_[current_mappings_[event->key()]] = 0;
 }
 
