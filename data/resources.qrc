@@ -22,6 +22,7 @@
         <file>images/compile.png</file>
         <file>images/autocompile.png</file>
         <file>images/open.png</file>
+        <file>default_mappings.json</file>
         <file>core.html</file>
         <file>about.html</file>
         <file>shaders/simple.vs</file>

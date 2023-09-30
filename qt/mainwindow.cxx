@@ -6,6 +6,8 @@
 #include "shadereditor.hxx"
 #include "terminalwindow.hxx"
 #include <common/compatibility.hxx>
+#include <common/str_hash.hxx>
+#include <core/core.h>
 #include <error_factory.hxx>
 #include <fmt/format.h>
 #include <fstream>
@@ -14,6 +16,8 @@
 #include <log.h>
 #include <QApplication>
 #include <QClipboard>
+#include <QDesktopServices>
+#include <QFile>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QKeyEvent>
@@ -39,6 +43,49 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
     std::memcpy(out, window->queued_audio_.data(), frames * sizeof(int16_t));
     window->queued_audio_.erase(window->queued_audio_.begin(),
                                 window->queued_audio_.begin() + frames);
+}
+
+constexpr hc_input_e deserialize(const std::string& input)
+{
+    switch (str_hash(input.c_str()))
+    {
+#define X(key)           \
+    case str_hash(#key): \
+        return key;
+        HC_INPUTS
+#undef X
+        default:
+            return HC_INPUT_SIZE;
+    }
+}
+
+std::unordered_map<int, hc_input_e> current_mappings()
+{
+    std::string mappings = Settings::Get("current_mappings");
+    if (mappings.empty())
+    {
+        Settings::Set("current_mappings", "default");
+        mappings = "default";
+    }
+
+    std::unordered_map<int, hc_input_e> map;
+    if (mappings == "default")
+    {
+        QFile file(":/default_mappings.json");
+        file.open(QIODevice::ReadOnly | QIODevice::Text);
+        std::string file_data = file.readAll().toStdString();
+        file.close();
+        nlohmann::json json = nlohmann::json::parse(file_data);
+        for (auto& [key, value] : json.items())
+        {
+            QKeySequence sequence = QKeySequence::fromString(value.get<std::string>().c_str());
+            map[sequence[0].key()] = deserialize(key);
+        }
+    }
+    else
+    {
+    }
+    return map;
 }
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
@@ -76,6 +123,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
         background-position: center;
         background-image: url(:/images/hydra.png);
     )");
+    current_mappings_ = current_mappings();
 }
 
 MainWindow::~MainWindow()
@@ -135,6 +183,12 @@ void MainWindow::create_actions()
     settings_act_ = new QAction(tr("&Settings"), this);
     settings_act_->setShortcut(Qt::CTRL | Qt::Key_Comma);
     settings_act_->setStatusTip(tr("Emulator settings"));
+    open_settings_file_act_ = new QAction(tr("Open settings file"), this);
+    open_settings_file_act_->setStatusTip(tr("Open the settings.json file"));
+    connect(open_settings_file_act_, &QAction::triggered, this, []() {
+        std::string settings_file = hydra::UiCommon::GetSavePath() + "settings.json";
+        QDesktopServices::openUrl(QUrl::fromLocalFile(settings_file.c_str()));
+    });
     connect(settings_act_, &QAction::triggered, this, &MainWindow::open_settings);
     close_act_ = new QAction(tr("&Exit"), this);
     close_act_->setShortcut(QKeySequence::Close);
@@ -236,6 +290,7 @@ void MainWindow::create_menus()
     file_menu_->addAction(screenshot_act_);
     file_menu_->addSeparator();
     file_menu_->addAction(settings_act_);
+    file_menu_->addAction(open_settings_file_act_);
     file_menu_->addSeparator();
     file_menu_->addAction(close_act_);
     emulation_menu_ = menuBar()->addMenu(tr("&Emulation"));
@@ -252,91 +307,20 @@ void MainWindow::create_menus()
     help_menu_->addAction(about_act_);
 }
 
-// Shitty input but cba
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    switch (event->key())
-    {
-        case Qt::Key_Right:
-        {
-            //            input_state_[InputButton::AnalogHorizontal_0] = 127;
-            break;
-        }
-        case Qt::Key_Left:
-        {
-            //            input_state_[InputButton::AnalogHorizontal_0] = -127;
-            break;
-        }
-        case Qt::Key_Up:
-        {
-            //            input_state_[InputButton::AnalogVertical_0] = 127;
-            break;
-        }
-        case Qt::Key_Down:
-        {
-            //            input_state_[InputButton::AnalogVertical_0] = -127;
-            break;
-        }
-        case Qt::Key_Z:
-        {
-            //            input_state_[InputButton::A] = 1;
-            break;
-        }
-        case Qt::Key_X:
-        {
-            //            input_state_[InputButton::B] = 1;
-            break;
-        }
-        case Qt::Key_C:
-        {
-            //            input_state_[InputButton::Z] = 1;
-            break;
-        }
-        case Qt::Key_Return:
-        {
-            //            input_state_[InputButton::Start] = 1;
-            break;
-        }
-    }
+    if (current_mappings_.find(event->key()) == current_mappings_.end())
+        return;
+    printf("pressed %d %d\n", event->key(), current_mappings_[event->key()]);
+    input_state_[current_mappings_[event->key()]] = 127;
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    switch (event->key())
-    {
-        case Qt::Key_Left:
-        case Qt::Key_Right:
-        {
-            //            input_state_[InputButton::AnalogHorizontal_0] = 0;
-            break;
-        }
-        case Qt::Key_Up:
-        case Qt::Key_Down:
-        {
-            //            input_state_[InputButton::AnalogVertical_0] = 0;
-            break;
-        }
-        case Qt::Key_Z:
-        {
-            //            input_state_[InputButton::A] = 0;
-            break;
-        }
-        case Qt::Key_X:
-        {
-            //            input_state_[InputButton::B] = 0;
-            break;
-        }
-        case Qt::Key_C:
-        {
-            //            input_state_[InputButton::Z] = 0;
-            break;
-        }
-        case Qt::Key_Return:
-        {
-            //            input_state_[InputButton::Start] = 0;
-            break;
-        }
-    }
+    if (current_mappings_.find(event->key()) == current_mappings_.end())
+        return;
+    printf("released %d %d\n", event->key(), current_mappings_[event->key()]);
+    input_state_[current_mappings_[event->key()]] = 0;
 }
 
 void MainWindow::on_mouse_move(QMouseEvent* event) {}
@@ -703,9 +687,9 @@ void* MainWindow::read_other_callback(hc_other_e other)
             return nullptr;
         case hc_other_e::HC_OTHER_GL_FBO:
             return reinterpret_cast<void*>(&main_window->screen_->fbo_);
+        default:
+            return nullptr;
     }
-
-    return nullptr;
 }
 
 void MainWindow::add_recent(const std::string& path)
