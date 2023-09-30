@@ -16,6 +16,7 @@
 #include <QStatusBar>
 #include <QVBoxLayout>
 #include <thread>
+#include <unordered_map>
 
 class MainWindow : public QMainWindow
 {

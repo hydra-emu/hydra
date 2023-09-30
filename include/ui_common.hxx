@@ -3,7 +3,6 @@
 #include <array>
 #include <common/core_loader.hxx>
 #include <core/core.h>
-#include <dlfcn.h>
 #include <filesystem>
 #include <fmt/format.h>
 #include <log.h>
