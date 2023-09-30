@@ -615,6 +615,10 @@ void MainWindow::init_emulator()
 {
     emulator_->hc_set_read_other_callback_p(read_other_callback);
     emulator_->core_handle = emulator_->hc_create_p();
+    if (!emulator_->core_handle)
+    {
+        throw std::runtime_error("hc_create returned null");
+    }
     emulator_->hc_set_video_callback_p(emulator_->core_handle, video_callback);
     emulator_->hc_set_audio_callback_p(emulator_->core_handle, audio_callback);
     emulator_->hc_set_poll_input_callback_p(emulator_->core_handle, poll_input_callback);
@@ -684,7 +688,7 @@ void MainWindow::audio_callback(const int16_t* data, uint32_t frames)
 
 void MainWindow::poll_input_callback() {}
 
-int8_t MainWindow::read_input_callback(uint8_t player, uint8_t button)
+int8_t MainWindow::read_input_callback(uint8_t player, hc_input_e button)
 {
     return main_window->input_state_[button];
 }

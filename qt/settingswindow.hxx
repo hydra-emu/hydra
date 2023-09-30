@@ -17,16 +17,17 @@ private:
     QListWidget* tab_list_;
     QTabWidget* tab_show_;
     QGroupBox *right_group_box_, *left_group_box_;
-    QLineEdit *dmg_bios_path_, *cgb_bios_path_;
-    QLineEdit* ipl_path_;
     KeyPickerPage* key_picker_;
     std::function<void(int)> volume_callback_;
     void create_tabs();
     void on_open_file_click(QLineEdit* edit, const std::string& name, const std::string& setting,
-                            const std::string& extension);
-    void on_open_dir_click(QLineEdit* edit, const std::string& name, const std::string& setting);
+                            const std::string& extension,
+                            std::function<void(const std::string&)> callback);
+    void on_open_dir_click(QLineEdit* edit, const std::string& name, const std::string& setting,
+                           std::function<void(const std::string&)> callback);
     void add_filepicker(QGridLayout* layout, const std::string& name, const std::string& setting,
-                        const std::string& extension, int row, int column, bool dir = false);
+                        const std::string& extension, int row, int column, bool dir = false,
+                        std::function<void(const std::string&)> callback = {});
     void keyPressEvent(QKeyEvent* event);
 
 private slots:

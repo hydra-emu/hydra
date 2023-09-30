@@ -55,7 +55,7 @@ private:
     static void video_callback(const uint8_t* data, uint32_t width, uint32_t height);
     static void audio_callback(const int16_t* data, uint32_t frames);
     static void poll_input_callback();
-    static int8_t read_input_callback(uint8_t player, uint8_t button);
+    static int8_t read_input_callback(uint8_t player, hc_input_e button);
     static void* read_other_callback(hc_other_e other);
 
 private slots:
@@ -101,7 +101,7 @@ public:
     uint32_t video_width_ = 0;
     uint32_t video_height_ = 0;
 
-    std::array<int8_t, 100> input_state_{};
+    std::array<int8_t, hc_input_e::HC_INPUT_SIZE> input_state_{};
     std::deque<std::string> recent_files_;
 
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);

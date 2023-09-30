@@ -5,6 +5,7 @@
 #include <QCheckBox>
 #include <QFileDialog>
 #include <QLabel>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <settings.hxx>
@@ -90,6 +91,16 @@ SettingsWindow::~SettingsWindow()
     open_ = false;
 }
 
+QWidget* create_separator()
+{
+    QFrame* separator = new QFrame;
+    separator->setLineWidth(1);
+    separator->setMidLineWidth(1);
+    separator->setFrameShape(QFrame::HLine);
+    separator->setPalette(QPalette(QColor(0, 0, 0)));
+    return separator;
+}
+
 void SettingsWindow::create_tabs()
 {
     {
@@ -144,18 +155,30 @@ void SettingsWindow::create_tabs()
             const auto& core = Settings::CoreInfo[i];
             QListWidgetItem* item = new QListWidgetItem(core.core_name.c_str());
             core_list->addItem(item);
-            // QLabel* label = new QLabel;
-            // label->setTextFormat(Qt::RichText);
-            // label->setTextInteractionFlags(Qt::TextBrowserInteraction);
-            // label->setOpenExternalLinks(true);
-            // label->setText(fmt::format(fmt::runtime(html.toStdString()), core.core_name,
-            //                            core.version, core.system_name, core.license,
-            //                            core.description, core.author, core.url)
-            //    .c_str());
-            // core_list->setItemWidget(item, label);
         }
+        connect(core_list, &QListWidget::itemDoubleClicked, this,
+                [this, html, core_list](QListWidgetItem* item) {
+                    auto core = Settings::CoreInfo[core_list->row(item)];
+                    QMessageBox msg;
+                    msg.setWindowTitle(core.core_name.c_str());
+                    msg.setText(fmt::format(fmt::runtime(html.toStdString()), core.core_name,
+                                            core.version, core.system_name, core.license,
+                                            core.description, core.author, core.url)
+                                    .c_str());
+                    msg.setDefaultButton(QMessageBox::Ok);
+                    msg.exec();
+                });
         cores_layout->addWidget(core_list, 0, 0, 1, 0);
-        add_filepicker(cores_layout, "Core directory", "core_path", "", 1, 0, true);
+        add_filepicker(cores_layout, "Core directory", "core_path", "", 1, 0, true,
+                       [](const std::string&) {
+                           Settings::ReinitCoreInfo();
+                           QMessageBox msg;
+                           msg.setWindowTitle("Core directory changed!");
+                           msg.setText("Please restart the settings window to\n"
+                                       "see the changes.");
+                           msg.addButton("What a lazy developer!", QMessageBox::YesRole);
+                           msg.exec();
+                       });
     }
     {
         QGridLayout* audio_layout = new QGridLayout;
@@ -186,68 +209,50 @@ void SettingsWindow::create_tabs()
         key_picker_ = new KeyPickerPage;
         tab_show_->addTab(key_picker_, "Input");
     }
-    // {
-    //     QGridLayout* n64_layout = new QGridLayout;
-    //     n64_layout->setColumnStretch(1, 3);
-    //     n64_layout->setAlignment(Qt::AlignTop);
-    //     add_filepicker(n64_layout, "IPL path", "IPL", "Binary files (*.bin)", 0, 0);
-    //     QFrame* separator = new QFrame(this);
-    //     separator->setLineWidth(1);
-    //     separator->setMidLineWidth(1);
-    //     separator->setFrameShape(QFrame::HLine);
-    //     separator->setPalette(QPalette(QColor(0, 0, 0)));
-    //     n64_layout->addWidget(separator, 1, 0, 1, 0);
-    //     for (int i = 1; i <= 4; i++)
-    //     {
-    //         n64_layout->addWidget(new QLabel("Controller port " + QString::number(i) + ":"), i +
-    //         1,
-    //                               0);
-    //         QCheckBox* active = new QCheckBox("Active");
-    //         std::string is_active =
-    //             Settings::Get("n64_controller_" + std::to_string(i) + "_active");
-    //         active->setChecked(is_active == "true");
-    //         connect(active, &QCheckBox::stateChanged, this, [this, i](int state) {
-    //             Settings::Set("n64_controller_" + std::to_string(i) + "_active",
-    //                           state == Qt::Checked ? "true" : "false");
-    //         });
-    //         if (is_active.empty() && i == 1)
-    //         {
-    //             active->setChecked(true);
-    //         }
-    //         n64_layout->addWidget(new QComboBox, i + 1, 1);
-    //         n64_layout->addWidget(active, i + 1, 2);
-    //     }
-    //     QWidget* n64_tab = new QWidget;
-    //     n64_tab->setLayout(n64_layout);
-    //     tab_show_->addTab(n64_tab, "N64");
-    // }
 
     for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
     {
         const auto& core = Settings::CoreInfo[i];
         QGridLayout* core_layout = new QGridLayout;
         core_layout->setAlignment(Qt::AlignTop);
+        core_layout->setColumnStretch(0, 1);
+        core_layout->setColumnStretch(1, 2);
         std::vector<std::string> firmware_files = hydra::split(core.firmware_files, ';');
+        int current_row = 0;
         for (size_t j = 0; j < firmware_files.size(); j++)
         {
-            add_filepicker(core_layout,
-                           firmware_files[j] + " path: ", core.core_name + "_" + firmware_files[j],
-                           "", j, 0);
+            add_filepicker(core_layout, firmware_files[j], core.core_name + "_" + firmware_files[j],
+                           "", current_row++, 0);
+            core_layout->addWidget(create_separator(), current_row++, 0, 1, 0);
         }
-        QFrame* separator = new QFrame(this);
-        separator->setLineWidth(1);
-        separator->setMidLineWidth(1);
-        separator->setFrameShape(QFrame::HLine);
-        separator->setPalette(QPalette(QColor(0, 0, 0)));
-        core_layout->addWidget(separator, 1, 0, 1, 0);
+
+        std::string core_name = core.core_name;
+        for (int j = 1; j <= core.max_players; j++)
+        {
+            core_layout->addWidget(new QLabel("Controller port " + QString::number(j) + ":"),
+                                   current_row, 0);
+            QCheckBox* active = new QCheckBox("Active");
+            std::string is_active =
+                Settings::Get(core_name + "_controller_" + std::to_string(j) + "_active");
+            active->setChecked(is_active == "true");
+            connect(active, &QCheckBox::stateChanged, this, [this, j, core_name](int state) {
+                Settings::Set(core_name + "_controller_" + std::to_string(j) + "_active",
+                              state == Qt::Checked ? "true" : "false");
+            });
+            core_layout->addWidget(new QComboBox, current_row, 1);
+            core_layout->addWidget(active, current_row, 2);
+            current_row++;
+        }
+
         QWidget* core_tab = new QWidget;
         core_tab->setLayout(core_layout);
-        tab_show_->addTab(core_tab, core.core_name.c_str());
+        tab_show_->addTab(core_tab, core_name.c_str());
     }
 }
 
 void SettingsWindow::on_open_file_click(QLineEdit* edit, const std::string& name,
-                                        const std::string& setting, const std::string& extension)
+                                        const std::string& setting, const std::string& extension,
+                                        std::function<void(const std::string&)> callback)
 {
     auto path = QFileDialog::getOpenFileName(this, name.c_str(), "", extension.c_str(), nullptr,
                                              QFileDialog::ReadOnly);
@@ -255,11 +260,16 @@ void SettingsWindow::on_open_file_click(QLineEdit* edit, const std::string& name
     {
         Settings::Set(setting, path.toStdString());
         edit->setText(path);
+        if (callback)
+        {
+            callback(path.toStdString());
+        }
     }
 }
 
 void SettingsWindow::on_open_dir_click(QLineEdit* edit, const std::string& name,
-                                       const std::string& setting)
+                                       const std::string& setting,
+                                       std::function<void(const std::string&)> callback)
 {
     auto path = QFileDialog::getExistingDirectory(this, name.c_str(), "", QFileDialog::ReadOnly);
 
@@ -267,12 +277,17 @@ void SettingsWindow::on_open_dir_click(QLineEdit* edit, const std::string& name,
     {
         Settings::Set(setting, path.toStdString());
         edit->setText(path);
+        if (callback)
+        {
+            callback(path.toStdString());
+        }
     }
 }
 
 void SettingsWindow::add_filepicker(QGridLayout* layout, const std::string& name,
                                     const std::string& setting, const std::string& extension,
-                                    int row, int column, bool dir)
+                                    int row, int column, bool dir,
+                                    std::function<void(const std::string&)> callback)
 {
     auto path = Settings::Get(setting);
     QLineEdit* edit = new QLineEdit;
@@ -283,16 +298,16 @@ void SettingsWindow::add_filepicker(QGridLayout* layout, const std::string& name
     button->setIcon(QIcon(":/images/open.png"));
     if (!dir)
     {
-        connect(
-            button, &QPushButton::clicked, this,
-            std::bind(&SettingsWindow::on_open_file_click, this, edit, name, setting, extension));
+        connect(button, &QPushButton::clicked, this,
+                std::bind(&SettingsWindow::on_open_file_click, this, edit, name, setting, extension,
+                          callback));
     }
     else
     {
         connect(button, &QPushButton::clicked, this,
-                std::bind(&SettingsWindow::on_open_dir_click, this, edit, name, setting));
+                std::bind(&SettingsWindow::on_open_dir_click, this, edit, name, setting, callback));
     }
-    layout->addWidget(new QLabel(QString::fromStdString(name + ": ")), row, column);
+    layout->addWidget(new QLabel(QString::fromStdString(name + " path: ")), row, column);
     layout->addWidget(edit, row, column + 1);
     layout->addWidget(button, row, column + 2);
 }

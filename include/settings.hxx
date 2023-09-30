@@ -100,7 +100,7 @@ public:
         std::filesystem::directory_iterator end;
         while (it != end)
         {
-            if (it->path().extension() == ".so")
+            if (it->path().extension() == dynlib_get_extension())
             {
                 hydra::core_wrapper_t core(it->path());
                 core.hc_get_info_p = reinterpret_cast<decltype(core.hc_get_info_p)>(
@@ -130,11 +130,39 @@ public:
                     info.max_players = 1;
                     log_warn("Could not get HC_INFO_MAX_PLAYERS for core, setting to 1");
                 }
+
+                bool one_active = false;
+                for (int i = 1; i <= info.max_players; i++)
+                {
+                    std::string active = Settings::Get(info.core_name + "_controller_" +
+                                                       std::to_string(i) + "_active");
+                    if (active == "true")
+                    {
+                        one_active = true;
+                    }
+                    else if (active.empty())
+                    {
+                        Settings::Set(info.core_name + "_controller_" + std::to_string(i) +
+                                          "_active",
+                                      "false");
+                    }
+                }
+                if (!one_active)
+                {
+                    Settings::Set(info.core_name + "_controller_1_active", "true");
+                }
                 CoreInfo.push_back(info);
             }
 
             ++it;
         }
+    }
+
+    static void ReinitCoreInfo()
+    {
+        core_info_initialized_ = false;
+        CoreInfo.clear();
+        InitCoreInfo();
     }
 
     static std::vector<core_info> CoreInfo;
