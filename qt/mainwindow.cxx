@@ -45,9 +45,9 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
                                 window->queued_audio_.begin() + frames);
 }
 
-constexpr hc_input_e deserialize(const std::string& input)
+constexpr hc_input_e deserialize(const char* input)
 {
-    switch (str_hash(input.c_str()))
+    switch (str_hash(input))
     {
 #define X(key)           \
     case str_hash(#key): \
@@ -79,7 +79,7 @@ std::unordered_map<int, hc_input_e> current_mappings()
         for (auto& [key, value] : json.items())
         {
             QKeySequence sequence = QKeySequence::fromString(value.get<std::string>().c_str());
-            map[sequence[0].key()] = deserialize(key);
+            map[sequence[0].key()] = deserialize(key.c_str());
         }
     }
     else

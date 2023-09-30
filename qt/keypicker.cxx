@@ -9,7 +9,7 @@
 #include <qt/keypicker.hxx>
 #include <QTableWidget>
 
-constexpr std::string serialize_pretty(hc_input_e input)
+inline std::string serialize_pretty(hc_input_e input)
 {
     std::string out;
     switch (input)
@@ -46,7 +46,7 @@ constexpr std::string serialize_pretty(hc_input_e input)
     return sub.c_str();
 }
 
-constexpr std::string serialize(hc_input_e input)
+constexpr const char* serialize(hc_input_e input)
 {
     switch (input)
     {
@@ -60,9 +60,9 @@ constexpr std::string serialize(hc_input_e input)
     }
 }
 
-constexpr hc_input_e deserialize(const std::string& input)
+constexpr hc_input_e deserialize(const char* input)
 {
-    switch (str_hash(input.c_str()))
+    switch (str_hash(input))
     {
 #define X(key)           \
     case str_hash(#key): \
