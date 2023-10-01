@@ -347,26 +347,6 @@ build/
 CMakeFiles/
 
 # Other
-Deprecated/
-cmake_install.cmake
-Makefile
-CMakeCache.txt
-background.jpg
-nds/target
-
-# imgui specific files, we download these with cmake
-imconfig.h 
-imgui.cpp 
-imgui.h 
-imgui_draw.cpp 
-imgui_internal.h 
-imgui_tables.cpp 
-imgui_widgets.cpp 
-imstb_rectpack.h 
-imstb_textedit.h 
-imstb_truetype.h
-glad.h
-glad.c
 *.sav
 *.raw
 callgrind.out.*
@@ -375,3 +355,4 @@ out**
 .qt/
 Testing/
 compile_commands.json
+.gradle
