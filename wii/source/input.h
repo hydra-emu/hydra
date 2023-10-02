@@ -1,0 +1,2 @@
+void InitializeInput();
+bool UpdateInput();

@@ -17,7 +17,7 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	hydra_wii
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES		:=	source/images source 
 INCLUDES	:=	source
 
 #---------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ LDFLAGS		=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS :=	-lgrrlib -lpng `freetype-config --libs` -lz -lfat -lwiiuse -lbte -lasnd -logc -lvorbisidec -logg
+LIBS :=	-lgrrlib -ljpeg -lpng -lpngu `freetype-config --libs` -lz -lfat -lwiiuse -lbte -lasnd -logc -lvorbisidec -logg
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
@@ -71,11 +71,11 @@ else
 	export LD	:=	$(CXX)
 endif
 
-export OFILES	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
-					$(sFILES:.s=.o) $(SFILES:.S=.o) \
-					$(TTFFILES:.ttf=.ttf.o) $(LANGFILES:.lang=.lang.o) \
+export OFILES	:=	$(TTFFILES:.ttf=.ttf.o) $(LANGFILES:.lang=.lang.o) \
 					$(PNGFILES:.png=.png.o) \
-					$(OGGFILES:.ogg=.ogg.o) $(PCMFILES:.pcm=.pcm.o)
+					$(OGGFILES:.ogg=.ogg.o) $(PCMFILES:.pcm=.pcm.o) \
+					$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
+					$(sFILES:.s=.o) $(SFILES:.S=.o)
 
 #---------------------------------------------------------------------------------
 # build a list of include paths

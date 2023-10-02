@@ -356,3 +356,5 @@ out**
 Testing/
 compile_commands.json
 .gradle
+*.dol
+*.elf
