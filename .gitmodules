@@ -7,3 +7,6 @@
 [submodule "core"]
 	path = core
 	url = https://github.com/hydra-emu/core
+[submodule "protocol"]
+	path = protocol
+	url = https://github.com/hydra-emu/protocol

@@ -2,15 +2,8 @@
     <qresource prefix="/">
         <file>images/support.png</file>
         <file>images/input.png</file>
-        <file>images/debugger.png</file>
-        <file>images/tracelogger.png</file>
-        <file>images/mmioviewer.png</file>
         <file>images/hydra.png</file>
         <file>images/logo.png</file>
-        <file>images/gameboy.png</file>
-        <file>images/c8.png</file>
-        <file>images/Nintendo 64.png</file>
-        <file>images/nes.png</file>
         <file>images/core.png</file>
         <file>images/trash.png</file>
         <file>images/sound.png</file>
@@ -19,8 +12,6 @@
         <file>images/terminal.png</file>
         <file>images/run.png</file>
         <file>images/save.png</file>
-        <file>images/compile.png</file>
-        <file>images/autocompile.png</file>
         <file>images/open.png</file>
         <file>default_mappings.json</file>
         <file>core.html</file>

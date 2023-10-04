@@ -15,18 +15,7 @@ This is the Hydra, a multi-platform frontend for emulator cores.
 A Hydra core is a shared library that defines the functions in the [core header](https://github.com/hydra-emu/core).
 You can load cores by placing them in the core directory specified in Hydras settings.
 
-## Current cores
-- Nintendo 64
-  - [n64hydra](https://github.com/hydra-emu/n64)
-- Gameboy Color
-  - [SkyEmu](https://github.com/hydra-emu/SkyEmu)
-- Gameboy Advance
-  - [SkyEmu](https://github.com/hydra-emu/SkyEmu)
-- Nintendo DS
-  - [SkyEmu](https://github.com/hydra-emu/SkyEmu)
-  - [vargds](https://github.com/hydra-emu/vargds) (WIP)
-- Nintendo 3DS
-  - [Panda3DS](https://github.com/hydra-emu/Panda3DS)
+[Current cores](https://github.com/hydra-emu/hydra/wiki/Cores)
 
 ## Building
 

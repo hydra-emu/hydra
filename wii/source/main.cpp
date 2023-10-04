@@ -1,5 +1,7 @@
-#include <cstdlib>
-#include "menu.h"
+#include <stdlib.h>
+extern "C" {
+    #include "menu.h"
+}
 
 int main()
 {
