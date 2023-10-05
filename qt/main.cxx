@@ -4,9 +4,15 @@
 #include <QSurfaceFormat>
 #include <settings.hxx>
 
+std::vector<core_info> Settings::CoreInfo;
+std::map<std::string, std::string> Settings::map_;
+std::string Settings::save_path_;
+bool Settings::initialized_ = false;
+bool Settings::core_info_initialized_ = false;
+
 int main(int argc, char* argv[])
 {
-    auto settings_path = hydra::UiCommon::GetSavePath() + "settings.json";
+    auto settings_path = Settings::GetSavePath() + "settings.json";
     Settings::Open(settings_path);
     Settings::InitCoreInfo();
     QSurfaceFormat format;

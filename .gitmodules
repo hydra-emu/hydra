@@ -1,12 +1,12 @@
 [submodule "fmt"]
 	path = vendored/fmt
 	url = https://github.com/fmtlib/fmt
-[submodule "common"]
-	path = common
-	url = https://github.com/hydra-emu/common
 [submodule "core"]
 	path = core
 	url = https://github.com/hydra-emu/core
 [submodule "protocol"]
 	path = protocol
 	url = https://github.com/hydra-emu/protocol
+[submodule "vendored/argparse"]
+	path = vendored/argparse
+	url = https://github.com/cofyc/argparse/

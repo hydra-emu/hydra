@@ -5,8 +5,7 @@
 #include "settingswindow.hxx"
 #include "shadereditor.hxx"
 #include "terminalwindow.hxx"
-#include <common/compatibility.hxx>
-#include <common/str_hash.hxx>
+#include <compatibility.hxx>
 #include <core/core.h>
 #include <error_factory.hxx>
 #include <fmt/format.h>
@@ -28,6 +27,7 @@
 #include <settings.hxx>
 #include <sol/sol.hpp>
 #include <stb_image_write.h>
+#include <str_hash.hxx>
 
 MainWindow* main_window = nullptr;
 
@@ -186,7 +186,7 @@ void MainWindow::create_actions()
     open_settings_file_act_ = new QAction(tr("Open settings file"), this);
     open_settings_file_act_->setStatusTip(tr("Open the settings.json file"));
     connect(open_settings_file_act_, &QAction::triggered, this, []() {
-        std::string settings_file = hydra::UiCommon::GetSavePath() + "settings.json";
+        std::string settings_file = Settings::GetSavePath() + "settings.json";
         QDesktopServices::openUrl(QUrl::fromLocalFile(settings_file.c_str()));
     });
     connect(settings_act_, &QAction::triggered, this, &MainWindow::open_settings);
@@ -403,7 +403,7 @@ void MainWindow::open_file_impl(const std::string& path)
         log_warn(fmt::format("Failed to find core for file: {}", path).c_str());
         return;
     }
-    emulator_ = hydra::UiCommon::Create(core_path);
+    emulator_ = std::make_unique<hydra::core_wrapper_t>(core_path);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
     init_emulator();

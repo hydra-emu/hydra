@@ -1,7 +1,9 @@
 #pragma once
 
-#include <common/compatibility.hxx>
+#include "log.h"
+#include <compatibility.hxx>
 #include <core/core.h>
+#include <core_loader.hxx>
 #include <error_factory.hxx>
 #include <fmt/format.h>
 #include <fstream>
@@ -10,7 +12,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <ui_common.hxx>
 
 struct core_info
 {
@@ -88,6 +89,36 @@ public:
         return map_.empty();
     }
 
+    static std::string GetSavePath()
+    {
+        static std::string dir;
+        if (dir.empty())
+        {
+#if defined(__linux__)
+            dir = getenv("HOME") + std::string("/.config/hydra/");
+#elif defined(_WIN32)
+            dir = getenv("APPDATA") + std::string("/hydra/");
+#elif defined(__APPLE__)
+            dir = getenv("HOME") + std::string("/Library/Application Support/hydra/");
+#endif
+            if (dir.empty())
+            {
+                throw ErrorFactory::generate_exception(
+                    __func__, __LINE__, "GetSavePath was not defined for this environment");
+            }
+            if (!std::filesystem::create_directories(dir))
+            {
+                if (std::filesystem::exists(dir))
+                {
+                    return dir;
+                }
+                throw ErrorFactory::generate_exception(__func__, __LINE__,
+                                                       "Failed to create directories");
+            }
+        }
+        return dir;
+    }
+
     static void InitCoreInfo()
     {
         if (core_info_initialized_)
@@ -101,11 +132,11 @@ public:
         std::filesystem::directory_iterator end;
         while (it != end)
         {
-            if (it->path().extension() == dynlib_get_extension())
+            if (it->path().extension() == hydra::dynlib_get_extension())
             {
                 hydra::core_wrapper_t core(it->path());
                 core.hc_get_info_p = reinterpret_cast<decltype(core.hc_get_info_p)>(
-                    dynlib_get_symbol(core.dl_handle, "hc_get_info"));
+                    hydra::dynlib_get_symbol(core.dl_handle, "hc_get_info"));
                 if (!core.hc_get_info_p)
                 {
                     log_warn(fmt::format("Could not find symbol hc_get_info in core {}",

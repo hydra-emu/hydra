@@ -1,6 +1,6 @@
 #include "settingswindow.hxx"
 #include "keypicker.hxx"
-#include <common/compatibility.hxx>
+#include <compatibility.hxx>
 #include <fmt/format.h>
 #include <QCheckBox>
 #include <QFileDialog>
@@ -9,7 +9,6 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <settings.hxx>
-#include <ui_common.hxx>
 
 SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callback,
                                QWidget* parent)

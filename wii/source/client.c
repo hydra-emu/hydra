@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <packet.h>
 
 int32_t socket = 0;
 
@@ -14,7 +15,7 @@ char localip[16] = {0};
 char gateway[16] = {0};
 char netmask[16] = {0};
 
-void InitializeHTTP()
+void InitializeClient()
 {
 	if (if_config ( localip, netmask, gateway, true, 20) < 0) {
         panic("Failed to get network configuration");
@@ -40,26 +41,12 @@ void InitializeHTTP()
     response_buffer = malloc(MAX_RESPONSE_SIZE);
     memset(response_buffer, 0, MAX_RESPONSE_SIZE);
 
-    // GET /screen HTTP/1.1
-    // Host: 192.168.1.4:1234
-    // User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0
-    // Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
-    // Accept-Language: en-US,en;q=0.5
-    // Accept-Encoding: gzip, deflate
-    // Connection: keep-alive
-    // Upgrade-Insecure-Requests: 1
-    const char* request =
-        "GET /screen HTTP/1.1\r\n"
-        "Host: 192.168.1.4:1234\r\n"
-        "User-Agent: hydra-wii/0.1\r\n"
-        "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\r\n"
-        "Accept-Language: en-US,en;q=0.5\r\n"
-        "Accept-Encoding: gzip, deflate\r\n"
-        // TODO: keep-alive?
-        "Connection: close\r\n"
-        "Upgrade-Insecure-Requests: 1\r\n"
-        "\r\n";
-    net_write(socket, request, strlen(request));
+    hc_client_version_t version;
+    version.version = (HC_PROTOCOL_VERSION >> 8) | (HC_PROTOCOL_VERSION << 8);
+    uint32_t packet_size = 0;
+    void* packet = malloc_packet(HC_PACKET_TYPE_version, &version, sizeof(version), &packet_size);
+    net_write(socket, packet, packet_size);
+    free_packet(packet);
 
     printf("Written!\n");
     int i = 0;

@@ -17,8 +17,8 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	hydra_wii
 BUILD		:=	build
-SOURCES		:=	source/images source 
-INCLUDES	:=	source ../common
+SOURCES		:=	source/images source ../protocol
+INCLUDES	:=	source ../common ../protocol
 
 #---------------------------------------------------------------------------------
 # options for code generation

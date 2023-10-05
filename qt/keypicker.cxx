@@ -1,4 +1,3 @@
-#include <common/str_hash.hxx>
 #include <core/core.h>
 #include <filesystem>
 #include <iostream>
@@ -8,6 +7,7 @@
 #include <QKeyEvent>
 #include <qt/keypicker.hxx>
 #include <QTableWidget>
+#include <str_hash.hxx>
 
 inline std::string serialize_pretty(hc_input_e input)
 {

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 include(ExternalProject)
 
 project(hydra VERSION 0.2.0 LANGUAGES CXX)
-project(src)
+project(hydra_server)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -53,11 +53,12 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidg
 find_package(Lua REQUIRED)
 
 add_subdirectory(vendored/fmt)
+add_subdirectory(vendored/argparse)
 
 # add_compile_options(-fsanitize=address -fsanitize=undefined)
 # add_link_options(-fsanitize=address -fsanitize=undefined)
 
-set(QT_SOURCES
+set(HYDRA_QT_FILES
     data/resources.qrc
     qt/main.cxx
     qt/mainwindow.cxx
@@ -72,9 +73,10 @@ set(QT_SOURCES
     vendored/stb_image_write.c
 )
 
-set(SRC_FILES
-    src/ui_common.cxx
-    src/settings.cxx
+set(HYDRA_SERVER_FILES
+    server/main.cxx
+    server/server.cxx
+    protocol/packet.c
 )
 
 set(HYDRA_INCLUDE_DIRECTORIES
@@ -86,17 +88,14 @@ set(HYDRA_INCLUDE_DIRECTORIES
 
 qt_add_executable(hydra
     MANUAL_FINALIZATION
-    ${QT_SOURCES}
+    ${HYDRA_QT_FILES}
 )
 
-add_library(src STATIC ${SRC_FILES})
-
-target_link_libraries(hydra PRIVATE src 
+target_link_libraries(hydra PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
     Qt${QT_VERSION_MAJOR}::OpenGLWidgets ${CMAKE_DL_LIBS}
     fmt::fmt ${LUA_LIBRARIES})
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
-target_include_directories(src PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 set_target_properties(hydra PROPERTIES hydra_properties
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.hydra.com
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -107,24 +106,13 @@ set_target_properties(hydra PROPERTIES hydra_properties
 
 qt_finalize_executable(hydra)
 
-# Testing
-if (CMAKE_TESTING_ENABLED)
-find_package(GTest)
-project(n64_qa)
-add_library(alp-core STATIC
-    vendored/angrylion-rdp-plus/common.h
-    vendored/angrylion-rdp-plus/msg.h
-    vendored/angrylion-rdp-plus/n64video.c
-    vendored/angrylion-rdp-plus/n64video.h
-    vendored/angrylion-rdp-plus/parallel.cpp
-    vendored/angrylion-rdp-plus/parallel.h
-    vendored/angrylion-rdp-plus/screen.h
-    vendored/angrylion-rdp-plus/vdac.h
+# Server
+add_executable(
+    hydra_server
+    ${HYDRA_SERVER_FILES}
 )
-target_include_directories(alp-core PUBLIC vendored/angrylion-rdp-plus/)
-target_link_libraries(alp-core PUBLIC -pthread)
-add_executable(n64_qa n64/qa/n64_rdp_qa.cxx n64/core/n64_rdp.cxx n64/qa/n64_angrylion_replayer.cxx)
-target_include_directories(n64_qa PRIVATE ${HYDRA_INCLUDE_DIRECTORIES} vendored/angrylion-rdp-plus/)
-target_link_libraries(n64_qa PUBLIC GTest::gtest GTest::gtest_main fmt::fmt alp-core)
-add_test(NAME n64_qa COMMAND n64_qa WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(hydra_server PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
+target_link_libraries(hydra_server PRIVATE argparse)
+if (NOT BUILD_SERVER)
+   set_target_properties(hydra_server PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
 endif()

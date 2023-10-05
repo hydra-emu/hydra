@@ -5,9 +5,9 @@
 #include <core/core.h>
 #include <deque>
 #include <memory>
-#include <ui_common.hxx>
 #define MA_NO_DECODING
 #define MA_NO_ENCODING
+#include <core_loader.hxx>
 #include <miniaudio.h>
 #include <QFileDialog>
 #include <QLabel>
