@@ -24,13 +24,13 @@ void InitializeMenu()
     InitializeInput();
     Printf("hydra-wii v0.1");
     InitializeClient();
-    SendPacket(HC_PACKET_TYPE_video);
 }
 
 void LoopMenu()
 {
     while(1) {
         if (UpdateInput()) break;
+        SendPacket(HC_PACKET_TYPE_video);
         GRRLIB_DrawImg(100, 0, emulator_texture, 0, 1, 1, 0xFFFFFFFF);
         DrawText();
         GRRLIB_Render();

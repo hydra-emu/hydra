@@ -27,8 +27,17 @@ void Printf(const char* format, ...)
     char* msg = (char*)malloc(size * sizeof(char));
     memset(msg, 0, size * sizeof(char));
     vsnprintf(msg, size, format, args);
-    buffer[buffer_index++] = msg;
     va_end(args);
+
+    if (buffer_index >= 20) {
+        free(buffer[0]);
+        for (int i = 0; i < 19; i++) {
+            buffer[i] = buffer[i + 1];
+        }
+        buffer[19] = msg;
+    } else {
+        buffer[buffer_index++] = msg;
+    }
 }
 
 void DrawText()

@@ -22,6 +22,7 @@ void* get_proc_address = nullptr;
 GLuint fbo = 0;
 void* context = nullptr;
 std::array<uint8_t, 400 * 480 * 4> buffer;
+hydra::core_wrapper_t* core_;
 
 namespace hydra
 {
@@ -227,12 +228,8 @@ namespace hydra
         core_->hc_set_read_input_callback_p(core_->core_handle, read_input_callback);
         core_->hc_set_video_callback_p(core_->core_handle, video_callback);
         core_->hc_set_audio_callback_p(core_->core_handle, audio_callback);
-
-        for (int i = 0; i < 640; i++)
-        {
+        for (int i = 0; i < 600; i++)
             core_->hc_run_frame_p(core_->core_handle);
-        }
-
         accept_loop();
     }
 
@@ -284,6 +281,7 @@ namespace hydra
                 }
                 case HC_PACKET_TYPE_video:
                 {
+                    core_->hc_run_frame_p(core_->core_handle);
                     hc_client_video_t video;
                     client_socket.read(&video, sizeof(video));
                     packet_wrapper wrapper(client_socket, HC_PACKET_TYPE_video_ack, buffer.data(),
@@ -314,11 +312,8 @@ namespace hydra
             }
             else
             {
-                std::thread client_thread([client_socket, client_addr] {
-                    socket_wrapper wrapper(client_socket);
-                    client_loop(wrapper, client_addr);
-                });
-                client_thread.detach();
+                socket_wrapper wrapper(client_socket);
+                client_loop(wrapper, client_addr);
             }
         }
     }

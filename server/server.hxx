@@ -21,6 +21,5 @@ namespace hydra
 
     private:
         uint32_t socket_;
-        core_wrapper_t* core_;
     };
 } // namespace hydra

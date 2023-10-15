@@ -1,2 +1,2 @@
 #!/bin/bash
-find -name "*.cxx" -o -name "*.hxx" -not -path "./vendored/*" | xargs clang-format --dry-run --Werror -style=file
+find . -type f -iregex '.*\.\(hxx\|cxx\|hpp\|cpp\)$' -not -path "./vendored/*" -not -path "**/build/*" -not -path "**/CMakeFiles/*" | xargs clang-format --dry-run --Werror -style=file

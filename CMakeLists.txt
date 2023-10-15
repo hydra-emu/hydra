@@ -77,7 +77,7 @@ set(HYDRA_QT_FILES
 set(HYDRA_SERVER_FILES
     server/main.cxx
     server/server.cxx
-    server/glad.c
+    vendored/glad.c
 )
 
 set(HYDRA_INCLUDE_DIRECTORIES

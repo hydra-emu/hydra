@@ -116,7 +116,6 @@ void* SendPacket_Impl(void* arg)
         }
         case HC_PACKET_TYPE_video:
         {
-            Printf("Sending video packet");
             hc_client_video_t video;
             video.format[0] = 'r';
             video.format[1] = 'g';
@@ -143,19 +142,15 @@ void* SendPacket_Impl(void* arg)
         Printf("Tried to write %d bytes, but only wrote %d", packet_size, ret);
         return NULL;
     }
-    Printf("Reading response");
     uint8_t response_type;
     uint32_t response_size;
     int ret1 = net_read(socket, &response_type, 1);
-    Printf("net_read ret: %d", ret1);
     int ret2 = net_read(socket, &response_size, 4);
-    Printf("net_read ret: %d", ret2);
     if (ret1 != 1 || ret2 != 4) {
         Printf("Failed to read response header");
         return NULL;
     }
     response_size = __builtin_bswap32(response_size);
-    Printf("Response type: %d, size: %d", response_type, response_size);
     if (response_size > response_max_size) {
         response_buffer = realloc(response_buffer, response_size);
         response_max_size = response_size;
@@ -173,7 +168,6 @@ void* SendPacket_Impl(void* arg)
         }
         response_index += ret;
     }
-    Printf("Read %d bytes", response_index);
     for (int i = 0; i < 400; i++) {
         for (int j = 0; j < 480; j++) {
             GRRLIB_SetPixelTotexImg(i, j, emulator_texture, ((uint32_t*)response_buffer)[i + j * 400]);

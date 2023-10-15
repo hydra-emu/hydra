@@ -1,6 +1,6 @@
 #include <stdlib.h>
 extern "C" {
-    #include "menu.h"
+#include "menu.h"
 }
 
 int main()
