@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <GLFW/glfw3.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <netinet/tcp.h>
 #include <stb_image_write.h>
 
 void* get_proc_address = nullptr;
@@ -203,7 +204,17 @@ namespace hydra
         addr.sin_addr.s_addr = INADDR_ANY;
         const int enable = 1;
         if (setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "setsockopt() failed");
+            throw ErrorFactory::generate_exception(__func__, __LINE__,
+                                                   "setsockopt(SO_REUSEADDR) failed");
+        if (setsockopt(socket_, SOL_SOCKET, SO_KEEPALIVE, (void*)&enable, sizeof(int) < 0))
+            throw ErrorFactory::generate_exception(__func__, __LINE__,
+                                                   "setsockopt(SO_KEEPALIVE) failed");
+        if (setsockopt(socket_, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(int) < 0))
+            throw ErrorFactory::generate_exception(__func__, __LINE__,
+                                                   "setsockopt(TCP_NODELAY) failed");
+        if (setsockopt(socket_, IPPROTO_TCP, TCP_QUICKACK, (void*)&enable, sizeof(int) < 0))
+            throw ErrorFactory::generate_exception(__func__, __LINE__,
+                                                   "setsockopt(TCP_QUICKACK) failed");
         if (auto res = bind(socket_, (sockaddr*)&addr, sizeof(addr)); res < 0)
         {
             printf("bind() failed: %d\n", errno);
@@ -281,13 +292,37 @@ namespace hydra
                 }
                 case HC_PACKET_TYPE_video:
                 {
-                    core_->hc_run_frame_p(core_->core_handle);
                     hc_client_video_t video;
                     client_socket.read(&video, sizeof(video));
                     packet_wrapper wrapper(client_socket, HC_PACKET_TYPE_video_ack, buffer.data(),
                                            buffer.size());
                     wrapper.send();
-                    printf("Sent video ack %d\n", buffer.size());
+                    break;
+                }
+                case HC_PACKET_TYPE_step:
+                {
+                    hc_client_step_t step;
+                    client_socket.read(&step, sizeof(step));
+                    for (uint16_t i = 0; i < step.frames; i++)
+                    {
+                        core_->hc_run_frame_p(core_->core_handle);
+                    }
+                    hc_server_step_ack_t step_ack;
+                    step_ack.response = HC_RESPONSE_OK;
+                    packet_wrapper wrapper(client_socket, HC_PACKET_TYPE_step_ack, &step_ack,
+                                           sizeof(step_ack));
+                    wrapper.send();
+                    break;
+                }
+                case HC_PACKET_TYPE_discord_plays_special_input:
+                {
+                    hc_client_discord_plays_special_input_t discord_plays_special_input;
+                    client_socket.read(&discord_plays_special_input,
+                                       sizeof(discord_plays_special_input));
+                    // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+                    packet_wrapper wrapper(client_socket,
+                                           HC_PACKET_TYPE_discord_plays_special_input_ack,
+                                           buffer.data(), buffer.size());
                     break;
                 }
                 default:

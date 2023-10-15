@@ -7,5 +7,5 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
     android.cpp)
 target_link_libraries(${CMAKE_PROJECT_NAME}
     android
-    log
+    EGL
 )

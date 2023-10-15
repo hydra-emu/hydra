@@ -1,12 +1,24 @@
+#include <EGL/egl.h>
 #include <jni.h>
 
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_hydra_1emu_android_MainActivity_getNativeString(JNIEnv* env, jobject obj)
-{
-    return env->NewStringUTF("Hello World! From native code!");
-}
+EGLContext gl_context = 0;
+unsigned fbo = 0;
+using func_ptr = void (*)();
+using get_proc_address_ptr = func_ptr (*)(const char*);
+get_proc_address_ptr get_proc_address = nullptr;
 
-int main()
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_hydra_1emu_android_HydraGlSurfaceView_getNativeString(JNIEnv* env, jobject thiz)
 {
-    return 0;
+    gl_context = eglGetCurrentContext();
+    get_proc_address = eglGetProcAddress;
+    if (gl_context == 0)
+    {
+        return env->NewStringUTF("Error1");
+    }
+    if (get_proc_address == nullptr)
+    {
+        return env->NewStringUTF("Error2");
+    }
+    return env->NewStringUTF("Whatever");
 }
