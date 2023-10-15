@@ -3,6 +3,7 @@
 #include "menu.h"
 #include "player1_point_png.h"
 #include "player1_grab_png.h"
+#include "text.h"
 
 static GRRLIB_texImg* cursors[4];
 static GRRLIB_texImg* cursors_grab[4];
@@ -16,6 +17,7 @@ void InitializeInput()
     cursors_current[0] = cursors[0];
     WPAD_SetDataFormat(WPAD_CHAN_ALL,WPAD_FMT_BTNS_ACC_IR);
 	WPAD_SetVRes(WPAD_CHAN_ALL, screen_width, screen_height);
+    Printf("Input initialized successfully");
 }
 
 bool UpdateInput()

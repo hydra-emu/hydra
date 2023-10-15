@@ -7,6 +7,7 @@
 #elif defined(HYDRA_WINDOWS)
 #pragma message("TODO: include winsock2.h")
 #endif
+#include "core_loader.hxx"
 
 namespace hydra
 {
@@ -20,5 +21,6 @@ namespace hydra
 
     private:
         uint32_t socket_;
+        core_wrapper_t* core_;
     };
 } // namespace hydra

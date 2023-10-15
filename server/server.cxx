@@ -1,4 +1,5 @@
 #include "server.hxx"
+#include <cstring>
 #include <error_factory.hxx>
 #include <protocol/packet.h>
 #include <thread>
@@ -8,9 +9,118 @@
 #else
 #pragma message("TODO: include winsock2.h")
 #endif
+#include "glad.h"
+#include <array>
+#include <core/core.h>
+#include <cstdint>
+#include <filesystem>
+#include <GLFW/glfw3.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
+void* get_proc_address = nullptr;
+GLuint fbo = 0;
+void* context = nullptr;
+std::array<uint8_t, 400 * 480 * 4> buffer;
 
 namespace hydra
 {
+
+    void* malloc_packet(uint8_t type, void* body, uint32_t body_size, uint32_t* packet_size)
+    {
+        uint8_t* packet = (uint8_t*)malloc(sizeof(uint8_t) + sizeof(uint32_t) + body_size);
+        memset(packet, type, 1);
+        memcpy(packet + 1, &body_size, 4);
+        if (body_size != 0)
+            memcpy(packet + 1 + 4, body, body_size);
+        *packet_size = sizeof(uint8_t) + sizeof(uint32_t) + body_size;
+        return packet;
+    }
+
+    void free_packet(void* packet)
+    {
+        free(packet);
+    }
+
+    void init_gl()
+    {
+        if (!glfwInit())
+            printf("glfwInit() failed\n");
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        GLFWwindow* window = glfwCreateWindow(640, 480, "", nullptr, nullptr);
+        if (!window)
+            printf("glfwCreateWindow() failed\n");
+        glfwMakeContextCurrent(window);
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+            printf("gladLoadGLLoader() failed\n");
+        get_proc_address = (void*)glfwGetProcAddress;
+        context = (void*)glfwGetCurrentContext();
+
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 400, 480);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    }
+
+    void* read_other_callback(hc_other_e other)
+    {
+        switch (other)
+        {
+            case hc_other_e::HC_OTHER_GL_GET_PROC_ADDRESS:
+            {
+                return get_proc_address;
+            }
+            case hc_other_e::HC_OTHER_GL_FBO:
+            {
+                return &fbo;
+            }
+            case hc_other_e::HC_OTHER_GL_CONTEXT:
+            {
+                return context;
+            }
+            default:
+            {
+                return nullptr;
+            }
+        }
+    }
+
+    void poll_input_callback() {}
+
+    int8_t read_input_callback(uint8_t player, hc_input_e button)
+    {
+        return 0;
+    }
+
+    void video_callback(const uint8_t* data, uint32_t width, uint32_t height)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+
+        for (uint32_t y = 0; y < height / 2; y++)
+        {
+            for (uint32_t x = 0; x < width; x++)
+            {
+                std::swap(buffer[(y * width + x) * 4 + 0],
+                          buffer[((height - 1 - y) * width + x) * 4 + 0]);
+                std::swap(buffer[(y * width + x) * 4 + 1],
+                          buffer[((height - 1 - y) * width + x) * 4 + 1]);
+                std::swap(buffer[(y * width + x) * 4 + 2],
+                          buffer[((height - 1 - y) * width + x) * 4 + 2]);
+                std::swap(buffer[(y * width + x) * 4 + 3],
+                          buffer[((height - 1 - y) * width + x) * 4 + 3]);
+            }
+        }
+    }
+
+    void audio_callback(const int16_t* data, uint32_t size) {}
 
     struct socket_wrapper
     {
@@ -90,8 +200,14 @@ namespace hydra
         addr.sin_family = AF_INET;
         addr.sin_port = htons(1234);
         addr.sin_addr.s_addr = INADDR_ANY;
-        if (bind(socket_, (sockaddr*)&addr, sizeof(addr)) < 0)
+        const int enable = 1;
+        if (setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "setsockopt() failed");
+        if (auto res = bind(socket_, (sockaddr*)&addr, sizeof(addr)); res < 0)
+        {
+            printf("bind() failed: %d\n", errno);
             throw ErrorFactory::generate_exception(__func__, __LINE__, "bind() failed");
+        }
         if (listen(socket_, 10) < 0)
             throw ErrorFactory::generate_exception(__func__, __LINE__, "listen() failed");
         sockaddr_in server_addr;
@@ -100,6 +216,22 @@ namespace hydra
             throw ErrorFactory::generate_exception(__func__, __LINE__, "getsockname() failed");
         printf("Listening on address %s:%d...\n", inet_ntoa(server_addr.sin_addr),
                ntohs(server_addr.sin_port));
+
+        init_gl();
+
+        core_ = new core_wrapper_t(std::filesystem::path("/home/offtkp/cores/libAlber.so"));
+        core_->hc_set_read_other_callback_p(read_other_callback);
+        core_->core_handle = core_->hc_create_p();
+        core_->hc_load_file_p(core_->core_handle, "rom", "/home/offtkp/Roms/3DS/zelda.3ds");
+        core_->hc_set_poll_input_callback_p(core_->core_handle, poll_input_callback);
+        core_->hc_set_read_input_callback_p(core_->core_handle, read_input_callback);
+        core_->hc_set_video_callback_p(core_->core_handle, video_callback);
+        core_->hc_set_audio_callback_p(core_->core_handle, audio_callback);
+
+        for (int i = 0; i < 640; i++)
+        {
+            core_->hc_run_frame_p(core_->core_handle);
+        }
 
         accept_loop();
     }
@@ -118,9 +250,11 @@ namespace hydra
         {
             uint8_t packet_type;
             client_socket.read(&packet_type, 1);
+            printf("Received packet type: %d\n", packet_type);
 
             uint32_t packet_size;
             client_socket.read(&packet_size, 4);
+            printf("Received packet size: %d\n", packet_size);
 
             switch (packet_type)
             {
@@ -148,6 +282,19 @@ namespace hydra
                     }
                     break;
                 }
+                case HC_PACKET_TYPE_video:
+                {
+                    hc_client_video_t video;
+                    client_socket.read(&video, sizeof(video));
+                    packet_wrapper wrapper(client_socket, HC_PACKET_TYPE_video_ack, buffer.data(),
+                                           buffer.size());
+                    wrapper.send();
+                    printf("Sent video ack %d\n", buffer.size());
+                    break;
+                }
+                default:
+                    printf("Unknown packet type: %d\n", packet_type);
+                    break;
             }
         }
         printf("Connection closed from %s:%d\n", inet_ntoa(client_addr.sin_addr),
