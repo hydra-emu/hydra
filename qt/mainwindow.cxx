@@ -617,15 +617,12 @@ void MainWindow::init_emulator()
         }
         emulator_->hc_load_file_p(emulator_->core_handle, file.c_str(), path.c_str());
     }
-    emulator_->hc_add_log_callback_p(emulator_->core_handle, "warn", TerminalWindow::log_warn);
-    emulator_->hc_add_log_callback_p(emulator_->core_handle, "info", TerminalWindow::log_info);
-    emulator_->hc_add_log_callback_p(emulator_->core_handle, "debug", TerminalWindow::log_debug);
-    if (Settings::Get("print_to_native_terminal") == "true")
-    {
-        emulator_->hc_add_log_callback_p(emulator_->core_handle, "warn", log_warn);
-        emulator_->hc_add_log_callback_p(emulator_->core_handle, "info", log_info);
-        emulator_->hc_add_log_callback_p(emulator_->core_handle, "fatal", log_fatal);
-    }
+    emulator_->hc_set_log_callback_p(emulator_->core_handle, HC_LOG_TARGET_WARN,
+                                     TerminalWindow::log_warn);
+    emulator_->hc_set_log_callback_p(emulator_->core_handle, HC_LOG_TARGET_INFO,
+                                     TerminalWindow::log_info);
+    // emulator_->hc_add_log_callback_p(emulator_->core_handle, "debug", TerminalWindow::log_debug);
+    emulator_->hc_set_log_callback_p(emulator_->core_handle, HC_LOG_TARGET_ERROR, log_fatal);
 }
 
 void MainWindow::stop_emulator()

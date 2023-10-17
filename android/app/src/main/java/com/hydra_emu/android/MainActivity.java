@@ -1,18 +1,32 @@
 package com.hydra_emu.android;
 
+import static android.Manifest.permission.MANAGE_EXTERNAL_STORAGE;
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION;
+import static android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION;
+
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.documentfile.provider.DocumentFile;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.FileUtils;
+import android.provider.Settings;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -27,17 +41,32 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.apache.commons.io.IOUtils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends AppCompatActivity {
 
     HydraGlSurfaceView glView;
     private ActivityResultLauncher<Intent> filePickerLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!Environment.isExternalStorageManager()) {
+            Intent intent = new Intent(ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+            startActivity(intent);
+        }
+        if (!Environment.isExternalStorageManager()) {
+            Log.e("hydra", "Not enough permissions");
+            return;
+        }
         Resources resources = getResources();
         InputStream isv = resources.openRawResource(R.raw.vshader);
         InputStream isf = resources.openRawResource(R.raw.fshader);
@@ -60,9 +89,8 @@ public class MainActivity extends AppCompatActivity {
                 FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
         fabLayoutParams.gravity = Gravity.BOTTOM | Gravity.END;
         fab.setLayoutParams(fabLayoutParams);
-        fab.setImageResource(android.R.drawable.ic_menu_search);
+        fab.setImageResource(android.R.drawable.ic_menu_edit);
         addContentView(fab, fab.getLayoutParams());
-
         filePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
                     @Override
@@ -71,12 +99,7 @@ public class MainActivity extends AppCompatActivity {
                             Intent data = result.getData();
                             if (data != null) {
                                 Uri uri = data.getData();
-                                try {
-                                    byte[] fileData = readFileDataFromUri(uri);
-                                    // Handle the file data (byte array) as needed
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+
                             }
                         }
                     }
@@ -87,9 +110,22 @@ public class MainActivity extends AppCompatActivity {
         glView.queueEvent(new Runnable() {
             @Override
             public void run() {
-                MainActivity.this.glView.renderer.setGreen();
-                MainActivity.this.glView.invalidate();
-                openFilePicker();
+                //Intent act = new Intent(MainActivity.this, SettingsActivity.class);
+                //MainActivity.this.startActivity(act);
+                //openFilePicker();
+                glView.queueEvent(new Runnable() {
+                                      @Override
+                                      public void run() {
+                                          String core_path = getApplicationInfo().dataDir + "/cores/libAlber_x86_64.so";
+                                          glView.loadCore(core_path);
+                                          String game_path = getApplicationInfo().dataDir + "/games/SimplerTri.elf";
+                                          glView.loadGame(game_path);
+                                          for (int i = 0; i < 20; i++)
+                                            glView.runFrame(glView.renderer.screenFbo);
+                                          glView.requestRender();
+                                      }
+                                  });
+
             }
         });
     }
@@ -113,6 +149,5 @@ public class MainActivity extends AppCompatActivity {
             throw new IOException("Failed to open input stream for the selected file.");
         }
     }
-
 
 }

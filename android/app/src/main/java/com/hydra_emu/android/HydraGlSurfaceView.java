@@ -19,9 +19,7 @@ public class HydraGlSurfaceView extends GLSurfaceView {
         System.loadLibrary("hydra_android");
     }
 
-    public static String getJniString() {
-        return "Hello from JVM!";
-    }
-
-    private native String getNativeString();
+    public native void loadCore(String path);
+    public native void loadGame(String game);
+    public native void runFrame(int fbo);
 }

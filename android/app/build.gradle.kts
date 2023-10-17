@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.hydra_emu.android"
-        minSdk = 24
+        minSdk = 30
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"

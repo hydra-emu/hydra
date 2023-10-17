@@ -3,9 +3,12 @@
 # For more examples on how to use CMake, see https://github.com/android/ndk-samples.
 cmake_minimum_required(VERSION 3.22.1)
 project(hydra_android)
+set(CMAKE_CXX_STANDARD 17)
 add_library(${CMAKE_PROJECT_NAME} SHARED
     android.cpp)
 target_link_libraries(${CMAKE_PROJECT_NAME}
     android
+    log
     EGL
 )
+target_include_directories(hydra_android PRIVATE .)

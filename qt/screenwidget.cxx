@@ -55,6 +55,7 @@ void ScreenWidget::Redraw(int width, int height, const void* tdata)
             glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_,
                                    0);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
         }
         if (tdata)
         {

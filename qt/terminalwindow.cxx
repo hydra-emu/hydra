@@ -118,11 +118,19 @@ void TerminalWindow::log(const char* group, const char* message)
 void TerminalWindow::log_warn(const char* message)
 {
     log("Warn", message);
+    if (Settings::Get("print_to_native_terminal") == "true")
+    {
+        std::cout << "[Warn] " << message << std::endl;
+    }
 }
 
 void TerminalWindow::log_info(const char* message)
 {
     log("Info", message);
+    if (Settings::Get("print_to_native_terminal") == "true")
+    {
+        std::cout << "[Info] " << message << std::endl;
+    }
 }
 
 void TerminalWindow::log_debug(const char* message)
