@@ -8,17 +8,9 @@ using get_proc_address_ptr = func_ptr (*)(const char*);
 get_proc_address_ptr get_proc_address = nullptr;
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_hydra_1emu_android_HydraGlSurfaceView_getNativeString(JNIEnv* env, jobject thiz)
+Java_com_hydra_1emu_android_HydraGlSurfaceView_getNativeString(JNIEnv* env, jobject jo)
 {
     gl_context = eglGetCurrentContext();
     get_proc_address = eglGetProcAddress;
-    if (gl_context == 0)
-    {
-        return env->NewStringUTF("Error1");
-    }
-    if (get_proc_address == nullptr)
-    {
-        return env->NewStringUTF("Error2");
-    }
     return env->NewStringUTF("Whatever");
 }

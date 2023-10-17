@@ -142,6 +142,7 @@ public:
                     log_warn(fmt::format("Could not find symbol hc_get_info in core {}",
                                          it->path().string())
                                  .c_str());
+                    ++it;
                     continue;
                 }
                 core_info info;
