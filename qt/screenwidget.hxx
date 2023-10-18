@@ -18,7 +18,6 @@ public:
     ScreenWidget(QWidget* parent = nullptr);
     ~ScreenWidget();
     void Redraw(int width, int height, const void* data);
-    void ResetProgram(QString* vertex = nullptr, QString* fragment = nullptr);
 
     void SetMouseMoveCallback(std::function<void(QMouseEvent*)> callback)
     {
@@ -33,11 +32,6 @@ private:
     void paintGL() override;
     GLuint texture_ = 0;
     GLuint fbo_ = 0;
-    QOpenGLShaderProgram* program_ = nullptr;
-    QString vshader_source_;
-    QString fshader_source_;
-    QOpenGLVertexArrayObject vao_;
-    QOpenGLBuffer vbo_;
     bool initialized_ = false;
     int current_width_ = 0;
     int current_height_ = 0;

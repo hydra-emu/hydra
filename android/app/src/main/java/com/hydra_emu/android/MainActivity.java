@@ -118,9 +118,9 @@ public class MainActivity extends AppCompatActivity {
                                       public void run() {
                                           String core_path = getApplicationInfo().dataDir + "/cores/libAlber_x86_64.so";
                                           glView.loadCore(core_path);
-                                          String game_path = getApplicationInfo().dataDir + "/games/SimplerTri.elf";
+                                          String game_path = getApplicationInfo().dataDir + "/games/zelda.3ds";
                                           glView.loadGame(game_path);
-                                          for (int i = 0; i < 20; i++)
+                                          for (int i = 0; i < 600; i++)
                                             glView.runFrame(glView.renderer.screenFbo);
                                           glView.requestRender();
                                       }

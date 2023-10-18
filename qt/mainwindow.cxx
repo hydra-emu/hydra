@@ -95,12 +95,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     QWidget* widget = new QWidget;
     setCentralWidget(widget);
 
-    QVBoxLayout* layout = new QVBoxLayout;
+    QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
     layout->setContentsMargins(5, 5, 5, 5);
     screen_ = new ScreenWidget(this);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
     screen_->setMouseTracking(true);
-    layout->addWidget(screen_);
+    layout->addWidget(screen_, Qt::AlignCenter);
     widget->setLayout(layout);
     create_actions();
     create_menus();
@@ -434,10 +434,10 @@ void MainWindow::open_shaders()
     qt_may_throw([this]() {
         if (!shaders_open_)
         {
-            using namespace std::placeholders;
-            std::function<void(QString*, QString*)> callback =
-                std::bind(&ScreenWidget::ResetProgram, screen_, _1, _2);
-            new ShaderEditor(shaders_open_, callback, this);
+            // using namespace std::placeholders;
+            // std::function<void(QString*, QString*)> callback =
+            //     std::bind(&ScreenWidget::ResetProgram, screen_, _1, _2);
+            // new ShaderEditor(shaders_open_, callback, this);
         }
     });
 }
