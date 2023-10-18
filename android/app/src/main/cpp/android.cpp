@@ -68,8 +68,9 @@ int8_t input_callback(uint8_t, hc_input_e)
     return 0;
 };
 
-extern "C" JNIEXPORT void JNICALL
-Java_com_hydra_1emu_android_HydraGlSurfaceView_loadCore(JNIEnv* env, jobject thiz, jstring path)
+extern "C" JNIEXPORT void JNICALL Java_com_hydra_1emu_android_HydraGlRenderer_loadCore(JNIEnv* env,
+                                                                                       jobject thiz,
+                                                                                       jstring path)
 {
     if (dlhandle)
     {
@@ -100,15 +101,17 @@ Java_com_hydra_1emu_android_HydraGlSurfaceView_loadCore(JNIEnv* env, jobject thi
     }
 }
 
-extern "C" JNIEXPORT void JNICALL
-Java_com_hydra_1emu_android_HydraGlSurfaceView_runFrame(JNIEnv* env, jobject thiz, jint fbo)
+extern "C" JNIEXPORT void JNICALL Java_com_hydra_1emu_android_HydraGlRenderer_runFrame(JNIEnv* env,
+                                                                                       jobject thiz,
+                                                                                       jint fbo)
 {
     gl_fbo = fbo;
     hc_run_frame_p(emu);
 }
 
-extern "C" JNIEXPORT void JNICALL
-Java_com_hydra_1emu_android_HydraGlSurfaceView_loadGame(JNIEnv* env, jobject thiz, jstring path)
+extern "C" JNIEXPORT void JNICALL Java_com_hydra_1emu_android_HydraGlRenderer_loadGame(JNIEnv* env,
+                                                                                       jobject thiz,
+                                                                                       jstring path)
 {
     auto cpath = jstring2string(env, path);
     hc_load_file_p(emu, "rom", cpath.c_str());

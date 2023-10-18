@@ -10,6 +10,8 @@
 <p align="center">A multi-system emulator</p>
 <p align="center"><img src="./data/images/screen.png"></p>
 
+<p align="center">⚠️ <b>This project is very early in development and not ready for use yet!</b> ⚠️</p>
+
 ## What is this?
 This is the Hydra, a multi-platform frontend for emulator cores.
 A Hydra core is a shared library that defines the functions in the [core header](https://github.com/hydra-emu/core).
