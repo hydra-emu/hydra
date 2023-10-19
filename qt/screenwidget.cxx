@@ -13,7 +13,7 @@ void GLAPIENTRY debug_callback(GLenum source, GLenum type, GLuint id, GLenum sev
 
 ScreenWidget::ScreenWidget(QWidget* parent) : QOpenGLWidget(parent)
 {
-    setFixedSize(600, 600);
+    setFixedSize(400, 480);
 }
 
 ScreenWidget::~ScreenWidget()
@@ -31,6 +31,11 @@ void ScreenWidget::Redraw(int width, int height, const void* tdata)
 {
     if (initialized_) [[likely]]
     {
+        if (width == 0 || height == 0)
+        {
+            log_fatal("Width or height is 0, stopping\n");
+            return;
+        }
         if (width != current_width_ || height != current_height_)
         {
             current_width_ = width;
@@ -50,6 +55,14 @@ void ScreenWidget::Redraw(int width, int height, const void* tdata)
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_,
                                    0);
             glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
+            // Check if fbo is complete
+            GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+            if (status != GL_FRAMEBUFFER_COMPLETE)
+            {
+                printf("Framebuffer not complete: %x\n", status);
+                log_fatal("Framebuffer not complete, stopping\n");
+                return;
+            }
         }
         if (tdata)
         {
@@ -88,6 +101,6 @@ void ScreenWidget::paintGL()
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_);
-        glBlitFramebuffer(0, 0, 600, 600, 0, 0, 600, 600, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        glBlitFramebuffer(0, 0, 400, 480, 0, 0, 400, 480, GL_COLOR_BUFFER_BIT, GL_LINEAR);
     }
 }

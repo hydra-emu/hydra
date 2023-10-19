@@ -4,7 +4,7 @@
 #include <QSurfaceFormat>
 #include <settings.hxx>
 
-std::vector<core_info> Settings::CoreInfo;
+std::vector<EmulatorInfo> Settings::CoreInfo;
 std::map<std::string, std::string> Settings::map_;
 std::string Settings::save_path_;
 bool Settings::initialized_ = false;

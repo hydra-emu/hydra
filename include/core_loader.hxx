@@ -9,7 +9,7 @@
 #elif defined(HYDRA_WII)
 #include "ELFIO/elfio/elfio.hpp"
 #endif
-#include <core/core.h>
+#include <core/core.hxx>
 #include <filesystem>
 
 namespace hydra
@@ -20,7 +20,7 @@ namespace hydra
     inline dynlib_handle_t dynlib_open(const char* path)
     {
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
-        return dlopen(path, RTLD_LAZY);
+        return dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
 #elif defined(HYDRA_WINDOWS)
         std::wstring wpath = std::wstring(path.begin(), path.end());
         printf("Trying to convert string to wstring to load library with loadlibraryw, this is "
@@ -96,38 +96,69 @@ namespace hydra
 #endif
     }
 
-    struct core_wrapper_t
+    // Should only be made through the factory
+    struct EmulatorWrapper
     {
-        core_wrapper_t(const std::filesystem::path& path)
+        BaseEmulatorInterface* shell = nullptr;
+
+        ~EmulatorWrapper()
         {
-            dl_handle = dynlib_open(path.c_str());
-            if (!dl_handle)
-            {
-                printf("Error while trying to load core: %s\n", path.c_str());
-                return;
-            }
-#define X(symbol)                                                                               \
-    symbol##_p = reinterpret_cast<decltype(symbol##_p)>(dynlib_get_symbol(dl_handle, #symbol)); \
-    if (!symbol##_p)                                                                            \
-        printf("Error while trying to load symbol: %s\n", #symbol);
-            HC_SYMBOLS
-#undef X
+            destroy_function(shell);
+            dynlib_close(handle);
         }
 
-        ~core_wrapper_t()
+    private:
+        dynlib_handle_t handle;
+        void (*destroy_function)(BaseEmulatorInterface*);
+
+        EmulatorWrapper(BaseEmulatorInterface* shell, dynlib_handle_t handle,
+                        void (*destroy_function)(BaseEmulatorInterface*))
+            : shell(shell), handle(handle), destroy_function(destroy_function)
         {
-            if (dl_handle)
-            {
-                dynlib_close(dl_handle);
-            }
         }
 
-#define X(name) decltype(name)* name##_p;
-        HC_SYMBOLS
-#undef X
+        EmulatorWrapper(const EmulatorWrapper&) = delete;
+        friend struct EmulatorFactory;
+    };
 
-        void* core_handle = nullptr;
-        void* dl_handle;
+    struct EmulatorFactory
+    {
+        static std::unique_ptr<EmulatorWrapper> Create(const std::string& path)
+        {
+            dynlib_handle_t handle = dynlib_open(path.c_str());
+
+            if (!handle)
+            {
+                printf("Failed to load library %s\n", path.c_str());
+                return nullptr;
+            }
+            auto create_emu_p =
+                (decltype(hydra::createEmulator)*)dynlib_get_symbol(handle, "createEmulator");
+            if (!create_emu_p)
+            {
+                printf("Failed to find createEmulator in %s\n", path.c_str());
+                dynlib_close(handle);
+                return nullptr;
+            }
+
+            auto destroy_emu_p =
+                (decltype(hydra::destroyEmulator)*)dynlib_get_symbol(handle, "destroyEmulator");
+
+            if (!destroy_emu_p)
+            {
+                printf("Failed to find destroyEmulator in %s\n", path.c_str());
+                dynlib_close(handle);
+                return nullptr;
+            }
+
+            return std::unique_ptr<EmulatorWrapper>(
+                new EmulatorWrapper(create_emu_p(), handle, destroy_emu_p));
+        }
+
+        static std::unique_ptr<EmulatorWrapper> Create(const std::filesystem::path& path)
+        {
+            return Create(path.string());
+        }
     };
 
 } // namespace hydra

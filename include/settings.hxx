@@ -2,7 +2,7 @@
 
 #include "log.h"
 #include <compatibility.hxx>
-#include <core/core.h>
+#include <core/core.hxx>
 #include <core_loader.hxx>
 #include <error_factory.hxx>
 #include <fmt/format.h>
@@ -13,7 +13,7 @@
 #include <mutex>
 #include <string>
 
-struct core_info
+struct EmulatorInfo
 {
     std::string path;
     std::string core_name;
@@ -23,8 +23,8 @@ struct core_info
     std::string description;
     std::string license;
     std::string url;
-    std::string firmware_files;
     int max_players;
+    std::vector<std::string> firmware_files;
     std::vector<std::string> extensions;
 };
 
@@ -134,35 +134,38 @@ public:
         {
             if (it->path().extension() == hydra::dynlib_get_extension())
             {
-                hydra::core_wrapper_t core(it->path());
-                core.hc_get_info_p = reinterpret_cast<decltype(core.hc_get_info_p)>(
-                    hydra::dynlib_get_symbol(core.dl_handle, "hc_get_info"));
-                if (!core.hc_get_info_p)
+                // TODO: cache these to a json or whatever so we don't dlopen every time
+                void* handle = hydra::dynlib_open(it->path().string().c_str());
+
+                if (!handle)
                 {
-                    log_warn(fmt::format("Could not find symbol hc_get_info in core {}",
-                                         it->path().string())
-                                 .c_str());
+                    printf("dl error: %s\n", dlerror());
                     ++it;
                     continue;
                 }
-                core_info info;
-                info.path = it->path().string();
-                info.core_name = core.hc_get_info_p(hc_info::HC_INFO_CORE_NAME);
-                info.system_name = core.hc_get_info_p(hc_info::HC_INFO_SYSTEM_NAME);
-                info.version = core.hc_get_info_p(hc_info::HC_INFO_VERSION);
-                info.author = core.hc_get_info_p(hc_info::HC_INFO_AUTHOR);
-                info.description = core.hc_get_info_p(hc_info::HC_INFO_DESCRIPTION);
-                info.extensions =
-                    hydra::split(core.hc_get_info_p(hc_info::HC_INFO_EXTENSIONS), ',');
-                info.url = core.hc_get_info_p(hc_info::HC_INFO_URL);
-                info.license = core.hc_get_info_p(hc_info::HC_INFO_LICENSE);
-                info.firmware_files = core.hc_get_info_p(hc_info::HC_INFO_FIRMWARE_FILES);
-                info.max_players = std::atoi(core.hc_get_info_p(hc_info::HC_INFO_MAX_PLAYERS));
-                if (info.max_players == 0)
+
+                auto get_info_p =
+                    (decltype(hydra::getInfo)*)hydra::dynlib_get_symbol(handle, "getInfo");
+                if (!get_info_p)
                 {
-                    info.max_players = 1;
-                    log_warn("Could not get HC_INFO_MAX_PLAYERS for core, setting to 1");
+                    log_warn(
+                        fmt::format("Could not find symbol getInfo in core {}", it->path().string())
+                            .c_str());
+                    ++it;
+                    continue;
                 }
+                EmulatorInfo info;
+                info.path = it->path().string();
+                info.core_name = get_info_p(hydra::InfoType::CoreName);
+                info.system_name = get_info_p(hydra::InfoType::SystemName);
+                info.version = get_info_p(hydra::InfoType::Version);
+                info.author = get_info_p(hydra::InfoType::Author);
+                info.description = get_info_p(hydra::InfoType::Description);
+                info.extensions = hydra::split(get_info_p(hydra::InfoType::Extensions), ',');
+                info.url = get_info_p(hydra::InfoType::Website);
+                info.license = get_info_p(hydra::InfoType::License);
+                info.firmware_files = hydra::split(get_info_p(hydra::InfoType::Firmware), ',');
+                info.max_players = 1;
 
                 bool one_active = false;
                 for (int i = 1; i <= info.max_players; i++)
@@ -198,7 +201,7 @@ public:
         InitCoreInfo();
     }
 
-    static std::vector<core_info> CoreInfo;
+    static std::vector<EmulatorInfo> CoreInfo;
 
 private:
     static std::map<std::string, std::string> map_;

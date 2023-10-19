@@ -24,6 +24,11 @@ public:
         mouse_move_callback_ = callback;
     }
 
+    unsigned GetFbo()
+    {
+        return fbo_;
+    }
+
     void mouseMoveEvent(QMouseEvent* event) override;
 
 private:

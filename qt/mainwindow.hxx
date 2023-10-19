@@ -1,8 +1,9 @@
 #pragma once
 
 #include "screenwidget.hxx"
+#include "settings.hxx"
 #include <array>
-#include <core/core.h>
+#include <core/core.hxx>
 #include <deque>
 #include <memory>
 #define MA_NO_DECODING
@@ -53,11 +54,9 @@ private:
     void update_recent_files();
     void update_fbo(unsigned fbo);
 
-    static void video_callback(const uint8_t* data, uint32_t width, uint32_t height);
-    static void audio_callback(const int16_t* data, uint32_t frames);
-    static void poll_input_callback();
-    static int8_t read_input_callback(uint8_t player, hc_input_e button);
-    static void* read_other_callback(hc_other_e other);
+    static void video_callback(void* data, hydra::Size size);
+    static void audio_callback(void* data, size_t frames);
+    static int32_t read_input_callback(uint32_t player, hydra::ButtonType button);
 
 private slots:
     void emulator_frame();
@@ -88,7 +87,10 @@ public:
     QTimer* emulator_timer_;
     ScreenWidget* screen_;
     ma_device sound_device_{};
-    std::unique_ptr<hydra::core_wrapper_t> emulator_;
+    bool frontend_driven_ = false;
+    std::unique_ptr<hydra::EmulatorWrapper> emulator_;
+    hydra::FrontendDrivenEmulatorInterface* emulator_frontend_cached_ = nullptr;
+    std::unique_ptr<EmulatorInfo> info_;
     std::vector<int16_t> queued_audio_;
     bool settings_open_ = false;
     bool about_open_ = false;
@@ -103,8 +105,8 @@ public:
     uint32_t video_width_ = 0;
     uint32_t video_height_ = 0;
 
-    std::unordered_map<int, hc_input_e> current_mappings_{};
-    std::array<int8_t, hc_input_e::HC_INPUT_SIZE> input_state_{};
+    // std::unordered_map<int, hc_input_e> current_mappings_{};
+    // std::array<int8_t, hc_input_e::HC_INPUT_SIZE> input_state_{};
     std::deque<std::string> recent_files_;
 
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);

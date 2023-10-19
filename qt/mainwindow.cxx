@@ -6,7 +6,7 @@
 #include "shadereditor.hxx"
 #include "terminalwindow.hxx"
 #include <compatibility.hxx>
-#include <core/core.h>
+#include <core/core.hxx>
 #include <error_factory.hxx>
 #include <fmt/format.h>
 #include <fstream>
@@ -45,48 +45,48 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
                                 window->queued_audio_.begin() + frames);
 }
 
-constexpr hc_input_e deserialize(const char* input)
-{
-    switch (str_hash(input))
-    {
-#define X(key)           \
-    case str_hash(#key): \
-        return key;
-        HC_INPUTS
-#undef X
-        default:
-            return HC_INPUT_SIZE;
-    }
-}
+// constexpr hc_input_e deserialize(const char* input)
+// {
+//     switch (str_hash(input))
+//     {
+// #define X(key)           \
+//     case str_hash(#key): \
+//         return key;
+//         HC_INPUTS
+// #undef X
+//         default:
+//             return HC_INPUT_SIZE;
+//     }
+// }
 
-std::unordered_map<int, hc_input_e> current_mappings()
-{
-    std::string mappings = Settings::Get("current_mappings");
-    if (mappings.empty())
-    {
-        Settings::Set("current_mappings", "default");
-        mappings = "default";
-    }
+// std::unordered_map<int, hc_input_e> current_mappings()
+// {
+//     std::string mappings = Settings::Get("current_mappings");
+//     if (mappings.empty())
+//     {
+//         Settings::Set("current_mappings", "default");
+//         mappings = "default";
+//     }
 
-    std::unordered_map<int, hc_input_e> map;
-    if (mappings == "default")
-    {
-        QFile file(":/default_mappings.json");
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        std::string file_data = file.readAll().toStdString();
-        file.close();
-        nlohmann::json json = nlohmann::json::parse(file_data);
-        for (auto& [key, value] : json.items())
-        {
-            QKeySequence sequence = QKeySequence::fromString(value.get<std::string>().c_str());
-            map[sequence[0].key()] = deserialize(key.c_str());
-        }
-    }
-    else
-    {
-    }
-    return map;
-}
+//     std::unordered_map<int, hc_input_e> map;
+//     if (mappings == "default")
+//     {
+//         QFile file(":/default_mappings.json");
+//         file.open(QIODevice::ReadOnly | QIODevice::Text);
+//         std::string file_data = file.readAll().toStdString();
+//         file.close();
+//         nlohmann::json json = nlohmann::json::parse(file_data);
+//         for (auto& [key, value] : json.items())
+//         {
+//             QKeySequence sequence = QKeySequence::fromString(value.get<std::string>().c_str());
+//             map[sequence[0].key()] = deserialize(key.c_str());
+//         }
+//     }
+//     else
+//     {
+//     }
+//     return map;
+// }
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
@@ -116,14 +116,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     connect(emulator_timer_, SIGNAL(timeout()), this, SLOT(emulator_frame()));
 
     initialize_audio();
-    enable_emulation_actions(false);
+    // enable_emulation_actions(false);
 
     widget->setStyleSheet(R"(
         background-repeat: no-repeat;
         background-position: center;
         background-image: url(:/images/hydra.png);
     )");
-    current_mappings_ = current_mappings();
+    // current_mappings_ = current_mappings();
 }
 
 MainWindow::~MainWindow()
@@ -309,16 +309,16 @@ void MainWindow::create_menus()
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    if (current_mappings_.find(event->key()) == current_mappings_.end())
-        return;
-    input_state_[current_mappings_[event->key()]] = 127;
+    // if (current_mappings_.find(event->key()) == current_mappings_.end())
+    //     return;
+    // input_state_[current_mappings_[event->key()]] = 127;
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    if (current_mappings_.find(event->key()) == current_mappings_.end())
-        return;
-    input_state_[current_mappings_[event->key()]] = 0;
+    // if (current_mappings_.find(event->key()) == current_mappings_.end())
+    //     return;
+    // input_state_[current_mappings_[event->key()]] = 0;
 }
 
 void MainWindow::on_mouse_move(QMouseEvent* event) {}
@@ -403,12 +403,27 @@ void MainWindow::open_file_impl(const std::string& path)
         log_warn(fmt::format("Failed to find core for file: {}", path).c_str());
         return;
     }
-    emulator_ = std::make_unique<hydra::core_wrapper_t>(core_path);
+    info_.reset();
+    for (auto info : Settings::CoreInfo)
+    {
+        if (info.path == core_path)
+        {
+            info_ = std::make_unique<EmulatorInfo>(info);
+            break;
+        }
+    }
+    if (!info_)
+    {
+        log_warn(
+            fmt::format("Failed to find core info for core {}... This shouldn't happen?", core_path)
+                .c_str());
+    }
+    emulator_ = hydra::EmulatorFactory::Create(core_path);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
     init_emulator();
-    if (!emulator_->hc_load_file_p(emulator_->core_handle, "rom", path.c_str()))
-        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open ROM");
+    if (!emulator_->shell->loadFile("rom", path.c_str()))
+        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open file");
     enable_emulation_actions(true);
     add_recent(path);
 
@@ -582,7 +597,8 @@ void MainWindow::reset_emulator()
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
         queued_audio_.clear();
-        emulator_->hc_reset_p(emulator_->core_handle);
+        emulator_->shell->reset();
+        emulator_frontend_cached_ = nullptr;
     }
 }
 
@@ -593,98 +609,128 @@ fptr get_proc_address(const char* name)
     return QOpenGLContext::currentContext()->getProcAddress(name);
 }
 
+void poll_input_callback() {}
+
 void MainWindow::init_emulator()
 {
-    emulator_->hc_set_read_other_callback_p(read_other_callback);
-    emulator_->core_handle = emulator_->hc_create_p();
-    if (!emulator_->core_handle)
+    if (!emulator_->shell)
     {
-        throw std::runtime_error("hc_create returned null");
+        log_fatal("Emulator not loaded correctly?");
     }
-    emulator_->hc_set_video_callback_p(emulator_->core_handle, video_callback);
-    emulator_->hc_set_audio_callback_p(emulator_->core_handle, audio_callback);
-    emulator_->hc_set_poll_input_callback_p(emulator_->core_handle, poll_input_callback);
-    emulator_->hc_set_read_input_callback_p(emulator_->core_handle, read_input_callback);
-    std::string firmware = emulator_->hc_get_info_p(hc_info::HC_INFO_FIRMWARE_FILES);
-    std::vector<std::string> firmware_files = hydra::split(firmware, ';');
+
+    // Initialize gl
+    hydra::GlEmulatorInterface* shell_gl =
+        dynamic_cast<hydra::GlEmulatorInterface*>(emulator_->shell);
+    if (shell_gl)
+    {
+        shell_gl->setContext(QOpenGLContext::currentContext());
+        shell_gl->setGetProcAddress((void*)get_proc_address);
+        // TODO: tf so ugly
+        screen_->Redraw(shell_gl->getNativeSize().width, shell_gl->getNativeSize().height, nullptr);
+        if (screen_->GetFbo() == 0)
+        {
+            log_fatal("FBO not initialized correctly?");
+        }
+        shell_gl->setFbo(screen_->GetFbo());
+        shell_gl->setOutputSize(shell_gl->getNativeSize());
+    }
+
+    // Initialize sw
+    hydra::SwEmulatorInterface* shell_sw =
+        dynamic_cast<hydra::SwEmulatorInterface*>(emulator_->shell);
+    if (shell_sw)
+    {
+        shell_sw->setVideoCallback(video_callback);
+    }
+
+    // Initialize audio
+    hydra::AudioInterface* shell_audio = dynamic_cast<hydra::AudioInterface*>(emulator_->shell);
+    if (shell_audio)
+    {
+        shell_audio->setSampleRate(48000);
+        shell_audio->setAudioCallback(audio_callback);
+    }
+
+    // Initialize input
+    hydra::InputInterface* shell_input = dynamic_cast<hydra::InputInterface*>(emulator_->shell);
+    if (shell_input)
+    {
+        shell_input->setPollInputCallback(poll_input_callback);
+        shell_input->setCheckButtonCallback(read_input_callback);
+    }
+
+    // Initialize logging
+    hydra::LogInterface* shell_log = dynamic_cast<hydra::LogInterface*>(emulator_->shell);
+    if (shell_log)
+    {
+        shell_log->setLogCallback(hydra::LogTarget::Warning, TerminalWindow::log_warn);
+        shell_log->setLogCallback(hydra::LogTarget::Info, TerminalWindow::log_info);
+        shell_log->setLogCallback(hydra::LogTarget::Debug, TerminalWindow::log_debug);
+        shell_log->setLogCallback(hydra::LogTarget::Error, log_fatal);
+    }
+
+    // Initialize firmware
+    std::vector<std::string> firmware_files = info_->firmware_files;
     for (const auto& file : firmware_files)
     {
-        std::string core_name = emulator_->hc_get_info_p(hc_info::HC_INFO_CORE_NAME);
+        std::string core_name = info_->core_name;
         std::string path = Settings::Get(core_name + "_" + file);
         if (path.empty())
         {
             log_fatal(fmt::format("Firmware file {} not set in settings", file).c_str());
         }
-        emulator_->hc_load_file_p(emulator_->core_handle, file.c_str(), path.c_str());
+        emulator_->shell->loadFile(file.c_str(), path.c_str());
     }
-    emulator_->hc_set_log_callback_p(emulator_->core_handle, HC_LOG_TARGET_WARN,
-                                     TerminalWindow::log_warn);
-    emulator_->hc_set_log_callback_p(emulator_->core_handle, HC_LOG_TARGET_INFO,
-                                     TerminalWindow::log_info);
-    // emulator_->hc_add_log_callback_p(emulator_->core_handle, "debug", TerminalWindow::log_debug);
-    emulator_->hc_set_log_callback_p(emulator_->core_handle, HC_LOG_TARGET_ERROR, log_fatal);
+
+    emulator_frontend_cached_ =
+        dynamic_cast<hydra::FrontendDrivenEmulatorInterface*>(emulator_->shell);
 }
 
 void MainWindow::stop_emulator()
 {
+    reset_emulator();
     if (emulator_)
     {
-        std::unique_lock<std::mutex> alock(audio_mutex_);
-        emulator_timer_->stop();
-        queued_audio_.clear();
-        emulator_->hc_destroy_p(emulator_->core_handle);
-        emulator_->core_handle = nullptr;
-        emulator_.reset();
         std::fill(video_buffer_.begin(), video_buffer_.end(), 0);
         enable_emulation_actions(false);
     }
 }
 
+// TODO: check if frontend driven core
 void MainWindow::emulator_frame()
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
-    emulator_->hc_run_frame_p(emulator_->core_handle);
-    screen_->Redraw(video_width_, video_height_, video_buffer_.data());
+    if (emulator_frontend_cached_)
+    {
+        emulator_frontend_cached_->runFrame();
+        screen_->update();
+    }
 }
 
-void MainWindow::video_callback(const uint8_t* data, uint32_t width, uint32_t height)
+void MainWindow::video_callback(void* data, hydra::Size size)
 {
-    main_window->video_width_ = width;
-    main_window->video_height_ = height;
+    main_window->video_width_ = size.width;
+    main_window->video_height_ = size.height;
     if (data)
     {
-        main_window->video_buffer_.resize(width * height * 4);
+        main_window->video_buffer_.resize(size.width * size.height * 4);
         std::memcpy(main_window->video_buffer_.data(), data, main_window->video_buffer_.size());
     }
 }
 
-void MainWindow::audio_callback(const int16_t* data, uint32_t frames)
+void MainWindow::audio_callback(void* data, size_t frames)
 {
     std::unique_lock<std::mutex> lock(main_window->audio_mutex_);
     main_window->queued_audio_.reserve(main_window->queued_audio_.size() + frames * 2);
-    main_window->queued_audio_.insert(main_window->queued_audio_.end(), data, data + frames * 2);
+    // TODO: fix for float samples
+    main_window->queued_audio_.insert(main_window->queued_audio_.end(), (int16_t*)data,
+                                      (int16_t*)data + frames * 2);
 }
 
-void MainWindow::poll_input_callback() {}
-
-int8_t MainWindow::read_input_callback(uint8_t player, hc_input_e button)
+int32_t MainWindow::read_input_callback(uint32_t player, hydra::ButtonType button)
 {
-    return main_window->input_state_[button];
-}
-
-void* MainWindow::read_other_callback(hc_other_e other)
-{
-    switch (other)
-    {
-        case hc_other_e::HC_OTHER_GL_GET_PROC_ADDRESS:
-            return reinterpret_cast<void*>(&get_proc_address);
-        case hc_other_e::HC_OTHER_GL_CONTEXT:
-            return nullptr;
-        case hc_other_e::HC_OTHER_GL_FBO:
-            return reinterpret_cast<void*>(&main_window->screen_->fbo_);
-        default:
-            return nullptr;
-    }
+    return 0;
+    // return main_window->input_state_[button];
 }
 
 void MainWindow::add_recent(const std::string& path)

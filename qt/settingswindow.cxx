@@ -216,7 +216,7 @@ void SettingsWindow::create_tabs()
         core_layout->setAlignment(Qt::AlignTop);
         core_layout->setColumnStretch(0, 1);
         core_layout->setColumnStretch(1, 2);
-        std::vector<std::string> firmware_files = hydra::split(core.firmware_files, ';');
+        const std::vector<std::string>& firmware_files = core.firmware_files;
         int current_row = 0;
         for (size_t j = 0; j < firmware_files.size(); j++)
         {
