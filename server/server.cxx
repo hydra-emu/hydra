@@ -11,10 +11,10 @@
 #endif
 #include "glad.h"
 #include <array>
-#include <core/core.h>
 #include <cstdint>
 #include <filesystem>
 #include <GLFW/glfw3.h>
+#include <hydra/core.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <netinet/tcp.h>
 #include <stb_image_write.h>

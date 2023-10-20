@@ -2,11 +2,11 @@
 
 #include "log.h"
 #include <compatibility.hxx>
-#include <core/core.hxx>
 #include <core_loader.hxx>
 #include <error_factory.hxx>
 #include <fmt/format.h>
 #include <fstream>
+#include <hydra/core.hxx>
 #include <json.hpp>
 #include <map>
 #include <memory>

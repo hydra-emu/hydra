@@ -3,8 +3,8 @@
 #include "screenwidget.hxx"
 #include "settings.hxx"
 #include <array>
-#include <core/core.hxx>
 #include <deque>
+#include <hydra/core.hxx>
 #include <memory>
 #define MA_NO_DECODING
 #define MA_NO_ENCODING
@@ -89,7 +89,6 @@ public:
     ma_device sound_device_{};
     bool frontend_driven_ = false;
     std::unique_ptr<hydra::EmulatorWrapper> emulator_;
-    hydra::FrontendDrivenEmulatorInterface* emulator_frontend_cached_ = nullptr;
     std::unique_ptr<EmulatorInfo> info_;
     std::vector<int16_t> queued_audio_;
     bool settings_open_ = false;

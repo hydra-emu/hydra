@@ -59,6 +59,10 @@ add_subdirectory(vendored/argparse)
 # add_compile_options(-fsanitize=address -fsanitize=undefined)
 # add_link_options(-fsanitize=address -fsanitize=undefined)
 
+set(HYDRA_COMMON_FILES
+    core/src/core.cxx
+)
+
 set(HYDRA_QT_FILES
     data/resources.qrc
     qt/main.cxx
@@ -82,6 +86,7 @@ set(HYDRA_SERVER_FILES
 
 set(HYDRA_INCLUDE_DIRECTORIES
     include
+    core/include
     vendored
     vendored/fmt/include
     ${LUA_INCLUDE_DIR}
@@ -89,6 +94,7 @@ set(HYDRA_INCLUDE_DIRECTORIES
 
 qt_add_executable(hydra
     MANUAL_FINALIZATION
+    ${HYDRA_COMMON_FILES}
     ${HYDRA_QT_FILES}
 )
 
@@ -110,6 +116,7 @@ qt_finalize_executable(hydra)
 # Server
 add_executable(
     hydra_server
+    ${HYDRA_COMMON_FILES}
     ${HYDRA_SERVER_FILES}
 )
 target_include_directories(hydra_server PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})

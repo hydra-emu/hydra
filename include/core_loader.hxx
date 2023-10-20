@@ -9,8 +9,8 @@
 #elif defined(HYDRA_WII)
 #include "ELFIO/elfio/elfio.hpp"
 #endif
-#include <core/core.hxx>
 #include <filesystem>
+#include <hydra/core.hxx>
 
 namespace hydra
 {
@@ -19,8 +19,8 @@ namespace hydra
 
     inline dynlib_handle_t dynlib_open(const char* path)
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
-        return dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
+        return dlopen(path, RTLD_NOW | RTLD_GLOBAL);
 #elif defined(HYDRA_WINDOWS)
         std::wstring wpath = std::wstring(path.begin(), path.end());
         printf("Trying to convert string to wstring to load library with loadlibraryw, this is "
@@ -54,7 +54,7 @@ namespace hydra
 
     inline void* dynlib_get_symbol(dynlib_handle_t handle, const char* name)
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
+#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
         return dlsym(handle, name);
 #elif defined(HYDRA_WINDOWS)
         return (void*)GetProcAddress((HMODULE)handle, name);
@@ -69,7 +69,7 @@ namespace hydra
 
     inline void dynlib_close(dynlib_handle_t handle)
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
+#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
         dlclose(handle);
 #elif defined(HYDRA_WINDOWS)
         FreeLibrary((HMODULE)handle);
@@ -83,7 +83,7 @@ namespace hydra
 
     inline std::string dynlib_get_extension()
     {
-#if defined(HYDRA_LINUX)
+#if defined(HYDRA_LINUX) || defined(HYDRA_ANDROID)
         return ".so";
 #elif defined(HYDRA_MACOS)
         return ".dylib";
@@ -99,7 +99,7 @@ namespace hydra
     // Should only be made through the factory
     struct EmulatorWrapper
     {
-        BaseEmulatorInterface* shell = nullptr;
+        IBase* shell = nullptr;
 
         ~EmulatorWrapper()
         {
@@ -109,10 +109,9 @@ namespace hydra
 
     private:
         dynlib_handle_t handle;
-        void (*destroy_function)(BaseEmulatorInterface*);
+        void (*destroy_function)(IBase*);
 
-        EmulatorWrapper(BaseEmulatorInterface* shell, dynlib_handle_t handle,
-                        void (*destroy_function)(BaseEmulatorInterface*))
+        EmulatorWrapper(IBase* shell, dynlib_handle_t handle, void (*destroy_function)(IBase*))
             : shell(shell), handle(handle), destroy_function(destroy_function)
         {
         }

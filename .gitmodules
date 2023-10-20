@@ -10,6 +10,3 @@
 [submodule "vendored/argparse"]
 	path = vendored/argparse
 	url = https://github.com/cofyc/argparse/
-[submodule "android/app/src/main/cpp/core"]
-	path = android/app/src/main/cpp/core
-	url = https://github.com/hydra-emu/core

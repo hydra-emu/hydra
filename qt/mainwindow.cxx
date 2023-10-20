@@ -6,10 +6,10 @@
 #include "shadereditor.hxx"
 #include "terminalwindow.hxx"
 #include <compatibility.hxx>
-#include <core/core.hxx>
 #include <error_factory.hxx>
 #include <fmt/format.h>
 #include <fstream>
+#include <hydra/core.hxx>
 #include <iostream>
 #include <json.hpp>
 #include <log.h>
@@ -597,7 +597,7 @@ void MainWindow::reset_emulator()
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
         queued_audio_.clear();
-        emulator_->shell->reset();
+        emulator_->shell->getIBase()->reset();
     }
 }
 
@@ -617,51 +617,55 @@ void MainWindow::init_emulator()
         log_fatal("Emulator not loaded correctly?");
     }
 
-    // Initialize gl
-    hydra::GlEmulatorInterface* shell_gl =
-        dynamic_cast<hydra::GlEmulatorInterface*>(emulator_->shell);
-    if (shell_gl)
+    if (!emulator_->shell->hasInterface(hydra::InterfaceType::IBase))
     {
+        log_fatal("Emulator does not have base interface?");
+    }
+
+    // Initialize gl
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
+    {
+        hydra::IOpenGlRendered* shell_gl = emulator_->shell->getIOpenGlRendered();
         shell_gl->setContext(QOpenGLContext::currentContext());
         shell_gl->setGetProcAddress((void*)get_proc_address);
         // TODO: tf so ugly
-        screen_->Redraw(shell_gl->getNativeSize().width, shell_gl->getNativeSize().height, nullptr);
+        auto size = emulator_->shell->getNativeSize();
+        screen_->Redraw(size.width, size.height, nullptr);
         if (screen_->GetFbo() == 0)
         {
             log_fatal("FBO not initialized correctly?");
         }
         shell_gl->setFbo(screen_->GetFbo());
-        shell_gl->setOutputSize(shell_gl->getNativeSize());
+        emulator_->shell->setOutputSize(size);
     }
 
     // Initialize sw
-    hydra::SwEmulatorInterface* shell_sw =
-        dynamic_cast<hydra::SwEmulatorInterface*>(emulator_->shell);
-    if (shell_sw)
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::ISoftwareRendered))
     {
+        hydra::ISoftwareRendered* shell_sw = emulator_->shell->getISoftwareRendered();
         shell_sw->setVideoCallback(video_callback);
     }
 
     // Initialize audio
-    hydra::AudioInterface* shell_audio = dynamic_cast<hydra::AudioInterface*>(emulator_->shell);
-    if (shell_audio)
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::IAudio))
     {
+        hydra::IAudio* shell_audio = emulator_->shell->getIAudio();
         shell_audio->setSampleRate(48000);
         shell_audio->setAudioCallback(audio_callback);
     }
 
     // Initialize input
-    hydra::InputInterface* shell_input = dynamic_cast<hydra::InputInterface*>(emulator_->shell);
-    if (shell_input)
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::IInput))
     {
+        hydra::IInput* shell_input = emulator_->shell->getIInput();
         shell_input->setPollInputCallback(poll_input_callback);
         shell_input->setCheckButtonCallback(read_input_callback);
     }
 
     // Initialize logging
-    hydra::LogInterface* shell_log = dynamic_cast<hydra::LogInterface*>(emulator_->shell);
-    if (shell_log)
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::ILog))
     {
+        hydra::ILog* shell_log = emulator_->shell->getILog();
         shell_log->setLogCallback(hydra::LogTarget::Warning, TerminalWindow::log_warn);
         shell_log->setLogCallback(hydra::LogTarget::Info, TerminalWindow::log_info);
         shell_log->setLogCallback(hydra::LogTarget::Debug, TerminalWindow::log_debug);
@@ -680,9 +684,6 @@ void MainWindow::init_emulator()
         }
         emulator_->shell->loadFile(file.c_str(), path.c_str());
     }
-
-    emulator_frontend_cached_ =
-        dynamic_cast<hydra::FrontendDrivenEmulatorInterface*>(emulator_->shell);
 }
 
 void MainWindow::stop_emulator()
@@ -691,7 +692,6 @@ void MainWindow::stop_emulator()
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
         emulator_.reset();
-        emulator_frontend_cached_ = nullptr;
         std::fill(video_buffer_.begin(), video_buffer_.end(), 0);
         enable_emulation_actions(false);
     }
@@ -701,11 +701,8 @@ void MainWindow::stop_emulator()
 void MainWindow::emulator_frame()
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
-    if (emulator_frontend_cached_)
-    {
-        emulator_frontend_cached_->runFrame();
-        screen_->update();
-    }
+    emulator_->shell->getIFrontendDriven()->runFrame();
+    screen_->update();
 }
 
 void MainWindow::video_callback(void* data, hydra::Size size)

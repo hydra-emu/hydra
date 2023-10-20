@@ -18,6 +18,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags += ""
+                arguments += "-DANDROID_TOOLCHAIN=clang -DANDROID_CPP_FEATURES=exceptions rtti"
             }
         }
         vectorDrawables {
