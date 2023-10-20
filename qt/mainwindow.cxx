@@ -598,7 +598,6 @@ void MainWindow::reset_emulator()
         std::unique_lock<std::mutex> alock(audio_mutex_);
         queued_audio_.clear();
         emulator_->shell->reset();
-        emulator_frontend_cached_ = nullptr;
     }
 }
 
@@ -688,9 +687,11 @@ void MainWindow::init_emulator()
 
 void MainWindow::stop_emulator()
 {
-    reset_emulator();
     if (emulator_)
     {
+        std::unique_lock<std::mutex> alock(audio_mutex_);
+        emulator_.reset();
+        emulator_frontend_cached_ = nullptr;
         std::fill(video_buffer_.begin(), video_buffer_.end(), 0);
         enable_emulation_actions(false);
     }
