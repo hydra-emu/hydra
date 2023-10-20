@@ -3,14 +3,6 @@
 #include <log.h>
 #include <QFile>
 #include <QSurfaceFormat>
-#include <GL/gl.h>
-
-void GLAPIENTRY debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
-                               GLsizei length, const GLchar* message, const void* userParam)
-{
-    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
-}
 
 ScreenWidget::ScreenWidget(QWidget* parent) : QOpenGLWidget(parent)
 {
@@ -89,8 +81,6 @@ void ScreenWidget::mouseMoveEvent(QMouseEvent* event)
 void ScreenWidget::initializeGL()
 {
     initializeOpenGLFunctions();
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(debug_callback, 0);
     initialized_ = true;
 }
 
