@@ -358,3 +358,7 @@ compile_commands.json
 .gradle
 *.dol
 *.elf
+
+# ios
+*.xcodeproj/
+DerivedData/
