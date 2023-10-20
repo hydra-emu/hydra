@@ -111,8 +111,8 @@ namespace hydra
         dynlib_handle_t handle;
         void (*destroy_function)(IBase*);
 
-        EmulatorWrapper(IBase* shell, dynlib_handle_t handle, void (*destroy_function)(IBase*))
-            : shell(shell), handle(handle), destroy_function(destroy_function)
+        EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*destroy_function)(IBase*))
+            : shell(shl), handle(hdl), destroy_function(destroy_function)
         {
         }
 
