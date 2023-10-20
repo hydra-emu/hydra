@@ -51,7 +51,6 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Lua REQUIRED)
-find_package(glfw3 REQUIRED)
 
 add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
@@ -60,7 +59,6 @@ add_subdirectory(vendored/argparse)
 # add_link_options(-fsanitize=address -fsanitize=undefined)
 
 set(HYDRA_COMMON_FILES
-    core/src/core.cxx
 )
 
 set(HYDRA_QT_FILES
@@ -113,6 +111,9 @@ set_target_properties(hydra PROPERTIES hydra_properties
 
 qt_finalize_executable(hydra)
 
+if(BUILD_SERVER)
+find_package(glfw3 REQUIRED)
+endif()
 # Server
 add_executable(
     hydra_server

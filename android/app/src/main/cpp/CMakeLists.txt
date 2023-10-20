@@ -7,7 +7,7 @@ project(hydra_android)
 set(HYDRA_BASE_DIR ../../../../..)
 set(CMAKE_CXX_STANDARD 17)
 add_library(${CMAKE_PROJECT_NAME} SHARED
-    android.cpp ${HYDRA_BASE_DIR}/core/src/core.cxx)
+    android.cpp)
 target_link_libraries(${CMAKE_PROJECT_NAME}
     android
     log
