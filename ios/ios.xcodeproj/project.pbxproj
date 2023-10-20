@@ -13,7 +13,7 @@
 		6FCFFBFD2AE30C5500A96E75 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6FCFFBFC2AE30C5500A96E75 /* Preview Assets.xcassets */; };
 		6FCFFC052AE3103000A96E75 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FCFFC042AE3103000A96E75 /* OpenGLES.framework */; platformFilter = ios; };
 		6FCFFC072AE3106600A96E75 /* HydraGlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCFFC062AE3106600A96E75 /* HydraGlView.swift */; };
-		6FCFFC0A2AE329C500A96E75 /* CoreDriver.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FCFFC092AE329C500A96E75 /* CoreDriver.m */; };
+		6FCFFC0D2AE3336400A96E75 /* CoreDriver.h in Sources */ = {isa = PBXBuildFile; fileRef = 6FCFFC0C2AE3336400A96E75 /* CoreDriver.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,9 +26,7 @@
 		6FCFFC022AE3101C00A96E75 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/System/Library/Frameworks/OpenGL.framework; sourceTree = DEVELOPER_DIR; };
 		6FCFFC042AE3103000A96E75 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
 		6FCFFC062AE3106600A96E75 /* HydraGlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HydraGlView.swift; sourceTree = "<group>"; };
-		6FCFFC082AE329C500A96E75 /* hydra_ios-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "hydra_ios-Bridging-Header.h"; sourceTree = "<group>"; };
-		6FCFFC092AE329C500A96E75 /* CoreDriver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CoreDriver.m; sourceTree = "<group>"; };
-		6FCFFC0B2AE32A5400A96E75 /* CoreDriver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CoreDriver.h; sourceTree = "<group>"; };
+		6FCFFC0C2AE3336400A96E75 /* CoreDriver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CoreDriver.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,9 +67,7 @@
 				6FCFFBF82AE30C5500A96E75 /* Assets.xcassets */,
 				6FCFFBFA2AE30C5500A96E75 /* hydra_ios.entitlements */,
 				6FCFFBFB2AE30C5500A96E75 /* Preview Content */,
-				6FCFFC092AE329C500A96E75 /* CoreDriver.m */,
-				6FCFFC0B2AE32A5400A96E75 /* CoreDriver.h */,
-				6FCFFC082AE329C500A96E75 /* hydra_ios-Bridging-Header.h */,
+				6FCFFC0C2AE3336400A96E75 /* CoreDriver.h */,
 			);
 			path = hydra_ios;
 			sourceTree = "<group>";
@@ -164,7 +160,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FCFFC0A2AE329C500A96E75 /* CoreDriver.m in Sources */,
+				6FCFFC0D2AE3336400A96E75 /* CoreDriver.h in Sources */,
 				6FCFFBF72AE30C5400A96E75 /* ContentView.swift in Sources */,
 				6FCFFC072AE3106600A96E75 /* HydraGlView.swift in Sources */,
 				6FCFFBF52AE30C5400A96E75 /* hydra_iosApp.swift in Sources */,
@@ -305,7 +301,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"hydra_ios/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = ../include;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../include";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -345,7 +341,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"hydra_ios/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = ../include;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../include";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

@@ -1,12 +1,16 @@
-//
-//  CoreDriver.h
-//  ios
-//
-//  Created by m1 on 20/10/2023.
-//
+#ifndef CORE_DRIVER_H
+#define CORE_DRIVER_H
+#import <Foundation/Foundation.h>
 
-#ifndef CoreDriver_h
-#define CoreDriver_h
+@interface CoreDriver : NSObject {
+    void* cppImplementation;
+}
 
++ (BOOL) create:(NSString*)corePath;
++ (void) resetCore:();
++ (void) runFrame:();
++ (void) destroyCore:();
 
-#endif /* CoreDriver_h */
+@end
+
+#endif
