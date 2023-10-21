@@ -116,7 +116,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     connect(emulator_timer_, SIGNAL(timeout()), this, SLOT(emulator_frame()));
 
     initialize_audio();
-    // enable_emulation_actions(false);
+    enable_emulation_actions(false);
+    screen_->show();
 
     widget->setStyleSheet(R"(
         background-repeat: no-repeat;
@@ -597,7 +598,7 @@ void MainWindow::reset_emulator()
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
         queued_audio_.clear();
-        emulator_->shell->getIBase()->reset();
+        emulator_->shell->asIBase()->reset();
     }
 }
 
@@ -625,12 +626,12 @@ void MainWindow::init_emulator()
     // Initialize gl
     if (emulator_->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
     {
-        hydra::IOpenGlRendered* shell_gl = emulator_->shell->getIOpenGlRendered();
+        hydra::IOpenGlRendered* shell_gl = emulator_->shell->asIOpenGlRendered();
         shell_gl->setContext(QOpenGLContext::currentContext());
         shell_gl->setGetProcAddress((void*)get_proc_address);
         // TODO: tf so ugly
         auto size = emulator_->shell->getNativeSize();
-        screen_->Redraw(size.width, size.height, nullptr);
+        screen_->Resize(size.width, size.height);
         if (screen_->GetFbo() == 0)
         {
             log_fatal("FBO not initialized correctly?");
@@ -642,14 +643,14 @@ void MainWindow::init_emulator()
     // Initialize sw
     if (emulator_->shell->hasInterface(hydra::InterfaceType::ISoftwareRendered))
     {
-        hydra::ISoftwareRendered* shell_sw = emulator_->shell->getISoftwareRendered();
+        hydra::ISoftwareRendered* shell_sw = emulator_->shell->asISoftwareRendered();
         shell_sw->setVideoCallback(video_callback);
     }
 
     // Initialize audio
     if (emulator_->shell->hasInterface(hydra::InterfaceType::IAudio))
     {
-        hydra::IAudio* shell_audio = emulator_->shell->getIAudio();
+        hydra::IAudio* shell_audio = emulator_->shell->asIAudio();
         shell_audio->setSampleRate(48000);
         shell_audio->setAudioCallback(audio_callback);
     }
@@ -657,7 +658,7 @@ void MainWindow::init_emulator()
     // Initialize input
     if (emulator_->shell->hasInterface(hydra::InterfaceType::IInput))
     {
-        hydra::IInput* shell_input = emulator_->shell->getIInput();
+        hydra::IInput* shell_input = emulator_->shell->asIInput();
         shell_input->setPollInputCallback(poll_input_callback);
         shell_input->setCheckButtonCallback(read_input_callback);
     }
@@ -665,11 +666,17 @@ void MainWindow::init_emulator()
     // Initialize logging
     if (emulator_->shell->hasInterface(hydra::InterfaceType::ILog))
     {
-        hydra::ILog* shell_log = emulator_->shell->getILog();
+        hydra::ILog* shell_log = emulator_->shell->asILog();
         shell_log->setLogCallback(hydra::LogTarget::Warning, TerminalWindow::log_warn);
         shell_log->setLogCallback(hydra::LogTarget::Info, TerminalWindow::log_info);
         shell_log->setLogCallback(hydra::LogTarget::Debug, TerminalWindow::log_debug);
         shell_log->setLogCallback(hydra::LogTarget::Error, log_fatal);
+    }
+
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::ISelfDriven))
+    {
+        printf("Warning: self driven cores are not supported currently and the API for them is "
+               "bound to change");
     }
 
     // Initialize firmware
@@ -701,8 +708,41 @@ void MainWindow::stop_emulator()
 void MainWindow::emulator_frame()
 {
     std::unique_lock<std::mutex> elock(emulator_mutex_);
-    emulator_->shell->getIFrontendDriven()->runFrame();
+    frame_count_++;
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
+    {
+        hydra::IOpenGlRendered* shell_gl = emulator_->shell->asIOpenGlRendered();
+        shell_gl->setFbo(screen_->GetFbo());
+        auto size = emulator_->shell->getNativeSize();
+        screen_->Resize(size.width, size.height);
+    }
+    else if (emulator_->shell->hasInterface(hydra::InterfaceType::ISoftwareRendered))
+    {
+        // TODO: rename variables to something more meaningful
+        screen_->Resize(video_width_, video_height_);
+        screen_->Redraw(video_buffer_.data());
+    }
+    emulator_->shell->asIFrontendDriven()->runFrame();
     screen_->update();
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time_));
+    if (frame_count_ >= emulator_->shell->asIFrontendDriven()->getFps())
+    {
+        frame_count_ = 0;
+        // Check how many ms elapsed
+        auto now = std::chrono::high_resolution_clock::now();
+        auto elapsed =
+            std::chrono::duration_cast<std::chrono::milliseconds>(now - last_emulation_second_time_)
+                .count();
+        if (elapsed > 1100)
+        {
+            sleep_time_ -= 1;
+        }
+        else if (elapsed < 900)
+        {
+            sleep_time_ += 1;
+        }
+        last_emulation_second_time_ = std::chrono::high_resolution_clock::now();
+    }
 }
 
 void MainWindow::video_callback(void* data, hydra::Size size)

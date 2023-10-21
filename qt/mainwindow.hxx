@@ -103,6 +103,9 @@ public:
     std::vector<uint8_t> video_buffer_;
     uint32_t video_width_ = 0;
     uint32_t video_height_ = 0;
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_emulation_second_time_;
+    int frame_count_ = 0;
+    int sleep_time_ = 0;
 
     // std::unordered_map<int, hc_input_e> current_mappings_{};
     // std::array<int8_t, hc_input_e::HC_INPUT_SIZE> input_state_{};

@@ -42,7 +42,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_hydra_1emu_android_HydraGlRenderer_lo
         exit(1);
     }
 
-    auto shell_gl = emulator->shell->getIOpenGlRendered();
+    auto shell_gl = emulator->shell->asIOpenGlRendered();
     if (shell_gl)
     {
         shell_gl->setContext(eglGetCurrentContext());
@@ -58,8 +58,8 @@ extern "C" JNIEXPORT void JNICALL Java_com_hydra_1emu_android_HydraGlRenderer_ru
                                                                                        jobject thiz,
                                                                                        jint fbo)
 {
-    emulator->shell->getIOpenGlRendered()->setFbo(fbo);
-    emulator->shell->getIFrontendDriven()->runFrame();
+    emulator->shell->asIOpenGlRendered()->setFbo(fbo);
+    emulator->shell->asIFrontendDriven()->runFrame();
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_hydra_1emu_android_HydraGlRenderer_loadGame(JNIEnv* env,

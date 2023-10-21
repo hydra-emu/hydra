@@ -4,10 +4,7 @@
 #include <QFile>
 #include <QSurfaceFormat>
 
-ScreenWidget::ScreenWidget(QWidget* parent) : QOpenGLWidget(parent)
-{
-    setFixedSize(400, 480);
-}
+ScreenWidget::ScreenWidget(QWidget* parent) : QOpenGLWidget(parent) {}
 
 ScreenWidget::~ScreenWidget()
 {
@@ -20,17 +17,35 @@ ScreenWidget::~ScreenWidget()
     }
 }
 
-void ScreenWidget::Redraw(int width, int height, const void* tdata)
+void ScreenWidget::Redraw(const void* tdata)
 {
     if (initialized_) [[likely]]
     {
-        if (width == 0 || height == 0)
+        if (tdata)
         {
-            log_fatal("Width or height is 0, stopping\n");
-            return;
+            // Flip texture upside down when copying
+            glBindTexture(GL_TEXTURE_2D, texture_);
+            for (int i = 0; i < current_height_; i++)
+            {
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, current_height_ - i - 1, current_width_, 1,
+                                GL_RGBA, GL_UNSIGNED_BYTE,
+                                static_cast<const uint8_t*>(tdata) + current_width_ * 4 * i);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
+        update();
+    }
+}
+
+void ScreenWidget::Resize(int width, int height)
+{
+    if (initialized_)
+    {
         if (width != current_width_ || height != current_height_)
         {
+            printf("Resize %d %d\n", width, height);
+            setFixedWidth(width);
+            setFixedHeight(height);
             current_width_ = width;
             current_height_ = height;
             if (texture_ != 0)
@@ -47,7 +62,8 @@ void ScreenWidget::Redraw(int width, int height, const void* tdata)
             glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_,
                                    0);
-            glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            update();
             // Check if fbo is complete
             GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
             if (status != GL_FRAMEBUFFER_COMPLETE)
@@ -57,19 +73,6 @@ void ScreenWidget::Redraw(int width, int height, const void* tdata)
                 return;
             }
         }
-        if (tdata)
-        {
-            // Flip texture upside down when copying
-            glBindTexture(GL_TEXTURE_2D, texture_);
-            for (int i = 0; i < height; i++)
-            {
-                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, height - i - 1, width, 1, GL_RGBA,
-                                GL_UNSIGNED_BYTE,
-                                static_cast<const uint8_t*>(tdata) + width * 4 * i);
-            }
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
-        update();
     }
 }
 
@@ -81,6 +84,8 @@ void ScreenWidget::mouseMoveEvent(QMouseEvent* event)
 void ScreenWidget::initializeGL()
 {
     initializeOpenGLFunctions();
+    // Stupid qt won't initialize OpenGL unless widget is showing
+    hide();
     initialized_ = true;
 }
 

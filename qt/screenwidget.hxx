@@ -17,7 +17,8 @@ class ScreenWidget : public QOpenGLWidget, protected QOpenGLExtraFunctions
 public:
     ScreenWidget(QWidget* parent = nullptr);
     ~ScreenWidget();
-    void Redraw(int width, int height, const void* data);
+    void Redraw(const void* data = nullptr);
+    void Resize(int width, int height);
 
     void SetMouseMoveCallback(std::function<void(QMouseEvent*)> callback)
     {

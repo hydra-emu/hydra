@@ -89,6 +89,8 @@ namespace hydra
         return ".dylib";
 #elif defined(HYDRA_WINDOWS)
         return ".dll";
+#elif defined(HYDRA_WII)
+        return ".elf";
 #else
 #pragma message("dynlib_get_extension not implemented for this platform")
 #error dynlib_get_extension not implemented for this platform
@@ -111,8 +113,8 @@ namespace hydra
         dynlib_handle_t handle;
         void (*destroy_function)(IBase*);
 
-        EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*destroy_function)(IBase*))
-            : shell(shl), handle(hdl), destroy_function(destroy_function)
+        EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*func)(IBase*))
+            : shell(shl), handle(hdl), destroy_function(func)
         {
         }
 
