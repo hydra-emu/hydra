@@ -43,7 +43,6 @@ void ScreenWidget::Resize(int width, int height)
     {
         if (width != current_width_ || height != current_height_)
         {
-            printf("Resize %d %d\n", width, height);
             setFixedWidth(width);
             setFixedHeight(height);
             current_width_ = width;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "input.hxx"
 #include "screenwidget.hxx"
 #include "settings.hxx"
 #include <array>
@@ -108,8 +109,11 @@ public:
     int frame_count_ = 0;
     int sleep_time_ = 0;
 
-    // std::unordered_map<int, hc_input_e> current_mappings_{};
-    // std::array<int8_t, hc_input_e::HC_INPUT_SIZE> input_state_{};
+    // Maps key -> pair<player, button>
+    std::unordered_map<int, std::pair<int, hydra::ButtonType>> backwards_mappings_{};
+    // Holds the current state of the input
+    // vector[player][button]
+    std::vector<std::array<int32_t, (int)hydra::ButtonType::InputCount>> input_state_{};
     std::deque<std::string> recent_files_;
 
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);

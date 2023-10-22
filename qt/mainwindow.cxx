@@ -54,7 +54,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
     QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
     layout->setContentsMargins(5, 5, 5, 5);
-    screen_ = new ScreenWidget(this);
+    screen_ = new ScreenWidget(widget);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
     screen_->setMouseTracking(true);
     layout->addWidget(screen_, Qt::AlignCenter);
@@ -274,16 +274,22 @@ void MainWindow::create_menus()
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    // if (current_mappings_.find(event->key()) == current_mappings_.end())
-    //     return;
-    // input_state_[current_mappings_[event->key()]] = 127;
+    if (!emulator_)
+        return;
+    if (backwards_mappings_.find(event->key()) == backwards_mappings_.end())
+        return;
+    auto [player, key] = backwards_mappings_[event->key()];
+    input_state_[player][(int)key] = 1;
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    // if (current_mappings_.find(event->key()) == current_mappings_.end())
-    //     return;
-    // input_state_[current_mappings_[event->key()]] = 0;
+    if (!emulator_)
+        return;
+    if (backwards_mappings_.find(event->key()) == backwards_mappings_.end())
+        return;
+    auto [player, key] = backwards_mappings_[event->key()];
+    input_state_[player][(int)key] = 0;
 }
 
 void MainWindow::on_mouse_move(QMouseEvent* event) {}
@@ -391,6 +397,43 @@ void MainWindow::open_file_impl(const std::string& path)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open file");
     enable_emulation_actions(true);
     add_recent(path);
+
+    // Find mappings
+    backwards_mappings_.clear();
+    input_state_.clear();
+
+    uint32_t max_players = 1;
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::IMultiplayer))
+    {
+        auto multiplayer = emulator_->shell->asIMultiplayer();
+        max_players = multiplayer->getMaximumPlayerCount();
+    }
+    input_state_.resize(max_players);
+
+    for (uint32_t i = 1; i < max_players + 1; i++)
+    {
+        std::string setting = info_->core_name + "_" + std::to_string(i) + "_mapping";
+        std::string mapping = Settings::Get(setting);
+        hydra::KeyMappings keys;
+
+        if (mapping == "Default mappings" || mapping.empty())
+        {
+            QFile file(":/default_mappings.json");
+            file.open(QIODevice::ReadOnly);
+            keys = hydra::Input::Load(file.readAll().toStdString());
+        }
+        else
+        {
+            std::filesystem::path mapping_path =
+                Settings::GetSavePath() / "mappings" / (mapping + ".json");
+            keys = hydra::Input::Open(mapping_path.string());
+        }
+
+        for (int j = 0; j < (int)hydra::ButtonType::InputCount; j++)
+        {
+            backwards_mappings_[keys[j][0].key()] = {i - 1, (hydra::ButtonType)j};
+        }
+    }
 
     if (!paused_)
     {
@@ -596,6 +639,8 @@ void MainWindow::init_emulator()
         // TODO: tf so ugly
         auto size = emulator_->shell->getNativeSize();
         screen_->Resize(size.width, size.height);
+        // TODO: better resizing!!
+        resize(size.width, size.height);
         if (screen_->GetFbo() == 0)
         {
             log_fatal("FBO not initialized correctly?");
@@ -731,8 +776,7 @@ void MainWindow::audio_callback(void* data, size_t frames)
 
 int32_t MainWindow::read_input_callback(uint32_t player, hydra::ButtonType button)
 {
-    return 0;
-    // return main_window->input_state_[button];
+    return main_window->input_state_[player][(int)button];
 }
 
 void MainWindow::add_recent(const std::string& path)
