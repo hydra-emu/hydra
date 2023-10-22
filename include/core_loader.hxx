@@ -109,12 +109,19 @@ namespace hydra
             dynlib_close(handle);
         }
 
+        const char* GetInfo(hydra::InfoType type)
+        {
+            return get_info_function(type);
+        }
+
     private:
         dynlib_handle_t handle;
         void (*destroy_function)(IBase*);
+        const char* (*get_info_function)(hydra::InfoType);
 
-        EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*func)(IBase*))
-            : shell(shl), handle(hdl), destroy_function(func)
+        EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*dfunc)(IBase*),
+                        const char* (*gfunc)(hydra::InfoType))
+            : shell(shl), handle(hdl), destroy_function(dfunc), get_info_function(gfunc)
         {
         }
 
@@ -152,8 +159,17 @@ namespace hydra
                 return nullptr;
             }
 
+            auto get_info_p = (decltype(hydra::getInfo)*)dynlib_get_symbol(handle, "getInfo");
+
+            if (!get_info_p)
+            {
+                printf("Failed to find getInfo in %s\n", path.c_str());
+                dynlib_close(handle);
+                return nullptr;
+            }
+
             return std::unique_ptr<EmulatorWrapper>(
-                new EmulatorWrapper(create_emu_p(), handle, destroy_emu_p));
+                new EmulatorWrapper(create_emu_p(), handle, destroy_emu_p, get_info_p));
         }
 
         static std::unique_ptr<EmulatorWrapper> Create(const std::filesystem::path& path)

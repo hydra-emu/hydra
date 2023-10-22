@@ -32,7 +32,7 @@ int main(int argc, const char** argv)
 
     if (!settings_path)
     {
-        settings_path_string = Settings::GetSavePath() + "settings.json";
+        settings_path_string = Settings::GetSavePath() / "settings.json";
     }
     else
     {

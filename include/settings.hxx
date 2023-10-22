@@ -89,23 +89,30 @@ public:
         return map_.empty();
     }
 
-    static std::string GetSavePath()
+    static std::filesystem::path GetSavePath()
     {
-        static std::string dir;
+        static std::filesystem::path dir;
         if (dir.empty())
         {
-#if defined(__linux__)
-            dir = getenv("HOME") + std::string("/.config/hydra/");
-#elif defined(_WIN32)
-            dir = getenv("APPDATA") + std::string("/hydra/");
-#elif defined(__APPLE__)
-            dir = getenv("HOME") + std::string("/Library/Application Support/hydra/");
+#if defined(HYDRA_LINUX) || defined(HYDRA_FREEBSD)
+            dir = std::filesystem::path(getenv("HOME")) / ".config" / "hydra";
+#elif defined(HYDRA_WINDOWS)
+            dir = std::filesystem::path(getenv("APPDATA")) / "hydra";
+#elif defined(HYDRA_MACOS)
+            dir =
+                std::filesystem::path(getenv("HOME")) / "Library" / "Application Support" / "hydra";
+#elif defined(HYDRA_ANDROID)
+            std::ifstream cmdline("/proc/self/cmdline");
+            std::string applicationName;
+            std::getline(cmdline, applicationName, '\0');
+            dir = std::filesystem::path("/data") / "data" / applicationName / "files";
 #endif
             if (dir.empty())
             {
                 throw ErrorFactory::generate_exception(
                     __func__, __LINE__, "GetSavePath was not defined for this environment");
             }
+
             if (!std::filesystem::create_directories(dir))
             {
                 if (std::filesystem::exists(dir))
@@ -135,6 +142,7 @@ public:
             if (it->path().extension() == hydra::dynlib_get_extension())
             {
                 // TODO: cache these to a json or whatever so we don't dlopen every time
+                // TODO: replace with EmulatorWrapper
                 void* handle = hydra::dynlib_open(it->path().string().c_str());
 
                 if (!handle)

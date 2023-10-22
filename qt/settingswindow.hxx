@@ -5,7 +5,7 @@
 #include <QListWidget>
 #include <QWidget>
 
-class KeyPickerPage;
+class InputPage;
 class QGridLayout;
 
 class SettingsWindow : public QWidget
@@ -17,7 +17,7 @@ private:
     QListWidget* tab_list_;
     QTabWidget* tab_show_;
     QGroupBox *right_group_box_, *left_group_box_;
-    KeyPickerPage* key_picker_;
+    InputPage* key_picker_;
     std::function<void(int)> volume_callback_;
     void create_tabs();
     void on_open_file_click(QLineEdit* edit, const std::string& name, const std::string& setting,

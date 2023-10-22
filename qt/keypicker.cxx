@@ -1,45 +1,18 @@
 #include <filesystem>
 #include <hydra/core.hxx>
+#include <input.hxx>
 #include <iostream>
 #include <json.hpp>
+#include <QCheckBox>
 #include <QFile>
+#include <QFileInfo>
 #include <QHeaderView>
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <qt/keypicker.hxx>
 #include <QTableWidget>
+#include <settings.hxx>
 #include <str_hash.hxx>
-
-// Keypad1Up,
-// Keypad1Down,
-// Keypad1Left,
-// Keypad1Right,
-// Keypad2Up,
-// Keypad2Down,
-// Keypad2Left,
-// Keypad2Right,
-// A,
-// B,
-// X,
-// Y,
-// Z,
-// L1,
-// R1,
-// L2,
-// R2,
-// L3,
-// R3,
-// Start,
-// Select,
-// Touch,
-// Analog1Up,
-// Analog1Down,
-// Analog1Left,
-// Analog1Right,
-// Analog2Up,
-// Analog2Down,
-// Analog2Left,
-// Analog2Right,
 
 constexpr const char* serialize(hydra::ButtonType input)
 {
@@ -110,55 +83,58 @@ constexpr const char* serialize(hydra::ButtonType input)
     }
 }
 
-std::map<std::string, std::string> load_mappings(const std::string& file_data)
+std::vector<std::filesystem::path> get_all(const std::filesystem::path& root,
+                                           const std::string& ext)
 {
-    nlohmann::json json;
-    try
+    std::vector<std::filesystem::path> paths;
+
+    if (std::filesystem::exists(root) && std::filesystem::is_directory(root))
     {
-        json = nlohmann::json::parse(file_data);
-        std::map<std::string, std::string> out;
-        for (auto& pair : json.items())
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(root))
         {
-            out[pair.key()] = pair.value();
+            if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ext)
+                paths.emplace_back(entry.path());
         }
-        return out;
-    } catch (const std::exception& e)
-    {
-        std::cerr << "Failed to parse json: " << e.what() << std::endl;
-        return {};
     }
+
+    return paths;
 }
 
-std::string save_mappings(const std::map<std::string, std::string>& mappings)
+InputPage::InputPage(QWidget* parent) : QWidget(parent)
 {
-    nlohmann::json json;
-    for (auto& pair : mappings)
-    {
-        json[pair.first] = pair.second;
-    }
-    return json.dump(4);
-}
-
-KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
-{
-    QFile file(":/default_mappings.json");
-    file.open(QIODevice::ReadOnly);
-    std::string file_data = file.readAll().toStdString();
-    std::map<std::string, std::string> default_mappings = load_mappings(file_data);
-
     tab_show_ = new QTabWidget;
     emulator_picker_ = new QComboBox;
     emulator_picker_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-    QTableWidget* default_table = copy_page(nullptr);
-    add_tab("Default mappings", default_table);
+    {
+        QFile file(":/default_mappings.json");
+        file.open(QIODevice::ReadOnly);
+        add_tab_from_file(file);
+    }
+
+    std::filesystem::path dirpath = Settings::GetSavePath() / "mappings";
+    std::vector<std::filesystem::path> files = get_all(dirpath, ".json");
+    for (const auto& path : files)
+    {
+        QFile file(path.c_str());
+        file.open(QIODevice::ReadOnly);
+        add_tab_from_file(file);
+    }
 
     QHBoxLayout* hlayout = new QHBoxLayout;
     hlayout->addWidget(emulator_picker_);
 
+    mapping_name_ = new QLineEdit;
+    mapping_name_->hide();
+    hlayout->addWidget(mapping_name_);
+
     add_button_ = new QPushButton("Add");
     hlayout->addWidget(add_button_);
     connect(add_button_, SIGNAL(clicked()), this, SLOT(onAddButtonClicked()));
+
+    copy_button_ = new QPushButton("Copy");
+    hlayout->addWidget(copy_button_);
+    connect(copy_button_, SIGNAL(clicked()), this, SLOT(onCopyButtonClicked()));
 
     remove_button_ = new QPushButton("Remove");
     hlayout->addWidget(remove_button_);
@@ -188,16 +164,27 @@ KeyPickerPage::KeyPickerPage(QWidget* parent) : QWidget(parent)
     layout_->addWidget(tab_show_);
     setLayout(layout_);
 
-    onComboBoxChange(0);
-    connect(emulator_picker_, SIGNAL(currentIndexChanged(int)), this, SLOT(onComboBoxChange(int)));
+    set_tab(0);
+    connect(emulator_picker_, SIGNAL(currentIndexChanged(int)), this, SLOT(set_tab(int)));
 }
 
-void KeyPickerPage::onComboBoxChange(int index)
+void InputPage::add_tab_from_file(QFile& file)
 {
-    tab_show_->setCurrentIndex(index);
+    std::string file_data = file.readAll().toStdString();
+    hydra::KeyMappings mappings = hydra::Input::Load(file_data);
+    QTableWidget* table = copy_page(nullptr);
+    for (int i = 0; i < (int)hydra::ButtonType::InputCount; ++i)
+    {
+        table->item(i, 0)->setText(serialize(static_cast<hydra::ButtonType>(i)));
+        table->item(i, 1)->setText(mappings[i].toString());
+    }
+    QString name = QFileInfo(file).baseName();
+    if (file.fileName() == ":/default_mappings.json")
+        name = "Default mappings";
+    add_tab(name, table);
 }
 
-void KeyPickerPage::onCellDoubleClicked(int row, int column)
+void InputPage::onCellDoubleClicked(int row, int column)
 {
     if (column != 1)
         return;
@@ -205,46 +192,45 @@ void KeyPickerPage::onCellDoubleClicked(int row, int column)
     ensure_same();
     if (!adding_mapping_)
     {
+        if (tab_show_->currentIndex() == 0)
+        {
+            QMessageBox msg;
+            msg.setIcon(QMessageBox::Warning);
+            msg.setText("You can't edit the default mappings.\nCreate a new mapping?");
+            msg.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+            msg.setDefaultButton(QMessageBox::Yes);
+            int ret = msg.exec();
+            if (ret == QMessageBox::Yes)
+            {
+                onAddButtonClicked();
+            }
+            return;
+        }
+
         QTableWidgetItem* item =
             static_cast<QTableWidget*>(tab_show_->currentWidget())->item(row, 1);
         if (!waiting_input_)
         {
-            waiting_input_ = true;
             row_waiting_ = row;
             old_key_ = item->text();
 
             item->setText("Press a key");
-            add_button_->hide();
-        }
-        else
-        {
-            if (row == row_waiting_)
-            {
-                waiting_input_ = false;
-            }
+            set_buttons(ButtonPage::WaitingInput);
         }
     }
 }
 
-void KeyPickerPage::onAddButtonClicked()
+void InputPage::onAddButtonClicked()
 {
     ensure_same();
     // Shouldn't happen but w/e
     if (!waiting_input_)
     {
-        emulator_picker_->setCurrentIndex(emulator_picker_->count() - 1);
-        emulator_picker_->setEditable(true);
-        emulator_picker_->setEditText("New mapping");
-        emulator_picker_->hidePopup();
-        tab_show_->setEnabled(false);
-        save_button_->show();
-        cancel_button_->show();
-        add_button_->hide();
-        remove_button_->hide();
+        set_buttons(ButtonPage::AddingMapping);
     }
 }
 
-void KeyPickerPage::onRemoveButtonClicked()
+void InputPage::onRemoveButtonClicked()
 {
     ensure_same();
     if (!waiting_input_)
@@ -255,57 +241,171 @@ void KeyPickerPage::onRemoveButtonClicked()
             return;
         }
 
-        tab_show_->removeTab(tab_show_->currentIndex());
-        emulator_picker_->removeItem(tab_show_->currentIndex());
-        emulator_picker_->setCurrentIndex(emulator_picker_->count() - 1);
+        QMessageBox msg;
+        msg.setIcon(QMessageBox::Warning);
+        msg.setText("Are you sure you want to permanently remove this mapping?");
+        msg.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msg.setDefaultButton(QMessageBox::No);
+        int ret = msg.exec();
+        if (ret == QMessageBox::Yes)
+        {
+            std::string current_name = emulator_picker_->currentText().toStdString();
+            int index = emulator_picker_->currentIndex();
+            tab_show_->removeTab(index);
+            emulator_picker_->removeItem(index);
+            set_tab(index - 1);
+
+            std::string path = Settings::GetSavePath() / "mappings" / (current_name + ".json");
+            if (std::remove(path.c_str()) != 0)
+            {
+                QMessageBox::warning(this, "Warning",
+                                     QString("Failed to remove mapping file: ") + path.c_str());
+            }
+        }
     }
 }
 
-void KeyPickerPage::onSaveButtonClicked()
+void InputPage::onSaveButtonClicked()
 {
     ensure_same();
     if (!waiting_input_)
     {
-        add_tab(emulator_picker_->currentText(),
-                copy_page(static_cast<QTableWidget*>(tab_show_->currentWidget())));
-        emulator_picker_->clearEditText();
-        emulator_picker_->setEditable(false);
-        emulator_picker_->setCurrentIndex(emulator_picker_->count() - 1);
-        tab_show_->setEnabled(true);
-        save_button_->hide();
-        cancel_button_->hide();
-        add_button_->show();
-        remove_button_->show();
+        if (check_exists(mapping_name_->text()))
+        {
+            QMessageBox::warning(this, "Warning", "Mapping name already exists");
+            return;
+        }
+
+        auto copy =
+            is_copying_page_ ? static_cast<QTableWidget*>(tab_show_->currentWidget()) : nullptr;
+        add_tab(mapping_name_->text(), copy_page(copy));
+        set_buttons(ButtonPage::Normal);
+        set_tab(emulator_picker_->count() - 1);
+
+        save_page((QTableWidget*)tab_show_->currentWidget());
     }
 }
 
-void KeyPickerPage::onCancelButtonClicked()
+hydra::KeyMappings InputPage::table_to_mappings(QTableWidget* table)
+{
+    hydra::KeyMappings mappings;
+    for (int i = 0; i < table->rowCount(); i++)
+    {
+        QTableWidgetItem* item = table->item(i, 1);
+        mappings[i] = hydra::Input::StringToKey(item->text().toStdString());
+    }
+    return mappings;
+}
+
+bool InputPage::check_exists(const QString& name)
+{
+    std::filesystem::path path =
+        Settings::GetSavePath() / "mappings" / (name.toStdString() + ".json");
+    if (std::filesystem::exists(path))
+        return true;
+
+    for (int i = 0; i < emulator_picker_->count(); i++)
+    {
+        if (emulator_picker_->itemText(i) == name)
+        {
+            printf("Weird, name exists in QComboBox but file doesn't. Was the mapping file "
+                   "removed?\n");
+            return true;
+        }
+    }
+    return false;
+}
+
+void InputPage::onCopyButtonClicked()
+{
+    onAddButtonClicked();
+    is_copying_page_ = true;
+}
+
+void InputPage::onCancelButtonClicked()
 {
     ensure_same();
     if (!waiting_input_)
     {
-        emulator_picker_->setEditable(false);
-        tab_show_->setEnabled(true);
-        save_button_->hide();
-        cancel_button_->hide();
-        add_button_->show();
-        remove_button_->show();
+        set_buttons(ButtonPage::Normal);
     }
 }
 
-void KeyPickerPage::KeyPressed(QKeyEvent* event)
+void InputPage::KeyPressed(QKeyEvent* event)
 {
     if (waiting_input_)
     {
-        waiting_input_ = false;
+        // Check if the key is already used
+        QTableWidget* table = static_cast<QTableWidget*>(tab_show_->currentWidget());
+        int count = table->rowCount();
+        for (int i = 0; i < count; i++)
+        {
+            QTableWidgetItem* item = table->item(i, 1);
+            if (item->text() == QKeySequence(event->key()).toString())
+            {
+                std::string act = Settings::Get("mappings_overwrite");
+                if (act.empty())
+                {
+                    QString key_name = table->item(i, 0)->text();
+                    QMessageBox msg;
+                    msg.setIcon(QMessageBox::Warning);
+                    msg.setText("Key already used by " + key_name + "\nReplace?");
+                    msg.addButton(QMessageBox::Yes);
+                    msg.addButton(QMessageBox::No);
+                    QAbstractButton* use_for_both = new QPushButton("Use mapping for both");
+                    msg.addButton(use_for_both, QMessageBox::YesRole);
+                    QCheckBox* remember = new QCheckBox("Remember my choice");
+                    msg.setCheckBox(remember);
+                    msg.setDefaultButton(QMessageBox::No);
+                    int ret = msg.exec();
+                    if (msg.clickedButton() == use_for_both)
+                    {
+                        act = "both";
+                    }
+                    else if (ret == QMessageBox::Yes)
+                    {
+                        act = "yes";
+                    }
+                    else
+                    {
+                        act = "no";
+                    }
+                    if (remember->isChecked())
+                    {
+                        Settings::Set("mappings_overwrite", act);
+                    }
+                }
+                if (act == "yes")
+                {
+                    item->setText("");
+                    break;
+                }
+                else if (act == "no")
+                {
+                    onCancelWaitingButtonClicked();
+                    return;
+                }
+                else if (act == "both")
+                {
+                    break;
+                }
+                else
+                {
+                    Settings::Set("mappings_overwrite", "");
+                }
+            }
+        }
+
         auto item = static_cast<QTableWidget*>(tab_show_->currentWidget())->item(row_waiting_, 1);
         item->setText(QKeySequence(event->key()).toString());
+        save_page((QTableWidget*)tab_show_->currentWidget());
+        cancel_waiting();
     }
 }
 
-void KeyPickerPage::ensure_same()
+// Just a sanity check function, in case I messed up the code or I mess it up in the future
+void InputPage::ensure_same()
 {
-    // Just a sanity check function, in case I messed up the code or I mess it up in the future
     if (emulator_picker_->count() != tab_show_->count())
     {
         QMessageBox::critical(this, "Error", "Emulator picker and tab show have different counts");
@@ -330,7 +430,7 @@ void KeyPickerPage::ensure_same()
     }
 }
 
-QTableWidget* KeyPickerPage::copy_page(QTableWidget* copy)
+QTableWidget* InputPage::copy_page(QTableWidget* copy)
 {
     QHeaderView* header = new QHeaderView(Qt::Vertical);
     header->hide();
@@ -355,20 +455,122 @@ QTableWidget* KeyPickerPage::copy_page(QTableWidget* copy)
     return table;
 }
 
-void KeyPickerPage::add_tab(const QString& name, QTableWidget* table)
+QTableWidget* InputPage::make_page(const std::filesystem::path& path)
+{
+    QTableWidget* page = copy_page(nullptr);
+
+    hydra::KeyMappings mappings = hydra::Input::Open(path);
+    for (int i = 0; i < (int)hydra::ButtonType::InputCount; i++)
+    {
+        page->item(i, 1)->setText(mappings[i].toString());
+    }
+
+    return page;
+}
+
+void InputPage::save_page(QTableWidget* page)
+{
+    std::filesystem::path path = Settings::GetSavePath() / "mappings" /
+                                 (emulator_picker_->currentText().toStdString() + ".json");
+    hydra::KeyMappings mappings;
+
+    for (int i = 0; i < (int)hydra::ButtonType::InputCount; i++)
+    {
+        mappings[i] = QKeySequence(page->item(i, 1)->text());
+    }
+
+    hydra::Input::Save(path, mappings);
+}
+
+void InputPage::set_tab(int index)
+{
+    tab_show_->setCurrentIndex(index);
+    emulator_picker_->setCurrentIndex(index);
+    ensure_same();
+}
+
+void InputPage::add_tab(const QString& name, QTableWidget* table)
 {
     ensure_same();
     tab_show_->addTab(table, name);
     emulator_picker_->addItem(name);
 }
 
-void KeyPickerPage::onCancelWaitingButtonClicked()
+void InputPage::onCancelWaitingButtonClicked()
 {
     ensure_same();
     if (waiting_input_)
     {
-        waiting_input_ = false;
         auto item = static_cast<QTableWidget*>(tab_show_->currentWidget())->item(row_waiting_, 1);
         item->setText(old_key_);
+        cancel_waiting();
     }
+}
+
+void InputPage::cancel_waiting()
+{
+    set_buttons(ButtonPage::Normal);
+}
+
+void InputPage::set_buttons(ButtonPage page)
+{
+    switch (page)
+    {
+        case ButtonPage::Normal:
+        {
+            add_button_->show();
+            copy_button_->show();
+            remove_button_->show();
+            cancel_button_->hide();
+            save_button_->hide();
+            cancel_waiting_button_->hide();
+            emulator_picker_->setEnabled(true);
+            emulator_picker_->show();
+            mapping_name_->hide();
+            tab_show_->setEnabled(true);
+            adding_mapping_ = false;
+            waiting_input_ = false;
+            break;
+        }
+        case ButtonPage::AddingMapping:
+        {
+            add_button_->hide();
+            copy_button_->hide();
+            remove_button_->hide();
+            cancel_button_->show();
+            save_button_->show();
+            cancel_waiting_button_->hide();
+            emulator_picker_->setEnabled(false);
+            emulator_picker_->hide();
+            mapping_name_->show();
+            int i = 0;
+            if (check_exists("New mapping"))
+            {
+                i++;
+                while (check_exists("New mapping " + QString::number(i)))
+                    i++;
+            }
+            mapping_name_->setText("New mapping" + (i ? " " + QString::number(i) : ""));
+            tab_show_->setEnabled(false);
+            adding_mapping_ = true;
+            waiting_input_ = false;
+            break;
+        }
+        case ButtonPage::WaitingInput:
+        {
+            add_button_->hide();
+            copy_button_->hide();
+            remove_button_->hide();
+            cancel_button_->hide();
+            save_button_->hide();
+            cancel_waiting_button_->show();
+            emulator_picker_->setEnabled(false);
+            emulator_picker_->show();
+            mapping_name_->hide();
+            tab_show_->setEnabled(true);
+            adding_mapping_ = false;
+            waiting_input_ = true;
+            break;
+        }
+    };
 }

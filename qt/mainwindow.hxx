@@ -79,6 +79,7 @@ public:
     QAction* close_act_;
     QAction* settings_act_;
     QAction* open_settings_file_act_;
+    QAction* open_settings_folder_act_;
     QAction* screenshot_act_;
     QAction* shaders_act_;
     QAction* scripts_act_;

@@ -4,6 +4,7 @@
 #include <QSurfaceFormat>
 #include <settings.hxx>
 
+// TODO: Not my favorite of designs
 std::vector<EmulatorInfo> Settings::CoreInfo;
 std::map<std::string, std::string> Settings::map_;
 std::string Settings::save_path_;
@@ -12,7 +13,7 @@ bool Settings::core_info_initialized_ = false;
 
 int main(int argc, char* argv[])
 {
-    auto settings_path = Settings::GetSavePath() + "settings.json";
+    auto settings_path = Settings::GetSavePath() / "settings.json";
     Settings::Open(settings_path);
     Settings::InitCoreInfo();
     QSurfaceFormat format;
