@@ -1,6 +1,6 @@
 #include "mainwindow.hxx"
-#include <log.h>
 #include <filesystem>
+#include <log.h>
 #include <QApplication>
 #include <QSurfaceFormat>
 #include <settings.hxx>

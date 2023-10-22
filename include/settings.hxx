@@ -4,8 +4,8 @@
 #include <compatibility.hxx>
 #include <core_loader.hxx>
 #include <error_factory.hxx>
-#include <fmt/format.h>
 #include <filesystem>
+#include <fmt/format.h>
 #include <fstream>
 #include <hydra/core.hxx>
 #include <json.hpp>
@@ -143,16 +143,11 @@ public:
             if (it->path().extension() == hydra::dynlib_get_extension())
             {
                 // TODO: cache these to a json or whatever so we don't dlopen every time
-                // TODO: replace with EmulatorWrapper
                 void* handle = hydra::dynlib_open(it->path().string().c_str());
 
                 if (!handle)
                 {
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
-                    printf("dl error: %s\n", dlerror());
-#else
-                    printf("dl error occured\n");
-#endif
+                    printf("%s\n", hydra::dynlib_get_error().c_str());
                     ++it;
                     continue;
                 }
