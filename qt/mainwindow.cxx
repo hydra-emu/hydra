@@ -45,49 +45,6 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
                                 window->queued_audio_.begin() + frames);
 }
 
-// constexpr hc_input_e deserialize(const char* input)
-// {
-//     switch (str_hash(input))
-//     {
-// #define X(key)           \
-//     case str_hash(#key): \
-//         return key;
-//         HC_INPUTS
-// #undef X
-//         default:
-//             return HC_INPUT_SIZE;
-//     }
-// }
-
-// std::unordered_map<int, hc_input_e> current_mappings()
-// {
-//     std::string mappings = Settings::Get("current_mappings");
-//     if (mappings.empty())
-//     {
-//         Settings::Set("current_mappings", "default");
-//         mappings = "default";
-//     }
-
-//     std::unordered_map<int, hc_input_e> map;
-//     if (mappings == "default")
-//     {
-//         QFile file(":/default_mappings.json");
-//         file.open(QIODevice::ReadOnly | QIODevice::Text);
-//         std::string file_data = file.readAll().toStdString();
-//         file.close();
-//         nlohmann::json json = nlohmann::json::parse(file_data);
-//         for (auto& [key, value] : json.items())
-//         {
-//             QKeySequence sequence = QKeySequence::fromString(value.get<std::string>().c_str());
-//             map[sequence[0].key()] = deserialize(key.c_str());
-//         }
-//     }
-//     else
-//     {
-//     }
-//     return map;
-// }
-
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
     main_window = this;

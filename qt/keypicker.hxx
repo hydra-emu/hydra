@@ -17,7 +17,7 @@ class InputPage : public QWidget
     Q_OBJECT
 
 public:
-    InputPage(QWidget* parent = 0);
+    InputPage(const std::vector<std::tuple<QComboBox*, int, QString>>& combos, QWidget* parent = 0);
     void KeyPressed(QKeyEvent* event);
 
 private slots:
@@ -31,6 +31,7 @@ private slots:
     void onCancelWaitingButtonClicked();
 
 private:
+    const std::vector<std::tuple<QComboBox*, int, QString>>& listener_combos_;
     bool waiting_input_ = false;
     bool adding_mapping_ = false;
     bool is_copying_page_ = false;

@@ -7,10 +7,18 @@
 
 class InputPage;
 class QGridLayout;
+class QComboBox;
 
 class SettingsWindow : public QWidget
 {
     Q_OBJECT
+
+public:
+    SettingsWindow(bool& open, std::function<void(int)> volume_callback, QWidget* parent = nullptr);
+    ~SettingsWindow();
+
+private slots:
+    void on_tab_change(int tab);
 
 private:
     bool& open_;
@@ -19,6 +27,8 @@ private:
     QGroupBox *right_group_box_, *left_group_box_;
     InputPage* key_picker_;
     std::function<void(int)> volume_callback_;
+    std::vector<std::tuple<QComboBox*, int, QString>> listener_combos_;
+    void keyPressEvent(QKeyEvent* event);
     void create_tabs();
     void on_open_file_click(QLineEdit* edit, const std::string& name, const std::string& setting,
                             const std::string& extension,
@@ -28,12 +38,6 @@ private:
     void add_filepicker(QGridLayout* layout, const std::string& name, const std::string& setting,
                         const std::string& extension, int row, int column, bool dir = false,
                         std::function<void(const std::string&)> callback = {});
-    void keyPressEvent(QKeyEvent* event);
-
-private slots:
-    void on_tab_change(int tab);
-
-public:
-    SettingsWindow(bool& open, std::function<void(int)> volume_callback, QWidget* parent = nullptr);
-    ~SettingsWindow();
+    QComboBox* make_input_combo(const QString& core_name, int player,
+                                const QString& selected_mapping);
 };

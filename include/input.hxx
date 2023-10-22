@@ -112,6 +112,23 @@ namespace hydra
             std::ofstream ofs(path);
             ofs << j_map.dump(4);
         }
+
+        static std::vector<std::filesystem::path> Scan(const std::filesystem::path& root,
+                                                       const std::string& ext)
+        {
+            std::vector<std::filesystem::path> paths;
+
+            if (std::filesystem::exists(root) && std::filesystem::is_directory(root))
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(root))
+                {
+                    if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ext)
+                        paths.emplace_back(entry.path());
+                }
+            }
+
+            return paths;
+        }
     };
 
 } // namespace hydra

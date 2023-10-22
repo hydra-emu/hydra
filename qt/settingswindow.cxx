@@ -268,11 +268,6 @@ void SettingsWindow::create_tabs()
         });
         audio_layout->addWidget(audio_slider, 0, 1);
     }
-    {
-        key_picker_ = new InputPage;
-        tab_show_->addTab(key_picker_, "Input");
-    }
-
     for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
     {
         const auto& core = Settings::CoreInfo[i];
@@ -302,7 +297,9 @@ void SettingsWindow::create_tabs()
                 Settings::Set(core_name + "_controller_" + std::to_string(j) + "_active",
                               state == Qt::Checked ? "true" : "false");
             });
-            core_layout->addWidget(new QComboBox, current_row, 1);
+            core_layout->addWidget(make_input_combo(core_name.c_str(), j,
+                                                    Settings::Get(core_name + "_mapping").c_str()),
+                                   current_row, 1);
             core_layout->addWidget(active, current_row, 2);
             current_row++;
         }
@@ -310,6 +307,10 @@ void SettingsWindow::create_tabs()
         QWidget* core_tab = new QWidget;
         core_tab->setLayout(core_layout);
         tab_show_->addTab(core_tab, core_name.c_str());
+    }
+    {
+        key_picker_ = new InputPage(listener_combos_);
+        tab_show_->insertTab(3, key_picker_, "Input");
     }
 }
 
@@ -345,6 +346,22 @@ void SettingsWindow::on_open_dir_click(QLineEdit* edit, const std::string& name,
             callback(path.toStdString());
         }
     }
+}
+
+QComboBox* SettingsWindow::make_input_combo(const QString& core_name, int player,
+                                            const QString& selected_mapping)
+{
+    QComboBox* combo = new QComboBox;
+    std::string setting = core_name.toStdString() + "_" + std::to_string(player) + "_mapping";
+    if (Settings::Get(setting).empty())
+    {
+        Settings::Set(setting, "Default mappings");
+    }
+    connect(combo, &QComboBox::currentTextChanged, this,
+            [this, setting](const QString& text) { Settings::Set(setting, text.toStdString()); });
+    std::tuple<QComboBox*, int, QString> tuple = {combo, player, selected_mapping};
+    listener_combos_.push_back(tuple);
+    return combo;
 }
 
 void SettingsWindow::add_filepicker(QGridLayout* layout, const std::string& name,

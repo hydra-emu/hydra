@@ -83,24 +83,9 @@ constexpr const char* serialize(hydra::ButtonType input)
     }
 }
 
-std::vector<std::filesystem::path> get_all(const std::filesystem::path& root,
-                                           const std::string& ext)
-{
-    std::vector<std::filesystem::path> paths;
-
-    if (std::filesystem::exists(root) && std::filesystem::is_directory(root))
-    {
-        for (const auto& entry : std::filesystem::recursive_directory_iterator(root))
-        {
-            if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ext)
-                paths.emplace_back(entry.path());
-        }
-    }
-
-    return paths;
-}
-
-InputPage::InputPage(QWidget* parent) : QWidget(parent)
+InputPage::InputPage(const std::vector<std::tuple<QComboBox*, int, QString>>& listener_combos,
+                     QWidget* parent)
+    : listener_combos_(listener_combos), QWidget(parent)
 {
     tab_show_ = new QTabWidget;
     emulator_picker_ = new QComboBox;
@@ -113,12 +98,28 @@ InputPage::InputPage(QWidget* parent) : QWidget(parent)
     }
 
     std::filesystem::path dirpath = Settings::GetSavePath() / "mappings";
-    std::vector<std::filesystem::path> files = get_all(dirpath, ".json");
+    std::vector<std::filesystem::path> files = hydra::Input::Scan(dirpath, ".json");
     for (const auto& path : files)
     {
         QFile file(path.c_str());
         file.open(QIODevice::ReadOnly);
         add_tab_from_file(file);
+    }
+
+    for (const auto& [combo, player, name] : listener_combos_)
+    {
+        int found = combo->findText(
+            Settings::Get((name.toStdString() + std::string("_") + std::to_string(player)) +
+                          "_mapping")
+                .c_str());
+        if (found == -1)
+        {
+            combo->setCurrentIndex(0);
+        }
+        else
+        {
+            combo->setCurrentIndex(found);
+        }
     }
 
     QHBoxLayout* hlayout = new QHBoxLayout;
@@ -223,7 +224,6 @@ void InputPage::onCellDoubleClicked(int row, int column)
 void InputPage::onAddButtonClicked()
 {
     ensure_same();
-    // Shouldn't happen but w/e
     if (!waiting_input_)
     {
         set_buttons(ButtonPage::AddingMapping);
@@ -254,6 +254,11 @@ void InputPage::onRemoveButtonClicked()
             tab_show_->removeTab(index);
             emulator_picker_->removeItem(index);
             set_tab(index - 1);
+
+            for (auto& [combo, n, s] : listener_combos_)
+            {
+                combo->removeItem(index);
+            }
 
             std::string path = Settings::GetSavePath() / "mappings" / (current_name + ".json");
             if (std::remove(path.c_str()) != 0)
@@ -494,6 +499,11 @@ void InputPage::add_tab(const QString& name, QTableWidget* table)
     ensure_same();
     tab_show_->addTab(table, name);
     emulator_picker_->addItem(name);
+
+    for (auto& [combo, player, _] : listener_combos_)
+    {
+        combo->addItem(name);
+    }
 }
 
 void InputPage::onCancelWaitingButtonClicked()
