@@ -144,13 +144,13 @@ void MainWindow::create_actions()
     open_settings_file_act_ = new QAction(tr("Open settings file"), this);
     open_settings_file_act_->setStatusTip(tr("Open the settings.json file"));
     connect(open_settings_file_act_, &QAction::triggered, this, []() {
-        std::string settings_file = Settings::GetSavePath() / "settings.json";
+        std::string settings_file = (Settings::GetSavePath() / "settings.json").string();
         QDesktopServices::openUrl(QUrl::fromLocalFile(settings_file.c_str()));
     });
     open_settings_folder_act_ = new QAction(tr("Open settings folder"), this);
     open_settings_folder_act_->setStatusTip(tr("Open the settings folder"));
     connect(open_settings_folder_act_, &QAction::triggered, this, []() {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(Settings::GetSavePath().c_str()));
+        QDesktopServices::openUrl(QUrl::fromLocalFile(Settings::GetSavePath().string().c_str()));
     });
     connect(settings_act_, &QAction::triggered, this, &MainWindow::open_settings);
     close_act_ = new QAction(tr("&Exit"), this);
