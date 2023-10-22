@@ -5,6 +5,7 @@
 #include <core_loader.hxx>
 #include <error_factory.hxx>
 #include <fmt/format.h>
+#include <filesystem>
 #include <fstream>
 #include <hydra/core.hxx>
 #include <json.hpp>
@@ -37,7 +38,7 @@ class Settings
     ~Settings() = delete;
 
 public:
-    static void Open(const std::string& path)
+    static void Open(const std::filesystem::path& path)
     {
         save_path_ = path;
         std::ifstream ifs(save_path_);
@@ -217,7 +218,7 @@ public:
 
 private:
     static std::map<std::string, std::string> map_;
-    static std::string save_path_;
+    static std::filesystem::path save_path_;
 
     static bool initialized_;
     static bool core_info_initialized_;
