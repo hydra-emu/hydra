@@ -1,5 +1,6 @@
 #include "mainwindow.hxx"
 #include <log.h>
+#include <filesystem>
 #include <QApplication>
 #include <QSurfaceFormat>
 #include <settings.hxx>
@@ -7,7 +8,7 @@
 // TODO: Not my favorite of designs
 std::vector<EmulatorInfo> Settings::CoreInfo;
 std::map<std::string, std::string> Settings::map_;
-std::string Settings::save_path_;
+std::filesystem::path Settings::save_path_;
 bool Settings::initialized_ = false;
 bool Settings::core_info_initialized_ = false;
 
