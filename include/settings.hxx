@@ -147,7 +147,11 @@ public:
 
                 if (!handle)
                 {
+#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
                     printf("dl error: %s\n", dlerror());
+#else
+                    printf("dl error occured\n");
+#endif
                     ++it;
                     continue;
                 }
