@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hsystem.h"
+#include <cstring>
 #include <string>
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
 #include <dlfcn.h>
@@ -22,7 +23,7 @@ namespace hydra
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
         return dlopen(path, RTLD_NOW | RTLD_GLOBAL);
 #elif defined(HYDRA_WINDOWS)
-        std::wstring wpath = std::wstring(path.begin(), path.end());
+        std::wstring wpath = std::wstring(path, path + std::strlen(path));
         printf("Trying to convert string to wstring to load library with loadlibraryw, this is "
                "untested\n",
                path, wpath.c_str());
