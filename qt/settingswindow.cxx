@@ -46,7 +46,7 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
         {
             std::filesystem::path path = Settings::GetSavePath() / "cache" /
                                          std::string(Settings::CoreInfo[i].core_name + ".png");
-            if (QFile::exists(path))
+            if (std::filesystem::exists(path))
             {
                 QListWidgetItem* item = new QListWidgetItem(
                     QPixmap((path).string().c_str()), Settings::CoreInfo[i].core_name.c_str());

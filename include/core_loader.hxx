@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hsystem.h"
+#include <cstring>
 #include <string>
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
 #include <dlfcn.h>
@@ -22,7 +23,7 @@ namespace hydra
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
         return dlopen(path, RTLD_NOW | RTLD_GLOBAL);
 #elif defined(HYDRA_WINDOWS)
-        std::wstring wpath = std::wstring(path.begin(), path.end());
+        std::wstring wpath = std::wstring(path, path + std::strlen(path));
         printf("Trying to convert string to wstring to load library with loadlibraryw, this is "
                "untested\n",
                path, wpath.c_str());
@@ -98,6 +99,21 @@ namespace hydra
 #endif
     }
 
+    inline std::string dynlib_get_error()
+    {
+#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
+        return dlerror();
+#elif defined(HYDRA_WINDOWS)
+        DWORD error = GetLastError();
+        LPVOID buffer;
+        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0,
+                      (LPWSTR)&buffer, 0, NULL);
+        std::string ret = (char*)buffer;
+        LocalFree(buffer);
+        return ret;
+#endif
+    }
+
     // Should only be made through the factory
     struct EmulatorWrapper
     {
@@ -137,7 +153,7 @@ namespace hydra
 
             if (!handle)
             {
-                printf("Failed to load library %s\n", path.c_str());
+                printf("Failed to load library %s: %s\n", path.c_str(), dynlib_get_error().c_str());
                 return nullptr;
             }
             auto create_emu_p =

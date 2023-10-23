@@ -4,6 +4,7 @@
 #include <compatibility.hxx>
 #include <core_loader.hxx>
 #include <error_factory.hxx>
+#include <filesystem>
 #include <fmt/format.h>
 #include <fstream>
 #include <hydra/core.hxx>
@@ -37,7 +38,7 @@ class Settings
     ~Settings() = delete;
 
 public:
-    static void Open(const std::string& path)
+    static void Open(const std::filesystem::path& path)
     {
         save_path_ = path;
         std::ifstream ifs(save_path_);
@@ -142,12 +143,11 @@ public:
             if (it->path().extension() == hydra::dynlib_get_extension())
             {
                 // TODO: cache these to a json or whatever so we don't dlopen every time
-                // TODO: replace with EmulatorWrapper
                 void* handle = hydra::dynlib_open(it->path().string().c_str());
 
                 if (!handle)
                 {
-                    printf("dl error: %s\n", dlerror());
+                    printf("%s\n", hydra::dynlib_get_error().c_str());
                     ++it;
                     continue;
                 }
@@ -213,7 +213,7 @@ public:
 
 private:
     static std::map<std::string, std::string> map_;
-    static std::string save_path_;
+    static std::filesystem::path save_path_;
 
     static bool initialized_;
     static bool core_info_initialized_;
