@@ -12,52 +12,100 @@ namespace hydra
 {
     struct Updater
     {
+        enum UpdateStatus
+        {
+            Error,
+            UpToDate,
+            UpdateAvailable,
+        };
+
         static std::mutex& GetMutex()
         {
             static std::mutex mutex;
             return mutex;
         }
 
-        static bool NeedsDatabaseUpdate()
+        static UpdateStatus NeedsDatabaseUpdate()
         {
             std::string old_date = Settings::Get("database_date");
             if (old_date.empty())
-                return true;
+                return UpdateAvailable;
 
             std::string new_date = get_database_time();
-            return is_newer_date(old_date, new_date);
+            return is_newer_date(old_date, new_date) ? UpdateAvailable : UpToDate;
         }
 
-        static void UpdateDatabase()
+        static UpdateStatus NeedsCoreUpdate(const std::string& core_name)
         {
-            std::thread t([]() {
+            if (Settings::Get(core_name + "_date").empty())
+                return UpdateAvailable;
+
+            std::mutex& mutex = GetMutex();
+            std::lock_guard<std::mutex> lock(mutex);
+
+            std::filesystem::path database_path =
+                Settings::GetSavePath() / "database" / (core_name + ".json");
+            if (!std::filesystem::exists(database_path))
+                return Error;
+
+            nlohmann::json database;
+            std::ifstream file(database_path);
+            file >> database;
+
+            std::string versioning = database["Versioning"];
+            std::string versioning_url = database["VersioningURL"];
+            printf("Versioning: %s\n", versioning_url.c_str());
+
+            if (versioning == "Github")
+            {
+                HydraBufferWrapper buffer = Downloader::Download(versioning_url);
+                if (!buffer->data())
+                    return Error;
+
+                nlohmann::json versioning_json = nlohmann::json::parse((char*)buffer->data());
+                std::string last_date = versioning_json["commit"]["commit"]["committer"]["date"];
+                std::string old_date = Settings::Get(core_name + "_date");
+
+                return is_newer_date(old_date, last_date) ? UpdateAvailable : UpToDate;
+            }
+            else
+            {
+                log_fatal("Unknown versioning type");
+            }
+
+            return Error;
+        }
+
+        static void UpdateDatabase(std::function<void()> callback)
+        {
+            std::thread t([callback]() {
                 std::mutex& mutex = GetMutex();
                 std::lock_guard<std::mutex> lock(mutex);
                 HydraBufferWrapper buffer = Downloader::Download(
                     "https://github.com/hydra-emu/database/archive/refs/heads/master.zip");
 
-                if (!buffer->data)
+                if (!buffer->data())
                 {
-                    log_fatal("Failed to download database zip\n");
+                    log_fatal("Failed to download database zip");
                 }
 
                 mz_zip_archive zip_archive;
                 memset(&zip_archive, 0, sizeof(zip_archive));
 
-                if (!mz_zip_reader_init_mem(&zip_archive, buffer->data, buffer->size, 0))
-                    log_fatal("Failed to read database zip\n");
+                if (!mz_zip_reader_init_mem(&zip_archive, buffer->data(), buffer->size(), 0))
+                    log_fatal("Failed to read database zip");
 
                 if (!std::filesystem::create_directories(Settings::GetSavePath() / "database"))
                 {
                     if (!std::filesystem::exists(Settings::GetSavePath() / "database"))
-                        log_fatal("Failed to create database directory\n");
+                        log_fatal("Failed to create database directory");
                 }
 
                 for (size_t i = 0; i < mz_zip_reader_get_num_files(&zip_archive); i++)
                 {
                     mz_zip_archive_file_stat file_stat;
                     if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-                        log_fatal("Failed to stat file in zip\n");
+                        log_fatal("Failed to stat file in zip");
 
                     std::filesystem::path path = file_stat.m_filename;
                     if (path.extension() == ".json")
@@ -66,12 +114,14 @@ namespace hydra
                         data.resize(file_stat.m_uncomp_size);
                         if (!mz_zip_reader_extract_to_mem(&zip_archive, i, data.data(), data.size(),
                                                           0))
-                            log_fatal("Failed to extract file from zip\n");
+                            log_fatal("Failed to extract file from zip");
 
                         std::ofstream file(Settings::GetSavePath() / "database" / path.filename());
                         file << data;
                     }
                 }
+                Settings::Set("database_date", get_database_time());
+                callback();
             });
             t.detach();
         }
@@ -82,13 +132,12 @@ namespace hydra
             HydraBufferWrapper result = Downloader::Download(
                 "https://api.github.com/repos/hydra-emu/database/commits/master");
 
-            if (result->data)
-                log_fatal("Failed to download database info\n");
+            if (!result->data())
+                log_fatal("Failed to download database info");
 
-            std::string data = std::string((char*)result->data, result->size);
+            std::string data = std::string((char*)result->data(), result->size());
             auto json = nlohmann::json::parse(data);
-            std::string date = json["commit"]["commit"]["commiter"]["date"];
-
+            std::string date = json["commit"]["committer"]["date"];
             return date;
         }
 

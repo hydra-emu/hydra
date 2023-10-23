@@ -15,8 +15,6 @@ bool Settings::core_info_initialized_ = false;
 
 int main(int argc, char* argv[])
 {
-    hydra::Updater::UpdateDatabase();
-
     auto settings_path = Settings::GetSavePath() / "settings.json";
     Settings::Open(settings_path);
     Settings::InitCoreInfo();

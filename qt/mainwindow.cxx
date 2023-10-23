@@ -23,11 +23,14 @@
 #include <QKeySequence>
 #include <QMessageBox>
 #include <QSurfaceFormat>
+#include <QtConcurrent/QtConcurrent>
+#include <QThread>
 #include <QTimer>
 #include <settings.hxx>
 #include <sol/sol.hpp>
 #include <stb_image_write.h>
 #include <str_hash.hxx>
+#include <update.hxx>
 
 MainWindow* main_window = nullptr;
 
@@ -83,7 +86,36 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
         background-position: center;
         background-image: url(:/images/hydra.png);
     )");
-    // current_mappings_ = current_mappings();
+
+    QFuture<hydra::Updater::UpdateStatus> future =
+        QtConcurrent::run([this]() { return hydra::Updater::NeedsDatabaseUpdate(); });
+
+    QFutureWatcher<hydra::Updater::UpdateStatus>* watcher =
+        new QFutureWatcher<hydra::Updater::UpdateStatus>(this);
+    connect(watcher, &QFutureWatcher<hydra::Updater::UpdateStatus>::finished, this,
+            [this, watcher]() {
+                if (watcher->result() == hydra::Updater::UpdateStatus::UpdateAvailable)
+                {
+                    QMessageBox* msg = new QMessageBox;
+                    msg->setWindowTitle("Database update available");
+                    msg->setText("There's a new version of the database available.\nWould you like "
+                                 "to update in the background?");
+                    msg->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+                    msg->setDefaultButton(QMessageBox::Yes);
+                    connect(msg, &QMessageBox::finished, this, [this, msg]() {
+                        if (msg->clickedButton() == msg->button(QMessageBox::Yes))
+                        {
+                            statusBar()->showMessage("Updating database...");
+                            hydra::Updater::UpdateDatabase(
+                                [this]() { statusBar()->showMessage("Database updated"); });
+                        }
+                    });
+                    msg->move(screen()->geometry().center() - frameGeometry().center());
+                    msg->show();
+                    watcher->deleteLater();
+                }
+            });
+    watcher->setFuture(future);
 }
 
 MainWindow::~MainWindow()
@@ -573,8 +605,8 @@ void MainWindow::screenshot()
 
     std::filesystem::path screenshot_full_path =
         screenshot_path / (screenshot_name + screenshot_extension);
-    stbi_write_png(screenshot_full_path.string().c_str(), video_width_, video_height_, 4,
-                   video_buffer_.data(), video_width_ * 4);
+    QImage image = screen_->grabFramebuffer();
+    image.save(screenshot_full_path.string().c_str());
 }
 
 void MainWindow::set_volume(int volume)

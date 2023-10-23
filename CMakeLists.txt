@@ -57,6 +57,7 @@ find_package(Lua REQUIRED)
 add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
 add_subdirectory(go)
+add_dependencies(hydra_go_static hydra_go)
 
 # add_compile_options(-fsanitize=address -fsanitize=undefined)
 # add_link_options(-fsanitize=address -fsanitize=undefined)
@@ -100,14 +101,14 @@ qt_add_executable(hydra
     ${HYDRA_QT_FILES}
 )
 
-target_link_libraries(hydra PRIVATE
-    Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
-    Qt${QT_VERSION_MAJOR}::OpenGLWidgets ${CMAKE_DL_LIBS}
-    fmt::fmt ${LUA_LIBRARIES})
 if(USE_GOLANG)
     target_link_libraries(hydra PRIVATE hydra_go_static)
     target_compile_definitions(hydra PRIVATE HYDRA_USE_GOLANG)
 endif()
+target_link_libraries(hydra PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
+    Qt${QT_VERSION_MAJOR}::OpenGLWidgets
+    ${CMAKE_DL_LIBS} fmt::fmt ${LUA_LIBRARIES})
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 set_target_properties(hydra PROPERTIES hydra_properties
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.hydra.com

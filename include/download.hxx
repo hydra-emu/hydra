@@ -1,30 +1,38 @@
 #pragma once
 
 #include "go/downloader.h"
+#include <memory>
 #include <string>
 
 namespace hydra
 {
-    struct HydraBufferWrapper
+    struct HydraBuffer
     {
-        HydraBufferWrapper() = default;
+        HydraBuffer() = default;
 
-        HydraBufferWrapper(const hydra_buffer_t& buffer) : buffer_(buffer) {}
+        HydraBuffer(const hydra_buffer_t& buffer) : buffer_(buffer) {}
 
-        ~HydraBufferWrapper()
+        ~HydraBuffer()
         {
             if (buffer_.data)
                 free(buffer_.data);
         }
 
-        hydra_buffer_t* operator->()
+        void* data() const
         {
-            return &buffer_;
+            return buffer_.data;
+        }
+
+        size_t size() const
+        {
+            return buffer_.size;
         }
 
     private:
         hydra_buffer_t buffer_;
     };
+
+    using HydraBufferWrapper = std::unique_ptr<HydraBuffer>;
 
     struct Downloader
     {
@@ -37,7 +45,7 @@ namespace hydra
             try
             {
                 hydra_buffer_t buffer = hydra_download(url.c_str());
-                return HydraBufferWrapper(buffer);
+                return std::make_unique<HydraBuffer>(buffer);
             } catch (...)
             {
                 printf("Failed while trying to download %s using Go\n", url.c_str());
