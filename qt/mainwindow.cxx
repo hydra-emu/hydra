@@ -56,6 +56,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     layout->setContentsMargins(5, 5, 5, 5);
     screen_ = new ScreenWidget(widget);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
+    screen_->SetMouseClickCallback([this](QMouseEvent* event) { on_mouse_click(event); });
+    screen_->SetMouseReleaseCallback([this](QMouseEvent* event) { on_mouse_release(event); });
     screen_->setMouseTracking(true);
     layout->addWidget(screen_, Qt::AlignCenter);
     widget->setLayout(layout);
@@ -293,6 +295,22 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 }
 
 void MainWindow::on_mouse_move(QMouseEvent* event) {}
+
+void MainWindow::on_mouse_click(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        mouse_state_ = (event->pos().x() << 16) | (event->pos().y() & 0xFFFF);
+    }
+}
+
+void MainWindow::on_mouse_release(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        mouse_state_ = hydra::TOUCH_RELEASED;
+    }
+}
 
 void MainWindow::open_file()
 {
@@ -776,6 +794,10 @@ void MainWindow::audio_callback(void* data, size_t frames)
 
 int32_t MainWindow::read_input_callback(uint32_t player, hydra::ButtonType button)
 {
+    // TODO: is there such a thing as multiplayer touch?
+    if (button == hydra::ButtonType::Touch)
+        return main_window->mouse_state_;
+
     return main_window->input_state_[player][(int)button];
 }
 

@@ -25,12 +25,24 @@ public:
         mouse_move_callback_ = callback;
     }
 
+    void SetMouseClickCallback(std::function<void(QMouseEvent*)> callback)
+    {
+        mouse_click_callback_ = callback;
+    }
+
+    void SetMouseReleaseCallback(std::function<void(QMouseEvent*)> callback)
+    {
+        mouse_release_callback_ = callback;
+    }
+
     unsigned GetFbo()
     {
         return fbo_;
     }
 
     void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
     void initializeGL() override;
@@ -43,6 +55,8 @@ private:
     int current_height_ = 0;
 
     std::function<void(QMouseEvent*)> mouse_move_callback_;
+    std::function<void(QMouseEvent*)> mouse_click_callback_;
+    std::function<void(QMouseEvent*)> mouse_release_callback_;
 
     friend class MainWindow;
 };
