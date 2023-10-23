@@ -21,7 +21,7 @@ namespace hydra
     inline dynlib_handle_t dynlib_open(const char* path)
     {
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
-        return dlopen(path, RTLD_NOW | RTLD_GLOBAL);
+        return dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
 #elif defined(HYDRA_WINDOWS)
         std::wstring wpath = std::wstring(path, path + std::strlen(path));
         printf("Trying to convert string to wstring to load library with loadlibraryw, this is "

@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QSurfaceFormat>
 #include <settings.hxx>
+#include <update.hxx>
 
 // TODO: Not my favorite of designs
 std::vector<EmulatorInfo> Settings::CoreInfo;
@@ -14,6 +15,8 @@ bool Settings::core_info_initialized_ = false;
 
 int main(int argc, char* argv[])
 {
+    hydra::Updater::UpdateDatabase();
+
     auto settings_path = Settings::GetSavePath() / "settings.json";
     Settings::Open(settings_path);
     Settings::InitCoreInfo();

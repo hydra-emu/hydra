@@ -453,10 +453,8 @@ void MainWindow::open_file_impl(const std::string& path)
         }
     }
 
-    if (!paused_)
-    {
-        emulator_timer_->start();
-    }
+    paused_ = false;
+    emulator_timer_->start();
 }
 
 void MainWindow::open_settings()
