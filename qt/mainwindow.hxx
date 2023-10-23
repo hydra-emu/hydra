@@ -62,6 +62,8 @@ private:
 private slots:
     void emulator_frame();
     void on_mouse_move(QMouseEvent* event);
+    void on_mouse_click(QMouseEvent* event);
+    void on_mouse_release(QMouseEvent* event);
 
 public:
     MainWindow(QWidget* parent = nullptr);
@@ -115,6 +117,8 @@ public:
     // vector[player][button]
     std::vector<std::array<int32_t, (int)hydra::ButtonType::InputCount>> input_state_{};
     std::deque<std::string> recent_files_;
+    // Holds the current state of the mouse
+    uint32_t mouse_state_ = hydra::TOUCH_RELEASED;
 
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
 };

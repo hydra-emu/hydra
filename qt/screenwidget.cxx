@@ -80,6 +80,16 @@ void ScreenWidget::mouseMoveEvent(QMouseEvent* event)
     mouse_move_callback_(event);
 }
 
+void ScreenWidget::mousePressEvent(QMouseEvent* event)
+{
+    mouse_click_callback_(event);
+}
+
+void ScreenWidget::mouseReleaseEvent(QMouseEvent* event)
+{
+    mouse_release_callback_(event);
+}
+
 void ScreenWidget::initializeGL()
 {
     initializeOpenGLFunctions();
