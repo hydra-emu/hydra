@@ -145,6 +145,18 @@ public:
                 // TODO: cache these to a json or whatever so we don't dlopen every time
                 void* handle = hydra::dynlib_open(it->path().string().c_str());
 
+                struct Destructor
+                {
+                    void* handle;
+
+                    ~Destructor()
+                    {
+                        hydra::dynlib_close(handle);
+                    }
+                };
+
+                Destructor d{handle};
+
                 if (!handle)
                 {
                     printf("%s\n", hydra::dynlib_get_error().c_str());

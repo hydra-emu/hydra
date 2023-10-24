@@ -6,6 +6,7 @@
 #include "shadereditor.hxx"
 #include "terminalwindow.hxx"
 #include <compatibility.hxx>
+#include <csignal>
 #include <error_factory.hxx>
 #include <fmt/format.h>
 #include <fstream>
@@ -32,6 +33,15 @@
 #include <str_hash.hxx>
 #include <update.hxx>
 
+enum class EmulatorState
+{
+    NOTRUNNING,
+    RUNNING,
+    STOP,
+    STOPPED,
+};
+std::atomic<EmulatorState> emulator_thread_state;
+
 MainWindow* main_window = nullptr;
 
 void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames)
@@ -48,9 +58,24 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
                                 window->queued_audio_.begin() + frames);
 }
 
+void emulator_signal_handler(int signal)
+{
+    std::lock_guard<std::mutex> lock(main_window->emulator_mutex_);
+    printf("Received signal in emulator: %d, stopping...\n", signal);
+    main_window->stop_emulator();
+}
+
+void initialize_signals()
+{
+    signal(SIGSEGV, emulator_signal_handler);
+    signal(SIGILL, emulator_signal_handler);
+}
+
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
     main_window = this;
+
+    emulator_thread_state = EmulatorState::NOTRUNNING;
 
     QWidget* widget = new QWidget;
     setCentralWidget(widget);
@@ -425,7 +450,7 @@ void MainWindow::open_file_impl(const std::string& path)
         return;
     }
     info_.reset();
-    for (auto info : Settings::CoreInfo)
+    for (auto& info : Settings::CoreInfo)
     {
         if (info.path == core_path)
         {
@@ -682,7 +707,6 @@ void MainWindow::init_emulator()
     if (emulator_->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
     {
         hydra::IOpenGlRendered* shell_gl = emulator_->shell->asIOpenGlRendered();
-        shell_gl->setContext(QOpenGLContext::currentContext());
         shell_gl->setGetProcAddress((void*)get_proc_address);
         // TODO: tf so ugly
         auto size = emulator_->shell->getNativeSize();

@@ -106,6 +106,7 @@ void ScreenWidget::paintGL()
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_);
-        glBlitFramebuffer(0, 0, 400, 480, 0, 0, 400, 480, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        glBlitFramebuffer(0, 0, current_width_, current_height_, 0, 0, current_width_,
+                          current_height_, GL_COLOR_BUFFER_BIT, GL_LINEAR);
     }
 }

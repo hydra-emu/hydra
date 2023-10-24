@@ -17,6 +17,7 @@ namespace hydra
             Error,
             UpToDate,
             UpdateAvailable,
+            NoConnection,
         };
 
         static std::mutex& GetMutex()
@@ -28,10 +29,12 @@ namespace hydra
         static UpdateStatus NeedsDatabaseUpdate()
         {
             std::string old_date = Settings::Get("database_date");
+            std::string new_date = get_database_time();
+            if (new_date.empty())
+                return NoConnection;
             if (old_date.empty())
                 return UpdateAvailable;
 
-            std::string new_date = get_database_time();
             return is_newer_date(old_date, new_date) ? UpdateAvailable : UpToDate;
         }
 
@@ -86,7 +89,8 @@ namespace hydra
 
                 if (!buffer->data())
                 {
-                    log_fatal("Failed to download database zip");
+                    printf("Failed to download database. No internet connection?");
+                    return;
                 }
 
                 mz_zip_archive zip_archive;
@@ -131,9 +135,8 @@ namespace hydra
         {
             HydraBufferWrapper result = Downloader::Download(
                 "https://api.github.com/repos/hydra-emu/database/commits/master");
-
             if (!result->data())
-                log_fatal("Failed to download database info");
+                return std::string();
 
             std::string data = std::string((char*)result->data(), result->size());
             auto json = nlohmann::json::parse(data);

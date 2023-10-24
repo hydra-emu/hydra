@@ -60,15 +60,17 @@ private:
     static int32_t read_input_callback(uint32_t player, hydra::ButtonType button);
 
 private slots:
-    void emulator_frame();
     void on_mouse_move(QMouseEvent* event);
     void on_mouse_click(QMouseEvent* event);
     void on_mouse_release(QMouseEvent* event);
+    void emulator_frame();
 
 public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
     void OpenFile(const std::string& file);
+
+private:
     QMenu* file_menu_;
     QMenu* emulation_menu_;
     QMenu* tools_menu_;
@@ -120,5 +122,6 @@ public:
     // Holds the current state of the mouse
     uint32_t mouse_state_ = hydra::TOUCH_RELEASED;
 
+    friend void emulator_signal_handler(int);
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
 };
