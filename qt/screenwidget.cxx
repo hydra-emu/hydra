@@ -73,6 +73,10 @@ void ScreenWidget::Resize(int width, int height)
             }
         }
     }
+    else
+    {
+        printf("ScreenWidget not initialized\n");
+    }
 }
 
 void ScreenWidget::mouseMoveEvent(QMouseEvent* event)

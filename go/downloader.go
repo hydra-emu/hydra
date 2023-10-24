@@ -9,6 +9,7 @@ import "C"
 import (
 	"io"
 	"net/http"
+	"time"
 	"unsafe"
 )
 
@@ -19,7 +20,10 @@ func hydra_download(url *C.cchar_t) C.hydra_buffer_t {
 	buffer.size = 0
 
 	goURL := C.GoString(url)
-	response, err := http.Get(goURL)
+	client := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	response, err := client.Get(goURL)
 	if err != nil {
 		println("Go: " + err.Error())
 		return buffer

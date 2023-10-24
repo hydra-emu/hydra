@@ -708,6 +708,7 @@ void MainWindow::init_emulator()
     {
         hydra::IOpenGlRendered* shell_gl = emulator_->shell->asIOpenGlRendered();
         shell_gl->setGetProcAddress((void*)get_proc_address);
+        shell_gl->resetContext();
         // TODO: tf so ugly
         auto size = emulator_->shell->getNativeSize();
         screen_->Resize(size.width, size.height);
