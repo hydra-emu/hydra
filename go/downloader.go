@@ -43,7 +43,7 @@ func hydra_download(url *C.cchar_t) C.hydra_buffer_t {
 
 	buffer.data = C.malloc(C.size_t(len(b)))
 	C.memcpy(buffer.data, unsafe.Pointer(&b[0]), C.size_t(len(b)))
-	buffer.size = C.ulonglong(C.size_t(len(b)))
+	buffer.size = C.uint64_t(len(b))
 	return buffer
 }
 
