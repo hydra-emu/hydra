@@ -262,7 +262,7 @@ void InputPage::onRemoveButtonClicked()
 
             auto path = Settings::GetSavePath() / "mappings" / (current_name + ".json");
             std::error_code ec;
-            std::filesystem::remove_file(path, ec);
+            std::filesystem::remove(path, ec);
             if (ec)
             {
                 QMessageBox::warning(this, "Warning",
