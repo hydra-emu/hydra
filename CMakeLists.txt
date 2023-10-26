@@ -9,8 +9,6 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-option(USE_GOLANG "Use Go, used by core updater" ON)
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -53,11 +51,10 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Lua REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
-add_subdirectory(go)
-add_dependencies(hydra_go_static hydra_go)
 
 # add_compile_options(-fsanitize=address -fsanitize=undefined)
 # add_link_options(-fsanitize=address -fsanitize=undefined)
@@ -101,11 +98,6 @@ qt_add_executable(hydra
     ${HYDRA_QT_FILES}
 )
 
-if(USE_GOLANG)
-    target_link_libraries(hydra PRIVATE hydra_go_static)
-    target_compile_definitions(hydra PRIVATE HYDRA_USE_GOLANG)
-endif()
-
 if(APPLE)
   target_link_libraries(hydra PRIVATE "-framework Security")
 endif()
@@ -113,7 +105,7 @@ endif()
 target_link_libraries(hydra PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
     Qt${QT_VERSION_MAJOR}::OpenGLWidgets
-    ${CMAKE_DL_LIBS} fmt::fmt ${LUA_LIBRARIES})
+    ${CMAKE_DL_LIBS} fmt::fmt ${LUA_LIBRARIES} OpenSSL::SSL)
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 set_target_properties(hydra PROPERTIES hydra_properties
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.hydra.com

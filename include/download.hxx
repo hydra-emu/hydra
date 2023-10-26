@@ -1,54 +1,55 @@
 #pragma once
 
-#include "go/downloader.h"
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include "httplib.h"
 #include <memory>
 #include <string>
 
 namespace hydra
 {
-    struct HydraBuffer
+    using HydraBufferWrapper = std::vector<uint8_t>;
+
+    inline std::pair<std::string, std::string> split_url(const std::string& url)
     {
-        HydraBuffer() = default;
-
-        HydraBuffer(const hydra_buffer_t& buffer) : buffer_(buffer) {}
-
-        ~HydraBuffer()
+        std::regex path_regex("https://(.*?)(/.*)");
+        std::string host = "https://", query;
+        std::smatch match;
+        if (std::regex_search(url, match, path_regex) && match.size() == 3)
         {
-            if (buffer_.data)
-                free(buffer_.data);
+            host += match[1];
+            query = match[2];
         }
-
-        void* data() const
+        else
         {
-            return buffer_.data;
+            printf("[rcheevos]: failed to parse URL: %s\n", url.c_str());
         }
-
-        size_t size() const
-        {
-            return buffer_.size;
-        }
-
-    private:
-        hydra_buffer_t buffer_;
-    };
-
-    using HydraBufferWrapper = std::unique_ptr<HydraBuffer>;
+        return std::make_pair(host, query);
+    }
 
     struct Downloader
     {
         static HydraBufferWrapper Download(const std::string& url)
         {
-#ifndef HYDRA_USE_GOLANG
-            printf("Tried to download when built without golang support, this shouldn't happen");
-            return {};
-#endif
             try
             {
-                hydra_buffer_t buffer = hydra_download(url.c_str());
-                return std::make_unique<HydraBuffer>(buffer);
+                auto [host, query] = split_url(url);
+                httplib::Client client(host);
+                client.set_follow_location(true);
+                auto response = client.Get(query);
+
+                if (!response)
+                {
+                    printf("Null response when downloading %s\n", url.c_str());
+                }
+                else if (response->status != 200)
+                {
+                    printf("Failed to download %s: %d\n", url.c_str(), response->status);
+                }
+
+                return {response->body.begin(), response->body.end()};
             } catch (...)
             {
-                printf("Failed while trying to download %s using Go\n", url.c_str());
+                printf("Failed while trying to download %s\n", url.c_str());
                 return {};
             }
         }

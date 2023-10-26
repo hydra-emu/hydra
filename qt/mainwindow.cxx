@@ -139,6 +139,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                     msg->show();
                     watcher->deleteLater();
                 }
+                else
+                {
+                    printf("Result: %d\n", static_cast<int>(watcher->result()));
+                }
             });
     watcher->setFuture(future);
 }
@@ -559,6 +563,7 @@ void MainWindow::open_terminal()
     });
 }
 
+// TODO: compiler option to turn off lua support
 void MainWindow::run_script(const std::string& script, bool safe_mode)
 {
     static bool initialized = false;

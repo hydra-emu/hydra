@@ -62,10 +62,10 @@ namespace hydra
             if (versioning == "Github")
             {
                 HydraBufferWrapper buffer = Downloader::Download(versioning_url);
-                if (!buffer->data())
+                if (buffer.empty())
                     return Error;
 
-                nlohmann::json versioning_json = nlohmann::json::parse((char*)buffer->data());
+                nlohmann::json versioning_json = nlohmann::json::parse((char*)buffer.data());
                 std::string last_date = versioning_json["commit"]["commit"]["committer"]["date"];
                 std::string old_date = Settings::Get(core_name + "_date");
 
@@ -87,16 +87,16 @@ namespace hydra
                 HydraBufferWrapper buffer = Downloader::Download(
                     "https://github.com/hydra-emu/database/archive/refs/heads/master.zip");
 
-                if (!buffer->data())
+                if (buffer.empty())
                 {
-                    printf("Failed to download database. No internet connection?");
+                    printf("Failed to download database. No internet connection?\n");
                     return;
                 }
 
                 mz_zip_archive zip_archive;
                 memset(&zip_archive, 0, sizeof(zip_archive));
 
-                if (!mz_zip_reader_init_mem(&zip_archive, buffer->data(), buffer->size(), 0))
+                if (!mz_zip_reader_init_mem(&zip_archive, buffer.data(), buffer.size(), 0))
                     log_fatal("Failed to read database zip");
 
                 if (!std::filesystem::create_directories(Settings::GetSavePath() / "database"))
@@ -135,10 +135,10 @@ namespace hydra
         {
             HydraBufferWrapper result = Downloader::Download(
                 "https://api.github.com/repos/hydra-emu/database/commits/master");
-            if (!result->data())
+            if (result.empty())
                 return std::string();
 
-            std::string data = std::string((char*)result->data(), result->size());
+            std::string data = std::string((char*)result.data(), result.size());
             auto json = nlohmann::json::parse(data);
             std::string date = json["commit"]["committer"]["date"];
             return date;
