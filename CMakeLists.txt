@@ -105,6 +105,11 @@ if(USE_GOLANG)
     target_link_libraries(hydra PRIVATE hydra_go_static)
     target_compile_definitions(hydra PRIVATE HYDRA_USE_GOLANG)
 endif()
+
+if(APPLE)
+  target_link_libraries(hydra PRIVATE "-framework Security")
+endif()
+
 target_link_libraries(hydra PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
     Qt${QT_VERSION_MAJOR}::OpenGLWidgets
