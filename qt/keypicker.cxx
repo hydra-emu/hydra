@@ -260,8 +260,10 @@ void InputPage::onRemoveButtonClicked()
                 combo->removeItem(index);
             }
 
-            std::string path = Settings::GetSavePath() / "mappings" / (current_name + ".json");
-            if (std::remove(path.c_str()) != 0)
+            auto path = Settings::GetSavePath() / "mappings" / (current_name + ".json");
+            std::error_code ec;
+            std::filesystem::remove(path, ec);
+            if (ec)
             {
                 QMessageBox::warning(this, "Warning",
                                      QString("Failed to remove mapping file: ") + path.c_str());

@@ -18,9 +18,9 @@
 #pragma message("Unknown platform")
 #endif
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(__x86_64) || defined(__amd64) || defined(_M_X64)
 #define HYDRA_X86_64
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__i386) || defined(_M_IX86)
 #define HYDRA_X86
 #elif defined(__arm__) || defined(__aarch64__) || defined(__arm64__)
 #define HYDRA_ARM
