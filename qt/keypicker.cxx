@@ -101,7 +101,7 @@ InputPage::InputPage(const std::vector<std::tuple<QComboBox*, int, QString>>& li
     std::vector<std::filesystem::path> files = hydra::Input::Scan(dirpath, ".json");
     for (const auto& path : files)
     {
-        QFile file(path.c_str());
+        QFile file(QString::fromStdString(path.string()));
         file.open(QIODevice::ReadOnly);
         add_tab_from_file(file);
     }
@@ -265,8 +265,7 @@ void InputPage::onRemoveButtonClicked()
             std::filesystem::remove(path, ec);
             if (ec)
             {
-                QMessageBox::warning(this, "Warning",
-                                     QString("Failed to remove mapping file: ") + path.c_str());
+                QMessageBox::warning(this, "Warning", "Failed to remove mapping file");
             }
         }
     }

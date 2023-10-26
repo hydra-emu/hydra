@@ -18,8 +18,8 @@ jobs:
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
     - name: install-deps
-      run: brew install qt6 ninja lua
+      run: brew install qt6 ninja lua openssl
     - name: configure
-      run: cmake -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: cmake -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -D OPENSSL_ROOT_DIR=/usr/local/opt/openssl 
     - name: make
       run: cmake --build build --target hydra

@@ -275,6 +275,9 @@ void MainWindow::create_actions()
     scripts_act_->setStatusTip("Open the script editor");
     scripts_act_->setIcon(QIcon(":/images/scripts.png"));
     connect(scripts_act_, &QAction::triggered, this, &MainWindow::open_scripts);
+#ifndef HYDRA_USE_LUA
+    scripts_act_->setEnabled(false);
+#endif
     terminal_act_ = new QAction(tr("&Terminal"), this);
     terminal_act_->setShortcut(Qt::Key_F9);
     terminal_act_->setStatusTip("Open the terminal");
@@ -566,6 +569,7 @@ void MainWindow::open_terminal()
 // TODO: compiler option to turn off lua support
 void MainWindow::run_script(const std::string& script, bool safe_mode)
 {
+#ifdef HYDRA_USE_LUA
     static bool initialized = false;
     static sol::state lua;
     static auto environment = sol::environment(lua, sol::create);
@@ -613,6 +617,7 @@ void MainWindow::run_script(const std::string& script, bool safe_mode)
             lua.script(script);
         }
     });
+#endif
 }
 
 void MainWindow::screenshot()

@@ -5,6 +5,8 @@ include(ExternalProject)
 project(hydra VERSION 0.2.0 LANGUAGES CXX)
 project(hydra_server)
 
+option(USE_LUA "Use lua for script support" ON)
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -50,7 +52,10 @@ set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGL OpenGLWidgets)
-find_package(Lua REQUIRED)
+
+if (USE_LUA)
+    find_package(Lua REQUIRED)
+endif()
 find_package(OpenSSL REQUIRED)
 
 add_subdirectory(vendored/fmt)
@@ -89,8 +94,14 @@ set(HYDRA_INCLUDE_DIRECTORIES
     core/include
     vendored
     vendored/fmt/include
-    ${LUA_INCLUDE_DIR}
 )
+
+if(USE_LUA)
+    set(HYDRA_INCLUDE_DIRECTORIES
+        ${HYDRA_INCLUDE_DIRECTORIES}
+        ${LUA_INCLUDE_DIR}
+    )
+endif()
 
 qt_add_executable(hydra
     MANUAL_FINALIZATION
@@ -102,10 +113,15 @@ if(APPLE)
   target_link_libraries(hydra PRIVATE "-framework Security")
 endif()
 
+if(WIN32)
+    target_compile_definitions(hydra PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+endif()
+
 target_link_libraries(hydra PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGL
     Qt${QT_VERSION_MAJOR}::OpenGLWidgets
-    ${CMAKE_DL_LIBS} fmt::fmt ${LUA_LIBRARIES} OpenSSL::SSL)
+    ${CMAKE_DL_LIBS} fmt::fmt ${LUA_LIBRARIES}
+    OpenSSL::SSL)
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 set_target_properties(hydra PROPERTIES hydra_properties
     MACOSX_BUNDLE_GUI_IDENTIFIER offtkp.hydra.com
