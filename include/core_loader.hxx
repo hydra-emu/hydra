@@ -25,8 +25,7 @@ namespace hydra
 #elif defined(HYDRA_WINDOWS)
         std::wstring wpath = std::wstring(path, path + std::strlen(path));
         printf("Trying to convert string to wstring to load library with loadlibraryw, this is "
-               "untested\n",
-               path, wpath.c_str());
+               "untested\n");
         return (void*)LoadLibraryW(wpath.c_str());
 #elif defined(HYDRA_WII)
         ELFIO::elfio* reader = new ELFIO::elfio();
