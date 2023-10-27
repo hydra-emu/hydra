@@ -181,6 +181,25 @@ void SettingsWindow::create_tabs()
         use_cwd->setCheckState(Settings::Get("screenshot_path").empty() ? Qt::Checked
                                                                         : Qt::Unchecked);
         general_layout->addWidget(use_cwd, 1, 0, 1, 2);
+
+        QSpacerItem* spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        general_layout->addItem(spacer, 2, 0);
+
+        QPushButton* reset_settings = new QPushButton("Reset settings");
+        connect(reset_settings, &QPushButton::clicked, this, [this]() {
+            auto reply = QMessageBox::question(this, "Reset settings",
+                                               "Are you sure you want to reset your settings?",
+                                               QMessageBox::Yes | QMessageBox::No);
+            if (reply == QMessageBox::Yes)
+            {
+                std::filesystem::copy(Settings::GetSavePath() / "settings.json",
+                                      Settings::GetSavePath() / "settings.json.bak",
+                                      std::filesystem::copy_options::overwrite_existing);
+                std::filesystem::remove(Settings::GetSavePath() / "settings.json");
+                Settings::Open(Settings::GetSavePath() / "settings.json");
+            }
+        });
+        general_layout->addWidget(reset_settings, 3, 0, 1, 3);
     }
     {
         QGridLayout* cores_layout = new QGridLayout;
@@ -232,6 +251,7 @@ void SettingsWindow::create_tabs()
                     msg.exec();
                 });
         cores_layout->addWidget(core_list, 0, 0, 1, 0);
+        // TODO: become a non-lazy developer
         add_filepicker(cores_layout, "Core directory", "core_path", "", 1, 0, true,
                        [](const std::string&) {
                            Settings::ReinitCoreInfo();
@@ -273,6 +293,7 @@ void SettingsWindow::create_tabs()
         const auto& core = Settings::CoreInfo[i];
         QGridLayout* core_layout = new QGridLayout;
         core_layout->setAlignment(Qt::AlignTop);
+        core_layout->setSpacing(12);
         core_layout->setColumnStretch(0, 1);
         core_layout->setColumnStretch(1, 2);
         const std::vector<std::string>& firmware_files = core.firmware_files;

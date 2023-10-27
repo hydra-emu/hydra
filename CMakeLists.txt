@@ -78,6 +78,7 @@ set(HYDRA_QT_FILES
     qt/aboutwindow.cxx
     qt/keypicker.cxx
     qt/terminalwindow.cxx
+    qt/downloaderwindow.cxx
     vendored/miniaudio.c
     vendored/stb_image_write.c
     vendored/miniz/miniz.c

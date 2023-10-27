@@ -3897,6 +3897,8 @@ bool read_content(Stream &strm, T &x, size_t payload_max_length, int &status,
         auto exceed_payload_max_length = false;
 
         if (is_chunked_transfer_encoding(x.headers)) {
+          // Hack: signal that we won't know the progress
+          progress(0, 0);
           ret = read_content_chunked(strm, x, out);
         } else if (!has_header(x.headers, "Content-Length")) {
           ret = read_content_without_length(strm, out);

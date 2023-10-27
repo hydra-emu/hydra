@@ -1,5 +1,7 @@
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
+#include "downloaderwindow.hxx"
+#include "input.hxx"
 #include "qthelper.hxx"
 #include "scripteditor.hxx"
 #include "settingswindow.hxx"
@@ -138,10 +140,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                     msg->move(screen()->geometry().center() - frameGeometry().center());
                     msg->show();
                     watcher->deleteLater();
-                }
-                else
-                {
-                    printf("Result: %d\n", static_cast<int>(watcher->result()));
                 }
             });
     watcher->setFuture(future);

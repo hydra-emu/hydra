@@ -40,6 +40,7 @@ class Settings
 public:
     static void Open(const std::filesystem::path& path)
     {
+        map_.clear();
         save_path_ = path;
         std::ifstream ifs(save_path_);
         if (ifs.good())

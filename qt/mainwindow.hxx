@@ -1,6 +1,5 @@
 #pragma once
 
-#include "input.hxx"
 #include "screenwidget.hxx"
 #include "settings.hxx"
 #include <array>
@@ -19,6 +18,8 @@
 #include <QVBoxLayout>
 #include <thread>
 #include <unordered_map>
+
+class DownloaderWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -92,6 +93,7 @@ private:
     QAction* recent_act_;
     QTimer* emulator_timer_;
     ScreenWidget* screen_;
+    DownloaderWindow* downloader_;
     ma_device sound_device_{};
     bool frontend_driven_ = false;
     std::unique_ptr<hydra::EmulatorWrapper> emulator_;

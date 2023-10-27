@@ -11,7 +11,7 @@ namespace hydra
 
     inline std::pair<std::string, std::string> split_url(const std::string& url)
     {
-        std::regex path_regex("https://(.*?)(/.*)");
+        std::regex path_regex("http[s]?://(.*?)(/.*)");
         std::string host = "https://", query;
         std::smatch match;
         if (std::regex_search(url, match, path_regex) && match.size() == 3)
@@ -21,7 +21,7 @@ namespace hydra
         }
         else
         {
-            printf("[rcheevos]: failed to parse URL: %s\n", url.c_str());
+            printf("Failed to parse URL: %s\n", url.c_str());
         }
         return std::make_pair(host, query);
     }
@@ -30,12 +30,21 @@ namespace hydra
     {
         static HydraBufferWrapper Download(const std::string& url)
         {
+            return DownloadProgress(url);
+        }
+
+        static HydraBufferWrapper
+        DownloadProgress(const std::string& url,
+                         std::function<bool(uint64_t current, uint64_t total)> progress = nullptr)
+        {
             try
             {
                 auto [host, query] = split_url(url);
                 httplib::Client client(host);
                 client.set_follow_location(true);
-                auto response = client.Get(query);
+                httplib::Result response =
+                    progress ? client.Get(query, progress) : client.Get(query);
+                printf("Finished: %s\n", url.c_str());
 
                 if (!response)
                 {
