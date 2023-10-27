@@ -146,7 +146,7 @@ namespace hydra
 
     struct EmulatorFactory
     {
-        static std::unique_ptr<EmulatorWrapper> Create(const std::string& path)
+        static std::shared_ptr<EmulatorWrapper> Create(const std::string& path)
         {
             dynlib_handle_t handle = dynlib_open(path.c_str());
 
@@ -183,11 +183,11 @@ namespace hydra
                 return nullptr;
             }
 
-            return std::unique_ptr<EmulatorWrapper>(
+            return std::shared_ptr<EmulatorWrapper>(
                 new EmulatorWrapper(create_emu_p(), handle, destroy_emu_p, get_info_p));
         }
 
-        static std::unique_ptr<EmulatorWrapper> Create(const std::filesystem::path& path)
+        static std::shared_ptr<EmulatorWrapper> Create(const std::filesystem::path& path)
         {
             return Create(path.string());
         }

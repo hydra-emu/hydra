@@ -41,6 +41,7 @@ private:
     void open_shaders();
     void open_scripts();
     void open_terminal();
+    void open_cheats();
     void run_script(const std::string& script, bool safe_mode);
     void screenshot();
     void add_recent(const std::string& path);
@@ -89,6 +90,7 @@ private:
     QAction* screenshot_act_;
     QAction* shaders_act_;
     QAction* scripts_act_;
+    QAction* cheats_act_;
     QAction* terminal_act_;
     QAction* recent_act_;
     QTimer* emulator_timer_;
@@ -96,14 +98,16 @@ private:
     DownloaderWindow* downloader_;
     ma_device sound_device_{};
     bool frontend_driven_ = false;
-    std::unique_ptr<hydra::EmulatorWrapper> emulator_;
+    std::shared_ptr<hydra::EmulatorWrapper> emulator_;
     std::unique_ptr<EmulatorInfo> info_;
+    std::string game_hash_;
     std::vector<int16_t> queued_audio_;
     bool settings_open_ = false;
     bool about_open_ = false;
     bool shaders_open_ = false;
     bool scripts_open_ = false;
     bool terminal_open_ = false;
+    bool cheats_open_ = false;
     bool paused_ = false;
     std::mutex emulator_mutex_;
     std::mutex audio_mutex_;

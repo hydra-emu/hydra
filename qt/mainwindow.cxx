@@ -1,5 +1,6 @@
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
+#include "cheatswindow.hxx"
 #include "downloaderwindow.hxx"
 #include "input.hxx"
 #include "qthelper.hxx"
@@ -281,6 +282,10 @@ void MainWindow::create_actions()
     terminal_act_->setStatusTip("Open the terminal");
     terminal_act_->setIcon(QIcon(":/images/terminal.png"));
     connect(terminal_act_, &QAction::triggered, this, &MainWindow::open_terminal);
+    cheats_act_ = new QAction(tr("&Cheats"), this);
+    cheats_act_->setShortcut(Qt::Key_F8);
+    cheats_act_->setStatusTip("Open the cheats window");
+    connect(cheats_act_, &QAction::triggered, this, &MainWindow::open_cheats);
     recent_act_ = new QAction(tr("&Recent files"), this);
     for (int i = 0; i < 10; i++)
     {
@@ -330,6 +335,7 @@ void MainWindow::create_menus()
     emulation_menu_->addAction(mute_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
     tools_menu_->addAction(terminal_act_);
+    tools_menu_->addAction(cheats_act_);
     tools_menu_->addAction(scripts_act_);
     tools_menu_->addAction(shaders_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
@@ -564,6 +570,16 @@ void MainWindow::open_terminal()
     });
 }
 
+void MainWindow::open_cheats()
+{
+    qt_may_throw([this]() {
+        if (!cheats_open_)
+        {
+            new CheatsWindow(emulator_, cheats_open_, game_hash_, this);
+        }
+    });
+}
+
 // TODO: compiler option to turn off lua support
 void MainWindow::run_script(const std::string& script, bool safe_mode)
 {
@@ -761,6 +777,21 @@ void MainWindow::init_emulator()
         shell_log->setLogCallback(hydra::LogTarget::Info, TerminalWindow::log_info);
         shell_log->setLogCallback(hydra::LogTarget::Debug, TerminalWindow::log_debug);
         shell_log->setLogCallback(hydra::LogTarget::Error, log_fatal);
+        terminal_act_->setEnabled(true);
+    }
+    else
+    {
+        terminal_act_->setEnabled(false);
+    }
+
+    // Initialize cheats
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::ICheat))
+    {
+        cheats_act_->setEnabled(true);
+    }
+    else
+    {
+        cheats_act_->setEnabled(false);
     }
 
     if (emulator_->shell->hasInterface(hydra::InterfaceType::ISelfDriven))
