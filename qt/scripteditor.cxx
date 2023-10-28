@@ -45,7 +45,7 @@ void ScriptHighlighter::highlightBlock(const QString& text)
     {
         return;
     }
-    for (const HighlightingRule& rule : qAsConst(highlighting_rules_))
+    for (const HighlightingRule& rule : highlighting_rules_)
     {
         QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
         while (matchIterator.hasNext())
