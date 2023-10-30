@@ -5,11 +5,12 @@
 #include <memory>
 #include <QWidget>
 
+class QListWidget;
+
 struct CheatMetadata
 {
     bool enabled = true;
     std::string name{};
-    std::string description{};
     std::string code{};
     uint32_t handle = hydra::BAD_CHEAT;
 };
@@ -28,9 +29,16 @@ public:
                  const std::string& hash, QWidget* parent = nullptr);
     ~CheatsWindow();
 
+    void Show();
+    void Hide();
+
 private:
+    void closeEvent(QCloseEvent* event) override;
+
     bool& open_;
-    std::vector<CheatMetadata> cheats_;
+    QListWidget* cheat_list_;
     std::shared_ptr<hydra::EmulatorWrapper> wrapper_;
     std::filesystem::path cheat_path_;
+
+    void save_cheats();
 };

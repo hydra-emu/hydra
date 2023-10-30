@@ -1,6 +1,5 @@
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
-#include "cheatswindow.hxx"
 #include "downloaderwindow.hxx"
 #include "input.hxx"
 #include "qthelper.hxx"
@@ -35,6 +34,9 @@
 #include <stb_image_write.h>
 #include <str_hash.hxx>
 #include <update.hxx>
+// TODO: remove this
+#define OSSL_DEPRECATEDIN_3_0
+#include <openssl/md5.h>
 
 enum class EmulatorState
 {
@@ -285,7 +287,7 @@ void MainWindow::create_actions()
     cheats_act_ = new QAction(tr("&Cheats"), this);
     cheats_act_->setShortcut(Qt::Key_F8);
     cheats_act_->setStatusTip("Open the cheats window");
-    connect(cheats_act_, &QAction::triggered, this, &MainWindow::open_cheats);
+    connect(cheats_act_, &QAction::triggered, this, &MainWindow::toggle_cheats_window);
     recent_act_ = new QAction(tr("&Recent files"), this);
     for (int i = 0; i < 10; i++)
     {
@@ -475,6 +477,28 @@ void MainWindow::open_file_impl(const std::string& path)
             fmt::format("Failed to find core info for core {}... This shouldn't happen?", core_path)
                 .c_str());
     }
+    {
+        unsigned char result[MD5_DIGEST_LENGTH];
+        std::ifstream file(path, std::ifstream::binary);
+        MD5_CTX md5Context;
+        MD5_Init(&md5Context);
+        char buf[1024 * 16];
+        while (file.good())
+        {
+            file.read(buf, sizeof(buf));
+            MD5_Update(&md5Context, buf, file.gcount());
+        }
+        MD5_Final(result, &md5Context);
+        std::stringstream md5stream;
+        md5stream << std::hex << std::setfill('0');
+        for (const auto& byte : result)
+        {
+            md5stream << std::setw(2) << (int)byte;
+        }
+        game_hash_ = md5stream.str();
+    }
+    // TODO: such resets don't belong in open_file_impl, but in a separate function
+    cheats_window_.reset();
     emulator_ = hydra::EmulatorFactory::Create(core_path);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
@@ -570,12 +594,23 @@ void MainWindow::open_terminal()
     });
 }
 
-void MainWindow::open_cheats()
+void MainWindow::toggle_cheats_window()
 {
     qt_may_throw([this]() {
-        if (!cheats_open_)
+        if (!cheats_window_)
         {
-            new CheatsWindow(emulator_, cheats_open_, game_hash_, this);
+            cheats_window_.reset(new CheatsWindow(emulator_, cheats_open_, game_hash_, this));
+        }
+        else
+        {
+            if (!cheats_open_)
+            {
+                cheats_window_->Show();
+            }
+            else
+            {
+                cheats_window_->Hide();
+            }
         }
     });
 }

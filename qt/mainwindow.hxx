@@ -8,6 +8,7 @@
 #include <memory>
 #define MA_NO_DECODING
 #define MA_NO_ENCODING
+#include "cheatswindow.hxx"
 #include <core_loader.hxx>
 #include <miniaudio.h>
 #include <QFileDialog>
@@ -41,7 +42,7 @@ private:
     void open_shaders();
     void open_scripts();
     void open_terminal();
-    void open_cheats();
+    void toggle_cheats_window();
     void run_script(const std::string& script, bool safe_mode);
     void screenshot();
     void add_recent(const std::string& path);
@@ -98,6 +99,7 @@ private:
     DownloaderWindow* downloader_;
     ma_device sound_device_{};
     bool frontend_driven_ = false;
+    std::unique_ptr<CheatsWindow> cheats_window_ = nullptr;
     std::shared_ptr<hydra::EmulatorWrapper> emulator_;
     std::unique_ptr<EmulatorInfo> info_;
     std::string game_hash_;
