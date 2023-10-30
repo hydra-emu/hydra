@@ -677,6 +677,10 @@ void MainWindow::enable_emulation_actions(bool should)
 {
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
+    scripts_act_->setEnabled(should);
+    terminal_act_->setEnabled(should);
+    cheats_act_->setEnabled(should);
+    shaders_act_->setEnabled(should);
     if (should)
         screen_->show();
     else

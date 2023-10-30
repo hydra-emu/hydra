@@ -1,16 +1,17 @@
 #pragma once
 
+#include "hydra/core.hxx"
 #include <filesystem>
 #include <memory>
 #include <QWidget>
 
 struct CheatMetadata
 {
-    bool enabled;
-    std::string name;
-    std::string description;
-    std::string code;
-    uint32_t handle;
+    bool enabled = true;
+    std::string name{};
+    std::string description{};
+    std::string code{};
+    uint32_t handle = hydra::BAD_CHEAT;
 };
 
 namespace hydra
