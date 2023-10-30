@@ -137,6 +137,13 @@ public:
         {
             Settings::Set("core_path", (std::filesystem::current_path()).string());
         }
+
+        if (!std::filesystem::exists(Settings::Get("core_path")))
+        {
+            printf("Failed to find initialize core info\n");
+            return;
+        }
+
         std::filesystem::directory_iterator it(Settings::Get("core_path"));
         std::filesystem::directory_iterator end;
         while (it != end)
