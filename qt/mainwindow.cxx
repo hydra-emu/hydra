@@ -30,10 +30,15 @@
 #include <QThread>
 #include <QTimer>
 #include <settings.hxx>
+#ifdef HYDRA_USE_LUA
 #include <sol/sol.hpp>
+#endif
 #include <stb_image_write.h>
 #include <str_hash.hxx>
 #include <update.hxx>
+// TODO: remove this
+#define OSSL_DEPRECATEDIN_3_0
+#include <openssl/md5.h>
 
 enum class EmulatorState
 {
@@ -281,6 +286,10 @@ void MainWindow::create_actions()
     terminal_act_->setStatusTip("Open the terminal");
     terminal_act_->setIcon(QIcon(":/images/terminal.png"));
     connect(terminal_act_, &QAction::triggered, this, &MainWindow::open_terminal);
+    cheats_act_ = new QAction(tr("&Cheats"), this);
+    cheats_act_->setShortcut(Qt::Key_F8);
+    cheats_act_->setStatusTip("Open the cheats window");
+    connect(cheats_act_, &QAction::triggered, this, &MainWindow::toggle_cheats_window);
     recent_act_ = new QAction(tr("&Recent files"), this);
     for (int i = 0; i < 10; i++)
     {
@@ -330,6 +339,7 @@ void MainWindow::create_menus()
     emulation_menu_->addAction(mute_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
     tools_menu_->addAction(terminal_act_);
+    tools_menu_->addAction(cheats_act_);
     tools_menu_->addAction(scripts_act_);
     tools_menu_->addAction(shaders_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
@@ -469,6 +479,28 @@ void MainWindow::open_file_impl(const std::string& path)
             fmt::format("Failed to find core info for core {}... This shouldn't happen?", core_path)
                 .c_str());
     }
+    {
+        unsigned char result[MD5_DIGEST_LENGTH];
+        std::ifstream file(path, std::ifstream::binary);
+        MD5_CTX md5Context;
+        MD5_Init(&md5Context);
+        char buf[1024 * 16];
+        while (file.good())
+        {
+            file.read(buf, sizeof(buf));
+            MD5_Update(&md5Context, buf, file.gcount());
+        }
+        MD5_Final(result, &md5Context);
+        std::stringstream md5stream;
+        md5stream << std::hex << std::setfill('0');
+        for (const auto& byte : result)
+        {
+            md5stream << std::setw(2) << (int)byte;
+        }
+        game_hash_ = md5stream.str();
+    }
+    // TODO: such resets don't belong in open_file_impl, but in a separate function
+    cheats_window_.reset();
     emulator_ = hydra::EmulatorFactory::Create(core_path);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
@@ -560,6 +592,27 @@ void MainWindow::open_terminal()
         if (!terminal_open_)
         {
             new TerminalWindow(terminal_open_, this);
+        }
+    });
+}
+
+void MainWindow::toggle_cheats_window()
+{
+    qt_may_throw([this]() {
+        if (!cheats_window_)
+        {
+            cheats_window_.reset(new CheatsWindow(emulator_, cheats_open_, game_hash_, this));
+        }
+        else
+        {
+            if (!cheats_open_)
+            {
+                cheats_window_->Show();
+            }
+            else
+            {
+                cheats_window_->Hide();
+            }
         }
     });
 }
@@ -661,6 +714,10 @@ void MainWindow::enable_emulation_actions(bool should)
 {
     stop_act_->setEnabled(should);
     reset_act_->setEnabled(should);
+    scripts_act_->setEnabled(should);
+    terminal_act_->setEnabled(should);
+    cheats_act_->setEnabled(should);
+    shaders_act_->setEnabled(should);
     if (should)
         screen_->show();
     else
@@ -761,6 +818,21 @@ void MainWindow::init_emulator()
         shell_log->setLogCallback(hydra::LogTarget::Info, TerminalWindow::log_info);
         shell_log->setLogCallback(hydra::LogTarget::Debug, TerminalWindow::log_debug);
         shell_log->setLogCallback(hydra::LogTarget::Error, log_fatal);
+        terminal_act_->setEnabled(true);
+    }
+    else
+    {
+        terminal_act_->setEnabled(false);
+    }
+
+    // Initialize cheats
+    if (emulator_->shell->hasInterface(hydra::InterfaceType::ICheat))
+    {
+        cheats_act_->setEnabled(true);
+    }
+    else
+    {
+        cheats_act_->setEnabled(false);
     }
 
     if (emulator_->shell->hasInterface(hydra::InterfaceType::ISelfDriven))
