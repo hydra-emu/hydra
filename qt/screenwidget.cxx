@@ -17,12 +17,18 @@ ScreenWidget::~ScreenWidget()
     }
 }
 
-void ScreenWidget::Redraw(const void* tdata)
+void ScreenWidget::Redraw(void* tdata)
 {
     if (initialized_) [[likely]]
     {
         if (tdata)
         {
+            // TODO: find a faster way to do this (set all alphas to max or ignore alpha - otherwise
+            // causes windows to be transparent on wayland)
+            for (int i = 3; i < current_width_ * current_height_ * 4; i += 4)
+            {
+                ((uint8_t*)tdata)[i] = 0xFF;
+            }
             // Flip texture upside down when copying
             glBindTexture(GL_TEXTURE_2D, texture_);
             for (int i = 0; i < current_height_; i++)

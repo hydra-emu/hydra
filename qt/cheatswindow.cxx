@@ -144,9 +144,15 @@ CheatEntryWidget::CheatEntryWidget(std::shared_ptr<hydra::EmulatorWrapper> wrapp
     QHBoxLayout* layout = new QHBoxLayout;
     QCheckBox* chk_enabled = new QCheckBox;
 
+    chk_enabled->setChecked(metadata_->enabled);
     connect(chk_enabled, &QCheckBox::stateChanged, this, [this](int state) {
         metadata_->enabled = state == Qt::Checked;
         hydra::ICheat* cheat_interface = wrapper_->shell->asICheat();
+        if (metadata_->handle == hydra::BAD_CHEAT)
+        {
+            printf("Cheat handle is bad, this shouldn't happen\n");
+            return;
+        }
         if (metadata_->enabled)
         {
             cheat_interface->enableCheat(metadata_->handle);
@@ -156,8 +162,6 @@ CheatEntryWidget::CheatEntryWidget(std::shared_ptr<hydra::EmulatorWrapper> wrapp
             cheat_interface->disableCheat(metadata_->handle);
         }
     });
-
-    chk_enabled->setChecked(metadata_->enabled);
 
     lbl_name_ = new QLabel(metadata_->name.c_str());
     QPushButton* btn_edit = new QPushButton(tr("Edit"));
