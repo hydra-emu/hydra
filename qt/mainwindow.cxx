@@ -30,7 +30,9 @@
 #include <QThread>
 #include <QTimer>
 #include <settings.hxx>
+#ifdef HYDRA_USE_LUA
 #include <sol/sol.hpp>
+#endif
 #include <stb_image_write.h>
 #include <str_hash.hxx>
 #include <update.hxx>
