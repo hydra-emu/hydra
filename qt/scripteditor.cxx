@@ -59,7 +59,7 @@ void ScriptHighlighter::highlightBlock(const QString& text)
 ScriptEditor::ScriptEditor(bool& open,
                            std::function<void(const std::string&, bool)> run_script_callback,
                            QWidget* parent)
-    : QWidget(parent, Qt::Window), open_(open), run_script_callback_(run_script_callback)
+    : QWidget(parent, Qt::Window), run_script_callback_(run_script_callback), open_(open)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlag(Qt::WindowStaysOnTopHint);

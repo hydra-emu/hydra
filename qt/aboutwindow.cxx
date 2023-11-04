@@ -1,12 +1,12 @@
+#include "aboutwindow.hxx"
 #include <error_factory.hxx>
 #include <QFile>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <qt/aboutwindow.hxx>
 
-AboutWindow::AboutWindow(bool& open, QWidget* parent) : open_(open), QDialog(parent)
+AboutWindow::AboutWindow(bool& open, QWidget* parent) : QDialog(parent), open_(open)
 {
     static QString html;
     if (html.isEmpty())

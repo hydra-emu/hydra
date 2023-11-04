@@ -12,7 +12,7 @@
 
 SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callback,
                                QWidget* parent)
-    : open_(open), volume_callback_(volume_callback), QWidget(parent, Qt::Window)
+    : QWidget(parent, Qt::Window), open_(open), volume_callback_(volume_callback)
 {
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_DeleteOnClose);
@@ -221,7 +221,7 @@ void SettingsWindow::create_tabs()
             core_list->addItem(item);
         }
         connect(core_list, &QListWidget::itemDoubleClicked, this,
-                [this, html, core_list](QListWidgetItem* item) {
+                [html, core_list](QListWidgetItem* item) {
                     int index = core_list->row(item);
                     auto core = Settings::CoreInfo[index];
                     QMessageBox msg;
@@ -314,7 +314,7 @@ void SettingsWindow::create_tabs()
             std::string is_active =
                 Settings::Get(core_name + "_controller_" + std::to_string(j) + "_active");
             active->setChecked(is_active == "true");
-            connect(active, &QCheckBox::stateChanged, this, [this, j, core_name](int state) {
+            connect(active, &QCheckBox::stateChanged, this, [j, core_name](int state) {
                 Settings::Set(core_name + "_controller_" + std::to_string(j) + "_active",
                               state == Qt::Checked ? "true" : "false");
             });
@@ -379,7 +379,7 @@ QComboBox* SettingsWindow::make_input_combo(const QString& core_name, int player
         Settings::Set(setting, "Default mappings");
     }
     connect(combo, &QComboBox::currentTextChanged, this,
-            [this, setting](const QString& text) { Settings::Set(setting, text.toStdString()); });
+            [setting](const QString& text) { Settings::Set(setting, text.toStdString()); });
     std::tuple<QComboBox*, int, QString> tuple = {combo, player, selected_mapping};
     listener_combos_.push_back(tuple);
     return combo;

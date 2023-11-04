@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rbuffer.hxx"
 #include "screenwidget.hxx"
 #include "settings.hxx"
 #include <array>
@@ -53,8 +54,10 @@ private:
     void init_emulator();
     void stop_emulator();
     void enable_emulation_actions(bool should);
-    void initialize_audio();
+    void init_audio(hydra::SampleType sample_type = hydra::SampleType::Int16,
+                    hydra::ChannelType channel_type = hydra::ChannelType::Stereo);
     void set_volume(int volume);
+    void resample(void* output, const void* input, size_t frames);
     void update_recent_files();
     void update_fbo(unsigned fbo);
 
@@ -97,13 +100,15 @@ private:
     QTimer* emulator_timer_;
     ScreenWidget* screen_;
     DownloaderWindow* downloader_;
-    ma_device sound_device_{};
+    std::unique_ptr<ma_device, void (*)(ma_device*)> audio_device_;
+    std::unique_ptr<ma_resampler, void (*)(ma_resampler*)> resampler_;
     bool frontend_driven_ = false;
     std::unique_ptr<CheatsWindow> cheats_window_ = nullptr;
     std::shared_ptr<hydra::EmulatorWrapper> emulator_;
     std::unique_ptr<EmulatorInfo> info_;
     std::string game_hash_;
-    std::vector<int16_t> queued_audio_;
+    uint8_t audio_frame_size_ = 0;
+    hydra::ringbuffer<65536 * sizeof(float)> audio_buffer_;
     bool settings_open_ = false;
     bool about_open_ = false;
     bool shaders_open_ = false;

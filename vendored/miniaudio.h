@@ -11592,7 +11592,7 @@ static MA_INLINE void ma_sleep(ma_uint32 milliseconds)
 }
 #endif
 
-static MA_INLINE void ma_yield()
+static MA_INLINE void ma_yield(void)
 {
 #if defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
     /* x86/x64 */
@@ -11627,7 +11627,7 @@ static MA_INLINE void ma_yield()
 #define MA_MM_DENORMALS_ZERO_MASK   0x0040
 #define MA_MM_FLUSH_ZERO_MASK       0x8000
 
-static MA_INLINE unsigned int ma_disable_denormals()
+static MA_INLINE unsigned int ma_disable_denormals(void)
 {
     unsigned int prevState;
 
@@ -40038,7 +40038,7 @@ MA_API ma_result ma_context_uninit(ma_context* pContext)
     return MA_SUCCESS;
 }
 
-MA_API size_t ma_context_sizeof()
+MA_API size_t ma_context_sizeof(void)
 {
     return sizeof(ma_context);
 }
@@ -52201,7 +52201,7 @@ MA_API ma_result ma_channel_converter_get_output_channel_map(const ma_channel_co
 Data Conversion
 
 **************************************************************************************************************************************************************/
-MA_API ma_data_converter_config ma_data_converter_config_init_default()
+MA_API ma_data_converter_config ma_data_converter_config_init_default(void)
 {
     ma_data_converter_config config;
     MA_ZERO_OBJECT(&config);
@@ -59064,7 +59064,7 @@ MA_API ma_decoder_config ma_decoder_config_init(ma_format outputFormat, ma_uint3
     return config;
 }
 
-MA_API ma_decoder_config ma_decoder_config_init_default()
+MA_API ma_decoder_config ma_decoder_config_init_default(void)
 {
     return ma_decoder_config_init(ma_format_unknown, 0, 0);
 }

@@ -5,6 +5,7 @@
 #include "json.hpp"
 #include "settings.hxx"
 
+#include <qcheckbox.h>
 #include <QCheckBox>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -43,13 +44,15 @@ public:
     void Update()
     {
         lbl_name_->setText(metadata_->name.c_str());
+        chk_enabled_->setChecked(metadata_->enabled);
         update();
     }
 
 private:
-    std::shared_ptr<CheatMetadata> metadata_;
     std::shared_ptr<hydra::EmulatorWrapper> wrapper_;
+    std::shared_ptr<CheatMetadata> metadata_;
     QLabel* lbl_name_;
+    QCheckBox* chk_enabled_;
 };
 
 class CheatEditDialog : public QDialog
@@ -80,7 +83,7 @@ public:
             printf("Setting code to %s\n", metadata_->code.c_str());
             txt_code->setText(metadata_->code.c_str());
         }
-        connect(txt_code, &QTextEdit::textChanged, this, [this, txt_code]() {
+        connect(txt_code, &QTextEdit::textChanged, this, [txt_code]() {
             QString new_text = txt_code->toPlainText();
             new_text.replace(QRegularExpression("[^0-9a-fA-F]"), "");
             QStringList tokens;
@@ -117,6 +120,14 @@ public:
             {
                 cheat_interface->removeCheat(metadata_->handle);
                 metadata_->handle = cheat_interface->addCheat(bytes.data(), bytes.size());
+                if (metadata_->enabled)
+                {
+                    cheat_interface->enableCheat(metadata_->handle);
+                }
+                else
+                {
+                    cheat_interface->disableCheat(metadata_->handle);
+                }
             }
             else
             {
@@ -125,15 +136,16 @@ public:
                     metadata_->name = tr("My cheat code").toStdString();
                 }
                 metadata_->handle = cheat_interface->addCheat(bytes.data(), bytes.size());
+                cheat_interface->disableCheat(metadata_->handle);
             }
             entry_.Update();
         });
     }
 
 private:
+    std::shared_ptr<hydra::EmulatorWrapper> wrapper_;
     CheatEntryWidget& entry_;
     std::shared_ptr<CheatMetadata> metadata_;
-    std::shared_ptr<hydra::EmulatorWrapper> wrapper_;
     bool is_editing_;
 };
 
@@ -142,10 +154,10 @@ CheatEntryWidget::CheatEntryWidget(std::shared_ptr<hydra::EmulatorWrapper> wrapp
     : QWidget(), wrapper_(wrapper), metadata_(metadata)
 {
     QHBoxLayout* layout = new QHBoxLayout;
-    QCheckBox* chk_enabled = new QCheckBox;
+    chk_enabled_ = new QCheckBox;
 
-    chk_enabled->setChecked(metadata_->enabled);
-    connect(chk_enabled, &QCheckBox::stateChanged, this, [this](int state) {
+    chk_enabled_->setChecked(metadata_->enabled);
+    connect(chk_enabled_, &QCheckBox::stateChanged, this, [this](int state) {
         metadata_->enabled = state == Qt::Checked;
         hydra::ICheat* cheat_interface = wrapper_->shell->asICheat();
         if (metadata_->handle == hydra::BAD_CHEAT)
@@ -171,7 +183,7 @@ CheatEntryWidget::CheatEntryWidget(std::shared_ptr<hydra::EmulatorWrapper> wrapp
         dialog->show();
     });
 
-    layout->addWidget(chk_enabled);
+    layout->addWidget(chk_enabled_);
     layout->addWidget(lbl_name_);
     layout->addWidget(btn_edit);
     setLayout(layout);
@@ -297,7 +309,7 @@ void CheatsWindow::save_cheats()
     cheat_file << cheat_json.dump(4);
 }
 
-void CheatsWindow::closeEvent(QCloseEvent* event)
+void CheatsWindow::closeEvent(QCloseEvent*)
 {
     Hide();
 }

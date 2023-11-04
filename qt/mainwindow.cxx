@@ -1,3 +1,4 @@
+#define OPENSSL_API_COMPAT 10101
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
 #include "downloaderwindow.hxx"
@@ -16,6 +17,7 @@
 #include <iostream>
 #include <json.hpp>
 #include <log.h>
+#include <mutex>
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopServices>
@@ -33,12 +35,10 @@
 #ifdef HYDRA_USE_LUA
 #include <sol/sol.hpp>
 #endif
+#include <openssl/md5.h>
 #include <stb_image_write.h>
 #include <str_hash.hxx>
 #include <update.hxx>
-// TODO: remove this
-#define OSSL_DEPRECATEDIN_3_0
-#include <openssl/md5.h>
 
 enum class EmulatorState
 {
@@ -55,14 +55,14 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
 {
     MainWindow* window = static_cast<MainWindow*>(device->pUserData);
     std::unique_lock<std::mutex> lock(window->audio_mutex_);
-    if (window->queued_audio_.empty())
+    size_t frames_to_read =
+        std::min((size_t)frames * window->audio_frame_size_, window->audio_buffer_.size());
+    std::vector<int16_t> temp(frames_to_read / sizeof(int16_t));
+    window->audio_buffer_.read(temp.data(), frames_to_read);
+    for (size_t i = 0; i < temp.size(); i++)
     {
-        return;
+        ((int16_t*)out)[i] = temp[i];
     }
-    frames = std::min(frames * 2, static_cast<ma_uint32>(window->queued_audio_.size()));
-    std::memcpy(out, window->queued_audio_.data(), frames * sizeof(int16_t));
-    window->queued_audio_.erase(window->queued_audio_.begin(),
-                                window->queued_audio_.begin() + frames);
 }
 
 void emulator_signal_handler(int signal)
@@ -72,15 +72,24 @@ void emulator_signal_handler(int signal)
     main_window->stop_emulator();
 }
 
-void initialize_signals()
+void init_signals()
 {
     signal(SIGSEGV, emulator_signal_handler);
     signal(SIGILL, emulator_signal_handler);
 }
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
+void resampler_destructor(ma_resampler* resampler)
+{
+    ma_resampler_uninit(resampler, nullptr);
+}
+
+MainWindow::MainWindow(QWidget* parent)
+    : QMainWindow(parent), audio_device_(nullptr, ma_device_uninit),
+      resampler_(nullptr, resampler_destructor)
 {
     main_window = this;
+
+    init_audio();
 
     emulator_thread_state = EmulatorState::NOTRUNNING;
 
@@ -109,7 +118,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     emulator_timer_ = new QTimer(this);
     connect(emulator_timer_, SIGNAL(timeout()), this, SLOT(emulator_frame()));
 
-    initialize_audio();
     enable_emulation_actions(false);
     screen_->show();
 
@@ -120,7 +128,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     )");
 
     QFuture<hydra::Updater::UpdateStatus> future =
-        QtConcurrent::run([this]() { return hydra::Updater::NeedsDatabaseUpdate(); });
+        QtConcurrent::run([]() { return hydra::Updater::NeedsDatabaseUpdate(); });
 
     QFutureWatcher<hydra::Updater::UpdateStatus>* watcher =
         new QFutureWatcher<hydra::Updater::UpdateStatus>(this);
@@ -152,7 +160,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-    ma_device_uninit(&sound_device_);
     stop_emulator();
 }
 
@@ -161,40 +168,54 @@ void MainWindow::OpenFile(const std::string& file)
     open_file_impl(file);
 }
 
-void MainWindow::initialize_audio()
+void MainWindow::init_audio(hydra::SampleType sample_type, hydra::ChannelType channel_type)
 {
-    ma_context context;
-    ma_context_config context_config = ma_context_config_init();
-    context_config.threadPriority = ma_thread_priority_realtime;
-    if (ma_context_init(NULL, 0, &context_config, &context) != MA_SUCCESS)
-    {
-        log_fatal("Failed to initialize audio context");
-    }
+    static std::once_flag context_initialized;
+    std::call_once(context_initialized, []() {
+        ma_context context;
+        ma_context_config context_config = ma_context_config_init();
+        context_config.threadPriority = ma_thread_priority_realtime;
+        if (ma_context_init(NULL, 0, &context_config, &context) != MA_SUCCESS)
+        {
+            log_fatal("Failed to initialize audio context");
+        }
+    });
 
+    audio_frame_size_ =
+        (sample_type == hydra::SampleType::Int16 ? 2 : 4) * static_cast<int>(channel_type);
+
+    audio_device_.reset(new ma_device);
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
-    config.playback.format = ma_format_s16;
-    config.playback.channels = 2;
-    config.sampleRate = 48000;
-    config.periodSizeInFrames = 48000 / 60;
+    config.playback.format =
+        sample_type == hydra::SampleType::Int16 ? ma_format_s16 : ma_format_f32;
+    config.playback.channels = static_cast<int>(channel_type);
+    config.sampleRate = 0;
     config.dataCallback = hungry_for_more;
     config.pUserData = this;
-    if (ma_device_init(NULL, &config, &sound_device_) != MA_SUCCESS)
+
+    if (ma_device_init(NULL, &config, audio_device_.get()) != MA_SUCCESS)
     {
         log_fatal("Failed to open audio device");
     }
-    ma_device_start(&sound_device_);
+
+    ma_device_start(audio_device_.get());
 
     std::string volume_str = Settings::Get("master_volume");
     if (!volume_str.empty())
     {
         int volume = std::stoi(volume_str);
         float volume_f = static_cast<float>(volume) / 100.0f;
-        ma_device_set_master_volume(&sound_device_, volume_f);
+        ma_device_set_master_volume(audio_device_.get(), volume_f);
     }
     else
     {
-        ma_device_set_master_volume(&sound_device_, 1.0f);
+        ma_device_set_master_volume(audio_device_.get(), 1.0f);
     }
+}
+
+void MainWindow::resample(void*, const void*, size_t)
+{
+    printf("todo: resampling\n");
 }
 
 void MainWindow::create_actions()
@@ -237,22 +258,25 @@ void MainWindow::create_actions()
     mute_act_->setCheckable(true);
     mute_act_->setStatusTip(tr("Mute audio"));
     connect(mute_act_, &QAction::triggered, this, [this]() {
-        if (mute_act_->isChecked())
+        if (audio_device_)
         {
-            ma_device_set_master_volume(&sound_device_, 0.0f);
-        }
-        else
-        {
-            std::string volume_str = Settings::Get("master_volume");
-            if (!volume_str.empty())
+            if (mute_act_->isChecked())
             {
-                int volume = std::stoi(volume_str);
-                float volume_f = static_cast<float>(volume) / 100.0f;
-                ma_device_set_master_volume(&sound_device_, volume_f);
+                ma_device_set_master_volume(audio_device_.get(), 0.0f);
             }
             else
             {
-                ma_device_set_master_volume(&sound_device_, 1.0f);
+                std::string volume_str = Settings::Get("master_volume");
+                if (!volume_str.empty())
+                {
+                    int volume = std::stoi(volume_str);
+                    float volume_f = static_cast<float>(volume) / 100.0f;
+                    ma_device_set_master_volume(audio_device_.get(), volume_f);
+                }
+                else
+                {
+                    ma_device_set_master_volume(audio_device_.get(), 1.0f);
+                }
             }
         }
     });
@@ -366,7 +390,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
     input_state_[player][(int)key] = 0;
 }
 
-void MainWindow::on_mouse_move(QMouseEvent* event) {}
+void MainWindow::on_mouse_move(QMouseEvent*) {}
 
 void MainWindow::on_mouse_click(QMouseEvent* event)
 {
@@ -620,6 +644,8 @@ void MainWindow::toggle_cheats_window()
 // TODO: compiler option to turn off lua support
 void MainWindow::run_script(const std::string& script, bool safe_mode)
 {
+    (void)script;
+    (void)safe_mode;
 #ifdef HYDRA_USE_LUA
     static bool initialized = false;
     static sol::state lua;
@@ -697,7 +723,10 @@ void MainWindow::screenshot()
 
 void MainWindow::set_volume(int volume)
 {
-    ma_device_set_master_volume(&sound_device_, volume / 100.0f);
+    if (audio_device_)
+    {
+        ma_device_set_master_volume(audio_device_.get(), volume / 100.0f);
+    }
 }
 
 void MainWindow::open_about()
@@ -742,7 +771,7 @@ void MainWindow::reset_emulator()
     if (emulator_)
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
-        queued_audio_.clear();
+        audio_buffer_.clear();
         emulator_->shell->asIBase()->reset();
     }
 }
@@ -798,8 +827,32 @@ void MainWindow::init_emulator()
     if (emulator_->shell->hasInterface(hydra::InterfaceType::IAudio))
     {
         hydra::IAudio* shell_audio = emulator_->shell->asIAudio();
-        shell_audio->setSampleRate(48000);
         shell_audio->setAudioCallback(audio_callback);
+        hydra::SampleType sample_type = shell_audio->getSampleType();
+        hydra::ChannelType channel_type = shell_audio->getChannelType();
+        uint32_t sample_rate = shell_audio->getSampleRate();
+
+        ma_format format = sample_type == hydra::SampleType::Int16 ? ma_format_s16 : ma_format_f32;
+        ma_channel channel = static_cast<int>(channel_type);
+        if (format != audio_device_->playback.format || channel != audio_device_->playback.channels)
+        {
+            // Reinitialize audio with our settings
+            init_audio(sample_type, channel_type);
+        }
+
+        resampler_.reset();
+
+        if (audio_device_->sampleRate != sample_rate)
+        {
+            ma_resampler_config config =
+                ma_resampler_config_init(format, channel, sample_rate, audio_device_->sampleRate,
+                                         ma_resample_algorithm_linear);
+            resampler_.reset(new ma_resampler);
+            if (ma_resampler_init(&config, nullptr, resampler_.get()) != MA_SUCCESS)
+            {
+                log_fatal("Failed to initialize resampler");
+            }
+        }
     }
 
     // Initialize input
@@ -921,10 +974,7 @@ void MainWindow::video_callback(void* data, hydra::Size size)
 void MainWindow::audio_callback(void* data, size_t frames)
 {
     std::unique_lock<std::mutex> lock(main_window->audio_mutex_);
-    main_window->queued_audio_.reserve(main_window->queued_audio_.size() + frames * 2);
-    // TODO: fix for float samples
-    main_window->queued_audio_.insert(main_window->queued_audio_.end(), (int16_t*)data,
-                                      (int16_t*)data + frames * 2);
+    main_window->audio_buffer_.write(data, frames * main_window->audio_frame_size_);
 }
 
 int32_t MainWindow::read_input_callback(uint32_t player, hydra::ButtonType button)

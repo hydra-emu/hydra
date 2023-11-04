@@ -10,7 +10,7 @@ class QListWidget;
 
 struct CheatMetadata
 {
-    bool enabled = true;
+    bool enabled = false;
     std::string name{};
     std::string code{};
     uint32_t handle = hydra::BAD_CHEAT;

@@ -202,7 +202,7 @@ void ShaderHighlighter::highlightBlock(const QString& text)
 
 ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> callback,
                            QWidget* parent)
-    : open_(open), callback_(callback), QWidget(parent, Qt::Window)
+    : QWidget(parent, Qt::Window), callback_(callback), open_(open)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlag(Qt::WindowStaysOnTopHint);
