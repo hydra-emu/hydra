@@ -3,6 +3,7 @@
 #include "rbuffer.hxx"
 #include "screenwidget.hxx"
 #include "settings.hxx"
+#include "update.hxx"
 #include <array>
 #include <deque>
 #include <hydra/core.hxx>
@@ -13,6 +14,7 @@
 #include <core_loader.hxx>
 #include <miniaudio.h>
 #include <QFileDialog>
+#include <QFutureWatcher>
 #include <QLabel>
 #include <QMainWindow>
 #include <QMenuBar>
@@ -40,7 +42,6 @@ private:
     void open_file_impl(const std::string& file);
     void open_settings();
     void open_about();
-    void open_shaders();
     void open_scripts();
     void open_terminal();
     void toggle_cheats_window();
@@ -70,6 +71,8 @@ private slots:
     void on_mouse_click(QMouseEvent* event);
     void on_mouse_release(QMouseEvent* event);
     void emulator_frame();
+    void update_check_finished();
+    void toggle_mute();
 
 public:
     MainWindow(QWidget* parent = nullptr);
@@ -92,7 +95,6 @@ private:
     QAction* open_settings_file_act_;
     QAction* open_settings_folder_act_;
     QAction* screenshot_act_;
-    QAction* shaders_act_;
     QAction* scripts_act_;
     QAction* cheats_act_;
     QAction* terminal_act_;
@@ -100,6 +102,7 @@ private:
     QTimer* emulator_timer_;
     ScreenWidget* screen_;
     DownloaderWindow* downloader_;
+    QFutureWatcher<hydra::Updater::UpdateStatus>* update_watcher_;
     std::unique_ptr<ma_device, void (*)(ma_device*)> audio_device_;
     std::unique_ptr<ma_resampler, void (*)(ma_resampler*)> resampler_;
     bool frontend_driven_ = false;
@@ -111,7 +114,6 @@ private:
     hydra::ringbuffer<65536 * sizeof(float)> audio_buffer_;
     bool settings_open_ = false;
     bool about_open_ = false;
-    bool shaders_open_ = false;
     bool scripts_open_ = false;
     bool terminal_open_ = false;
     bool cheats_open_ = false;
@@ -132,7 +134,6 @@ private:
     // vector[player][button]
     std::vector<std::array<int32_t, (int)hydra::ButtonType::InputCount>> input_state_{};
     std::deque<std::string> recent_files_;
-    // Holds the current state of the mouse
     uint32_t mouse_state_ = hydra::TOUCH_RELEASED;
 
     friend void emulator_signal_handler(int);

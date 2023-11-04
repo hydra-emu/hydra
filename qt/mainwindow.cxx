@@ -6,7 +6,6 @@
 #include "qthelper.hxx"
 #include "scripteditor.hxx"
 #include "settingswindow.hxx"
-#include "shadereditor.hxx"
 #include "terminalwindow.hxx"
 #include <compatibility.hxx>
 #include <csignal>
@@ -18,18 +17,12 @@
 #include <json.hpp>
 #include <log.h>
 #include <mutex>
-#include <QApplication>
-#include <QClipboard>
 #include <QDesktopServices>
 #include <QFile>
-#include <QGridLayout>
-#include <QGroupBox>
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QMessageBox>
-#include <QSurfaceFormat>
 #include <QtConcurrent/QtConcurrent>
-#include <QThread>
 #include <QTimer>
 #include <settings.hxx>
 #ifdef HYDRA_USE_LUA
@@ -89,73 +82,48 @@ MainWindow::MainWindow(QWidget* parent)
 {
     main_window = this;
 
-    init_audio();
-
-    emulator_thread_state = EmulatorState::NOTRUNNING;
-
-    QWidget* widget = new QWidget;
-    setCentralWidget(widget);
-
-    QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
-    layout->setContentsMargins(5, 5, 5, 5);
-    screen_ = new ScreenWidget(widget);
-    screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
-    screen_->SetMouseClickCallback([this](QMouseEvent* event) { on_mouse_click(event); });
-    screen_->SetMouseReleaseCallback([this](QMouseEvent* event) { on_mouse_release(event); });
-    screen_->setMouseTracking(true);
-    layout->addWidget(screen_, Qt::AlignCenter);
-    widget->setLayout(layout);
-    create_actions();
-    create_menus();
+    setWindowTitle("hydra");
+    setWindowIcon(QIcon(":/images/hydra.png"));
+    setMinimumSize(160, 160);
+    resize(640, 480);
 
     QString message = tr("Welcome to hydra!");
     statusBar()->showMessage(message);
-    setMinimumSize(160, 160);
-    resize(640, 480);
-    setWindowTitle("hydra");
-    setWindowIcon(QIcon(":/images/hydra.png"));
 
-    emulator_timer_ = new QTimer(this);
-    connect(emulator_timer_, SIGNAL(timeout()), this, SLOT(emulator_frame()));
-
-    enable_emulation_actions(false);
-    screen_->show();
-
+    QWidget* widget = new QWidget;
     widget->setStyleSheet(R"(
         background-repeat: no-repeat;
         background-position: center;
         background-image: url(:/images/hydra.png);
     )");
+    setCentralWidget(widget);
 
-    QFuture<hydra::Updater::UpdateStatus> future =
+    QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
+    layout->setContentsMargins(5, 5, 5, 5);
+    widget->setLayout(layout);
+
+    create_actions();
+    create_menus();
+
+    screen_ = new ScreenWidget(widget);
+    screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
+    screen_->SetMouseClickCallback([this](QMouseEvent* event) { on_mouse_click(event); });
+    screen_->SetMouseReleaseCallback([this](QMouseEvent* event) { on_mouse_release(event); });
+    screen_->setMouseTracking(true);
+    screen_->show();
+    layout->addWidget(screen_, Qt::AlignCenter);
+
+    emulator_thread_state = EmulatorState::NOTRUNNING;
+    init_audio();
+    emulator_timer_ = new QTimer(this);
+    connect(emulator_timer_, SIGNAL(timeout()), this, SLOT(emulator_frame()));
+    enable_emulation_actions(false);
+
+    QFuture<hydra::Updater::UpdateStatus> update_future =
         QtConcurrent::run([]() { return hydra::Updater::NeedsDatabaseUpdate(); });
-
-    QFutureWatcher<hydra::Updater::UpdateStatus>* watcher =
-        new QFutureWatcher<hydra::Updater::UpdateStatus>(this);
-    connect(watcher, &QFutureWatcher<hydra::Updater::UpdateStatus>::finished, this,
-            [this, watcher]() {
-                if (watcher->result() == hydra::Updater::UpdateStatus::UpdateAvailable)
-                {
-                    QMessageBox* msg = new QMessageBox;
-                    msg->setWindowTitle("Database update available");
-                    msg->setText("There's a new version of the database available.\nWould you like "
-                                 "to update in the background?");
-                    msg->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-                    msg->setDefaultButton(QMessageBox::Yes);
-                    connect(msg, &QMessageBox::finished, this, [this, msg]() {
-                        if (msg->clickedButton() == msg->button(QMessageBox::Yes))
-                        {
-                            statusBar()->showMessage("Updating database...");
-                            hydra::Updater::UpdateDatabase(
-                                [this]() { statusBar()->showMessage("Database updated"); });
-                        }
-                    });
-                    msg->move(screen()->geometry().center() - frameGeometry().center());
-                    msg->show();
-                    watcher->deleteLater();
-                }
-            });
-    watcher->setFuture(future);
+    update_watcher_ = new QFutureWatcher<hydra::Updater::UpdateStatus>(this);
+    connect(update_watcher_, SIGNAL(finished()), this, SLOT(update_check_finished()));
+    update_watcher_->setFuture(update_future);
 }
 
 MainWindow::~MainWindow()
@@ -166,6 +134,30 @@ MainWindow::~MainWindow()
 void MainWindow::OpenFile(const std::string& file)
 {
     open_file_impl(file);
+}
+
+void MainWindow::update_check_finished()
+{
+    if (update_watcher_->result() == hydra::Updater::UpdateStatus::UpdateAvailable)
+    {
+        QMessageBox* msg = new QMessageBox;
+        msg->setWindowTitle("Database update available");
+        msg->setText("There's a new version of the database available.\nWould you like "
+                     "to update in the background?");
+        msg->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msg->setDefaultButton(QMessageBox::Yes);
+        connect(msg, &QMessageBox::finished, this, [this, msg]() {
+            if (msg->clickedButton() == msg->button(QMessageBox::Yes))
+            {
+                statusBar()->showMessage("Updating database...");
+                hydra::Updater::UpdateDatabase(
+                    [this]() { statusBar()->showMessage("Database updated"); });
+            }
+        });
+        msg->move(screen()->geometry().center() - frameGeometry().center());
+        msg->show();
+        update_watcher_->deleteLater();
+    }
 }
 
 void MainWindow::init_audio(hydra::SampleType sample_type, hydra::ChannelType channel_type)
@@ -181,13 +173,23 @@ void MainWindow::init_audio(hydra::SampleType sample_type, hydra::ChannelType ch
         }
     });
 
-    audio_frame_size_ =
-        (sample_type == hydra::SampleType::Int16 ? 2 : 4) * static_cast<int>(channel_type);
-
     audio_device_.reset(new ma_device);
+
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
-    config.playback.format =
-        sample_type == hydra::SampleType::Int16 ? ma_format_s16 : ma_format_f32;
+    switch (sample_type)
+    {
+        case hydra::SampleType::Int16:
+            audio_frame_size_ = sizeof(int16_t);
+            config.playback.format = ma_format_s16;
+            break;
+        case hydra::SampleType::Float:
+            audio_frame_size_ = sizeof(float);
+            config.playback.format = ma_format_f32;
+            break;
+        default:
+            log_fatal("Unknown sample type");
+            break;
+    }
     config.playback.channels = static_cast<int>(channel_type);
     config.sampleRate = 0;
     config.dataCallback = hungry_for_more;
@@ -218,6 +220,11 @@ void MainWindow::resample(void*, const void*, size_t)
     printf("todo: resampling\n");
 }
 
+void open_url(const std::filesystem::path& url)
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(url.string().c_str()));
+}
+
 void MainWindow::create_actions()
 {
     open_act_ = new QAction(tr("&Open ROM"), this);
@@ -225,78 +232,59 @@ void MainWindow::create_actions()
     open_act_->setStatusTip(tr("Open a ROM"));
     open_act_->setIcon(QIcon(":/images/open.png"));
     connect(open_act_, &QAction::triggered, this, &MainWindow::open_file);
+
     settings_act_ = new QAction(tr("&Settings"), this);
     settings_act_->setShortcut(Qt::CTRL | Qt::Key_Comma);
     settings_act_->setStatusTip(tr("Emulator settings"));
+    connect(settings_act_, &QAction::triggered, this, &MainWindow::open_settings);
+
     open_settings_file_act_ = new QAction(tr("Open settings file"), this);
     open_settings_file_act_->setStatusTip(tr("Open the settings.json file"));
-    connect(open_settings_file_act_, &QAction::triggered, this, []() {
-        std::string settings_file = (Settings::GetSavePath() / "settings.json").string();
-        QDesktopServices::openUrl(QUrl::fromLocalFile(settings_file.c_str()));
-    });
+    connect(open_settings_file_act_, &QAction::triggered, this,
+            std::bind(open_url, Settings::GetSavePath() / "settings.json"));
+
     open_settings_folder_act_ = new QAction(tr("Open settings folder"), this);
     open_settings_folder_act_->setStatusTip(tr("Open the settings folder"));
-    connect(open_settings_folder_act_, &QAction::triggered, this, []() {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(Settings::GetSavePath().string().c_str()));
-    });
-    connect(settings_act_, &QAction::triggered, this, &MainWindow::open_settings);
+    connect(open_settings_folder_act_, &QAction::triggered, this,
+            std::bind(open_url, Settings::GetSavePath()));
+
     close_act_ = new QAction(tr("&Exit"), this);
     close_act_->setShortcut(QKeySequence::Close);
     close_act_->setStatusTip(tr("Exit hydra"));
     connect(close_act_, &QAction::triggered, this, &MainWindow::close);
+
     pause_act_ = new QAction(tr("&Pause"), this);
     pause_act_->setShortcut(Qt::CTRL | Qt::Key_P);
     pause_act_->setCheckable(true);
     pause_act_->setStatusTip(tr("Pause emulation"));
     connect(pause_act_, &QAction::triggered, this, &MainWindow::pause_emulator);
+
     stop_act_ = new QAction(tr("&Stop"), this);
     stop_act_->setShortcut(Qt::CTRL | Qt::Key_Q);
     stop_act_->setStatusTip(tr("Stop emulation immediately"));
     connect(stop_act_, &QAction::triggered, this, &MainWindow::stop_emulator);
+
     mute_act_ = new QAction(tr("&Mute"), this);
     mute_act_->setShortcut(Qt::CTRL | Qt::Key_M);
     mute_act_->setCheckable(true);
     mute_act_->setStatusTip(tr("Mute audio"));
-    connect(mute_act_, &QAction::triggered, this, [this]() {
-        if (audio_device_)
-        {
-            if (mute_act_->isChecked())
-            {
-                ma_device_set_master_volume(audio_device_.get(), 0.0f);
-            }
-            else
-            {
-                std::string volume_str = Settings::Get("master_volume");
-                if (!volume_str.empty())
-                {
-                    int volume = std::stoi(volume_str);
-                    float volume_f = static_cast<float>(volume) / 100.0f;
-                    ma_device_set_master_volume(audio_device_.get(), volume_f);
-                }
-                else
-                {
-                    ma_device_set_master_volume(audio_device_.get(), 1.0f);
-                }
-            }
-        }
-    });
+    connect(mute_act_, SIGNAL(triggered()), this, SLOT(toggle_mute()));
+
     reset_act_ = new QAction(tr("&Reset"), this);
     reset_act_->setShortcut(Qt::CTRL | Qt::Key_R);
     reset_act_->setStatusTip(tr("Reset emulator"));
     connect(reset_act_, &QAction::triggered, this, &MainWindow::reset_emulator);
+
     screenshot_act_ = new QAction(tr("S&creenshot"), this);
     screenshot_act_->setShortcut(Qt::Key_F12);
     screenshot_act_->setStatusTip(tr("Take a screenshot (check settings for save path)"));
     connect(screenshot_act_, &QAction::triggered, this, &MainWindow::screenshot);
+
     about_act_ = new QAction(tr("&About"), this);
     about_act_->setShortcut(QKeySequence::HelpContents);
     about_act_->setStatusTip(tr("Show about dialog"));
     connect(about_act_, &QAction::triggered, this, &MainWindow::open_about);
-    shaders_act_ = new QAction(tr("&Shaders"), this);
-    shaders_act_->setShortcut(Qt::Key_F11);
-    shaders_act_->setStatusTip("Open the shader editor");
-    shaders_act_->setIcon(QIcon(":/images/shaders.png"));
-    connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
+
     scripts_act_ = new QAction(tr("S&cripts"), this);
     scripts_act_->setShortcut(Qt::Key_F10);
     scripts_act_->setStatusTip("Open the script editor");
@@ -305,15 +293,18 @@ void MainWindow::create_actions()
 #ifndef HYDRA_USE_LUA
     scripts_act_->setEnabled(false);
 #endif
+
     terminal_act_ = new QAction(tr("&Terminal"), this);
     terminal_act_->setShortcut(Qt::Key_F9);
     terminal_act_->setStatusTip("Open the terminal");
     terminal_act_->setIcon(QIcon(":/images/terminal.png"));
     connect(terminal_act_, &QAction::triggered, this, &MainWindow::open_terminal);
+
     cheats_act_ = new QAction(tr("&Cheats"), this);
     cheats_act_->setShortcut(Qt::Key_F8);
     cheats_act_->setStatusTip("Open the cheats window");
     connect(cheats_act_, &QAction::triggered, this, &MainWindow::toggle_cheats_window);
+
     recent_act_ = new QAction(tr("&Recent files"), this);
     for (int i = 0; i < 10; i++)
     {
@@ -341,6 +332,31 @@ void MainWindow::create_actions()
     }
 }
 
+void MainWindow::toggle_mute()
+{
+    if (audio_device_)
+    {
+        if (mute_act_->isChecked())
+        {
+            ma_device_set_master_volume(audio_device_.get(), 0.0f);
+        }
+        else
+        {
+            std::string volume_str = Settings::Get("master_volume");
+            if (!volume_str.empty())
+            {
+                int volume = std::stoi(volume_str);
+                float volume_f = static_cast<float>(volume) / 100.0f;
+                ma_device_set_master_volume(audio_device_.get(), volume_f);
+            }
+            else
+            {
+                ma_device_set_master_volume(audio_device_.get(), 1.0f);
+            }
+        }
+    }
+}
+
 void MainWindow::create_menus()
 {
     file_menu_ = menuBar()->addMenu(tr("&File"));
@@ -362,10 +378,9 @@ void MainWindow::create_menus()
     emulation_menu_->addSeparator();
     emulation_menu_->addAction(mute_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
-    tools_menu_->addAction(terminal_act_);
     tools_menu_->addAction(cheats_act_);
+    tools_menu_->addAction(terminal_act_);
     tools_menu_->addAction(scripts_act_);
-    tools_menu_->addAction(shaders_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
 }
@@ -586,19 +601,6 @@ void MainWindow::open_settings()
     });
 }
 
-void MainWindow::open_shaders()
-{
-    qt_may_throw([this]() {
-        if (!shaders_open_)
-        {
-            // using namespace std::placeholders;
-            // std::function<void(QString*, QString*)> callback =
-            //     std::bind(&ScreenWidget::ResetProgram, screen_, _1, _2);
-            // new ShaderEditor(shaders_open_, callback, this);
-        }
-    });
-}
-
 void MainWindow::open_scripts()
 {
     qt_may_throw([this]() {
@@ -746,7 +748,6 @@ void MainWindow::enable_emulation_actions(bool should)
     scripts_act_->setEnabled(should);
     terminal_act_->setEnabled(should);
     cheats_act_->setEnabled(should);
-    shaders_act_->setEnabled(should);
     if (should)
         screen_->show();
     else
