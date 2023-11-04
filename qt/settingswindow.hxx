@@ -14,14 +14,13 @@ class SettingsWindow : public QWidget
     Q_OBJECT
 
 public:
-    SettingsWindow(bool& open, std::function<void(int)> volume_callback, QWidget* parent = nullptr);
-    ~SettingsWindow();
+    SettingsWindow(std::function<void(int)> volume_callback, QWidget* parent = nullptr);
+    ~SettingsWindow() = default;
 
 private slots:
     void on_tab_change(int tab);
 
 private:
-    bool& open_;
     QListWidget* tab_list_;
     QTabWidget* tab_show_;
     QGroupBox *right_group_box_, *left_group_box_;

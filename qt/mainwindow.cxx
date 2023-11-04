@@ -1,8 +1,9 @@
+#include <qwidget.h>
 #define OPENSSL_API_COMPAT 10101
-#include "mainwindow.hxx"
 #include "aboutwindow.hxx"
 #include "downloaderwindow.hxx"
 #include "input.hxx"
+#include "mainwindow.hxx"
 #include "qthelper.hxx"
 #include "scripteditor.hxx"
 #include "settingswindow.hxx"
@@ -91,11 +92,6 @@ MainWindow::MainWindow(QWidget* parent)
     statusBar()->showMessage(message);
 
     QWidget* widget = new QWidget;
-    widget->setStyleSheet(R"(
-        background-repeat: no-repeat;
-        background-position: center;
-        background-image: url(:/images/hydra.png);
-    )");
     setCentralWidget(widget);
 
     QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
@@ -236,7 +232,7 @@ void MainWindow::create_actions()
     settings_act_ = new QAction(tr("&Settings"), this);
     settings_act_->setShortcut(Qt::CTRL | Qt::Key_Comma);
     settings_act_->setStatusTip(tr("Emulator settings"));
-    connect(settings_act_, &QAction::triggered, this, &MainWindow::open_settings);
+    connect(settings_act_, &QAction::triggered, this, &MainWindow::action_settings);
 
     open_settings_file_act_ = new QAction(tr("Open settings file"), this);
     open_settings_file_act_->setStatusTip(tr("Open the settings.json file"));
@@ -283,13 +279,14 @@ void MainWindow::create_actions()
     about_act_ = new QAction(tr("&About"), this);
     about_act_->setShortcut(QKeySequence::HelpContents);
     about_act_->setStatusTip(tr("Show about dialog"));
-    connect(about_act_, &QAction::triggered, this, &MainWindow::open_about);
+    connect(about_act_, &QAction::triggered, this, &MainWindow::action_about);
 
     scripts_act_ = new QAction(tr("S&cripts"), this);
     scripts_act_->setShortcut(Qt::Key_F10);
     scripts_act_->setStatusTip("Open the script editor");
     scripts_act_->setIcon(QIcon(":/images/scripts.png"));
-    connect(scripts_act_, &QAction::triggered, this, &MainWindow::open_scripts);
+    scripts_act_->setCheckable(true);
+    connect(scripts_act_, &QAction::triggered, this, &MainWindow::action_scripts);
 #ifndef HYDRA_USE_LUA
     scripts_act_->setEnabled(false);
 #endif
@@ -298,12 +295,14 @@ void MainWindow::create_actions()
     terminal_act_->setShortcut(Qt::Key_F9);
     terminal_act_->setStatusTip("Open the terminal");
     terminal_act_->setIcon(QIcon(":/images/terminal.png"));
-    connect(terminal_act_, &QAction::triggered, this, &MainWindow::open_terminal);
+    terminal_act_->setCheckable(true);
+    connect(terminal_act_, &QAction::triggered, this, &MainWindow::action_terminal);
 
     cheats_act_ = new QAction(tr("&Cheats"), this);
     cheats_act_->setShortcut(Qt::Key_F8);
     cheats_act_->setStatusTip("Open the cheats window");
-    connect(cheats_act_, &QAction::triggered, this, &MainWindow::toggle_cheats_window);
+    cheats_act_->setCheckable(true);
+    connect(cheats_act_, &QAction::triggered, this, &MainWindow::action_cheats);
 
     recent_act_ = new QAction(tr("&Recent files"), this);
     for (int i = 0; i < 10; i++)
@@ -483,6 +482,7 @@ void MainWindow::open_file_impl(const std::string& path)
     }
 
     stop_emulator();
+
     Settings::Set("last_path", pathfs.parent_path().string());
     std::string core_path;
     for (const auto& core : Settings::CoreInfo)
@@ -538,8 +538,10 @@ void MainWindow::open_file_impl(const std::string& path)
         }
         game_hash_ = md5stream.str();
     }
-    // TODO: such resets don't belong in open_file_impl, but in a separate function
-    cheats_window_.reset();
+
+    if (emulator_.use_count() != 0)
+        log_fatal("Emulator not reset properly?");
+
     emulator_ = hydra::EmulatorFactory::Create(core_path);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
@@ -590,57 +592,124 @@ void MainWindow::open_file_impl(const std::string& path)
     emulator_timer_->start();
 }
 
-void MainWindow::open_settings()
+void MainWindow::reset_emulator_windows()
 {
-    qt_may_throw([this]() {
-        if (!settings_open_)
-        {
-            using namespace std::placeholders;
-            new SettingsWindow(settings_open_, std::bind(&MainWindow::set_volume, this, _1), this);
-        }
-    });
+    windows_[WindowIndex::Cheats].reset();
+    windows_[WindowIndex::Terminal].reset();
+    windows_[WindowIndex::Script].reset();
 }
 
-void MainWindow::open_scripts()
+void MainWindow::init_cheats()
 {
-    qt_may_throw([this]() {
-        if (!scripts_open_)
-        {
-            using namespace std::placeholders;
-            new ScriptEditor(scripts_open_, std::bind(&MainWindow::run_script, this, _1, _2), this);
-        }
-    });
-}
+    cheats_.reset();
 
-void MainWindow::open_terminal()
-{
-    qt_may_throw([this]() {
-        if (!terminal_open_)
-        {
-            new TerminalWindow(terminal_open_, this);
-        }
-    });
-}
+    if (!emulator_->shell->hasInterface(hydra::InterfaceType::ICheat))
+        return;
 
-void MainWindow::toggle_cheats_window()
-{
-    qt_may_throw([this]() {
-        if (!cheats_window_)
+    if (cheats_.use_count() != 0)
+    {
+        log_fatal("CheatsWindow not reset properly?");
+    }
+
+    if (game_hash_.empty())
+    {
+        log_fatal("Game hash is empty when loading cheats?");
+    }
+
+    cheats_.reset(new std::vector<CheatMetadata>);
+
+    if (!std::filesystem::create_directories(Settings::GetSavePath() / "cheats"))
+    {
+        if (!std::filesystem::exists(Settings::GetSavePath() / "cheats"))
         {
-            cheats_window_.reset(new CheatsWindow(emulator_, cheats_open_, game_hash_, this));
+            printf("Failed to create cheats directory\n");
+            return;
         }
-        else
+    }
+
+    // Check if this game already has saved cheats
+    std::filesystem::path cheat_path = Settings::GetSavePath() / "cheats" / (game_hash_ + ".json");
+    if (std::filesystem::exists(cheat_path))
+    {
+        hydra::ICheat* cheat_interface = emulator_->shell->asICheat();
+        std::ifstream cheat_file(cheat_path);
+        nlohmann::json cheat_json;
+        cheat_file >> cheat_json;
+        for (auto& cheat : cheat_json)
         {
-            if (!cheats_open_)
+            CheatMetadata cheat_metadata;
+            std::vector<uint8_t> bytes = hydra::hex_to_bytes(cheat_metadata.code);
+            cheat_metadata.handle = cheat_interface->addCheat(bytes.data(), bytes.size());
+
+            if (cheat_metadata.handle != hydra::BAD_CHEAT)
             {
-                cheats_window_->Show();
-            }
-            else
-            {
-                cheats_window_->Hide();
+                cheat_metadata.enabled = cheat["enabled"] == "true";
+                cheat_metadata.name = cheat["name"];
+                cheat_metadata.code = cheat["code"];
+                cheats_->push_back(cheat_metadata);
+
+                if (cheat_metadata.enabled)
+                {
+                    cheat_interface->enableCheat(cheat_metadata.handle);
+                }
+                else
+                {
+                    cheat_interface->disableCheat(cheat_metadata.handle);
+                }
             }
         }
-    });
+    }
+}
+
+void MainWindow::action_settings()
+{
+    if (windows_[WindowIndex::Settings])
+    {
+        windows_[WindowIndex::Settings].reset();
+    }
+    using namespace std::placeholders;
+    windows_[WindowIndex::Settings] =
+        std::make_unique<SettingsWindow>(std::bind(&MainWindow::set_volume, this, _1), this);
+}
+
+void MainWindow::action_scripts()
+{
+    if (windows_[WindowIndex::Script])
+    {
+        windows_[WindowIndex::Script]->setVisible(!windows_[WindowIndex::Script]->isVisible());
+    }
+    else
+    {
+        using namespace std::placeholders;
+        windows_[WindowIndex::Script] = std::make_unique<ScriptEditor>(
+            std::bind(&MainWindow::run_script, this, _1, _2), scripts_act_, this);
+    }
+}
+
+void MainWindow::action_terminal()
+{
+    if (windows_[WindowIndex::Terminal])
+    {
+        windows_[WindowIndex::Terminal]->setVisible(!windows_[WindowIndex::Terminal]->isVisible());
+    }
+    else
+    {
+        windows_[WindowIndex::Terminal] = std::make_unique<TerminalWindow>(terminal_act_, this);
+    }
+}
+
+void MainWindow::action_cheats()
+{
+    if (windows_[WindowIndex::Cheats])
+    {
+        windows_[WindowIndex::Cheats]->setVisible(!windows_[WindowIndex::Cheats]->isVisible());
+    }
+    else
+    {
+        std::filesystem::path path = Settings::GetSavePath() / "cheats" / (game_hash_ + ".json");
+        windows_[WindowIndex::Cheats] =
+            std::make_unique<CheatsWindow>(emulator_, cheats_, path, cheats_act_, this);
+    }
 }
 
 // TODO: compiler option to turn off lua support
@@ -731,14 +800,16 @@ void MainWindow::set_volume(int volume)
     }
 }
 
-void MainWindow::open_about()
+void MainWindow::action_about()
 {
-    qt_may_throw([this]() {
-        if (!about_open_)
-        {
-            new AboutWindow(about_open_, this);
-        }
-    });
+    if (windows_[WindowIndex::About])
+    {
+        windows_[WindowIndex::About].reset();
+    }
+    else
+    {
+        windows_[WindowIndex::About] = std::make_unique<AboutWindow>(this);
+    }
 }
 
 void MainWindow::enable_emulation_actions(bool should)
@@ -751,7 +822,10 @@ void MainWindow::enable_emulation_actions(bool should)
     if (should)
         screen_->show();
     else
-        screen_->hide();
+    {
+        if (screen_->initialized_)
+            screen_->hide();
+    }
 }
 
 void MainWindow::pause_emulator()
@@ -883,6 +957,7 @@ void MainWindow::init_emulator()
     if (emulator_->shell->hasInterface(hydra::InterfaceType::ICheat))
     {
         cheats_act_->setEnabled(true);
+        init_cheats();
     }
     else
     {
@@ -914,6 +989,7 @@ void MainWindow::stop_emulator()
     if (emulator_)
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
+        reset_emulator_windows();
         emulator_.reset();
         std::fill(video_buffer_.begin(), video_buffer_.end(), 0);
         enable_emulation_actions(false);

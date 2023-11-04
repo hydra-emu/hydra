@@ -3,18 +3,6 @@
 #include <QOpenGLShader>
 #include <QVBoxLayout>
 
-#define QT_MAY_THROW(func)                                             \
-    try                                                                \
-    {                                                                  \
-        func                                                           \
-    } catch (std::exception & ex)                                      \
-    {                                                                  \
-        QMessageBox messageBox;                                        \
-        messageBox.critical(0, "Shader compilation error", ex.what()); \
-        messageBox.setFixedSize(500, 200);                             \
-        return;                                                        \
-    }
-
 ShaderHighlighter::ShaderHighlighter(QTextDocument* parent) : QSyntaxHighlighter(parent)
 {
     const QString patterns_pink[] = {
@@ -204,7 +192,6 @@ ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> c
                            QWidget* parent)
     : QWidget(parent, Qt::Window), callback_(callback), open_(open)
 {
-    setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlag(Qt::WindowStaysOnTopHint);
     QFont font;
     font.setFamily("Courier");
@@ -241,7 +228,8 @@ ShaderEditor::ShaderEditor(bool& open, std::function<void(QString*, QString*)> c
 
 void ShaderEditor::compile()
 {
-    QT_MAY_THROW(QString src = editor_->toPlainText(); callback_(nullptr, &src););
+    QString src = editor_->toPlainText();
+    callback_(nullptr, &src);
 }
 
 void ShaderEditor::open_shader() {}

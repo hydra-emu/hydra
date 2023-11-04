@@ -6,7 +6,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-AboutWindow::AboutWindow(bool& open, QWidget* parent) : QDialog(parent), open_(open)
+AboutWindow::AboutWindow(QWidget* parent) : QDialog(parent)
 {
     static QString html;
     if (html.isEmpty())
@@ -22,7 +22,6 @@ AboutWindow::AboutWindow(bool& open, QWidget* parent) : QDialog(parent), open_(o
         }
     }
     setWindowTitle("About");
-    setAttribute(Qt::WA_DeleteOnClose, true);
     QGridLayout* layout = new QGridLayout;
     QHBoxLayout* top_layout = new QHBoxLayout;
     QHBoxLayout* bot_layout = new QHBoxLayout;
@@ -53,10 +52,4 @@ AboutWindow::AboutWindow(bool& open, QWidget* parent) : QDialog(parent), open_(o
     layout->setSizeConstraint(QLayout::SetFixedSize);
     setLayout(layout);
     show();
-    open_ = true;
-}
-
-AboutWindow::~AboutWindow()
-{
-    open_ = false;
 }

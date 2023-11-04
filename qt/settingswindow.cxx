@@ -10,12 +10,10 @@
 #include <QVBoxLayout>
 #include <settings.hxx>
 
-SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callback,
-                               QWidget* parent)
-    : QWidget(parent, Qt::Window), open_(open), volume_callback_(volume_callback)
+SettingsWindow::SettingsWindow(std::function<void(int)> volume_callback, QWidget* parent)
+    : QWidget(parent, Qt::Window), volume_callback_(volume_callback)
 {
     setFocusPolicy(Qt::StrongFocus);
-    setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle("Settings");
     QGridLayout* main_layout = new QGridLayout;
     left_group_box_ = new QGroupBox;
@@ -128,12 +126,6 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
     main_layout->setColumnStretch(1, 1);
     setLayout(main_layout);
     show();
-    open_ = true;
-}
-
-SettingsWindow::~SettingsWindow()
-{
-    open_ = false;
 }
 
 QWidget* create_separator()

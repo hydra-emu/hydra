@@ -206,4 +206,15 @@ namespace hydra
         return splits;
     }
 
+    inline std::vector<uint8_t> hex_to_bytes(const std::string& cheat)
+    {
+        std::vector<uint8_t> bytes;
+        for (size_t i = 0; i < cheat.size(); i += 2)
+        {
+            std::string hex = cheat.substr(i, 2);
+            bytes.push_back((uint8_t)std::stoul(hex, nullptr, 16));
+        }
+        return bytes;
+    }
+
 } // namespace hydra

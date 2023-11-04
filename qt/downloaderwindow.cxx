@@ -11,7 +11,6 @@ DownloaderWindow::DownloaderWindow(const std::vector<std::string>& download_queu
     : QWidget(nullptr, Qt::Window), download_queue_(download_queue)
 {
     setMinimumSize(500, 400);
-    setAttribute(Qt::WA_DeleteOnClose);
     QVBoxLayout* layout = new QVBoxLayout;
     log_ = new QTextEdit;
     log_->setReadOnly(true);

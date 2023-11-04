@@ -103,7 +103,6 @@ void ScreenWidget::mouseReleaseEvent(QMouseEvent* event)
 void ScreenWidget::initializeGL()
 {
     initializeOpenGLFunctions();
-    // Stupid qt won't initialize OpenGL unless widget is showing
     hide();
     initialized_ = true;
 }

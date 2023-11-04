@@ -23,8 +23,6 @@
 #include <thread>
 #include <unordered_map>
 
-class DownloaderWindow;
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -40,11 +38,11 @@ private:
     // Menu bar actions
     void open_file();
     void open_file_impl(const std::string& file);
-    void open_settings();
-    void open_about();
-    void open_scripts();
-    void open_terminal();
-    void toggle_cheats_window();
+    void action_settings();
+    void action_about();
+    void action_scripts();
+    void action_terminal();
+    void action_cheats();
     void run_script(const std::string& script, bool safe_mode);
     void screenshot();
     void add_recent(const std::string& path);
@@ -57,11 +55,14 @@ private:
     void enable_emulation_actions(bool should);
     void init_audio(hydra::SampleType sample_type = hydra::SampleType::Int16,
                     hydra::ChannelType channel_type = hydra::ChannelType::Stereo);
+    void init_cheats();
     void set_volume(int volume);
     void resample(void* output, const void* input, size_t frames);
     void update_recent_files();
     void update_fbo(unsigned fbo);
+    void reset_emulator_windows();
 
+    // Hydra callbacks
     static void video_callback(void* data, hydra::Size size);
     static void audio_callback(void* data, size_t frames);
     static int32_t read_input_callback(uint32_t player, hydra::ButtonType button);
@@ -80,6 +81,19 @@ public:
     void OpenFile(const std::string& file);
 
 private:
+    // GUI
+    enum WindowIndex
+    {
+        Cheats = 0,
+        Terminal,
+        Script,
+        Settings,
+        About,
+        WindowCount
+    };
+
+    std::array<std::unique_ptr<QWidget>, WindowIndex::WindowCount> windows_;
+    QFutureWatcher<hydra::Updater::UpdateStatus>* update_watcher_;
     QMenu* file_menu_;
     QMenu* emulation_menu_;
     QMenu* tools_menu_;
@@ -101,33 +115,33 @@ private:
     QAction* recent_act_;
     QTimer* emulator_timer_;
     ScreenWidget* screen_;
-    DownloaderWindow* downloader_;
-    QFutureWatcher<hydra::Updater::UpdateStatus>* update_watcher_;
-    std::unique_ptr<ma_device, void (*)(ma_device*)> audio_device_;
-    std::unique_ptr<ma_resampler, void (*)(ma_resampler*)> resampler_;
-    bool frontend_driven_ = false;
-    std::unique_ptr<CheatsWindow> cheats_window_ = nullptr;
+
+    // Common
+    std::mutex emulator_mutex_;
+    std::mutex audio_mutex_;
+    int frame_count_ = 0;
+    int sleep_time_ = 0;
+
+    // Emulator
     std::shared_ptr<hydra::EmulatorWrapper> emulator_;
     std::unique_ptr<EmulatorInfo> info_;
     std::string game_hash_;
-    uint8_t audio_frame_size_ = 0;
-    hydra::ringbuffer<65536 * sizeof(float)> audio_buffer_;
-    bool settings_open_ = false;
-    bool about_open_ = false;
-    bool scripts_open_ = false;
-    bool terminal_open_ = false;
-    bool cheats_open_ = false;
     bool paused_ = false;
-    std::mutex emulator_mutex_;
-    std::mutex audio_mutex_;
 
+    // Video
     std::vector<uint8_t> video_buffer_;
     uint32_t video_width_ = 0;
     uint32_t video_height_ = 0;
     std::chrono::time_point<std::chrono::high_resolution_clock> last_emulation_second_time_;
-    int frame_count_ = 0;
-    int sleep_time_ = 0;
 
+    // Audio
+    // TODO: reduce size once done debugging
+    hydra::ringbuffer<65536 * sizeof(float)> audio_buffer_;
+    std::unique_ptr<ma_device, void (*)(ma_device*)> audio_device_;
+    std::unique_ptr<ma_resampler, void (*)(ma_resampler*)> resampler_;
+    uint8_t audio_frame_size_ = 0;
+
+    // Input
     // Maps key -> pair<player, button>
     std::unordered_map<int, std::pair<int, hydra::ButtonType>> backwards_mappings_{};
     // Holds the current state of the input
@@ -135,6 +149,9 @@ private:
     std::vector<std::array<int32_t, (int)hydra::ButtonType::InputCount>> input_state_{};
     std::deque<std::string> recent_files_;
     uint32_t mouse_state_ = hydra::TOUCH_RELEASED;
+
+    // Cheats
+    std::shared_ptr<std::vector<CheatMetadata>> cheats_;
 
     friend void emulator_signal_handler(int);
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);
