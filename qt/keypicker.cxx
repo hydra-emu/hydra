@@ -12,7 +12,6 @@
 #include <QMessageBox>
 #include <QTableWidget>
 #include <settings.hxx>
-#include <str_hash.hxx>
 
 constexpr const char* serialize(hydra::ButtonType input)
 {

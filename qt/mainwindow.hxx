@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rbuffer.hxx"
+#include "ringbuffer.hxx"
 #include "screenwidget.hxx"
 #include "settings.hxx"
 #include "update.hxx"
@@ -11,7 +11,7 @@
 #define MA_NO_DECODING
 #define MA_NO_ENCODING
 #include "cheatswindow.hxx"
-#include <core_loader.hxx>
+#include <corewrapper.hxx>
 #include <miniaudio.h>
 #include <QFileDialog>
 #include <QFutureWatcher>
@@ -55,7 +55,6 @@ private:
     void enable_emulation_actions(bool should);
     void init_audio(hydra::SampleType sample_type = hydra::SampleType::Int16,
                     hydra::ChannelType channel_type = hydra::ChannelType::Stereo);
-    void init_cheats();
     void set_volume(int volume);
     void resample(void* output, const void* input, size_t frames);
     void update_recent_files();
@@ -149,9 +148,6 @@ private:
     std::vector<std::array<int32_t, (int)hydra::ButtonType::InputCount>> input_state_{};
     std::deque<std::string> recent_files_;
     uint32_t mouse_state_ = hydra::TOUCH_RELEASED;
-
-    // Cheats
-    std::shared_ptr<std::vector<CheatMetadata>> cheats_;
 
     friend void emulator_signal_handler(int);
     friend void hungry_for_more(ma_device*, void*, const void*, ma_uint32);

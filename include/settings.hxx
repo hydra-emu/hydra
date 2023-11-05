@@ -2,7 +2,7 @@
 
 #include "log.h"
 #include <compatibility.hxx>
-#include <core_loader.hxx>
+#include <corewrapper.hxx>
 #include <error_factory.hxx>
 #include <filesystem>
 #include <fmt/format.h>

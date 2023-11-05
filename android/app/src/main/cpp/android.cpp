@@ -1,5 +1,5 @@
 #include <android/log.h>
-#include <core_loader.hxx>
+#include <corewrapper.hxx>
 #include <cstdio>
 #include <dlfcn.h>
 #include <EGL/egl.h>

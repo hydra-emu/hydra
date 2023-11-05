@@ -47,9 +47,9 @@
 #define hydra_inline [[clang::always_inline]] inline
 #endif
 #elif defined(__GNUC__)
-#define hydra_inline __always_inline
+#define hydra_inline __always_inline inline
 #elif defined(_MSC_VER)
-#define hydra_inline __forceinline
+#define hydra_inline __forceinline inline
 #else
 #define hydra_inline inline
 #endif

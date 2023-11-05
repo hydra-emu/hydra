@@ -3,6 +3,7 @@
 #include "hsystem.h"
 #include <cstring>
 #include <string>
+#include <vector>
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
 #include <dlfcn.h>
 #elif defined(HYDRA_WINDOWS)
@@ -10,6 +11,7 @@
 #elif defined(HYDRA_WII)
 #include "ELFIO/elfio/elfio.hpp"
 #endif
+#include "scopeguard.hxx"
 #include <filesystem>
 #include <hydra/core.hxx>
 
@@ -113,32 +115,44 @@ namespace hydra
 #endif
     }
 
+    struct CheatMetadata
+    {
+        bool enabled = false;
+        std::string name{};
+        std::string code{};
+        uint32_t handle = hydra::BAD_CHEAT;
+    };
+
     // Should only be made through the factory
     struct EmulatorWrapper
     {
         IBase* shell = nullptr;
 
-        ~EmulatorWrapper()
-        {
-            destroy_function(shell);
-            dynlib_close(handle);
-        }
+        ~EmulatorWrapper();
 
-        const char* GetInfo(hydra::InfoType type)
-        {
-            return get_info_function(type);
-        }
+        const char* GetInfo(hydra::InfoType type);
+        const CheatMetadata& GetCheat(uint32_t handle);
+        const std::vector<CheatMetadata>& GetCheats();
+
+        bool LoadGame(const std::filesystem::path& path);
+        uint32_t EditCheat(const CheatMetadata& cheat, uint32_t old_handle = hydra::BAD_CHEAT);
+        void RemoveCheat(uint32_t handle);
+        void EnableCheat(uint32_t handle);
+        void DisableCheat(uint32_t handle);
 
     private:
         dynlib_handle_t handle;
         void (*destroy_function)(IBase*);
         const char* (*get_info_function)(hydra::InfoType);
+        std::string game_hash_;
 
         EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*dfunc)(IBase*),
-                        const char* (*gfunc)(hydra::InfoType))
-            : shell(shl), handle(hdl), destroy_function(dfunc), get_info_function(gfunc)
-        {
-        }
+                        const char* (*gfunc)(hydra::InfoType));
+
+        void init_cheats();
+        void save_cheats();
+
+        std::vector<CheatMetadata> cheats_;
 
         EmulatorWrapper(const EmulatorWrapper&) = delete;
         friend struct EmulatorFactory;

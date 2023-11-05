@@ -1,10 +1,8 @@
-#include <qwidget.h>
 #define OPENSSL_API_COMPAT 10101
+#include "mainwindow.hxx"
 #include "aboutwindow.hxx"
 #include "downloaderwindow.hxx"
 #include "input.hxx"
-#include "mainwindow.hxx"
-#include "qthelper.hxx"
 #include "scripteditor.hxx"
 #include "settingswindow.hxx"
 #include "terminalwindow.hxx"
@@ -29,9 +27,7 @@
 #ifdef HYDRA_USE_LUA
 #include <sol/sol.hpp>
 #endif
-#include <openssl/md5.h>
 #include <stb_image_write.h>
-#include <str_hash.hxx>
 #include <update.hxx>
 
 enum class EmulatorState
@@ -466,7 +462,7 @@ void MainWindow::open_file()
         return;
     }
     std::string path = dialog.selectedFiles().first().toStdString();
-    qt_may_throw(std::bind(&MainWindow::open_file_impl, this, path));
+    open_file_impl(path);
 }
 
 void MainWindow::open_file_impl(const std::string& path)
@@ -518,26 +514,6 @@ void MainWindow::open_file_impl(const std::string& path)
             fmt::format("Failed to find core info for core {}... This shouldn't happen?", core_path)
                 .c_str());
     }
-    {
-        unsigned char result[MD5_DIGEST_LENGTH];
-        std::ifstream file(path, std::ifstream::binary);
-        MD5_CTX md5Context;
-        MD5_Init(&md5Context);
-        char buf[1024 * 16];
-        while (file.good())
-        {
-            file.read(buf, sizeof(buf));
-            MD5_Update(&md5Context, buf, file.gcount());
-        }
-        MD5_Final(result, &md5Context);
-        std::stringstream md5stream;
-        md5stream << std::hex << std::setfill('0');
-        for (const auto& byte : result)
-        {
-            md5stream << std::setw(2) << (int)byte;
-        }
-        game_hash_ = md5stream.str();
-    }
 
     if (emulator_.use_count() != 0)
         log_fatal("Emulator not reset properly?");
@@ -546,7 +522,7 @@ void MainWindow::open_file_impl(const std::string& path)
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
     init_emulator();
-    if (!emulator_->shell->loadFile("rom", path.c_str()))
+    if (!emulator_->LoadGame(pathfs))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open file");
     enable_emulation_actions(true);
     add_recent(path);
@@ -599,68 +575,6 @@ void MainWindow::reset_emulator_windows()
     windows_[WindowIndex::Script].reset();
 }
 
-void MainWindow::init_cheats()
-{
-    cheats_.reset();
-
-    if (!emulator_->shell->hasInterface(hydra::InterfaceType::ICheat))
-        return;
-
-    if (cheats_.use_count() != 0)
-    {
-        log_fatal("CheatsWindow not reset properly?");
-    }
-
-    if (game_hash_.empty())
-    {
-        log_fatal("Game hash is empty when loading cheats?");
-    }
-
-    cheats_.reset(new std::vector<CheatMetadata>);
-
-    if (!std::filesystem::create_directories(Settings::GetSavePath() / "cheats"))
-    {
-        if (!std::filesystem::exists(Settings::GetSavePath() / "cheats"))
-        {
-            printf("Failed to create cheats directory\n");
-            return;
-        }
-    }
-
-    // Check if this game already has saved cheats
-    std::filesystem::path cheat_path = Settings::GetSavePath() / "cheats" / (game_hash_ + ".json");
-    if (std::filesystem::exists(cheat_path))
-    {
-        hydra::ICheat* cheat_interface = emulator_->shell->asICheat();
-        std::ifstream cheat_file(cheat_path);
-        nlohmann::json cheat_json;
-        cheat_file >> cheat_json;
-        for (auto& cheat : cheat_json)
-        {
-            CheatMetadata cheat_metadata;
-            std::vector<uint8_t> bytes = hydra::hex_to_bytes(cheat_metadata.code);
-            cheat_metadata.handle = cheat_interface->addCheat(bytes.data(), bytes.size());
-
-            if (cheat_metadata.handle != hydra::BAD_CHEAT)
-            {
-                cheat_metadata.enabled = cheat["enabled"] == "true";
-                cheat_metadata.name = cheat["name"];
-                cheat_metadata.code = cheat["code"];
-                cheats_->push_back(cheat_metadata);
-
-                if (cheat_metadata.enabled)
-                {
-                    cheat_interface->enableCheat(cheat_metadata.handle);
-                }
-                else
-                {
-                    cheat_interface->disableCheat(cheat_metadata.handle);
-                }
-            }
-        }
-    }
-}
-
 void MainWindow::action_settings()
 {
     if (windows_[WindowIndex::Settings])
@@ -708,7 +622,7 @@ void MainWindow::action_cheats()
     {
         std::filesystem::path path = Settings::GetSavePath() / "cheats" / (game_hash_ + ".json");
         windows_[WindowIndex::Cheats] =
-            std::make_unique<CheatsWindow>(emulator_, cheats_, path, cheats_act_, this);
+            std::make_unique<CheatsWindow>(emulator_, path, cheats_act_, this);
     }
 }
 
@@ -755,16 +669,14 @@ void MainWindow::run_script(const std::string& script, bool safe_mode)
         initialized = true;
     }
 
-    qt_may_throw([this, &script, &safe_mode]() {
-        if (safe_mode)
-        {
-            lua.script(script, environment);
-        }
-        else
-        {
-            lua.script(script);
-        }
-    });
+    if (safe_mode)
+    {
+        lua.script(script, environment);
+    }
+    else
+    {
+        lua.script(script);
+    }
 #endif
 }
 
@@ -957,7 +869,6 @@ void MainWindow::init_emulator()
     if (emulator_->shell->hasInterface(hydra::InterfaceType::ICheat))
     {
         cheats_act_->setEnabled(true);
-        init_cheats();
     }
     else
     {

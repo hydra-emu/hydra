@@ -44,6 +44,7 @@ set(HYDRA_QT_FILES
     qt/terminalwindow.cxx
     qt/downloaderwindow.cxx
     qt/cheatswindow.cxx
+    src/corewrapper.cxx
     vendored/miniaudio.c
     vendored/stb_image_write.c
     vendored/miniz/miniz.c
