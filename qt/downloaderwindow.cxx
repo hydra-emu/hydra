@@ -1,59 +1,73 @@
 #include "downloaderwindow.hxx"
 #include "download.hxx"
+#include "update.hxx"
 #include <fmt/format.h>
 #include <future>
+#include <QHBoxLayout>
 #include <QLabel>
+#include <QPixmap>
 #include <QProgressBar>
+#include <QPushButton>
 #include <QTextEdit>
+#include <QTreeWidget>
 #include <QVBoxLayout>
 
-DownloaderWindow::DownloaderWindow(const std::vector<std::string>& download_queue)
-    : QWidget(nullptr, Qt::Window), download_queue_(download_queue)
+DownloaderWindow::DownloaderWindow(QWidget* parent) : QWidget(parent, Qt::Window)
 {
-    setMinimumSize(500, 400);
+    QTreeWidget* tree = new QTreeWidget;
+    tree->setHeaderLabels({"Cores"});
+    tree->setSelectionMode(QAbstractItemView::NoSelection);
+    tree->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tree->setAnimated(true);
+    tree->setIndentation(20);
+    tree->setColumnCount(1);
+
+    auto database = hydra::Updater::GetDatabase();
+    for (auto& [key, entries] : database)
+    {
+        QTreeWidgetItem* item = new QTreeWidgetItem;
+        item->setText(0, QString::fromStdString(key));
+        item->setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
+        tree->addTopLevelItem(item);
+        for (auto& entry : entries)
+        {
+            QTreeWidgetItem* child = new QTreeWidgetItem;
+            QWidget* widget = new QWidget;
+            QHBoxLayout* layout = new QHBoxLayout;
+            QLabel* label =
+                new QLabel(QString::fromStdString(entry.CoreName + " " + entry.CoreSubName));
+
+            layout->addWidget(label);
+            widget->setLayout(layout);
+            widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            widget->setMaximumHeight(25);
+            widget->setContentsMargins(6, 0, 6, 0);
+            layout->setContentsMargins(0, 0, 0, 0);
+            layout->addStretch();
+
+            for (auto& [key, _] : entry.Downloads)
+            {
+                QLabel* label = new QLabel;
+                std::string os = key.substr(0, key.find_first_of(' '));
+                QString path = ":/images/" + QString::fromStdString(os) + ".png";
+                label->setPixmap(QPixmap(path).scaled(16, 16, Qt::KeepAspectRatio));
+                layout->addWidget(label);
+            }
+
+            QPushButton* button = new QPushButton("Download");
+            button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+            button->setMaximumWidth(100);
+            button->setMaximumHeight(20);
+            layout->addWidget(button);
+
+            item->addChild(child);
+            tree->setItemWidget(child, 0, widget);
+        }
+    }
+
     QVBoxLayout* layout = new QVBoxLayout;
-    log_ = new QTextEdit;
-    log_->setReadOnly(true);
-    log_->setLineWrapMode(QTextEdit::NoWrap);
-    log_->setMinimumSize(500, 400);
-    log_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-    progress_bar_ = new QProgressBar;
-    progress_bar_->setMinimum(0);
-    progress_bar_->setMaximum(100);
-    progress_bar_->setValue(0);
-
-    byte_progress_label_ = new QLabel("");
-    byte_progress_label_->setAlignment(Qt::AlignCenter);
-
-    layout->addWidget(log_);
-    layout->addWidget(byte_progress_label_);
-    layout->addWidget(progress_bar_);
+    layout->addWidget(tree);
     setLayout(layout);
-
-    setWindowFlags(Qt::WindowStaysOnTopHint);
-
-    downloading_ = true;
-    std::thread t([this]() {
-        std::future<hydra::HydraBufferWrapper> f = std::async(std::launch::async, [this]() {
-            auto ret = hydra::Downloader::DownloadProgress(
-                download_queue_[0], [this](uint64_t current, uint64_t total) {
-                    if (current == 0 && total == 0)
-                    {
-                        printf("Unknown size\n");
-                    }
-                    else
-                    {
-                        int percent = (int)(current * 100 / total);
-                        printf("Progress: %d%%\n", percent);
-                    }
-                    return downloading_;
-                });
-            return ret;
-        });
-        f.wait();
-    });
-    t.detach();
 }
 
 DownloaderWindow::~DownloaderWindow() {}

@@ -116,6 +116,9 @@ MainWindow::MainWindow(QWidget* parent)
     update_watcher_ = new QFutureWatcher<hydra::Updater::UpdateStatus>(this);
     connect(update_watcher_, SIGNAL(finished()), this, SLOT(update_check_finished()));
     update_watcher_->setFuture(update_future);
+
+    DownloaderWindow* downloader = new DownloaderWindow(this);
+    downloader->show();
 }
 
 MainWindow::~MainWindow()

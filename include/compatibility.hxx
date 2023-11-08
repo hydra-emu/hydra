@@ -221,7 +221,7 @@ namespace hydra
     // https://stackoverflow.com/a/46711735
     // If there's a collision between two strings, we will know
     // at compile time since the cases can't use the same number twice
-    consteval uint32_t str_hash(std::string_view data) noexcept
+    constexpr uint32_t str_hash(std::string_view data) noexcept
     {
         uint32_t hash = 5381;
         const size_t size = data.size();

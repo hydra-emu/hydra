@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compatibility.hxx"
 #include "json.hpp"
 #include "settings.hxx"
 #include <download.hxx>
@@ -12,6 +13,17 @@ namespace hydra
 {
     struct Updater
     {
+    private:
+        struct DatabaseEntry
+        {
+            std::string CoreName;
+            std::string CoreSubName;
+            std::string Versioning;
+            std::string VersioningURL;
+            std::unordered_map<std::string, std::string> Downloads;
+        };
+
+    public:
         enum UpdateStatus
         {
             Error,
@@ -128,6 +140,49 @@ namespace hydra
                 callback();
             });
             t.detach();
+        }
+
+        static std::unordered_map<std::string, std::vector<DatabaseEntry>> GetDatabase()
+        {
+            std::filesystem::path database_path = Settings::GetSavePath() / "database";
+            if (!std::filesystem::exists(database_path))
+            {
+                if (!std::filesystem::create_directories(database_path))
+                    log_fatal("Failed to create database directory");
+                return {};
+            }
+
+            std::unordered_map<std::string, std::vector<DatabaseEntry>> database;
+            std::filesystem::directory_iterator end;
+
+            for (std::filesystem::directory_iterator it(database_path); it != end; ++it)
+            {
+                if (it->path().extension() == ".json")
+                {
+                    std::ifstream file(it->path());
+                    nlohmann::json json;
+                    file >> json;
+
+                    DatabaseEntry entry;
+                    entry.CoreName = json["CoreName"];
+                    entry.CoreSubName = json["CoreSubName"];
+                    entry.Versioning = json["Versioning"];
+                    entry.VersioningURL = json["VersioningURL"];
+
+                    for (auto& url : json["Downloads"].items())
+                    {
+                        entry.Downloads[url.key()] = url.value();
+                    }
+
+                    std::vector systems = hydra::split(json["SystemNames"], ',');
+                    for (auto& system : systems)
+                    {
+                        database[system].push_back(entry);
+                    }
+                }
+            }
+
+            return database;
         }
 
     private:
