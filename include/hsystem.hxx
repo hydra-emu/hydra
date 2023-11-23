@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #define HYDRA_WINDOWS
 #elif defined(__linux__)
@@ -22,7 +24,9 @@
 #define HYDRA_X86_64
 #elif defined(__i386__) || defined(__i386) || defined(_M_IX86)
 #define HYDRA_X86
-#elif defined(__arm__) || defined(__aarch64__) || defined(__arm64__)
+#elif defined(__aarch64__) || defined(__arm64__) || defined(_M_ARM64)
+#define HYDRA_ARM64
+#elif defined(__arm__)
 #define HYDRA_ARM
 #else
 #pragma message("Unknown architecture")
@@ -53,3 +57,34 @@
 #else
 #define hydra_inline inline
 #endif
+
+inline std::string hydra_os()
+{
+    std::string ret;
+
+#if defined(HYDRA_WINDOWS)
+    ret = "Windows";
+#elif defined(HYDRA_LINUX)
+    ret = "Linux";
+#elif defined(HYDRA_MACOS)
+    ret = "macOS";
+#elif defined(HYDRA_FREEBSD)
+    ret = "FreeBSD";
+#else
+    ret = "Unknown";
+#endif
+
+#if defined(HYDRA_X86_64)
+    ret += " x86_64";
+#elif defined(HYDRA_X86)
+    ret += " x86";
+#elif defined(HYDRA_ARM64)
+    ret += " ARM64";
+#elif defined(HYDRA_ARM)
+    ret += " ARM";
+#else
+    ret += " Unknown";
+#endif
+
+    return ret;
+}

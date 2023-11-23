@@ -40,19 +40,19 @@ SettingsWindow::SettingsWindow(std::function<void(int)> volume_callback, QWidget
             }
         }
 
-        for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+        for (size_t i = 0; i < Settings::CoreInfo().size(); i++)
         {
             std::filesystem::path path = Settings::GetSavePath() / "cache" /
-                                         std::string(Settings::CoreInfo[i].core_name + ".png");
+                                         std::string(Settings::CoreInfo()[i].core_name + ".png");
             if (std::filesystem::exists(path))
             {
                 QListWidgetItem* item = new QListWidgetItem(
-                    QPixmap((path).string().c_str()), Settings::CoreInfo[i].core_name.c_str());
+                    QPixmap((path).string().c_str()), Settings::CoreInfo()[i].core_name.c_str());
                 tab_list_->addItem(item);
             }
             else
             {
-                auto wrapper = hydra::EmulatorFactory::Create(Settings::CoreInfo[i].path);
+                auto wrapper = hydra::EmulatorFactory::Create(Settings::CoreInfo()[i].path);
                 QString cache_path = path.string().c_str();
                 if (wrapper->GetInfo(hydra::InfoType::IconData))
                 {
@@ -62,7 +62,7 @@ SettingsWindow::SettingsWindow(std::function<void(int)> volume_callback, QWidget
                     if (width <= 0 || height <= 0)
                     {
                         printf("Invalid icon size in core %s\n",
-                               Settings::CoreInfo[i].core_name.c_str());
+                               Settings::CoreInfo()[i].core_name.c_str());
                         continue;
                     }
                     QImage image(width, height, QImage::Format_RGBA8888);
@@ -79,12 +79,12 @@ SettingsWindow::SettingsWindow(std::function<void(int)> volume_callback, QWidget
                     image.save(cache_path);
 
                     QListWidgetItem* item = new QListWidgetItem(
-                        QPixmap::fromImage(image), Settings::CoreInfo[i].core_name.c_str());
+                        QPixmap::fromImage(image), Settings::CoreInfo()[i].core_name.c_str());
                     tab_list_->addItem(item);
                 }
                 else
                 {
-                    add_item(core, Settings::CoreInfo[i].core_name.c_str(), "core.png");
+                    add_item(core, Settings::CoreInfo()[i].core_name.c_str(), "core.png");
                     QFile::copy(QString(":/images/core.png"), cache_path);
                 }
             }
@@ -206,21 +206,21 @@ void SettingsWindow::create_tabs()
         file.open(QIODevice::ReadOnly);
         QString html = file.readAll();
         file.close();
-        for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+        for (size_t i = 0; i < Settings::CoreInfo().size(); i++)
         {
-            const auto& core = Settings::CoreInfo[i];
+            const auto& core = Settings::CoreInfo()[i];
             QListWidgetItem* item = new QListWidgetItem(core.core_name.c_str());
             core_list->addItem(item);
         }
         connect(core_list, &QListWidget::itemDoubleClicked, this,
                 [html, core_list](QListWidgetItem* item) {
                     int index = core_list->row(item);
-                    auto core = Settings::CoreInfo[index];
+                    auto core = Settings::CoreInfo()[index];
                     QMessageBox msg;
                     msg.setWindowTitle(core.core_name.c_str());
                     std::filesystem::path path =
                         Settings::GetSavePath() / "cache" /
-                        std::string(Settings::CoreInfo[index].core_name + ".png");
+                        std::string(Settings::CoreInfo()[index].core_name + ".png");
                     QPixmap pixmap;
                     if (!std::filesystem::exists(path))
                     {
@@ -280,9 +280,9 @@ void SettingsWindow::create_tabs()
         });
         audio_layout->addWidget(audio_slider, 0, 1);
     }
-    for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+    for (size_t i = 0; i < Settings::CoreInfo().size(); i++)
     {
-        const auto& core = Settings::CoreInfo[i];
+        const auto& core = Settings::CoreInfo()[i];
         QGridLayout* core_layout = new QGridLayout;
         core_layout->setAlignment(Qt::AlignTop);
         core_layout->setSpacing(12);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hsystem.h"
+#include "hsystem.hxx"
 #include <cstring>
 #include <string>
 #include <vector>

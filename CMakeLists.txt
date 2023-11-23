@@ -33,7 +33,6 @@ endif()
 
 set(HYDRA_QT_FILES
     data/resources.qrc
-    qt/main.cxx
     qt/mainwindow.cxx
     qt/screenwidget.cxx
     qt/settingswindow.cxx
@@ -45,9 +44,11 @@ set(HYDRA_QT_FILES
     qt/downloaderwindow.cxx
     qt/cheatswindow.cxx
     src/corewrapper.cxx
+    src/main.cxx
     vendored/miniaudio.c
     vendored/stb_image_write.c
     vendored/miniz/miniz.c
+    vendored/argparse/argparse.c
 )
 
 set(HYDRA_INCLUDE_DIRECTORIES
@@ -56,6 +57,7 @@ set(HYDRA_INCLUDE_DIRECTORIES
     core/include
     vendored
     vendored/fmt/include
+    qt/
 )
 
 qt_add_executable(hydra
@@ -86,5 +88,6 @@ target_link_libraries(hydra PRIVATE
     fmt::fmt
 )
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
+target_compile_definitions(hydra PRIVATE HYDRA_VERSION="${PROJECT_VERSION}")
 
 qt_finalize_executable(hydra)
