@@ -58,6 +58,7 @@ set(HYDRA_INCLUDE_DIRECTORIES
     vendored
     vendored/fmt/include
     qt/
+    man/
 )
 
 qt_add_executable(hydra

@@ -1,0 +1,74 @@
+.TH hydra 1 "" "" "USER COMMANDS"
+
+.SH NAME
+hydra \- a multi-system emulator frontend
+
+.SH SYNOPSIS
+\fBhydra\fR [\fI\,OPTION\/\fR]... [\fI\,FILE\/\fR]
+
+.SH DESCRIPTION
+.PP
+Hydra is a multi-system emulator frontend. Unlike most emulators, it doesn't come preinstalled
+with systems you can run your games on.
+Instead, the systems (called cores) must be downloaded and placed in Hydras core directory.
+.PP
+Cores are shared libraries that emulate one or more systems. Hydra communicates with these cores
+using the Hydra core API.
+.IP
+<https://github.com/hydra-emu/core>
+.PP
+Learn more about Hydra by reading the wiki.
+.IP
+<https://github.com/hydra-emu/hydra/wiki>
+.PP
+
+.SH OPTIONS
+.TP
+\fB\-o, \-\-open\-file=<\fIPATH\fR>
+open a file using a previously specified core or the first available core for this file extension
+
+.TP
+\fB\-c, \-\-use\-core=<\fINAME\fR|\fIFILENAME\fR>
+force usage of an installed core
+
+.TP
+\fB\-l, \-\-list\-cores
+list installed cores
+
+.TP
+\fB\-f, \-\-frontend\fR=<\fIqt\fR|\fIserver\fR>
+select the frontend to use
+
+.TP
+\fB\-p, \-\-print-settings\fR
+print system information along with the settings.json file
+
+.TP
+\fB\-h, \-\-help\fR
+print this help message
+
+.TP
+\fB\-v, \-\-version\fR
+print version information
+
+.SH FILES
+.TP
+.I $HOME/.config/hydra
+Default directory for configuration data.
+
+.TP
+.I $HOME/.config/hydra/settings.json
+Path to main configuration file.
+
+.TP
+.I $HOME/.cache/hydra
+Default directory for cache data. (Why? See
+<http://standards.freedesktop.org/basedir-spec/latest/>)
+
+.SH BUGS
+Bug tracker:
+.IP
+<https://github.com/hydra-emu/hydra/issues>
+
+.SH AUTHOR
+The Hydra team \- <https://github.com/hydra-emu>

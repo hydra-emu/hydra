@@ -116,6 +116,40 @@ public:
         return dir;
     }
 
+    static std::filesystem::path GetCachePath()
+    {
+        static std::filesystem::path dir;
+        if (dir.empty())
+        {
+#if defined(HYDRA_LINUX) || defined(HYDRA_FREEBSD)
+            dir = std::filesystem::path(getenv("HOME")) / ".cache" / "hydra";
+#elif defined(HYDRA_WINDOWS)
+            dir = std::filesystem::path(getenv("APPDATA")) / "hydra" / "cache";
+#elif defined(HYDRA_MACOS)
+            dir = std::filesystem::path(getenv("HOME")) / "Library" / "Caches" / "hydra" / "cache";
+#elif defined(HYDRA_ANDROID)
+            dir = GetSavePath() / "cache";
+#endif
+        }
+
+        if (dir.empty())
+        {
+            throw ErrorFactory::generate_exception(
+                __func__, __LINE__, "GetCachePath was not defined for this environment");
+        }
+
+        if (!std::filesystem::create_directories(dir))
+        {
+            if (std::filesystem::exists(dir))
+            {
+                return dir;
+            }
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create cache");
+        }
+
+        return dir;
+    }
+
     static void InitCoreInfo()
     {
         if (core_info_initialized())

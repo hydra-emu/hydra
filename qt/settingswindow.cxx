@@ -31,9 +31,9 @@ SettingsWindow::SettingsWindow(std::function<void(int)> volume_callback, QWidget
         add_item(audio, "Audio", "sound.png");
         add_item(input, "Input", "input.png");
 
-        if (!std::filesystem::create_directories(Settings::GetSavePath() / "cache"))
+        if (!std::filesystem::create_directories(Settings::GetCachePath()))
         {
-            if (!std::filesystem::exists(Settings::GetSavePath() / "cache"))
+            if (!std::filesystem::exists(Settings::GetCachePath()))
             {
                 QMessageBox::critical(this, "Error", "Cannot create cache directory");
                 return;
@@ -42,8 +42,8 @@ SettingsWindow::SettingsWindow(std::function<void(int)> volume_callback, QWidget
 
         for (size_t i = 0; i < Settings::CoreInfo().size(); i++)
         {
-            std::filesystem::path path = Settings::GetSavePath() / "cache" /
-                                         std::string(Settings::CoreInfo()[i].core_name + ".png");
+            std::filesystem::path path =
+                Settings::GetCachePath() / std::string(Settings::CoreInfo()[i].core_name + ".png");
             if (std::filesystem::exists(path))
             {
                 QListWidgetItem* item = new QListWidgetItem(
@@ -219,7 +219,7 @@ void SettingsWindow::create_tabs()
                     QMessageBox msg;
                     msg.setWindowTitle(core.core_name.c_str());
                     std::filesystem::path path =
-                        Settings::GetSavePath() / "cache" /
+                        Settings::GetCachePath() /
                         std::string(Settings::CoreInfo()[index].core_name + ".png");
                     QPixmap pixmap;
                     if (!std::filesystem::exists(path))
