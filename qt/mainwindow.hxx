@@ -39,6 +39,7 @@ private:
     void open_file();
     void open_file_impl(const std::string& file);
     void action_settings();
+    void action_download_cores();
     void action_about();
     void action_scripts();
     void action_terminal();
@@ -88,6 +89,7 @@ private:
         Script,
         Settings,
         About,
+        Downloader,
         WindowCount
     };
 
@@ -104,6 +106,7 @@ private:
     QAction* about_act_;
     QAction* stop_act_;
     QAction* close_act_;
+    QAction* download_cores_act_;
     QAction* settings_act_;
     QAction* open_settings_file_act_;
     QAction* open_settings_folder_act_;

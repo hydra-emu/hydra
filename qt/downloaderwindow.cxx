@@ -68,6 +68,7 @@ DownloaderWindow::DownloaderWindow(QWidget* parent) : QWidget(parent, Qt::Window
     QVBoxLayout* layout = new QVBoxLayout;
     layout->addWidget(tree);
     setLayout(layout);
+    show();
 }
 
 DownloaderWindow::~DownloaderWindow() {}

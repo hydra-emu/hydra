@@ -116,9 +116,6 @@ MainWindow::MainWindow(QWidget* parent)
     update_watcher_ = new QFutureWatcher<hydra::Updater::UpdateStatus>(this);
     connect(update_watcher_, SIGNAL(finished()), this, SLOT(update_check_finished()));
     update_watcher_->setFuture(update_future);
-
-    DownloaderWindow* downloader = new DownloaderWindow(this);
-    downloader->show();
 }
 
 MainWindow::~MainWindow()
@@ -232,6 +229,10 @@ void MainWindow::create_actions()
     settings_act_->setShortcut(Qt::CTRL | Qt::Key_Comma);
     settings_act_->setStatusTip(tr("Emulator settings"));
     connect(settings_act_, &QAction::triggered, this, &MainWindow::action_settings);
+
+    download_cores_act_ = new QAction(tr("&Download cores..."), this);
+    download_cores_act_->setStatusTip(tr("Download cores"));
+    connect(download_cores_act_, &QAction::triggered, this, &MainWindow::action_download_cores);
 
     open_settings_file_act_ = new QAction(tr("Open settings file"), this);
     open_settings_file_act_->setStatusTip(tr("Open the settings.json file"));
@@ -367,6 +368,7 @@ void MainWindow::create_menus()
     file_menu_->addAction(open_settings_folder_act_);
     file_menu_->addSeparator();
     file_menu_->addAction(settings_act_);
+    file_menu_->addAction(download_cores_act_);
     file_menu_->addSeparator();
     file_menu_->addAction(close_act_);
     emulation_menu_ = menuBar()->addMenu(tr("&Emulation"));
@@ -587,6 +589,19 @@ void MainWindow::action_settings()
     using namespace std::placeholders;
     windows_[WindowIndex::Settings] =
         std::make_unique<SettingsWindow>(std::bind(&MainWindow::set_volume, this, _1), this);
+}
+
+void MainWindow::action_download_cores()
+{
+    if (windows_[WindowIndex::Downloader])
+    {
+        windows_[WindowIndex::Downloader]->setVisible(
+            !windows_[WindowIndex::Downloader]->isVisible());
+    }
+    else
+    {
+        windows_[WindowIndex::Downloader] = std::make_unique<DownloaderWindow>(this);
+    }
 }
 
 void MainWindow::action_scripts()

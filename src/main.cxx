@@ -91,7 +91,7 @@ int list_cores_cb(struct argparse* self, const struct argparse_option* option)
     Settings::InitCoreInfo();
     for (auto& info : Settings::CoreInfo())
     {
-        std::string filename = std::filesystem::path(info.path).filename();
+        std::string filename = std::filesystem::path(info.path).filename().string();
         std::cout << fmt::format("{} - {}\n", filename, info.core_name);
     }
     std::cout << std::flush;
