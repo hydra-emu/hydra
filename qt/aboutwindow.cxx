@@ -1,12 +1,12 @@
+#include "aboutwindow.hxx"
 #include <error_factory.hxx>
 #include <QFile>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <qt/aboutwindow.hxx>
 
-AboutWindow::AboutWindow(bool& open, QWidget* parent) : open_(open), QDialog(parent)
+AboutWindow::AboutWindow(QWidget* parent) : QDialog(parent)
 {
     static QString html;
     if (html.isEmpty())
@@ -22,7 +22,6 @@ AboutWindow::AboutWindow(bool& open, QWidget* parent) : open_(open), QDialog(par
         }
     }
     setWindowTitle("About");
-    setAttribute(Qt::WA_DeleteOnClose, true);
     QGridLayout* layout = new QGridLayout;
     QHBoxLayout* top_layout = new QHBoxLayout;
     QHBoxLayout* bot_layout = new QHBoxLayout;
@@ -53,10 +52,4 @@ AboutWindow::AboutWindow(bool& open, QWidget* parent) : open_(open), QDialog(par
     layout->setSizeConstraint(QLayout::SetFixedSize);
     setLayout(layout);
     show();
-    open_ = true;
-}
-
-AboutWindow::~AboutWindow()
-{
-    open_ = false;
 }

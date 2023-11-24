@@ -1,7 +1,9 @@
 #pragma once
 
+#include "ringbuffer.hxx"
 #include "screenwidget.hxx"
 #include "settings.hxx"
+#include "update.hxx"
 #include <array>
 #include <deque>
 #include <hydra/core.hxx>
@@ -9,9 +11,10 @@
 #define MA_NO_DECODING
 #define MA_NO_ENCODING
 #include "cheatswindow.hxx"
-#include <core_loader.hxx>
+#include <corewrapper.hxx>
 #include <miniaudio.h>
 #include <QFileDialog>
+#include <QFutureWatcher>
 #include <QLabel>
 #include <QMainWindow>
 #include <QMenuBar>
@@ -19,8 +22,6 @@
 #include <QVBoxLayout>
 #include <thread>
 #include <unordered_map>
-
-class DownloaderWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -37,12 +38,11 @@ private:
     // Menu bar actions
     void open_file();
     void open_file_impl(const std::string& file);
-    void open_settings();
-    void open_about();
-    void open_shaders();
-    void open_scripts();
-    void open_terminal();
-    void toggle_cheats_window();
+    void action_settings();
+    void action_about();
+    void action_scripts();
+    void action_terminal();
+    void action_cheats();
     void run_script(const std::string& script, bool safe_mode);
     void screenshot();
     void add_recent(const std::string& path);
@@ -53,11 +53,15 @@ private:
     void init_emulator();
     void stop_emulator();
     void enable_emulation_actions(bool should);
-    void initialize_audio();
+    void init_audio(hydra::SampleType sample_type = hydra::SampleType::Int16,
+                    hydra::ChannelType channel_type = hydra::ChannelType::Stereo);
     void set_volume(int volume);
+    void resample(void* output, const void* input, size_t frames);
     void update_recent_files();
     void update_fbo(unsigned fbo);
+    void reset_emulator_windows();
 
+    // Hydra callbacks
     static void video_callback(void* data, hydra::Size size);
     static void audio_callback(void* data, size_t frames);
     static int32_t read_input_callback(uint32_t player, hydra::ButtonType button);
@@ -67,6 +71,8 @@ private slots:
     void on_mouse_click(QMouseEvent* event);
     void on_mouse_release(QMouseEvent* event);
     void emulator_frame();
+    void update_check_finished();
+    void toggle_mute();
 
 public:
     MainWindow(QWidget* parent = nullptr);
@@ -74,6 +80,19 @@ public:
     void OpenFile(const std::string& file);
 
 private:
+    // GUI
+    enum WindowIndex
+    {
+        Cheats = 0,
+        Terminal,
+        Script,
+        Settings,
+        About,
+        WindowCount
+    };
+
+    std::array<std::unique_ptr<QWidget>, WindowIndex::WindowCount> windows_;
+    QFutureWatcher<hydra::Updater::UpdateStatus>* update_watcher_;
     QMenu* file_menu_;
     QMenu* emulation_menu_;
     QMenu* tools_menu_;
@@ -89,45 +108,45 @@ private:
     QAction* open_settings_file_act_;
     QAction* open_settings_folder_act_;
     QAction* screenshot_act_;
-    QAction* shaders_act_;
     QAction* scripts_act_;
     QAction* cheats_act_;
     QAction* terminal_act_;
     QAction* recent_act_;
     QTimer* emulator_timer_;
     ScreenWidget* screen_;
-    DownloaderWindow* downloader_;
-    ma_device sound_device_{};
-    bool frontend_driven_ = false;
-    std::unique_ptr<CheatsWindow> cheats_window_ = nullptr;
+
+    // Common
+    std::mutex emulator_mutex_;
+    std::mutex audio_mutex_;
+    int frame_count_ = 0;
+    int sleep_time_ = 0;
+
+    // Emulator
     std::shared_ptr<hydra::EmulatorWrapper> emulator_;
     std::unique_ptr<EmulatorInfo> info_;
     std::string game_hash_;
-    std::vector<int16_t> queued_audio_;
-    bool settings_open_ = false;
-    bool about_open_ = false;
-    bool shaders_open_ = false;
-    bool scripts_open_ = false;
-    bool terminal_open_ = false;
-    bool cheats_open_ = false;
     bool paused_ = false;
-    std::mutex emulator_mutex_;
-    std::mutex audio_mutex_;
 
+    // Video
     std::vector<uint8_t> video_buffer_;
     uint32_t video_width_ = 0;
     uint32_t video_height_ = 0;
     std::chrono::time_point<std::chrono::high_resolution_clock> last_emulation_second_time_;
-    int frame_count_ = 0;
-    int sleep_time_ = 0;
 
+    // Audio
+    // TODO: reduce size once done debugging
+    hydra::ringbuffer<65536 * sizeof(float)> audio_buffer_;
+    std::unique_ptr<ma_device, void (*)(ma_device*)> audio_device_;
+    std::unique_ptr<ma_resampler, void (*)(ma_resampler*)> resampler_;
+    uint8_t audio_frame_size_ = 0;
+
+    // Input
     // Maps key -> pair<player, button>
     std::unordered_map<int, std::pair<int, hydra::ButtonType>> backwards_mappings_{};
     // Holds the current state of the input
     // vector[player][button]
     std::vector<std::array<int32_t, (int)hydra::ButtonType::InputCount>> input_state_{};
     std::deque<std::string> recent_files_;
-    // Holds the current state of the mouse
     uint32_t mouse_state_ = hydra::TOUCH_RELEASED;
 
     friend void emulator_signal_handler(int);

@@ -16,6 +16,10 @@ import java.nio.FloatBuffer;
 
 public class HydraGlRenderer implements GLSurfaceView.Renderer {
 
+    HydraGlRenderer() {
+        super();
+    }
+
     int screenWidth, screenHeight;
     int screenTexture;
     public int screenFbo;

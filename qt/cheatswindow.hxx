@@ -1,40 +1,39 @@
 #pragma once
 
 #include "hydra/core.hxx"
-#include <core_loader.hxx>
+#include <corewrapper.hxx>
 #include <filesystem>
 #include <memory>
+#include <qaction.h>
 #include <QWidget>
 
 class QListWidget;
 
-struct CheatMetadata
-{
-    bool enabled = true;
-    std::string name{};
-    std::string code{};
-    uint32_t handle = hydra::BAD_CHEAT;
-};
-
-class CheatsWindow : public QWidget
+class CheatsWindow final : public QWidget
 {
     Q_OBJECT
 
 public:
-    CheatsWindow(std::shared_ptr<hydra::EmulatorWrapper> wrapper, bool& open,
-                 const std::string& hash, QWidget* parent = nullptr);
-    ~CheatsWindow();
-
-    void Show();
-    void Hide();
+    CheatsWindow(std::shared_ptr<hydra::EmulatorWrapper> wrapper, const std::filesystem::path& path,
+                 QAction* action, QWidget* parent = nullptr);
+    ~CheatsWindow() = default;
 
 private:
-    void closeEvent(QCloseEvent* event) override;
+    void hideEvent(QHideEvent* event) override
+    {
+        menu_action_->setChecked(false);
+        QWidget::hideEvent(event);
+    }
 
-    bool& open_;
+    void showEvent(QShowEvent* event) override
+    {
+        menu_action_->setChecked(true);
+        QWidget::showEvent(event);
+    }
+
+private:
     QListWidget* cheat_list_;
     std::shared_ptr<hydra::EmulatorWrapper> wrapper_;
     std::filesystem::path cheat_path_;
-
-    void save_cheats();
+    QAction* menu_action_;
 };

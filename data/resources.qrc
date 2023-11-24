@@ -13,6 +13,10 @@
         <file>images/run.png</file>
         <file>images/save.png</file>
         <file>images/open.png</file>
+        <file>images/Windows.png</file>
+        <file>images/MacOS.png</file>
+        <file>images/Linux.png</file>
+        <file>images/Android.png</file>
         <file>default_mappings.json</file>
         <file>core.html</file>
         <file>about.html</file>

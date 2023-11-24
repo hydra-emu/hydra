@@ -56,12 +56,10 @@ void ScriptHighlighter::highlightBlock(const QString& text)
     }
 }
 
-ScriptEditor::ScriptEditor(bool& open,
-                           std::function<void(const std::string&, bool)> run_script_callback,
-                           QWidget* parent)
-    : QWidget(parent, Qt::Window), open_(open), run_script_callback_(run_script_callback)
+ScriptEditor::ScriptEditor(std::function<void(const std::string&, bool)> run_script_callback,
+                           QAction* action, QWidget* parent)
+    : QWidget(parent, Qt::Window), run_script_callback_(run_script_callback), menu_action_(action)
 {
-    setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlag(Qt::WindowStaysOnTopHint);
     setWindowTitle("Script Editor");
     QFont font;
@@ -93,12 +91,6 @@ ScriptEditor::ScriptEditor(bool& open,
     layout->addWidget(editor_);
     layout->addWidget(safe_mode);
     show();
-    open_ = true;
-}
-
-ScriptEditor::~ScriptEditor()
-{
-    open_ = false;
 }
 
 void ScriptEditor::run_script()

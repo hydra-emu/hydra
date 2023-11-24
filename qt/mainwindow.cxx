@@ -1,11 +1,10 @@
+#define OPENSSL_API_COMPAT 10101
 #include "mainwindow.hxx"
 #include "aboutwindow.hxx"
 #include "downloaderwindow.hxx"
 #include "input.hxx"
-#include "qthelper.hxx"
 #include "scripteditor.hxx"
 #include "settingswindow.hxx"
-#include "shadereditor.hxx"
 #include "terminalwindow.hxx"
 #include <compatibility.hxx>
 #include <csignal>
@@ -16,29 +15,20 @@
 #include <iostream>
 #include <json.hpp>
 #include <log.h>
-#include <QApplication>
-#include <QClipboard>
+#include <mutex>
 #include <QDesktopServices>
 #include <QFile>
-#include <QGridLayout>
-#include <QGroupBox>
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QMessageBox>
-#include <QSurfaceFormat>
 #include <QtConcurrent/QtConcurrent>
-#include <QThread>
 #include <QTimer>
 #include <settings.hxx>
 #ifdef HYDRA_USE_LUA
 #include <sol/sol.hpp>
 #endif
 #include <stb_image_write.h>
-#include <str_hash.hxx>
 #include <update.hxx>
-// TODO: remove this
-#define OSSL_DEPRECATEDIN_3_0
-#include <openssl/md5.h>
 
 enum class EmulatorState
 {
@@ -55,14 +45,14 @@ void hungry_for_more(ma_device* device, void* out, const void*, ma_uint32 frames
 {
     MainWindow* window = static_cast<MainWindow*>(device->pUserData);
     std::unique_lock<std::mutex> lock(window->audio_mutex_);
-    if (window->queued_audio_.empty())
+    size_t frames_to_read =
+        std::min((size_t)frames * window->audio_frame_size_, window->audio_buffer_.size());
+    std::vector<int16_t> temp(frames_to_read / sizeof(int16_t));
+    window->audio_buffer_.read(temp.data(), frames_to_read);
+    for (size_t i = 0; i < temp.size(); i++)
     {
-        return;
+        ((int16_t*)out)[i] = temp[i];
     }
-    frames = std::min(frames * 2, static_cast<ma_uint32>(window->queued_audio_.size()));
-    std::memcpy(out, window->queued_audio_.data(), frames * sizeof(int16_t));
-    window->queued_audio_.erase(window->queued_audio_.begin(),
-                                window->queued_audio_.begin() + frames);
 }
 
 void emulator_signal_handler(int signal)
@@ -72,87 +62,67 @@ void emulator_signal_handler(int signal)
     main_window->stop_emulator();
 }
 
-void initialize_signals()
+void init_signals()
 {
     signal(SIGSEGV, emulator_signal_handler);
     signal(SIGILL, emulator_signal_handler);
 }
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
+void resampler_destructor(ma_resampler* resampler)
+{
+    ma_resampler_uninit(resampler, nullptr);
+}
+
+MainWindow::MainWindow(QWidget* parent)
+    : QMainWindow(parent), audio_device_(nullptr, ma_device_uninit),
+      resampler_(nullptr, resampler_destructor)
 {
     main_window = this;
 
-    emulator_thread_state = EmulatorState::NOTRUNNING;
+    setWindowTitle("hydra");
+    setWindowIcon(QIcon(":/images/hydra.png"));
+    setMinimumSize(160, 160);
+    resize(640, 480);
+
+    QString message = tr("Welcome to hydra!");
+    statusBar()->showMessage(message);
 
     QWidget* widget = new QWidget;
     setCentralWidget(widget);
 
     QBoxLayout* layout = new QBoxLayout(QBoxLayout::LeftToRight);
     layout->setContentsMargins(5, 5, 5, 5);
+    widget->setLayout(layout);
+
+    create_actions();
+    create_menus();
+
     screen_ = new ScreenWidget(widget);
     screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
     screen_->SetMouseClickCallback([this](QMouseEvent* event) { on_mouse_click(event); });
     screen_->SetMouseReleaseCallback([this](QMouseEvent* event) { on_mouse_release(event); });
     screen_->setMouseTracking(true);
+    screen_->show();
     layout->addWidget(screen_, Qt::AlignCenter);
-    widget->setLayout(layout);
-    create_actions();
-    create_menus();
 
-    QString message = tr("Welcome to hydra!");
-    statusBar()->showMessage(message);
-    setMinimumSize(160, 160);
-    resize(640, 480);
-    setWindowTitle("hydra");
-    setWindowIcon(QIcon(":/images/hydra.png"));
-
+    emulator_thread_state = EmulatorState::NOTRUNNING;
+    init_audio();
     emulator_timer_ = new QTimer(this);
     connect(emulator_timer_, SIGNAL(timeout()), this, SLOT(emulator_frame()));
-
-    initialize_audio();
     enable_emulation_actions(false);
-    screen_->show();
 
-    widget->setStyleSheet(R"(
-        background-repeat: no-repeat;
-        background-position: center;
-        background-image: url(:/images/hydra.png);
-    )");
+    QFuture<hydra::Updater::UpdateStatus> update_future =
+        QtConcurrent::run([]() { return hydra::Updater::NeedsDatabaseUpdate(); });
+    update_watcher_ = new QFutureWatcher<hydra::Updater::UpdateStatus>(this);
+    connect(update_watcher_, SIGNAL(finished()), this, SLOT(update_check_finished()));
+    update_watcher_->setFuture(update_future);
 
-    QFuture<hydra::Updater::UpdateStatus> future =
-        QtConcurrent::run([this]() { return hydra::Updater::NeedsDatabaseUpdate(); });
-
-    QFutureWatcher<hydra::Updater::UpdateStatus>* watcher =
-        new QFutureWatcher<hydra::Updater::UpdateStatus>(this);
-    connect(watcher, &QFutureWatcher<hydra::Updater::UpdateStatus>::finished, this,
-            [this, watcher]() {
-                if (watcher->result() == hydra::Updater::UpdateStatus::UpdateAvailable)
-                {
-                    QMessageBox* msg = new QMessageBox;
-                    msg->setWindowTitle("Database update available");
-                    msg->setText("There's a new version of the database available.\nWould you like "
-                                 "to update in the background?");
-                    msg->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-                    msg->setDefaultButton(QMessageBox::Yes);
-                    connect(msg, &QMessageBox::finished, this, [this, msg]() {
-                        if (msg->clickedButton() == msg->button(QMessageBox::Yes))
-                        {
-                            statusBar()->showMessage("Updating database...");
-                            hydra::Updater::UpdateDatabase(
-                                [this]() { statusBar()->showMessage("Database updated"); });
-                        }
-                    });
-                    msg->move(screen()->geometry().center() - frameGeometry().center());
-                    msg->show();
-                    watcher->deleteLater();
-                }
-            });
-    watcher->setFuture(future);
+    DownloaderWindow* downloader = new DownloaderWindow(this);
+    downloader->show();
 }
 
 MainWindow::~MainWindow()
 {
-    ma_device_uninit(&sound_device_);
     stop_emulator();
 }
 
@@ -161,40 +131,93 @@ void MainWindow::OpenFile(const std::string& file)
     open_file_impl(file);
 }
 
-void MainWindow::initialize_audio()
+void MainWindow::update_check_finished()
 {
-    ma_context context;
-    ma_context_config context_config = ma_context_config_init();
-    context_config.threadPriority = ma_thread_priority_realtime;
-    if (ma_context_init(NULL, 0, &context_config, &context) != MA_SUCCESS)
+    if (update_watcher_->result() == hydra::Updater::UpdateStatus::UpdateAvailable)
     {
-        log_fatal("Failed to initialize audio context");
+        QMessageBox* msg = new QMessageBox;
+        msg->setWindowTitle("Database update available");
+        msg->setText("There's a new version of the database available.\nWould you like "
+                     "to update in the background?");
+        msg->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msg->setDefaultButton(QMessageBox::Yes);
+        connect(msg, &QMessageBox::finished, this, [this, msg]() {
+            if (msg->clickedButton() == msg->button(QMessageBox::Yes))
+            {
+                statusBar()->showMessage("Updating database...");
+                hydra::Updater::UpdateDatabase(
+                    [this]() { statusBar()->showMessage("Database updated"); });
+            }
+        });
+        msg->move(screen()->geometry().center() - frameGeometry().center());
+        msg->show();
+        update_watcher_->deleteLater();
     }
+}
+
+void MainWindow::init_audio(hydra::SampleType sample_type, hydra::ChannelType channel_type)
+{
+    static std::once_flag context_initialized;
+    std::call_once(context_initialized, []() {
+        ma_context context;
+        ma_context_config context_config = ma_context_config_init();
+        context_config.threadPriority = ma_thread_priority_realtime;
+        if (ma_context_init(NULL, 0, &context_config, &context) != MA_SUCCESS)
+        {
+            log_fatal("Failed to initialize audio context");
+        }
+    });
+
+    audio_device_.reset(new ma_device);
 
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
-    config.playback.format = ma_format_s16;
-    config.playback.channels = 2;
-    config.sampleRate = 48000;
-    config.periodSizeInFrames = 48000 / 60;
+    switch (sample_type)
+    {
+        case hydra::SampleType::Int16:
+            audio_frame_size_ = sizeof(int16_t);
+            config.playback.format = ma_format_s16;
+            break;
+        case hydra::SampleType::Float:
+            audio_frame_size_ = sizeof(float);
+            config.playback.format = ma_format_f32;
+            break;
+        default:
+            log_fatal("Unknown sample type");
+            break;
+    }
+    config.playback.channels = static_cast<int>(channel_type);
+    config.sampleRate = 0;
     config.dataCallback = hungry_for_more;
     config.pUserData = this;
-    if (ma_device_init(NULL, &config, &sound_device_) != MA_SUCCESS)
+
+    if (ma_device_init(NULL, &config, audio_device_.get()) != MA_SUCCESS)
     {
         log_fatal("Failed to open audio device");
     }
-    ma_device_start(&sound_device_);
+
+    ma_device_start(audio_device_.get());
 
     std::string volume_str = Settings::Get("master_volume");
     if (!volume_str.empty())
     {
         int volume = std::stoi(volume_str);
         float volume_f = static_cast<float>(volume) / 100.0f;
-        ma_device_set_master_volume(&sound_device_, volume_f);
+        ma_device_set_master_volume(audio_device_.get(), volume_f);
     }
     else
     {
-        ma_device_set_master_volume(&sound_device_, 1.0f);
+        ma_device_set_master_volume(audio_device_.get(), 1.0f);
     }
+}
+
+void MainWindow::resample(void*, const void*, size_t)
+{
+    printf("todo: resampling\n");
+}
+
+void open_url(const std::filesystem::path& url)
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(url.string().c_str()));
 }
 
 void MainWindow::create_actions()
@@ -204,92 +227,82 @@ void MainWindow::create_actions()
     open_act_->setStatusTip(tr("Open a ROM"));
     open_act_->setIcon(QIcon(":/images/open.png"));
     connect(open_act_, &QAction::triggered, this, &MainWindow::open_file);
+
     settings_act_ = new QAction(tr("&Settings"), this);
     settings_act_->setShortcut(Qt::CTRL | Qt::Key_Comma);
     settings_act_->setStatusTip(tr("Emulator settings"));
+    connect(settings_act_, &QAction::triggered, this, &MainWindow::action_settings);
+
     open_settings_file_act_ = new QAction(tr("Open settings file"), this);
     open_settings_file_act_->setStatusTip(tr("Open the settings.json file"));
-    connect(open_settings_file_act_, &QAction::triggered, this, []() {
-        std::string settings_file = (Settings::GetSavePath() / "settings.json").string();
-        QDesktopServices::openUrl(QUrl::fromLocalFile(settings_file.c_str()));
-    });
+    connect(open_settings_file_act_, &QAction::triggered, this,
+            std::bind(open_url, Settings::GetSavePath() / "settings.json"));
+
     open_settings_folder_act_ = new QAction(tr("Open settings folder"), this);
     open_settings_folder_act_->setStatusTip(tr("Open the settings folder"));
-    connect(open_settings_folder_act_, &QAction::triggered, this, []() {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(Settings::GetSavePath().string().c_str()));
-    });
-    connect(settings_act_, &QAction::triggered, this, &MainWindow::open_settings);
+    connect(open_settings_folder_act_, &QAction::triggered, this,
+            std::bind(open_url, Settings::GetSavePath()));
+
     close_act_ = new QAction(tr("&Exit"), this);
     close_act_->setShortcut(QKeySequence::Close);
     close_act_->setStatusTip(tr("Exit hydra"));
     connect(close_act_, &QAction::triggered, this, &MainWindow::close);
+
     pause_act_ = new QAction(tr("&Pause"), this);
     pause_act_->setShortcut(Qt::CTRL | Qt::Key_P);
     pause_act_->setCheckable(true);
     pause_act_->setStatusTip(tr("Pause emulation"));
     connect(pause_act_, &QAction::triggered, this, &MainWindow::pause_emulator);
+
     stop_act_ = new QAction(tr("&Stop"), this);
     stop_act_->setShortcut(Qt::CTRL | Qt::Key_Q);
     stop_act_->setStatusTip(tr("Stop emulation immediately"));
     connect(stop_act_, &QAction::triggered, this, &MainWindow::stop_emulator);
+
     mute_act_ = new QAction(tr("&Mute"), this);
     mute_act_->setShortcut(Qt::CTRL | Qt::Key_M);
     mute_act_->setCheckable(true);
     mute_act_->setStatusTip(tr("Mute audio"));
-    connect(mute_act_, &QAction::triggered, this, [this]() {
-        if (mute_act_->isChecked())
-        {
-            ma_device_set_master_volume(&sound_device_, 0.0f);
-        }
-        else
-        {
-            std::string volume_str = Settings::Get("master_volume");
-            if (!volume_str.empty())
-            {
-                int volume = std::stoi(volume_str);
-                float volume_f = static_cast<float>(volume) / 100.0f;
-                ma_device_set_master_volume(&sound_device_, volume_f);
-            }
-            else
-            {
-                ma_device_set_master_volume(&sound_device_, 1.0f);
-            }
-        }
-    });
+    connect(mute_act_, SIGNAL(triggered()), this, SLOT(toggle_mute()));
+
     reset_act_ = new QAction(tr("&Reset"), this);
     reset_act_->setShortcut(Qt::CTRL | Qt::Key_R);
     reset_act_->setStatusTip(tr("Reset emulator"));
     connect(reset_act_, &QAction::triggered, this, &MainWindow::reset_emulator);
+
     screenshot_act_ = new QAction(tr("S&creenshot"), this);
     screenshot_act_->setShortcut(Qt::Key_F12);
     screenshot_act_->setStatusTip(tr("Take a screenshot (check settings for save path)"));
     connect(screenshot_act_, &QAction::triggered, this, &MainWindow::screenshot);
+
     about_act_ = new QAction(tr("&About"), this);
     about_act_->setShortcut(QKeySequence::HelpContents);
     about_act_->setStatusTip(tr("Show about dialog"));
-    connect(about_act_, &QAction::triggered, this, &MainWindow::open_about);
-    shaders_act_ = new QAction(tr("&Shaders"), this);
-    shaders_act_->setShortcut(Qt::Key_F11);
-    shaders_act_->setStatusTip("Open the shader editor");
-    shaders_act_->setIcon(QIcon(":/images/shaders.png"));
-    connect(shaders_act_, &QAction::triggered, this, &MainWindow::open_shaders);
+    connect(about_act_, &QAction::triggered, this, &MainWindow::action_about);
+
     scripts_act_ = new QAction(tr("S&cripts"), this);
     scripts_act_->setShortcut(Qt::Key_F10);
     scripts_act_->setStatusTip("Open the script editor");
     scripts_act_->setIcon(QIcon(":/images/scripts.png"));
-    connect(scripts_act_, &QAction::triggered, this, &MainWindow::open_scripts);
+    scripts_act_->setCheckable(true);
+    connect(scripts_act_, &QAction::triggered, this, &MainWindow::action_scripts);
 #ifndef HYDRA_USE_LUA
     scripts_act_->setEnabled(false);
 #endif
+
     terminal_act_ = new QAction(tr("&Terminal"), this);
     terminal_act_->setShortcut(Qt::Key_F9);
     terminal_act_->setStatusTip("Open the terminal");
     terminal_act_->setIcon(QIcon(":/images/terminal.png"));
-    connect(terminal_act_, &QAction::triggered, this, &MainWindow::open_terminal);
+    terminal_act_->setCheckable(true);
+    connect(terminal_act_, &QAction::triggered, this, &MainWindow::action_terminal);
+
     cheats_act_ = new QAction(tr("&Cheats"), this);
     cheats_act_->setShortcut(Qt::Key_F8);
     cheats_act_->setStatusTip("Open the cheats window");
-    connect(cheats_act_, &QAction::triggered, this, &MainWindow::toggle_cheats_window);
+    cheats_act_->setCheckable(true);
+    connect(cheats_act_, &QAction::triggered, this, &MainWindow::action_cheats);
+
     recent_act_ = new QAction(tr("&Recent files"), this);
     for (int i = 0; i < 10; i++)
     {
@@ -317,6 +330,31 @@ void MainWindow::create_actions()
     }
 }
 
+void MainWindow::toggle_mute()
+{
+    if (audio_device_)
+    {
+        if (mute_act_->isChecked())
+        {
+            ma_device_set_master_volume(audio_device_.get(), 0.0f);
+        }
+        else
+        {
+            std::string volume_str = Settings::Get("master_volume");
+            if (!volume_str.empty())
+            {
+                int volume = std::stoi(volume_str);
+                float volume_f = static_cast<float>(volume) / 100.0f;
+                ma_device_set_master_volume(audio_device_.get(), volume_f);
+            }
+            else
+            {
+                ma_device_set_master_volume(audio_device_.get(), 1.0f);
+            }
+        }
+    }
+}
+
 void MainWindow::create_menus()
 {
     file_menu_ = menuBar()->addMenu(tr("&File"));
@@ -338,10 +376,9 @@ void MainWindow::create_menus()
     emulation_menu_->addSeparator();
     emulation_menu_->addAction(mute_act_);
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
-    tools_menu_->addAction(terminal_act_);
     tools_menu_->addAction(cheats_act_);
+    tools_menu_->addAction(terminal_act_);
     tools_menu_->addAction(scripts_act_);
-    tools_menu_->addAction(shaders_act_);
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
 }
@@ -366,7 +403,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
     input_state_[player][(int)key] = 0;
 }
 
-void MainWindow::on_mouse_move(QMouseEvent* event) {}
+void MainWindow::on_mouse_move(QMouseEvent*) {}
 
 void MainWindow::on_mouse_click(QMouseEvent* event)
 {
@@ -391,9 +428,9 @@ void MainWindow::open_file()
     {
         QString indep;
         extensions = "All supported types (";
-        for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+        for (size_t i = 0; i < Settings::CoreInfo().size(); i++)
         {
-            const auto& core_data = Settings::CoreInfo[i];
+            const auto& core_data = Settings::CoreInfo()[i];
             indep += core_data.core_name.c_str();
             indep += " (";
             for (size_t j = 0; j < core_data.extensions.size(); j++)
@@ -403,14 +440,14 @@ void MainWindow::open_file()
                 extensions += ext.c_str();
                 if (j != core_data.extensions.size() - 1)
                     extensions += " ";
-                else if (i != Settings::CoreInfo.size() - 1)
+                else if (i != Settings::CoreInfo().size() - 1)
                     extensions += " ";
                 indep += "*.";
                 indep += ext.c_str();
                 if (j != core_data.extensions.size() - 1)
                     indep += " ";
             }
-            if (i != Settings::CoreInfo.size() - 1)
+            if (i != Settings::CoreInfo().size() - 1)
                 indep += ");;";
             else
                 indep += ")";
@@ -428,7 +465,7 @@ void MainWindow::open_file()
         return;
     }
     std::string path = dialog.selectedFiles().first().toStdString();
-    qt_may_throw(std::bind(&MainWindow::open_file_impl, this, path));
+    open_file_impl(path);
 }
 
 void MainWindow::open_file_impl(const std::string& path)
@@ -444,9 +481,10 @@ void MainWindow::open_file_impl(const std::string& path)
     }
 
     stop_emulator();
+
     Settings::Set("last_path", pathfs.parent_path().string());
     std::string core_path;
-    for (const auto& core : Settings::CoreInfo)
+    for (const auto& core : Settings::CoreInfo())
     {
         for (const auto& ext : core.extensions)
         {
@@ -465,7 +503,7 @@ void MainWindow::open_file_impl(const std::string& path)
         return;
     }
     info_.reset();
-    for (auto& info : Settings::CoreInfo)
+    for (auto& info : Settings::CoreInfo())
     {
         if (info.path == core_path)
         {
@@ -479,33 +517,15 @@ void MainWindow::open_file_impl(const std::string& path)
             fmt::format("Failed to find core info for core {}... This shouldn't happen?", core_path)
                 .c_str());
     }
-    {
-        unsigned char result[MD5_DIGEST_LENGTH];
-        std::ifstream file(path, std::ifstream::binary);
-        MD5_CTX md5Context;
-        MD5_Init(&md5Context);
-        char buf[1024 * 16];
-        while (file.good())
-        {
-            file.read(buf, sizeof(buf));
-            MD5_Update(&md5Context, buf, file.gcount());
-        }
-        MD5_Final(result, &md5Context);
-        std::stringstream md5stream;
-        md5stream << std::hex << std::setfill('0');
-        for (const auto& byte : result)
-        {
-            md5stream << std::setw(2) << (int)byte;
-        }
-        game_hash_ = md5stream.str();
-    }
-    // TODO: such resets don't belong in open_file_impl, but in a separate function
-    cheats_window_.reset();
+
+    if (emulator_.use_count() != 0)
+        log_fatal("Emulator not reset properly?");
+
     emulator_ = hydra::EmulatorFactory::Create(core_path);
     if (!emulator_)
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
     init_emulator();
-    if (!emulator_->shell->loadFile("rom", path.c_str()))
+    if (!emulator_->LoadGame(pathfs))
         throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open file");
     enable_emulation_actions(true);
     add_recent(path);
@@ -551,75 +571,69 @@ void MainWindow::open_file_impl(const std::string& path)
     emulator_timer_->start();
 }
 
-void MainWindow::open_settings()
+void MainWindow::reset_emulator_windows()
 {
-    qt_may_throw([this]() {
-        if (!settings_open_)
-        {
-            using namespace std::placeholders;
-            new SettingsWindow(settings_open_, std::bind(&MainWindow::set_volume, this, _1), this);
-        }
-    });
+    windows_[WindowIndex::Cheats].reset();
+    windows_[WindowIndex::Terminal].reset();
+    windows_[WindowIndex::Script].reset();
 }
 
-void MainWindow::open_shaders()
+void MainWindow::action_settings()
 {
-    qt_may_throw([this]() {
-        if (!shaders_open_)
-        {
-            // using namespace std::placeholders;
-            // std::function<void(QString*, QString*)> callback =
-            //     std::bind(&ScreenWidget::ResetProgram, screen_, _1, _2);
-            // new ShaderEditor(shaders_open_, callback, this);
-        }
-    });
+    if (windows_[WindowIndex::Settings])
+    {
+        windows_[WindowIndex::Settings].reset();
+    }
+    using namespace std::placeholders;
+    windows_[WindowIndex::Settings] =
+        std::make_unique<SettingsWindow>(std::bind(&MainWindow::set_volume, this, _1), this);
 }
 
-void MainWindow::open_scripts()
+void MainWindow::action_scripts()
 {
-    qt_may_throw([this]() {
-        if (!scripts_open_)
-        {
-            using namespace std::placeholders;
-            new ScriptEditor(scripts_open_, std::bind(&MainWindow::run_script, this, _1, _2), this);
-        }
-    });
+    if (windows_[WindowIndex::Script])
+    {
+        windows_[WindowIndex::Script]->setVisible(!windows_[WindowIndex::Script]->isVisible());
+    }
+    else
+    {
+        using namespace std::placeholders;
+        windows_[WindowIndex::Script] = std::make_unique<ScriptEditor>(
+            std::bind(&MainWindow::run_script, this, _1, _2), scripts_act_, this);
+    }
 }
 
-void MainWindow::open_terminal()
+void MainWindow::action_terminal()
 {
-    qt_may_throw([this]() {
-        if (!terminal_open_)
-        {
-            new TerminalWindow(terminal_open_, this);
-        }
-    });
+    if (windows_[WindowIndex::Terminal])
+    {
+        windows_[WindowIndex::Terminal]->setVisible(!windows_[WindowIndex::Terminal]->isVisible());
+    }
+    else
+    {
+        windows_[WindowIndex::Terminal] = std::make_unique<TerminalWindow>(terminal_act_, this);
+    }
 }
 
-void MainWindow::toggle_cheats_window()
+void MainWindow::action_cheats()
 {
-    qt_may_throw([this]() {
-        if (!cheats_window_)
-        {
-            cheats_window_.reset(new CheatsWindow(emulator_, cheats_open_, game_hash_, this));
-        }
-        else
-        {
-            if (!cheats_open_)
-            {
-                cheats_window_->Show();
-            }
-            else
-            {
-                cheats_window_->Hide();
-            }
-        }
-    });
+    if (windows_[WindowIndex::Cheats])
+    {
+        windows_[WindowIndex::Cheats]->setVisible(!windows_[WindowIndex::Cheats]->isVisible());
+    }
+    else
+    {
+        std::filesystem::path path = Settings::GetSavePath() / "cheats" / (game_hash_ + ".json");
+        windows_[WindowIndex::Cheats] =
+            std::make_unique<CheatsWindow>(emulator_, path, cheats_act_, this);
+    }
 }
 
 // TODO: compiler option to turn off lua support
 void MainWindow::run_script(const std::string& script, bool safe_mode)
 {
+    (void)script;
+    (void)safe_mode;
 #ifdef HYDRA_USE_LUA
     static bool initialized = false;
     static sol::state lua;
@@ -658,16 +672,14 @@ void MainWindow::run_script(const std::string& script, bool safe_mode)
         initialized = true;
     }
 
-    qt_may_throw([this, &script, &safe_mode]() {
-        if (safe_mode)
-        {
-            lua.script(script, environment);
-        }
-        else
-        {
-            lua.script(script);
-        }
-    });
+    if (safe_mode)
+    {
+        lua.script(script, environment);
+    }
+    else
+    {
+        lua.script(script);
+    }
 #endif
 }
 
@@ -697,17 +709,22 @@ void MainWindow::screenshot()
 
 void MainWindow::set_volume(int volume)
 {
-    ma_device_set_master_volume(&sound_device_, volume / 100.0f);
+    if (audio_device_)
+    {
+        ma_device_set_master_volume(audio_device_.get(), volume / 100.0f);
+    }
 }
 
-void MainWindow::open_about()
+void MainWindow::action_about()
 {
-    qt_may_throw([this]() {
-        if (!about_open_)
-        {
-            new AboutWindow(about_open_, this);
-        }
-    });
+    if (windows_[WindowIndex::About])
+    {
+        windows_[WindowIndex::About].reset();
+    }
+    else
+    {
+        windows_[WindowIndex::About] = std::make_unique<AboutWindow>(this);
+    }
 }
 
 void MainWindow::enable_emulation_actions(bool should)
@@ -717,11 +734,13 @@ void MainWindow::enable_emulation_actions(bool should)
     scripts_act_->setEnabled(should);
     terminal_act_->setEnabled(should);
     cheats_act_->setEnabled(should);
-    shaders_act_->setEnabled(should);
     if (should)
         screen_->show();
     else
-        screen_->hide();
+    {
+        if (screen_->initialized_)
+            screen_->hide();
+    }
 }
 
 void MainWindow::pause_emulator()
@@ -742,7 +761,7 @@ void MainWindow::reset_emulator()
     if (emulator_)
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
-        queued_audio_.clear();
+        audio_buffer_.clear();
         emulator_->shell->asIBase()->reset();
     }
 }
@@ -798,8 +817,32 @@ void MainWindow::init_emulator()
     if (emulator_->shell->hasInterface(hydra::InterfaceType::IAudio))
     {
         hydra::IAudio* shell_audio = emulator_->shell->asIAudio();
-        shell_audio->setSampleRate(48000);
         shell_audio->setAudioCallback(audio_callback);
+        hydra::SampleType sample_type = shell_audio->getSampleType();
+        hydra::ChannelType channel_type = shell_audio->getChannelType();
+        uint32_t sample_rate = shell_audio->getSampleRate();
+
+        ma_format format = sample_type == hydra::SampleType::Int16 ? ma_format_s16 : ma_format_f32;
+        ma_channel channel = static_cast<int>(channel_type);
+        if (format != audio_device_->playback.format || channel != audio_device_->playback.channels)
+        {
+            // Reinitialize audio with our settings
+            init_audio(sample_type, channel_type);
+        }
+
+        resampler_.reset();
+
+        if (audio_device_->sampleRate != sample_rate)
+        {
+            ma_resampler_config config =
+                ma_resampler_config_init(format, channel, sample_rate, audio_device_->sampleRate,
+                                         ma_resample_algorithm_linear);
+            resampler_.reset(new ma_resampler);
+            if (ma_resampler_init(&config, nullptr, resampler_.get()) != MA_SUCCESS)
+            {
+                log_fatal("Failed to initialize resampler");
+            }
+        }
     }
 
     // Initialize input
@@ -860,6 +903,7 @@ void MainWindow::stop_emulator()
     if (emulator_)
     {
         std::unique_lock<std::mutex> alock(audio_mutex_);
+        reset_emulator_windows();
         emulator_.reset();
         std::fill(video_buffer_.begin(), video_buffer_.end(), 0);
         enable_emulation_actions(false);
@@ -921,10 +965,7 @@ void MainWindow::video_callback(void* data, hydra::Size size)
 void MainWindow::audio_callback(void* data, size_t frames)
 {
     std::unique_lock<std::mutex> lock(main_window->audio_mutex_);
-    main_window->queued_audio_.reserve(main_window->queued_audio_.size() + frames * 2);
-    // TODO: fix for float samples
-    main_window->queued_audio_.insert(main_window->queued_audio_.end(), (int16_t*)data,
-                                      (int16_t*)data + frames * 2);
+    main_window->audio_buffer_.write(data, frames * main_window->audio_frame_size_);
 }
 
 int32_t MainWindow::read_input_callback(uint32_t player, hydra::ButtonType button)

@@ -1,3 +1,4 @@
+#include "keypicker.hxx"
 #include <filesystem>
 #include <hydra/core.hxx>
 #include <input.hxx>
@@ -9,10 +10,8 @@
 #include <QHeaderView>
 #include <QKeyEvent>
 #include <QMessageBox>
-#include <qt/keypicker.hxx>
 #include <QTableWidget>
 #include <settings.hxx>
-#include <str_hash.hxx>
 
 constexpr const char* serialize(hydra::ButtonType input)
 {
@@ -85,7 +84,7 @@ constexpr const char* serialize(hydra::ButtonType input)
 
 InputPage::InputPage(const std::vector<std::tuple<QComboBox*, int, QString>>& listener_combos,
                      QWidget* parent)
-    : listener_combos_(listener_combos), QWidget(parent)
+    : QWidget(parent), listener_combos_(listener_combos)
 {
     tab_show_ = new QTabWidget;
     emulator_picker_ = new QComboBox;

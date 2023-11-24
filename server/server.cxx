@@ -23,7 +23,7 @@ void* get_proc_address = nullptr;
 GLuint fbo = 0;
 void* context = nullptr;
 std::array<uint8_t, 400 * 480 * 4> buffer;
-hydra::core_wrapper_t* core_;
+std::unique_ptr<hydra::EmulatorWrapper> wrapper;
 
 namespace hydra
 {

@@ -1,4 +1,4 @@
-#include <hsystem.h>
+#include <hsystem.hxx>
 
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
 #include <netinet/in.h>
@@ -7,7 +7,7 @@
 #elif defined(HYDRA_WINDOWS)
 #pragma message("TODO: include winsock2.h")
 #endif
-#include "core_loader.hxx"
+#include "corewrapper.hxx"
 
 namespace hydra
 {

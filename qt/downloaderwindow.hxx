@@ -13,14 +13,6 @@ class DownloaderWindow : public QWidget
     Q_OBJECT
 
 public:
-    DownloaderWindow(const std::vector<std::string>& download_queue);
+    DownloaderWindow(QWidget* parent = nullptr);
     ~DownloaderWindow();
-
-private:
-    std::vector<std::string> download_queue_;
-    bool downloading_ = false;
-
-    QProgressBar* progress_bar_;
-    QTextEdit* log_;
-    QLabel* byte_progress_label_;
 };

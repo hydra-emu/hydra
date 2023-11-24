@@ -2,7 +2,7 @@
 
 #include "log.h"
 #include <compatibility.hxx>
-#include <core_loader.hxx>
+#include <corewrapper.hxx>
 #include <error_factory.hxx>
 #include <filesystem>
 #include <fmt/format.h>
@@ -40,55 +40,43 @@ class Settings
 public:
     static void Open(const std::filesystem::path& path)
     {
-        map_.clear();
-        save_path_ = path;
-        std::ifstream ifs(save_path_);
+        map().clear();
+        save_path() = path;
+        std::ifstream ifs(save_path());
         if (ifs.good())
         {
             json j_map;
             ifs >> j_map;
-            map_ = j_map.get<std::map<std::string, std::string>>();
+            map() = j_map.get<std::map<std::string, std::string>>();
         }
-        initialized_ = true;
+        else
+        {
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open settings");
+        }
     }
 
     static std::string Get(const std::string& key)
     {
-        if (!initialized_)
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Settings not initialized");
-        }
-
-        if (map_.find(key) == map_.end())
+        if (map().find(key) == map().end())
         {
             Set(key, "");
             return "";
         }
 
-        return map_[key];
+        return map()[key];
     }
 
     static void Set(const std::string& key, const std::string& value)
     {
-        if (!initialized_)
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Settings not initialized");
-        }
-
-        map_[key] = value;
-        std::ofstream ofs(save_path_, std::ios::trunc);
-        json j_map(map_);
+        map()[key] = value;
+        std::ofstream ofs(save_path(), std::ios::trunc);
+        json j_map(map());
         ofs << j_map << std::endl;
     }
 
     static bool IsEmpty()
     {
-        if (!initialized_)
-        {
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Settings not initialized");
-        }
-
-        return map_.empty();
+        return map().empty();
     }
 
     static std::filesystem::path GetSavePath()
@@ -128,11 +116,45 @@ public:
         return dir;
     }
 
+    static std::filesystem::path GetCachePath()
+    {
+        static std::filesystem::path dir;
+        if (dir.empty())
+        {
+#if defined(HYDRA_LINUX) || defined(HYDRA_FREEBSD)
+            dir = std::filesystem::path(getenv("HOME")) / ".cache" / "hydra";
+#elif defined(HYDRA_WINDOWS)
+            dir = std::filesystem::path(getenv("APPDATA")) / "hydra" / "cache";
+#elif defined(HYDRA_MACOS)
+            dir = std::filesystem::path(getenv("HOME")) / "Library" / "Caches" / "hydra" / "cache";
+#elif defined(HYDRA_ANDROID)
+            dir = GetSavePath() / "cache";
+#endif
+        }
+
+        if (dir.empty())
+        {
+            throw ErrorFactory::generate_exception(
+                __func__, __LINE__, "GetCachePath was not defined for this environment");
+        }
+
+        if (!std::filesystem::create_directories(dir))
+        {
+            if (std::filesystem::exists(dir))
+            {
+                return dir;
+            }
+            throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create cache");
+        }
+
+        return dir;
+    }
+
     static void InitCoreInfo()
     {
-        if (core_info_initialized_)
+        if (core_info_initialized())
             return;
-        core_info_initialized_ = true;
+        core_info_initialized() = true;
         if (Settings::Get("core_path").empty())
         {
             Settings::Set("core_path", (std::filesystem::current_path()).string());
@@ -215,7 +237,7 @@ public:
                 {
                     Settings::Set(info.core_name + "_controller_1_active", "true");
                 }
-                CoreInfo.push_back(info);
+                CoreInfo().push_back(info);
             }
 
             ++it;
@@ -224,17 +246,42 @@ public:
 
     static void ReinitCoreInfo()
     {
-        core_info_initialized_ = false;
-        CoreInfo.clear();
+        core_info_initialized() = false;
+        CoreInfo().clear();
         InitCoreInfo();
     }
 
-    static std::vector<EmulatorInfo> CoreInfo;
+    static std::string Print()
+    {
+        std::string ret;
+        ret += fmt::format("version: {}\n", HYDRA_VERSION);
+        ret += fmt::format("system: {}\n", hydra_os());
+        ret += fmt::format("settings:\n{}\n", json(map()).dump(4));
+        return ret;
+    }
+
+    static std::vector<EmulatorInfo>& CoreInfo()
+    {
+        static std::vector<EmulatorInfo> c;
+        return c;
+    }
 
 private:
-    static std::map<std::string, std::string> map_;
-    static std::filesystem::path save_path_;
+    static std::map<std::string, std::string>& map()
+    {
+        static std::map<std::string, std::string> m;
+        return m;
+    }
 
-    static bool initialized_;
-    static bool core_info_initialized_;
+    static std::filesystem::path& save_path()
+    {
+        static std::filesystem::path p;
+        return p;
+    }
+
+    static bool& core_info_initialized()
+    {
+        static bool b;
+        return b;
+    }
 };

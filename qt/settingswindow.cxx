@@ -10,12 +10,10 @@
 #include <QVBoxLayout>
 #include <settings.hxx>
 
-SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callback,
-                               QWidget* parent)
-    : open_(open), volume_callback_(volume_callback), QWidget(parent, Qt::Window)
+SettingsWindow::SettingsWindow(std::function<void(int)> volume_callback, QWidget* parent)
+    : QWidget(parent, Qt::Window), volume_callback_(volume_callback)
 {
     setFocusPolicy(Qt::StrongFocus);
-    setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle("Settings");
     QGridLayout* main_layout = new QGridLayout;
     left_group_box_ = new QGroupBox;
@@ -33,28 +31,28 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
         add_item(audio, "Audio", "sound.png");
         add_item(input, "Input", "input.png");
 
-        if (!std::filesystem::create_directories(Settings::GetSavePath() / "cache"))
+        if (!std::filesystem::create_directories(Settings::GetCachePath()))
         {
-            if (!std::filesystem::exists(Settings::GetSavePath() / "cache"))
+            if (!std::filesystem::exists(Settings::GetCachePath()))
             {
                 QMessageBox::critical(this, "Error", "Cannot create cache directory");
                 return;
             }
         }
 
-        for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+        for (size_t i = 0; i < Settings::CoreInfo().size(); i++)
         {
-            std::filesystem::path path = Settings::GetSavePath() / "cache" /
-                                         std::string(Settings::CoreInfo[i].core_name + ".png");
+            std::filesystem::path path =
+                Settings::GetCachePath() / std::string(Settings::CoreInfo()[i].core_name + ".png");
             if (std::filesystem::exists(path))
             {
                 QListWidgetItem* item = new QListWidgetItem(
-                    QPixmap((path).string().c_str()), Settings::CoreInfo[i].core_name.c_str());
+                    QPixmap((path).string().c_str()), Settings::CoreInfo()[i].core_name.c_str());
                 tab_list_->addItem(item);
             }
             else
             {
-                auto wrapper = hydra::EmulatorFactory::Create(Settings::CoreInfo[i].path);
+                auto wrapper = hydra::EmulatorFactory::Create(Settings::CoreInfo()[i].path);
                 QString cache_path = path.string().c_str();
                 if (wrapper->GetInfo(hydra::InfoType::IconData))
                 {
@@ -64,7 +62,7 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
                     if (width <= 0 || height <= 0)
                     {
                         printf("Invalid icon size in core %s\n",
-                               Settings::CoreInfo[i].core_name.c_str());
+                               Settings::CoreInfo()[i].core_name.c_str());
                         continue;
                     }
                     QImage image(width, height, QImage::Format_RGBA8888);
@@ -81,12 +79,12 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
                     image.save(cache_path);
 
                     QListWidgetItem* item = new QListWidgetItem(
-                        QPixmap::fromImage(image), Settings::CoreInfo[i].core_name.c_str());
+                        QPixmap::fromImage(image), Settings::CoreInfo()[i].core_name.c_str());
                     tab_list_->addItem(item);
                 }
                 else
                 {
-                    add_item(core, Settings::CoreInfo[i].core_name.c_str(), "core.png");
+                    add_item(core, Settings::CoreInfo()[i].core_name.c_str(), "core.png");
                     QFile::copy(QString(":/images/core.png"), cache_path);
                 }
             }
@@ -128,12 +126,6 @@ SettingsWindow::SettingsWindow(bool& open, std::function<void(int)> volume_callb
     main_layout->setColumnStretch(1, 1);
     setLayout(main_layout);
     show();
-    open_ = true;
-}
-
-SettingsWindow::~SettingsWindow()
-{
-    open_ = false;
 }
 
 QWidget* create_separator()
@@ -214,21 +206,21 @@ void SettingsWindow::create_tabs()
         file.open(QIODevice::ReadOnly);
         QString html = file.readAll();
         file.close();
-        for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+        for (size_t i = 0; i < Settings::CoreInfo().size(); i++)
         {
-            const auto& core = Settings::CoreInfo[i];
+            const auto& core = Settings::CoreInfo()[i];
             QListWidgetItem* item = new QListWidgetItem(core.core_name.c_str());
             core_list->addItem(item);
         }
         connect(core_list, &QListWidget::itemDoubleClicked, this,
-                [this, html, core_list](QListWidgetItem* item) {
+                [html, core_list](QListWidgetItem* item) {
                     int index = core_list->row(item);
-                    auto core = Settings::CoreInfo[index];
+                    auto core = Settings::CoreInfo()[index];
                     QMessageBox msg;
                     msg.setWindowTitle(core.core_name.c_str());
                     std::filesystem::path path =
-                        Settings::GetSavePath() / "cache" /
-                        std::string(Settings::CoreInfo[index].core_name + ".png");
+                        Settings::GetCachePath() /
+                        std::string(Settings::CoreInfo()[index].core_name + ".png");
                     QPixmap pixmap;
                     if (!std::filesystem::exists(path))
                     {
@@ -288,9 +280,9 @@ void SettingsWindow::create_tabs()
         });
         audio_layout->addWidget(audio_slider, 0, 1);
     }
-    for (size_t i = 0; i < Settings::CoreInfo.size(); i++)
+    for (size_t i = 0; i < Settings::CoreInfo().size(); i++)
     {
-        const auto& core = Settings::CoreInfo[i];
+        const auto& core = Settings::CoreInfo()[i];
         QGridLayout* core_layout = new QGridLayout;
         core_layout->setAlignment(Qt::AlignTop);
         core_layout->setSpacing(12);
@@ -314,7 +306,7 @@ void SettingsWindow::create_tabs()
             std::string is_active =
                 Settings::Get(core_name + "_controller_" + std::to_string(j) + "_active");
             active->setChecked(is_active == "true");
-            connect(active, &QCheckBox::stateChanged, this, [this, j, core_name](int state) {
+            connect(active, &QCheckBox::stateChanged, this, [j, core_name](int state) {
                 Settings::Set(core_name + "_controller_" + std::to_string(j) + "_active",
                               state == Qt::Checked ? "true" : "false");
             });
@@ -379,7 +371,7 @@ QComboBox* SettingsWindow::make_input_combo(const QString& core_name, int player
         Settings::Set(setting, "Default mappings");
     }
     connect(combo, &QComboBox::currentTextChanged, this,
-            [this, setting](const QString& text) { Settings::Set(setting, text.toStdString()); });
+            [setting](const QString& text) { Settings::Set(setting, text.toStdString()); });
     std::tuple<QComboBox*, int, QString> tuple = {combo, player, selected_mapping};
     listener_combos_.push_back(tuple);
     return combo;

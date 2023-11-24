@@ -1,0 +1,21 @@
+R"!(OPTIONS
+       -o, --open-file=<PATH>
+              open a file using a previously specified core or the first available core for this file extension
+
+       -c, --use-core=<NAME|FILENAME>
+              force usage of an installed core
+
+       -l, --list-cores
+              list installed cores
+
+       -f, --frontend=<qt|server>
+              select the frontend to use
+
+       -p, --print-settings
+              print system information along with the settings.json file
+
+       -h, --help
+              print this help message
+
+       -v, --version
+              print version information)!"

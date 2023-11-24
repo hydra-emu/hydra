@@ -12,10 +12,9 @@
 std::unordered_map<std::string, std::string> TerminalWindow::logs_;
 bool TerminalWindow::changed_ = false;
 
-TerminalWindow::TerminalWindow(bool& open, QWidget* parent)
-    : QWidget(parent, Qt::Window), open_(open)
+TerminalWindow::TerminalWindow(QAction* action, QWidget* parent)
+    : QWidget(parent, Qt::Window), menu_action_(action)
 {
-    setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlag(Qt::WindowStaysOnTopHint);
     setWindowTitle("Terminal");
     QToolBar* toolbar = new QToolBar;
@@ -87,13 +86,6 @@ TerminalWindow::TerminalWindow(bool& open, QWidget* parent)
     QTimer* timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &TerminalWindow::on_timeout);
     timer->start(1000);
-
-    open_ = true;
-}
-
-TerminalWindow::~TerminalWindow()
-{
-    open_ = false;
 }
 
 void TerminalWindow::on_group_changed(const QString& group)
