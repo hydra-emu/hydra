@@ -7,7 +7,6 @@
 #include "log.h"
 #include "settings.hxx"
 
-#include <qcheckbox.h>
 #include <QCheckBox>
 #include <QDialog>
 #include <QDialogButtonBox>

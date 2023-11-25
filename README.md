@@ -1,14 +1,15 @@
 <!-- [![hydra](https://img.shields.io/aur/version/hydra?color=1793d1&label=yay&logo=arch-linux&style=for-the-badge)](https://aur.archlinux.org/packages/hydra) -->
 <!-- [![GitHub license](https://img.shields.io/github/license/offtkp/hydra?color=333333&style=for-the-badge)](https://github.com/offtkp/hydra/blob/master/LICENSE)
 ![Commit activity](https://img.shields.io/github/commit-activity/m/OFFTKP/hydra?style=for-the-badge)
-![Stars](https://img.shields.io/github/stars/OFFTKP/hydra?style=for-the-badge)
 ![Size](https://img.shields.io/github/repo-size/OFFTKP/hydra?style=for-the-badge) -->
+![Stars](https://img.shields.io/github/stars/OFFTKP/hydra)
+
 <p align="center"> <img src="./data/images/hydra.png"><img src="./data/images/logo.png"></p>
 
 ----
 
 <p align="center">A multi-system emulator</p>
-<p align="center"><img src="./data/images/screen.png"><img src="./data/images/android.png" height=520></p>
+<p align="center"><img src="./data/images/screen.png"><img src="./data/images/android_screenshot.png" height=520></p>
 
 <p align="center">⚠️ <b>This project is very early in development and not ready for use yet!</b> ⚠️</p>
 

@@ -75,13 +75,13 @@ inline std::string hydra_os()
 #endif
 
 #if defined(HYDRA_X86_64)
-    ret += " x86_64";
+    ret += " x64";
 #elif defined(HYDRA_X86)
     ret += " x86";
 #elif defined(HYDRA_ARM64)
-    ret += " ARM64";
+    ret += " arm64";
 #elif defined(HYDRA_ARM)
-    ret += " ARM";
+    ret += " arm32";
 #else
     ret += " Unknown";
 #endif

@@ -22,6 +22,7 @@ namespace hydra
         else
         {
             printf("Failed to parse URL: %s\n", url.c_str());
+            return {};
         }
         return std::make_pair(host, query);
     }
@@ -40,6 +41,11 @@ namespace hydra
             try
             {
                 auto [host, query] = split_url(url);
+                if (host.empty() || query.empty())
+                {
+                    return {};
+                }
+
                 httplib::Client client(host);
                 client.set_follow_location(true);
                 httplib::Result response =

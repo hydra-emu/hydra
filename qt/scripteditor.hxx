@@ -1,6 +1,6 @@
 #pragma once
 
-#include <qaction.h>
+#include <QAction>
 #include <QCheckBox>
 #include <QList>
 #include <QRegularExpression>

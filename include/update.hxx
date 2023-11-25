@@ -1,6 +1,7 @@
 #pragma once
 
 #include "compatibility.hxx"
+#include "corewrapper.hxx"
 #include "json.hpp"
 #include "settings.hxx"
 #include <download.hxx>
@@ -183,6 +184,36 @@ namespace hydra
             }
 
             return database;
+        }
+
+        static void InstallCore(const std::vector<uint8_t>& zipped_core)
+        {
+            mz_zip_archive zip_archive;
+            memset(&zip_archive, 0, sizeof(zip_archive));
+
+            if (!mz_zip_reader_init_mem(&zip_archive, zipped_core.data(), zipped_core.size(), 0))
+                log_fatal("Failed to read database zip");
+
+            if (mz_zip_reader_get_num_files(&zip_archive) != 1)
+                log_fatal("Invalid core zip");
+
+            mz_zip_archive_file_stat file_stat;
+            if (!mz_zip_reader_file_stat(&zip_archive, 0, &file_stat))
+                log_fatal("Failed to stat file in zip");
+
+            std::filesystem::path path = file_stat.m_filename;
+            if (path.extension() == hydra::dynlib_get_extension())
+            {
+                std::string data;
+                data.resize(file_stat.m_uncomp_size);
+                if (!mz_zip_reader_extract_to_mem(&zip_archive, 0, data.data(), data.size(), 0))
+                    log_fatal("Failed to extract file from zip");
+
+                std::ofstream file(std::filesystem::path(Settings::Get("core_path")) /
+                                       path.filename(),
+                                   std::ios::binary);
+                file << data;
+            }
         }
 
     private:

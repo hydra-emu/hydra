@@ -4,7 +4,7 @@
 #include <corewrapper.hxx>
 #include <filesystem>
 #include <memory>
-#include <qaction.h>
+#include <QAction>
 #include <QWidget>
 
 class QListWidget;

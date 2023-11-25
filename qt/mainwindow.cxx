@@ -287,9 +287,7 @@ void MainWindow::create_actions()
     scripts_act_->setIcon(QIcon(":/images/scripts.png"));
     scripts_act_->setCheckable(true);
     connect(scripts_act_, &QAction::triggered, this, &MainWindow::action_scripts);
-#ifndef HYDRA_USE_LUA
     scripts_act_->setEnabled(false);
-#endif
 
     terminal_act_ = new QAction(tr("&Terminal"), this);
     terminal_act_->setShortcut(Qt::Key_F9);
@@ -380,7 +378,9 @@ void MainWindow::create_menus()
     tools_menu_ = menuBar()->addMenu(tr("&Tools"));
     tools_menu_->addAction(cheats_act_);
     tools_menu_->addAction(terminal_act_);
+#ifdef HYDRA_USE_LUA
     tools_menu_->addAction(scripts_act_);
+#endif
     help_menu_ = menuBar()->addMenu(tr("&Help"));
     help_menu_->addAction(about_act_);
 }

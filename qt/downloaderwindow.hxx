@@ -15,4 +15,7 @@ class DownloaderWindow : public QWidget
 public:
     DownloaderWindow(QWidget* parent = nullptr);
     ~DownloaderWindow();
+
+private:
+    void download_core(const std::string& url);
 };
