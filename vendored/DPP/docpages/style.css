@@ -1,0 +1,85 @@
+html {
+	--content-maxwidth: 90% !important;
+}
+
+.memItemLeft, .memTemplItemLeft {
+	/* This was set to no wrap. Large types force scrolling right. ew. */
+	white-space: break-spaces !important;
+}
+
+img {
+	max-width: 100% !important;
+	max-height: auto;
+}
+
+object[data="DPP_Architecture.svg"] {
+	max-width: 100% !important;
+	max-height: auto;
+}
+
+select[name=vsv] {
+	background: none;
+	border: 1px solid var(--primary-dark-color);
+	color: var(--primary-dark-color);
+	border-radius: 6px;
+	padding: 5px;
+	margin-left: 1rem;
+	margin-right: 1rem;
+}
+
+#searchBoxPos1 {
+	top: 0px !important;
+}
+
+#top {
+	background: linear-gradient(0deg, var(--separator-color) 35%, var(--primary-lighter-color) 100%);
+}
+
+@media only screen and (max-width: 600px) {
+
+	#MSearchBox {
+		width: calc(100vw - 60px) !important;
+	}
+
+}
+
+#nav-sync {
+	display: none;
+}
+
+#projectname {
+	font-size: 160% !important;
+}
+
+table.doxtable td, table.doxtable th {
+	width: 50% !important;
+}
+
+dl.note {
+	background-color: #fcfcc0;
+	border-left-color: #f1b602;
+	color: #8d7400;
+}
+
+dl.note dt {
+	color: #f1b602;
+}
+
+dl.warning, dl.attention {
+	background: #2e1917;
+	border-left-color: #ad2617;
+	color: #f5b1aa;
+}
+
+dl.warning dt, dl.attention dt {
+	color: #ad2617;
+}
+
+#nav-tree .arrow {
+	opacity: 1 !important;
+	font-size: 100%;
+}
+
+#nav-tree div.item > a:hover .arrow {
+	color: var(--page-secondary-foreground-color) !important;
+}

@@ -1,0 +1,44 @@
+name: Prepare release for VCPKG
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  Collect-Vcpkg-Info:
+    permissions:
+      contents: write # Allow the creation of a release.
+    runs-on: ubuntu-latest
+    steps:
+         - name: Harden Runner
+           uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+           with:
+             egress-policy: audit
+
+         - name: Setup PHP
+           uses: shivammathur/setup-php@e6f75134d35752277f093989e72e140eaa222f35 # v2
+           with:
+             php-version: '8.1'
+
+         - name: Checkout D++
+           uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+           with:
+             submodules: recursive
+
+         - name: Update vcpkg and install other dependencies
+           run: sudo apt-get update &&
+                sudo apt-get install nasm linux-headers-$(uname -r) &&
+                cd /usr/local/share/vcpkg &&
+                sudo ./bootstrap-vcpkg.sh &&
+                sudo git stash &&
+                sudo git pull &&
+                sudo vcpkg update
+
+         - name: Run vcpkg release builder
+           run: git fetch -avt &&
+                cd buildtools &&
+                php make_vcpkg.php "${{ github.repository_owner }}" "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
