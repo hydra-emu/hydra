@@ -12,6 +12,7 @@
 #include "ELFIO/elfio/elfio.hpp"
 #endif
 #include "scopeguard.hxx"
+#include "stb_image_write.h"
 #include <filesystem>
 #include <hydra/core.hxx>
 
@@ -140,6 +141,11 @@ namespace hydra
         void EnableCheat(uint32_t handle);
         void DisableCheat(uint32_t handle);
 
+        const std::vector<uint8_t>& GetIcon()
+        {
+            return icon_;
+        }
+
     private:
         dynlib_handle_t handle;
         void (*destroy_function)(IBase*);
@@ -153,6 +159,7 @@ namespace hydra
         void save_cheats();
 
         std::vector<CheatMetadata> cheats_;
+        std::vector<uint8_t> icon_;
 
         EmulatorWrapper(const EmulatorWrapper&) = delete;
         friend struct EmulatorFactory;
@@ -197,8 +204,45 @@ namespace hydra
                 return nullptr;
             }
 
-            return std::shared_ptr<EmulatorWrapper>(
+            auto emulator = std::shared_ptr<EmulatorWrapper>(
                 new EmulatorWrapper(create_emu_p(), handle, destroy_emu_p, get_info_p));
+
+            if (get_info_p(hydra::InfoType::IconData) != nullptr &&
+                get_info_p(hydra::InfoType::IconWidth) != nullptr &&
+                get_info_p(hydra::InfoType::IconHeight) != nullptr)
+            {
+                int width = std::atoi(get_info_p(hydra::InfoType::IconWidth));
+                int height = std::atoi(get_info_p(hydra::InfoType::IconHeight));
+
+                if (width <= 0 || height <= 0)
+                {
+                    printf("Invalid icon size %dx%d\n", width, height);
+                    return nullptr;
+                }
+
+                std::vector<uint8_t> temp = std::vector<uint8_t>(width * height * 4);
+                memcpy(temp.data(), get_info_p(hydra::InfoType::IconData), temp.size());
+
+                for (size_t i = 0; i < temp.size(); i += 4)
+                {
+                    uint8_t r = temp[i + 0];
+                    uint8_t g = temp[i + 1];
+                    uint8_t b = temp[i + 2];
+                    uint8_t a = temp[i + 3];
+                    temp[i + 0] = a;
+                    temp[i + 1] = b;
+                    temp[i + 2] = g;
+                    temp[i + 3] = r;
+                }
+
+                int size;
+                void* data = stbi_write_png_to_mem(temp.data(), 0, width, height, 4, &size);
+                emulator->icon_.resize(size);
+                memcpy(emulator->icon_.data(), data, size);
+                free(data);
+            }
+
+            return emulator;
         }
 
         static std::shared_ptr<EmulatorWrapper> Create(const std::filesystem::path& path)

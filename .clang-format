@@ -37,3 +37,4 @@ BraceWrapping:
   AfterStruct: true
   AfterUnion: true
   BeforeElse: true
+WhitespaceSensitiveMacros: ['EM_ASM', 'EM_JS', 'EM_ASM_', 'EM_JS_']

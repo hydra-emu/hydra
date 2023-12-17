@@ -1,5 +1,6 @@
 #include "mainwindow.hxx"
 #include <argparse/argparse.h>
+#include <bot.hxx>
 #include <filesystem>
 #include <log.h>
 #include <QApplication>
@@ -45,18 +46,14 @@ int main_qt(int argc, char* argv[])
     ;
 }
 
-int version_cb(struct argparse* self, const struct argparse_option* option)
+int version_cb(struct argparse*, const struct argparse_option*)
 {
-    (void)self;
-    (void)option;
     std::cout << "hydra version " << HYDRA_VERSION << std::endl;
     return 0;
 }
 
-int start_frontend_cb(struct argparse* self, const struct argparse_option* option)
+int start_frontend_cb(struct argparse* self, const struct argparse_option*)
 {
-    (void)self;
-    (void)option;
     std::string frontend_str(frontend);
     if (frontend_str == "qt")
     {
@@ -69,7 +66,7 @@ int start_frontend_cb(struct argparse* self, const struct argparse_option* optio
     }
 }
 
-int print_settings_cb(struct argparse* self, const struct argparse_option* option)
+int print_settings_cb(struct argparse*, const struct argparse_option*)
 {
     std::cout << Settings::Print() << std::endl;
     return 0;
@@ -77,17 +74,13 @@ int print_settings_cb(struct argparse* self, const struct argparse_option* optio
 
 int help_cb(struct argparse* self, const struct argparse_option* option)
 {
-    (void)self;
-    (void)option;
     version_cb(self, option);
     std::cout << "A multi-system emulator frontend\n\n" << options << std::endl;
     return 0;
 }
 
-int list_cores_cb(struct argparse* self, const struct argparse_option* option)
+int list_cores_cb(struct argparse*, const struct argparse_option*)
 {
-    (void)self;
-    (void)option;
     Settings::InitCoreInfo();
     for (auto& info : Settings::CoreInfo())
     {
@@ -96,6 +89,11 @@ int list_cores_cb(struct argparse* self, const struct argparse_option* option)
     }
     std::cout << std::flush;
     return 0;
+}
+
+int bot_main_cb(struct argparse*, const struct argparse_option*)
+{
+    return bot_main();
 }
 
 int main(int argc, char* argv[])
@@ -116,6 +114,7 @@ int main(int argc, char* argv[])
     struct argparse_option options[] = {
         OPT_BOOLEAN('h', "help", NULL, nullptr, help_cb, 0, OPT_NONEG),
         OPT_GROUP("Options"),
+        OPT_BOOLEAN('b', "discord-bot", nullptr, nullptr, bot_main_cb),
         OPT_STRING('o', "open-file", &rom_path, nullptr, nullptr),
         OPT_STRING('c', "use-core", &core_name, nullptr, nullptr),
         OPT_BOOLEAN('l', "list-cores", nullptr, nullptr, list_cores_cb),

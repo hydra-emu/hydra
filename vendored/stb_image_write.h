@@ -194,6 +194,8 @@ STBIWDEF int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x,
 
 STBIWDEF void stbi_flip_vertically_on_write(int flip_boolean);
 
+STBIWDEF unsigned char *stbi_write_png_to_mem(const unsigned char *pixels, int stride_bytes, int x, int y, int n, int *out_len);
+
 #endif//INCLUDE_STB_IMAGE_WRITE_H
 
 #ifdef STB_IMAGE_WRITE_IMPLEMENTATION
