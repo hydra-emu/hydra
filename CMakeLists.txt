@@ -12,6 +12,7 @@ option(USE_LUA "Use lua for script support" ON)
 add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
 add_subdirectory(vendored/DPP)
+add_subdirectory(vendored/glfw)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -54,7 +55,7 @@ set(HYDRA_QT_FILES
 
 set(HYDRA_BOT_FILES
     discord/bot.cxx
-    vendored/gifenc.c
+    vendored/glad.c
 )
 
 set(HYDRA_INCLUDE_DIRECTORIES
@@ -96,6 +97,7 @@ target_link_libraries(hydra PRIVATE
     OpenSSL::SSL
     fmt::fmt
     dpp
+    glfw
 )
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
 target_compile_definitions(hydra PRIVATE HYDRA_VERSION="${PROJECT_VERSION}")
