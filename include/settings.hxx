@@ -1,20 +1,23 @@
 #pragma once
 
-#include "log.h"
+#include "SDL_opengl.h"
 #include <compatibility.hxx>
 #include <corewrapper.hxx>
-#include <error_factory.hxx>
 #include <filesystem>
 #include <fmt/format.h>
 #include <fstream>
+#include <hsystem.hxx>
 #include <hydra/core.hxx>
 #include <json.hpp>
+#include <log.hxx>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <SDL3/SDL_render.h>
+#include <stdexcept>
 #include <string>
 
-struct EmulatorInfo
+struct CoreInfo
 {
     std::string path;
     std::string core_name;
@@ -27,6 +30,7 @@ struct EmulatorInfo
     int max_players;
     std::vector<std::string> firmware_files;
     std::vector<std::string> extensions;
+    GLuint icon_texture = 0;
 };
 
 // Essentially a wrapper around a std::map<std::string, std::string> that locks a mutex
@@ -51,7 +55,7 @@ public:
         }
         else
         {
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open settings");
+            throw std::runtime_error("Failed to open settings");
         }
     }
 
@@ -99,8 +103,7 @@ public:
 #endif
             if (dir.empty())
             {
-                throw ErrorFactory::generate_exception(
-                    __func__, __LINE__, "GetSavePath was not defined for this environment");
+                throw std::runtime_error("GetSavePath was not defined for this environment");
             }
 
             if (!std::filesystem::create_directories(dir))
@@ -109,8 +112,7 @@ public:
                 {
                     return dir;
                 }
-                throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                       "Failed to create directories");
+                throw std::runtime_error("Failed to create directories");
             }
         }
         return dir;
@@ -127,15 +129,14 @@ public:
             dir = std::filesystem::path(getenv("APPDATA")) / "hydra" / "cache";
 #elif defined(HYDRA_MACOS)
             dir = std::filesystem::path(getenv("HOME")) / "Library" / "Caches" / "hydra" / "cache";
-#elif defined(HYDRA_ANDROID)
+#else
             dir = GetSavePath() / "cache";
 #endif
         }
 
         if (dir.empty())
         {
-            throw ErrorFactory::generate_exception(
-                __func__, __LINE__, "GetCachePath was not defined for this environment");
+            throw std::runtime_error("GetCachePath was not defined for this environment");
         }
 
         if (!std::filesystem::create_directories(dir))
@@ -144,7 +145,7 @@ public:
             {
                 return dir;
             }
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create cache");
+            throw std::runtime_error("Failed to create cache");
         }
 
         return dir;
@@ -198,13 +199,12 @@ public:
                     (decltype(hydra::getInfo)*)hydra::dynlib_get_symbol(handle, "getInfo");
                 if (!get_info_p)
                 {
-                    log_warn(
-                        fmt::format("Could not find symbol getInfo in core {}", it->path().string())
-                            .c_str());
+                    hydra::log("Could not find symbol getInfo in core {}",
+                               it->path().string().c_str());
                     ++it;
                     continue;
                 }
-                EmulatorInfo info;
+                struct CoreInfo info;
                 info.path = it->path().string();
                 info.core_name = get_info_p(hydra::InfoType::CoreName);
                 info.system_name = get_info_p(hydra::InfoType::SystemName);
@@ -237,7 +237,7 @@ public:
                 {
                     Settings::Set(info.core_name + "_controller_1_active", "true");
                 }
-                CoreInfo().push_back(info);
+                GetCoreInfo().push_back(info);
             }
 
             ++it;
@@ -247,7 +247,7 @@ public:
     static void ReinitCoreInfo()
     {
         core_info_initialized() = false;
-        CoreInfo().clear();
+        GetCoreInfo().clear();
         InitCoreInfo();
     }
 
@@ -260,11 +260,13 @@ public:
         return ret;
     }
 
-    static std::vector<EmulatorInfo>& CoreInfo()
+    static std::vector<CoreInfo>& GetCoreInfo()
     {
-        static std::vector<EmulatorInfo> c;
+        static std::vector<struct CoreInfo> c;
         return c;
     }
+
+    static void InitCoreIcons();
 
 private:
     static std::map<std::string, std::string>& map()

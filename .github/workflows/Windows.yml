@@ -1,29 +1,18 @@
 name: Build Windows
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
 jobs:
-  build:
-
-    runs-on: windows-latest
-
+  build-and-deploy:
+    runs-on: windows-2019
     steps:
-    - name: install-qt
-      uses: jurplel/install-qt-action@v3.2.1
-      with:
-        version: '6.2.*'
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'true'
-    - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-    - name: install-deps
-      run: vcpkg install --triplet x64-windows lua
-    - name: configure
-      run: cmake -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-    - name: make
-      run: cmake --build build --target hydra --config Release
+      - name: Checkout
+        uses: actions/checkout@v2.3.1 
+      - name: Get latest CMake and ninja
+        uses: lukka/get-cmake@latest
+      - name: Build 
+        run: |
+          cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_SYSTEM_VERSION=10.0.19041.0 -B build
+          cmake --build build --config Release
+      - name: Release
+        uses: actions/upload-artifact@v2
+        with:
+           name: WindowsRelease
+           path: build/

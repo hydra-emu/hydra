@@ -20,6 +20,10 @@ You can load cores by placing them in the core directory specified in Hydras set
 
 [Current cores](https://github.com/hydra-emu/hydra/wiki/Cores)
 
+Hydra tries to compile everything from source and statically link to avoid need for dependencies.
+We don't use submodules - instead we vendor specific versions of libraries in the `vendored/` directory.
+See [VENDORED.md](./VENDORED.md) for more info
+
 ## Building
 
 You will need a C++20 compliant compiler like `gcc-12`

@@ -2,24 +2,6 @@
 
 #include <string>
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
-#define HYDRA_WINDOWS
-#elif defined(__linux__)
-#define HYDRA_LINUX
-#elif defined(__APPLE__)
-#define HYDRA_MACOS
-#elif defined(__FreeBSD__)
-#define HYDRA_FREEBSD
-#elif defined(__unix__) || defined(__unix) || defined(unix)
-#define HYDRA_UNIX
-#elif defined(__ANDROID__)
-#define HYDRA_ANDROID
-#elif defined(GEKKO)
-#define HYDRA_WII
-#else
-#pragma message("Unknown platform")
-#endif
-
 #if defined(__x86_64__) || defined(__x86_64) || defined(__amd64) || defined(_M_X64)
 #define HYDRA_X86_64
 #elif defined(__i386__) || defined(__i386) || defined(_M_IX86)

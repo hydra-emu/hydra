@@ -2,6 +2,7 @@
 #define OPENSSL_API_COMPAT 10101
 #include <corewrapper.hxx>
 #include <openssl/md5.h>
+#include <scopeguard.hxx>
 #include <settings.hxx>
 
 namespace hydra
@@ -134,7 +135,7 @@ namespace hydra
 
     uint32_t EmulatorWrapper::EditCheat(const CheatMetadata& cheat, uint32_t old_handle)
     {
-        hydra::ScopeGuard guard([this]() { save_cheats(); });
+        hydra::scope_guard guard([this]() { save_cheats(); });
 
         if (old_handle == hydra::BAD_CHEAT)
         {

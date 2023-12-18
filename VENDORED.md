@@ -1,0 +1,13 @@
+### Hydra vendored libraries
+- [OpenSSL 1.1.1w](https://github.com/janbar/openssl-cmake)
+- [CURL 8.5.0](https://github.com/curl/curl)
+- [sol 3.2.3](https://github.com/ThePhD/sol2)
+- [miniaudio 0.11.21](https://github.com/mackron/miniaudio)
+- [stb_image 2.28](https://github.com/nothings/stb)
+- [argparse](https://github.com/cofyc/argparse)
+- [imgui 1.90.1](https://github.com/ocornut/imgui)
+- [nlohmann json 3.10.5](https://github.com/nlohmann/json)
+- [SDL3 2.28.5](https://github.com/libsdl-org/SDL)
+- [glad gl=4.6, gles1=1.0, gles2=3.2](https://github.com/Dav1dde/glad)
+- [miniz 3.0.0](https://github.com/richgel999/miniz)
+- [fmt](https://github.com/fmtlib/fmt/)

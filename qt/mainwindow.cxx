@@ -430,9 +430,9 @@ void MainWindow::open_file()
     {
         QString indep;
         extensions = "All supported types (";
-        for (size_t i = 0; i < Settings::CoreInfo().size(); i++)
+        for (size_t i = 0; i < Settings::GetCoreInfo().size(); i++)
         {
-            const auto& core_data = Settings::CoreInfo()[i];
+            const auto& core_data = Settings::GetCoreInfo()[i];
             indep += core_data.core_name.c_str();
             indep += " (";
             for (size_t j = 0; j < core_data.extensions.size(); j++)
@@ -442,14 +442,14 @@ void MainWindow::open_file()
                 extensions += ext.c_str();
                 if (j != core_data.extensions.size() - 1)
                     extensions += " ";
-                else if (i != Settings::CoreInfo().size() - 1)
+                else if (i != Settings::GetCoreInfo().size() - 1)
                     extensions += " ";
                 indep += "*.";
                 indep += ext.c_str();
                 if (j != core_data.extensions.size() - 1)
                     indep += " ";
             }
-            if (i != Settings::CoreInfo().size() - 1)
+            if (i != Settings::GetCoreInfo().size() - 1)
                 indep += ");;";
             else
                 indep += ")";
@@ -486,7 +486,7 @@ void MainWindow::open_file_impl(const std::string& path)
 
     Settings::Set("last_path", pathfs.parent_path().string());
     std::string core_path;
-    for (const auto& core : Settings::CoreInfo())
+    for (const auto& core : Settings::GetCoreInfo())
     {
         for (const auto& ext : core.extensions)
         {
@@ -505,11 +505,11 @@ void MainWindow::open_file_impl(const std::string& path)
         return;
     }
     info_.reset();
-    for (auto& info : Settings::CoreInfo())
+    for (auto& info : Settings::GetCoreInfo())
     {
         if (info.path == core_path)
         {
-            info_ = std::make_unique<EmulatorInfo>(info);
+            info_ = std::make_unique<CoreInfo>(info);
             break;
         }
     }

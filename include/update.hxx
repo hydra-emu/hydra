@@ -86,7 +86,7 @@ namespace hydra
             }
             else
             {
-                log_fatal("Unknown versioning type");
+                hydra::panic("Unknown versioning type");
             }
 
             return Error;
@@ -110,19 +110,19 @@ namespace hydra
                 memset(&zip_archive, 0, sizeof(zip_archive));
 
                 if (!mz_zip_reader_init_mem(&zip_archive, buffer.data(), buffer.size(), 0))
-                    log_fatal("Failed to read database zip");
+                    hydra::panic("Failed to read database zip");
 
                 if (!std::filesystem::create_directories(Settings::GetSavePath() / "database"))
                 {
                     if (!std::filesystem::exists(Settings::GetSavePath() / "database"))
-                        log_fatal("Failed to create database directory");
+                        hydra::panic("Failed to create database directory");
                 }
 
                 for (size_t i = 0; i < mz_zip_reader_get_num_files(&zip_archive); i++)
                 {
                     mz_zip_archive_file_stat file_stat;
                     if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-                        log_fatal("Failed to stat file in zip");
+                        hydra::panic("Failed to stat file in zip");
 
                     std::filesystem::path path = file_stat.m_filename;
                     if (path.extension() == ".json")
@@ -131,7 +131,7 @@ namespace hydra
                         data.resize(file_stat.m_uncomp_size);
                         if (!mz_zip_reader_extract_to_mem(&zip_archive, i, data.data(), data.size(),
                                                           0))
-                            log_fatal("Failed to extract file from zip");
+                            hydra::panic("Failed to extract file from zip");
 
                         std::ofstream file(Settings::GetSavePath() / "database" / path.filename());
                         file << data;
@@ -149,7 +149,7 @@ namespace hydra
             if (!std::filesystem::exists(database_path))
             {
                 if (!std::filesystem::create_directories(database_path))
-                    log_fatal("Failed to create database directory");
+                    hydra::panic("Failed to create database directory");
                 return {};
             }
 
@@ -192,14 +192,14 @@ namespace hydra
             memset(&zip_archive, 0, sizeof(zip_archive));
 
             if (!mz_zip_reader_init_mem(&zip_archive, zipped_core.data(), zipped_core.size(), 0))
-                log_fatal("Failed to read database zip");
+                hydra::panic("Failed to read database zip");
 
             if (mz_zip_reader_get_num_files(&zip_archive) != 1)
-                log_fatal("Invalid core zip");
+                hydra::panic("Invalid core zip");
 
             mz_zip_archive_file_stat file_stat;
             if (!mz_zip_reader_file_stat(&zip_archive, 0, &file_stat))
-                log_fatal("Failed to stat file in zip");
+                hydra::panic("Failed to stat file in zip");
 
             std::filesystem::path path = file_stat.m_filename;
             if (path.extension() == hydra::dynlib_get_extension())
@@ -207,7 +207,7 @@ namespace hydra
                 std::string data;
                 data.resize(file_stat.m_uncomp_size);
                 if (!mz_zip_reader_extract_to_mem(&zip_archive, 0, data.data(), data.size(), 0))
-                    log_fatal("Failed to extract file from zip");
+                    hydra::panic("Failed to extract file from zip");
 
                 std::ofstream file(std::filesystem::path(Settings::Get("core_path")) /
                                        path.filename(),

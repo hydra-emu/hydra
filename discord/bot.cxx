@@ -1,6 +1,5 @@
 #include "commands.hxx"
 #include "corewrapper.hxx"
-#include "glad.h"
 #include "hydra/core.hxx"
 #include "intents.h"
 #include "message.h"
@@ -9,6 +8,7 @@
 #include <cstdint>
 #include <dpp.h>
 #include <filesystem>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <settings.hxx>
 #include <string>

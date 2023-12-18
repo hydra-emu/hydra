@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.12)
+include(vendored/CMakeRC.cmake)
+
+cmake_minimum_required(VERSION 3.20)
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
 
 project(hydra
     VERSION 0.2.0
@@ -7,30 +10,139 @@ project(hydra
     DESCRIPTION "A multi-system, multi-platform emulator frontend"
 )
 
-option(USE_LUA "Use lua for script support" ON)
-
-add_subdirectory(vendored/fmt)
-add_subdirectory(vendored/argparse)
-add_subdirectory(vendored/DPP)
-add_subdirectory(vendored/glfw)
+add_executable(hydra)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(BUILD_SHARED_LIBS OFF)
+set(BUILD_STATIC_LIBS ON)
+set(DPP_BUILD_TEST OFF)
 
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
+if (WIN32)
+    add_definitions(-DHYDRA_WINDOWS)
+    set(HYDRA_WINDOWS 1)
+elseif(APPLE)
+    add_definitions(-DHYDRA_MACOS)
+    set(HYDRA_MACOS 1)
+elseif(ANDROID)
+    add_definitions(-DHYDRA_ANDROID)
+    set(HYDRA_ANDROID 1)
+elseif(IOS)
+    add_definitions(-DHYDRA_IOS)
+    set(HYDRA_IOS 1)
+elseif(EMSCRIPTEN)
+    add_definitions(-DHYDRA_WEB)
+    set(HYDRA_WEB 1)
+elseif(CMAKE_SYSTEM_NAME STREQUAL Linux)
+    add_definitions(-DHYDRA_LINUX)
+    set(HYDRA_LINUX 1)
+elseif(UNIX)
+    add_definitions(-DHYDRA_FREEBSD)
+    set(HYDRA_FREEBSD 1)
+else()
+    add_definitions(-DHYDRA_LINUX)
+    set(HYDRA_LINUX 1)
+    message(STATUS "Couldn't detect platform, assuming Linux")
+endif()
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGLWidgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGLWidgets)
-find_package(OpenSSL REQUIRED)
+# Thanks SkyEmu for most of these configurations
+if (MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0 ")
+elseif(NOT HYDRA_WEB)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O3")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG") # it's best to strip out debug symbols for web builds
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG")     # to reduce the binary size
+endif()
 
-if (USE_LUA)
-    find_package(Lua REQUIRED)
-    set(HYDRA_INCLUDE_DIRECTORIES
-        ${HYDRA_INCLUDE_DIRECTORIES}
-        ${LUA_INCLUDE_DIR}
+if(HYDRA_ANDROID)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} GLESv3 EGL OpenSLES log android)
+elseif(HYDRA_IOS)
+    set_property(TARGET hydra PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "hydra")
+    set_target_properties(hydra PROPERTIES XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2")
+    set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum iOS deployment version" FORCE)
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO" FORCE)
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO" FORCE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -x objective-c")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -x objective-c++")
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES}
+        # "-framework Foundation"
+        # "-framework UIKit"
+        # "-framework AudioToolbox"
+        # "-framework AVFoundation"
+        # "-framework GameController"
     )
+elseif(HYDRA_MACOS)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version" FORCE)
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES}
+        # "-framework QuartzCore"
+        # "-framework Cocoa"
+        # "-framework MetalKit"
+        # "-framework AudioToolbox"
+        # "-framework Metal"
+    )
+elseif(HYDRA_LINUX OR HYDRA_FREEBSD)
+    # find_package(X11 REQUIRED)
+    # find_package(ALSA REQUIRED)
+    # set(HYDRA_INCLUDES
+    #     ${HYDRA_INCLUDES}
+    #     ${X11_INCLUDE_DIR}
+    # )
+    # set(HYDRA_LIBRARIES
+    #     ${HYDRA_LIBRARIES}
+    #     ${X11_X11_LIB} ${X11_Xi_LIB} ${X11_Xcursor_LIB}
+    #     ${ALSA_LIBRARIES}
+    # )
+elseif(HYDRA_WEB)
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-s TOTAL_MEMORY=1024MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
+endif()
+
+option(FRONTEND_QT "Build the Qt frontend" OFF)
+option(BUILD_LUA "Build with lua for script support" OFF)
+option(BUILD_DISCORD_BOT "Build with discord bot support" OFF)
+
+add_subdirectory(vendored/fmt)
+add_subdirectory(vendored/argparse)
+add_subdirectory(vendored/SDL)
+
+if(NOT EMSCRIPTEN)
+    set(WITH_APPS OFF CACHE BOOL "" FORCE) # don't build executable
+    set(CURL_USE_LIBSSH2 OFF)
+    set(CURL_USE_LIBPSL OFF)
+    set(CURL_USE_OPENSSL ON)
+    set(CURL_DISABLE_LDAP ON)
+    set(USE_LIBIDN2 OFF)
+    set(CURL_ENABLE_EXPORT_TARGET OFF)
+    set(BUILD_TESTING OFF)
+    set(BUILD_CURL_EXE OFF)
+    set(BUILD_SHARED_LIBS OFF)
+    set(BUILD_STATIC_LIBS ON)
+    if (WIN32)
+        set(CURL_STATIC_CRT ON)
+    endif()
+    add_definitions(-DCURL_STATICLIB)
+    add_subdirectory(vendored/openssl)
+    add_subdirectory(vendored/curl)
+    set_property(TARGET ssl PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+    set_property(TARGET crypto PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+    set_property(TARGET libcurl_static PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+    set(HYDRA_INCLUDES ${HYDRA_INCLUDES}
+        ${CMAKE_CURRENT_BINARY_DIR}/vendored/openssl/include
+        vendored/openssl/include
+        vendored/curl/include
+    )
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} libcurl_static
+        ssl
+        crypto
+    )
+endif()
+
+if(NOT HYDRA_IOS)
+    find_package(OpenGL REQUIRED)
 endif()
 
 set(HYDRA_QT_FILES
@@ -45,61 +157,119 @@ set(HYDRA_QT_FILES
     qt/terminalwindow.cxx
     qt/downloaderwindow.cxx
     qt/cheatswindow.cxx
+)
+
+set(HYDRA_IMGUI_FILES
+    src/app.cxx
+    src/gamewindow.cxx
+    src/mainwindow.cxx
+    vendored/imgui/backends/imgui_impl_sdl3.cpp
+    vendored/imgui/backends/imgui_impl_opengl3.cpp
+    vendored/imgui/imgui.cpp
+    vendored/imgui/imgui_demo.cpp
+    vendored/imgui/imgui_draw.cpp
+    vendored/imgui/imgui_widgets.cpp
+    vendored/imgui/imgui_tables.cpp
+)
+
+set(HYDRA_COMMON_FILES
     src/corewrapper.cxx
     src/main.cxx
+    vendored/argparse/argparse.c
     vendored/miniaudio.c
     vendored/stb_image_write.c
+    vendored/glad/src/glad.c
     vendored/miniz/miniz.c
-    vendored/argparse/argparse.c
 )
 
 set(HYDRA_BOT_FILES
     discord/bot.cxx
-    vendored/glad.c
 )
 
-set(HYDRA_INCLUDE_DIRECTORIES
-    ${HYDRA_INCLUDE_DIRECTORIES}
+set(HYDRA_INCLUDES
+    ${HYDRA_INCLUDES}
     include
     core/include
     vendored
     vendored/fmt/include
-    qt/
+    vendored/glad/include
+    vendored/imgui
     discord/
     man/
 )
 
-qt_add_executable(hydra
-    MANUAL_FINALIZATION
-    ${HYDRA_QT_FILES}
-    ${HYDRA_BOT_FILES}
+set(HYDRA_LIBRARIES
+    ${HYDRA_LIBRARIES}
+    OpenGL::GL
+    SDL3-static
+    fmt
 )
 
-if(WIN32)
-    set_target_properties(hydra PROPERTIES COMPILE_FLAGS "/EHsc")
-    target_compile_definitions(hydra PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
-    set_target_properties(hydra PROPERTIES WIN32_EXECUTABLE TRUE)
-elseif(APPLE)
-    target_link_libraries(hydra PRIVATE "-framework Security")
-    set_target_properties(hydra PROPERTIES
-        MACOSX_BUNDLE_GUI_IDENTIFIER com.hydra_emu.hydra
-        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-        MACOSX_BUNDLE TRUE
+cmrc_add_resource_library(hydra_images ALIAS hydra::images NAMESPACE hydra
+    WHENCE data/images
+    PREFIX images
+    data/images/hydra.png
+)
+
+cmrc_add_resource_library(hydra_other ALIAS hydra::other NAMESPACE hydra
+    WHENCE data
+    PREFIX other
+    data/cacert.pem
+)
+
+set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} hydra::images hydra::other)
+
+if (FRONTEND_QT)
+    set(CMAKE_AUTOUIC ON)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTORCC ON)
+    find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGLWidgets)
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGLWidgets)
+    add_definitions(-DHYDRA_FRONTEND_QT)
+    set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_QT_FILES})
+endif()
+
+if (BUILD_DISCORD_BOT)
+    add_subdirectory(vendored/DPP)
+    add_definitions(-DHYDRA_DISCORD_BOT)
+    set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_BOT_FILES})
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} dpp)
+endif()
+
+if (BUILD_LUA)
+    find_package(Lua REQUIRED)
+    set(HYDRA_INCLUDES
+        ${HYDRA_INCLUDES}
+        ${LUA_INCLUDE_DIR}
     )
 endif()
 
-target_link_libraries(hydra PRIVATE
-    Qt${QT_VERSION_MAJOR}::Widgets
-    Qt${QT_VERSION_MAJOR}::OpenGLWidgets
-    ${CMAKE_DL_LIBS}
-    ${LUA_LIBRARIES}
-    OpenSSL::SSL
-    fmt::fmt
-    dpp
-    glfw
+set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_IMGUI_FILES} ${HYDRA_COMMON_FILES})
+
+target_sources(hydra PRIVATE
+    ${HYDRA_SOURCES}
 )
-target_include_directories(hydra PRIVATE ${HYDRA_INCLUDE_DIRECTORIES})
+
+if(FRONTEND_QT)
+    if(HYDRA_WINDOWS)
+        set_target_properties(hydra PROPERTIES COMPILE_FLAGS "/EHsc")
+        target_compile_definitions(hydra PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+        set_target_properties(hydra PROPERTIES WIN32_EXECUTABLE TRUE)
+    elseif(HYDRA_MACOS)
+        set_target_properties(hydra PROPERTIES
+            MACOSX_BUNDLE_GUI_IDENTIFIER com.hydra_emu.hydra
+            MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+            MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+            MACOSX_BUNDLE TRUE
+        )
+    endif()
+    set(${QT_LIBS} Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGLWidgets)
+endif()
+
+target_link_libraries(hydra PRIVATE ${HYDRA_LIBRARIES})
+target_include_directories(hydra PRIVATE ${HYDRA_INCLUDES})
 target_compile_definitions(hydra PRIVATE HYDRA_VERSION="${PROJECT_VERSION}")
 
-qt_finalize_executable(hydra)
+if (HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_MACOS OR HYDRA_ANDROID)
+    target_compile_definitions(hydra PRIVATE HYDRA_LIBDL)
+endif()

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "hsystem.hxx"
 #include <cstring>
 #include <string>
 #include <vector>
@@ -8,10 +7,7 @@
 #include <dlfcn.h>
 #elif defined(HYDRA_WINDOWS)
 #include <windows.h>
-#elif defined(HYDRA_WII)
-#include "ELFIO/elfio/elfio.hpp"
 #endif
-#include "scopeguard.hxx"
 #include "stb_image_write.h"
 #include <filesystem>
 #include <hydra/core.hxx>
@@ -23,31 +19,13 @@ namespace hydra
 
     inline dynlib_handle_t dynlib_open(const char* path)
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
+#if defined(HYDRA_LIBDL)
         return dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
 #elif defined(HYDRA_WINDOWS)
         std::wstring wpath = std::wstring(path, path + std::strlen(path));
         printf("Trying to convert string to wstring to load library with loadlibraryw, this is "
                "untested\n");
         return (void*)LoadLibraryW(wpath.c_str());
-#elif defined(HYDRA_WII)
-        ELFIO::elfio* reader = new ELFIO::elfio();
-        if (!reader->load(path))
-        {
-            printf("Failed to load library %s\n", path);
-            return nullptr;
-        }
-        if (reader->get_class() != ELFCLASS32)
-        {
-            printf("Library %s is not 32-bit\n", path);
-            return nullptr;
-        }
-        if (reader->get_encoding() != ELFDATA2MSB)
-        {
-            printf("Library %s is not big endian\n", path);
-            return nullptr;
-        }
-        return reader;
 #else
 #pragma message("dynlib_open not implemented for this platform")
 #error dynlib_open not implemented for this platform
@@ -57,7 +35,7 @@ namespace hydra
 
     inline void* dynlib_get_symbol(dynlib_handle_t handle, const char* name)
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
+#if defined(HYDRA_LIBDL)
         return dlsym(handle, name);
 #elif defined(HYDRA_WINDOWS)
         return (void*)GetProcAddress((HMODULE)handle, name);
@@ -72,7 +50,7 @@ namespace hydra
 
     inline void dynlib_close(dynlib_handle_t handle)
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
+#if defined(HYDRA_LIBDL)
         dlclose(handle);
 #elif defined(HYDRA_WINDOWS)
         FreeLibrary((HMODULE)handle);
@@ -86,14 +64,12 @@ namespace hydra
 
     inline std::string dynlib_get_extension()
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_ANDROID)
+#if defined(HYDRA_LINUX) || defined(HYDRA_ANDROID) || defined(HYDRA_FREEBSD)
         return ".so";
 #elif defined(HYDRA_MACOS)
         return ".dylib";
 #elif defined(HYDRA_WINDOWS)
         return ".dll";
-#elif defined(HYDRA_WII)
-        return ".elf";
 #else
 #pragma message("dynlib_get_extension not implemented for this platform")
 #error dynlib_get_extension not implemented for this platform
@@ -103,7 +79,7 @@ namespace hydra
 
     inline std::string dynlib_get_error()
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID)
+#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID) || defined(HYDRA_FREEBSD)
         return dlerror();
 #elif defined(HYDRA_WINDOWS)
         DWORD error = GetLastError();

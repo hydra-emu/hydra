@@ -1,0 +1,20 @@
+name: Build iOS
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.1 
+      - name: Build
+        run: |
+          cmake -GXcode -DSOKOL_BACKEND=SOKOL_METAL -DCMAKE_SYSTEM_NAME=iOS -B build
+          cmake --build build --config Release
+          mkdir Payload
+          cp -R Release/SkyEmu.app Payload/SkyEmu.app
+          zip -r hydra.ipa Payload
+      - name: Release
+        uses: actions/upload-artifact@v2
+        with:
+           name: iOSRelease
+           path: build/hydra.ipa

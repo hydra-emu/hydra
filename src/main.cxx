@@ -1,10 +1,11 @@
-#include "mainwindow.hxx"
 #include <argparse/argparse.h>
 #include <bot.hxx>
 #include <filesystem>
-#include <log.h>
+#ifdef HYDRA_FRONTEND_QT
+#include "mainwindow.hxx"
 #include <QApplication>
 #include <QSurfaceFormat>
+#endif
 #include <settings.hxx>
 #include <update.hxx>
 
@@ -19,11 +20,14 @@ const char* options =
 // clang-format on
 
 // Configurable options
-const char* frontend = "qt";
+const char* frontend = "imgui";
 const char* rom_path = nullptr;
 const char* core_name = nullptr;
 
-int main_qt(int argc, char* argv[])
+int imgui_main(int argc, char* argv[]);
+
+#ifdef HYDRA_FRONTEND_QT
+int qt_main(int argc, char* argv[])
 {
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
@@ -43,8 +47,8 @@ int main_qt(int argc, char* argv[])
     }
 
     return a.exec();
-    ;
 }
+#endif
 
 int version_cb(struct argparse*, const struct argparse_option*)
 {
@@ -57,7 +61,12 @@ int start_frontend_cb(struct argparse* self, const struct argparse_option*)
     std::string frontend_str(frontend);
     if (frontend_str == "qt")
     {
-        return main_qt(self->argc, const_cast<char**>(self->argv));
+#ifdef HYDRA_FRONTEND_QT
+        return qt_main(self->argc, const_cast<char**>(self->argv));
+#else
+        std::cout << "This build of hydra does not support the qt frontend" << std::endl;
+        return 1;
+#endif
     }
     else
     {
@@ -82,7 +91,7 @@ int help_cb(struct argparse* self, const struct argparse_option* option)
 int list_cores_cb(struct argparse*, const struct argparse_option*)
 {
     Settings::InitCoreInfo();
-    for (auto& info : Settings::CoreInfo())
+    for (auto& info : Settings::GetCoreInfo())
     {
         std::string filename = std::filesystem::path(info.path).filename().string();
         std::cout << fmt::format("{} - {}\n", filename, info.core_name);
@@ -93,7 +102,12 @@ int list_cores_cb(struct argparse*, const struct argparse_option*)
 
 int bot_main_cb(struct argparse*, const struct argparse_option*)
 {
+#ifdef HYDRA_DISCORD_BOT
     return bot_main();
+#else
+    hydra::log("This build of hydra does not support the discord bot");
+    return 1;
+#endif
 }
 
 int main(int argc, char* argv[])
@@ -104,7 +118,7 @@ int main(int argc, char* argv[])
 
     if (argc == 1)
     {
-        return main_qt(argc, argv);
+        return imgui_main(argc, argv);
     }
 
     static const char* const usages[] = {

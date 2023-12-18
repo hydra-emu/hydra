@@ -1,25 +1,24 @@
-name: Build MacOS
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
+name: Build macOS
 jobs:
-  build:
-
+  build-and-deploy:
     runs-on: macos-latest
-
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'true'
-    - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-    - name: install-deps
-      run: brew install qt6 ninja lua openssl
-    - name: configure
-      run: cmake -B build -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -D OPENSSL_ROOT_DIR=/usr/local/opt/openssl 
-    - name: make
-      run: cmake --build build --target hydra
+      - name: Checkout
+        uses: actions/checkout@v2.3.1 
+      - name: Build
+        run: |
+          cmake -B build -GNinja
+          cmake --build build--config Release
+      - name: Build DMG
+        run: |
+          cd build
+          brew install graphicsmagick imagemagick
+          pip install setuptools
+          npm install --global create-dmg
+          create-dmg --dmg-title=hydra 'hydra.app' || true
+          mv hydra*.dmg "hydra.dmg"
+      - name: GH Release 🚀
+        uses: actions/upload-artifact@v2
+        with:
+           name: MacOSRelease
+           path: build/hydra.dmg

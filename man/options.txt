@@ -5,10 +5,13 @@ R"!(OPTIONS
        -c, --use-core=<NAME|FILENAME>
               force usage of an installed core
 
+       -b --discord-bot
+              open in headless mode to use the discord bot
+
        -l, --list-cores
               list installed cores
 
-       -f, --frontend=<qt|server>
+       -f, --frontend=<qt|imgui|server>
               select the frontend to use
 
        -p, --print-settings
