@@ -1,6 +1,7 @@
 #include "hydra/core.hxx"
 #define OPENSSL_API_COMPAT 10101
 #include <corewrapper.hxx>
+#include <filesystem>
 #include <openssl/md5.h>
 #include <scopeguard.hxx>
 #include <settings.hxx>

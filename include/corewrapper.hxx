@@ -82,13 +82,15 @@ namespace hydra
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID) || defined(HYDRA_FREEBSD)
         return dlerror();
 #elif defined(HYDRA_WINDOWS)
-        DWORD error = GetLastError();
-        LPVOID buffer;
-        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0,
-                      (LPWSTR)&buffer, 0, NULL);
-        std::string ret = (char*)buffer;
-        LocalFree(buffer);
-        return ret;
+        // DWORD error = GetLastError();
+        // LPVOID buffer;
+        // FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error,
+        // 0,
+        //               (LPWSTR)&buffer, 0, NULL);
+        // std::string ret = (char*)buffer;
+        // LocalFree(buffer);
+        // return ret;
+        return ""; // TODO: fix
 #endif
     }
 

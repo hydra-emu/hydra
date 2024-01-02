@@ -20,45 +20,45 @@ set(BUILD_STATIC_LIBS ON)
 set(DPP_BUILD_TEST OFF)
 
 if (WIN32)
-    add_definitions(-DHYDRA_WINDOWS)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_WINDOWS WIN32_LEAN_AND_MEAN)
     set(HYDRA_WINDOWS 1)
 elseif(APPLE)
-    add_definitions(-DHYDRA_MACOS)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_MACOS)
     set(HYDRA_MACOS 1)
 elseif(ANDROID)
-    add_definitions(-DHYDRA_ANDROID)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_ANDROID)
     set(HYDRA_ANDROID 1)
 elseif(IOS)
-    add_definitions(-DHYDRA_IOS)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_IOS)
     set(HYDRA_IOS 1)
 elseif(EMSCRIPTEN)
-    add_definitions(-DHYDRA_WEB)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_WEB)
     set(HYDRA_WEB 1)
 elseif(CMAKE_SYSTEM_NAME STREQUAL Linux)
-    add_definitions(-DHYDRA_LINUX)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_LINUX)
     set(HYDRA_LINUX 1)
 elseif(UNIX)
-    add_definitions(-DHYDRA_FREEBSD)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_FREEBSD)
     set(HYDRA_FREEBSD 1)
 else()
-    add_definitions(-DHYDRA_LINUX)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_LINUX)
     set(HYDRA_LINUX 1)
     message(STATUS "Couldn't detect platform, assuming Linux")
 endif()
 
-# Thanks SkyEmu for most of these configurations
-if (MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0 ")
-elseif(NOT HYDRA_WEB)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O3")
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG") # it's best to strip out debug symbols for web builds
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG")     # to reduce the binary size
-endif()
-
-if(HYDRA_ANDROID)
+if(HYDRA_WINDOWS)
+elseif(HYDRA_MACOS)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version" FORCE)
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES}
+        # "-framework QuartzCore"
+        # "-framework Cocoa"
+        # "-framework MetalKit"
+        # "-framework AudioToolbox"
+        # "-framework Metal"
+    )
+elseif(HYDRA_LINUX)
+elseif(HYDRA_FREEBSD)
+elseif(HYDRA_ANDROID)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} GLESv3 EGL OpenSLES log android)
 elseif(HYDRA_IOS)
@@ -76,32 +76,25 @@ elseif(HYDRA_IOS)
         # "-framework AVFoundation"
         # "-framework GameController"
     )
-elseif(HYDRA_MACOS)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version" FORCE)
-    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES}
-        # "-framework QuartzCore"
-        # "-framework Cocoa"
-        # "-framework MetalKit"
-        # "-framework AudioToolbox"
-        # "-framework Metal"
-    )
-elseif(HYDRA_LINUX OR HYDRA_FREEBSD)
-    # find_package(X11 REQUIRED)
-    # find_package(ALSA REQUIRED)
-    # set(HYDRA_INCLUDES
-    #     ${HYDRA_INCLUDES}
-    #     ${X11_INCLUDE_DIR}
-    # )
-    # set(HYDRA_LIBRARIES
-    #     ${HYDRA_LIBRARIES}
-    #     ${X11_X11_LIB} ${X11_Xi_LIB} ${X11_Xcursor_LIB}
-    #     ${ALSA_LIBRARIES}
-    # )
 elseif(HYDRA_WEB)
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-s TOTAL_MEMORY=1024MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
+    set_target_properties(hydra PROPERTIES LINK_FLAGS "-s TOTAL_MEMORY=1024MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
+else()
+    message(FATAL_ERROR "Unsupported platform")
 endif()
 
-option(FRONTEND_QT "Build the Qt frontend" OFF)
+# Thanks SkyEmu for most of these configurations
+if (MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0 ")
+elseif(NOT HYDRA_WEB)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O3")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG") # it's best to strip out debug symbols for web builds
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG")     # to reduce the binary size
+endif()
+
+option(BUILD_QT "Build the Qt frontend" OFF)
 option(BUILD_LUA "Build with lua for script support" OFF)
 option(BUILD_DISCORD_BOT "Build with discord bot support" OFF)
 
@@ -109,7 +102,7 @@ add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
 add_subdirectory(vendored/SDL)
 
-if(NOT EMSCRIPTEN)
+if(NOT HYDRA_WEB)
     set(WITH_APPS OFF CACHE BOOL "" FORCE) # don't build executable
     set(CURL_USE_LIBSSH2 OFF)
     set(CURL_USE_LIBPSL OFF)
@@ -219,13 +212,13 @@ cmrc_add_resource_library(hydra_other ALIAS hydra::other NAMESPACE hydra
 
 set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} hydra::images hydra::other)
 
-if (FRONTEND_QT)
+if (BUILD_QT)
     set(CMAKE_AUTOUIC ON)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
     find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGLWidgets)
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGLWidgets)
-    add_definitions(-DHYDRA_FRONTEND_QT)
+    add_definitions(-DHYDRA_BUILD_QT)
     set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_QT_FILES})
 endif()
 
@@ -250,7 +243,7 @@ target_sources(hydra PRIVATE
     ${HYDRA_SOURCES}
 )
 
-if(FRONTEND_QT)
+if(BUILD_QT)
     if(HYDRA_WINDOWS)
         set_target_properties(hydra PROPERTIES COMPILE_FLAGS "/EHsc")
         target_compile_definitions(hydra PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
@@ -269,6 +262,7 @@ endif()
 target_link_libraries(hydra PRIVATE ${HYDRA_LIBRARIES})
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDES})
 target_compile_definitions(hydra PRIVATE HYDRA_VERSION="${PROJECT_VERSION}")
+target_compile_definitions(hydra PRIVATE ${HYDRA_DEFINITIONS})
 
 if (HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_MACOS OR HYDRA_ANDROID)
     target_compile_definitions(hydra PRIVATE HYDRA_LIBDL)

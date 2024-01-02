@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SDL_opengl.h"
 #include <compatibility.hxx>
 #include <corewrapper.hxx>
 #include <filesystem>
@@ -13,7 +12,6 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <SDL3/SDL_render.h>
 #include <stdexcept>
 #include <string>
 
@@ -30,7 +28,7 @@ struct CoreInfo
     int max_players;
     std::vector<std::string> firmware_files;
     std::vector<std::string> extensions;
-    GLuint icon_texture = 0;
+    unsigned int icon_texture = 0;
 };
 
 // Essentially a wrapper around a std::map<std::string, std::string> that locks a mutex
