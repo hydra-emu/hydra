@@ -12,9 +12,9 @@ project(hydra
 
 add_executable(hydra)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 20 CACHE STRING "" FORCE)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(WITH_APPS OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF)
 set(BUILD_STATIC_LIBS ON)
 set(DPP_BUILD_TEST OFF)
@@ -57,7 +57,9 @@ elseif(HYDRA_MACOS)
         # "-framework Metal"
     )
 elseif(HYDRA_LINUX)
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} OpenGL::GL)
 elseif(HYDRA_FREEBSD)
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} OpenGL::GL)
 elseif(HYDRA_ANDROID)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} GLESv3 EGL OpenSLES log android)
@@ -77,7 +79,11 @@ elseif(HYDRA_IOS)
         # "-framework GameController"
     )
 elseif(HYDRA_WEB)
-    set_target_properties(hydra PROPERTIES LINK_FLAGS "-s TOTAL_MEMORY=1024MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
+    set(LONG_INT 8) # for openssl
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -sEXPORTED_RUNTIME_METHODS=ccall")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sEXPORTED_RUNTIME_METHODS=ccall")
+    set_target_properties(hydra PROPERTIES LINK_FLAGS "-sALLOW_MEMORY_GROWTH -s TOTAL_MEMORY=192MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
 else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
@@ -85,7 +91,7 @@ endif()
 # Thanks SkyEmu for most of these configurations
 if (MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0 ")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0")
 elseif(NOT HYDRA_WEB)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O3")
@@ -102,8 +108,16 @@ add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
 add_subdirectory(vendored/SDL)
 
+set(HYDRA_INCLUDES ${HYDRA_INCLUDES}
+    ${CMAKE_CURRENT_BINARY_DIR}/vendored/openssl/include
+    vendored/openssl/include
+)
+add_subdirectory(vendored/openssl)
+set_property(TARGET ssl PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+set_property(TARGET crypto PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} ssl crypto)
+
 if(NOT HYDRA_WEB)
-    set(WITH_APPS OFF CACHE BOOL "" FORCE) # don't build executable
     set(CURL_USE_LIBSSH2 OFF)
     set(CURL_USE_LIBPSL OFF)
     set(CURL_USE_OPENSSL ON)
@@ -112,29 +126,19 @@ if(NOT HYDRA_WEB)
     set(CURL_ENABLE_EXPORT_TARGET OFF)
     set(BUILD_TESTING OFF)
     set(BUILD_CURL_EXE OFF)
-    set(BUILD_SHARED_LIBS OFF)
-    set(BUILD_STATIC_LIBS ON)
     if (WIN32)
         set(CURL_STATIC_CRT ON)
     endif()
     add_definitions(-DCURL_STATICLIB)
-    add_subdirectory(vendored/openssl)
     add_subdirectory(vendored/curl)
-    set_property(TARGET ssl PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
-    set_property(TARGET crypto PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
     set_property(TARGET libcurl_static PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
     set(HYDRA_INCLUDES ${HYDRA_INCLUDES}
-        ${CMAKE_CURRENT_BINARY_DIR}/vendored/openssl/include
-        vendored/openssl/include
         vendored/curl/include
     )
-    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} libcurl_static
-        ssl
-        crypto
-    )
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} libcurl_static)
 endif()
 
-if(NOT HYDRA_IOS)
+if(NOT HYDRA_IOS AND NOT HYDRA_WEB)
     find_package(OpenGL REQUIRED)
 endif()
 
@@ -193,7 +197,6 @@ set(HYDRA_INCLUDES
 
 set(HYDRA_LIBRARIES
     ${HYDRA_LIBRARIES}
-    OpenGL::GL
     SDL3-static
     fmt
 )
@@ -264,6 +267,6 @@ target_include_directories(hydra PRIVATE ${HYDRA_INCLUDES})
 target_compile_definitions(hydra PRIVATE HYDRA_VERSION="${PROJECT_VERSION}")
 target_compile_definitions(hydra PRIVATE ${HYDRA_DEFINITIONS})
 
-if (HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_MACOS OR HYDRA_ANDROID)
+if (HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_MACOS OR HYDRA_ANDROID OR HYDRA_WEB)
     target_compile_definitions(hydra PRIVATE HYDRA_LIBDL)
 endif()

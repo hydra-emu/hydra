@@ -1,0 +1,29 @@
+name: Build Web & Deploy to GH
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Setup emsdk                 
+        uses: mymindstorm/setup-emsdk@v10
+        with:
+          version: 2.0.21
+          actions-cache-folder: 'emsdk-cache'
+      - name: Build
+        run: |
+          emcmake cmake -B build
+          cmake --build build --config Release
+          mkdir website
+          mv build/hydra.html build/index.html
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: build
+          target-folder: commit/${{ github.sha }}
+          force: false
+          clean: false

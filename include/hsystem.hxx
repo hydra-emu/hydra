@@ -10,34 +10,9 @@
 #define HYDRA_ARM64
 #elif defined(__arm__)
 #define HYDRA_ARM
+#elif defined(__EMSCRIPTEN__)
 #else
 #pragma message("Unknown architecture")
-#endif
-
-#ifdef HYDRA_WINDOWS
-#include <immintrin.h>
-#include <intrin.h>
-#pragma intrinsic(_mul128)
-#else
-#ifdef HYDRA_X86_64
-#include <x86intrin.h>
-#elif defined(HYDRA_ARM)
-#include <arm_acle.h>
-#endif
-#endif
-
-#ifdef __clang__
-#ifdef HYDRA_MACOS
-#define hydra_inline inline
-#else
-#define hydra_inline [[clang::always_inline]] inline
-#endif
-#elif defined(__GNUC__)
-#define hydra_inline __always_inline inline
-#elif defined(_MSC_VER)
-#define hydra_inline __forceinline inline
-#else
-#define hydra_inline inline
 #endif
 
 inline std::string hydra_os()
@@ -52,6 +27,10 @@ inline std::string hydra_os()
     ret = "macOS";
 #elif defined(HYDRA_FREEBSD)
     ret = "FreeBSD";
+#elif defined(HYDRA_WEB)
+    return "Web WASM";
+#elif defined(HYDRA_IOS)
+    ret = "iOS";
 #else
     ret = "Unknown";
 #endif

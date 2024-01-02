@@ -3,7 +3,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
+#if defined(HYDRA_LIBDL)
 #include <dlfcn.h>
 #elif defined(HYDRA_WINDOWS)
 #include <windows.h>
@@ -39,8 +39,6 @@ namespace hydra
         return dlsym(handle, name);
 #elif defined(HYDRA_WINDOWS)
         return (void*)GetProcAddress((HMODULE)handle, name);
-#elif defined(HYDRA_WII)
-        ELFIO::elfio* reader = (ELFIO::elfio*)handle;
 #else
 #pragma message("dynlib_get_symbol not implemented for this platform")
 #error dynlib_get_symbol not implemented for this platform
@@ -54,8 +52,6 @@ namespace hydra
         dlclose(handle);
 #elif defined(HYDRA_WINDOWS)
         FreeLibrary((HMODULE)handle);
-#elif defined(HYDRA_WII)
-        delete (ELFIO::elfio*)handle;
 #else
 #pragma message("dynlib_close not implemented for this platform")
 #error dynlib_close not implemented for this platform
@@ -64,7 +60,7 @@ namespace hydra
 
     inline std::string dynlib_get_extension()
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_ANDROID) || defined(HYDRA_FREEBSD)
+#if defined(HYDRA_LINUX) || defined(HYDRA_ANDROID) || defined(HYDRA_FREEBSD) || defined(HYDRA_WEB)
         return ".so";
 #elif defined(HYDRA_MACOS)
         return ".dylib";
@@ -79,7 +75,7 @@ namespace hydra
 
     inline std::string dynlib_get_error()
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_MACOS) || defined(HYDRA_ANDROID) || defined(HYDRA_FREEBSD)
+#if defined(HYDRA_LIBDL)
         return dlerror();
 #elif defined(HYDRA_WINDOWS)
         // DWORD error = GetLastError();

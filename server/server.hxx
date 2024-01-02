@@ -1,5 +1,3 @@
-#include <hsystem.hxx>
-
 #if defined(HYDRA_LINUX) || defined(HYDRA_MACOS)
 #include <netinet/in.h>
 #include <sys/socket.h>

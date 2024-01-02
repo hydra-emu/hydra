@@ -8,10 +8,30 @@
 #include <imgui/backends/imgui_impl_sdl3.h>
 #include <imgui/imgui.h>
 #include <memory>
+#include <sanity.hxx>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_video.h>
 #include <settings.hxx>
+
+#ifdef HYDRA_WEB
+#include <emscripten.h>
+#include <functional>
+static std::function<void()> MainLoopForEmscriptenP;
+
+static void MainLoopForEmscripten()
+{
+    MainLoopForEmscriptenP();
+}
+
+#define EMSCRIPTEN_MAINLOOP_BEGIN MainLoopForEmscriptenP = [&]()
+#define EMSCRIPTEN_MAINLOOP_END \
+    ;                           \
+    emscripten_set_main_loop(MainLoopForEmscripten, 0, true)
+#else
+#define EMSCRIPTEN_MAINLOOP_BEGIN
+#define EMSCRIPTEN_MAINLOOP_END
+#endif
 
 int imgui_main(int argc, char** argv)
 {
@@ -73,7 +93,12 @@ int imgui_main(int argc, char** argv)
 
     bool done = false;
     std::unique_ptr<MainWindow> main_window = std::make_unique<MainWindow>();
+#ifdef HYDRA_WEB
+    io.IniFilename = nullptr;
+    EMSCRIPTEN_MAINLOOP_BEGIN
+#else
     while (!done)
+#endif
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -115,6 +140,9 @@ int imgui_main(int argc, char** argv)
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
     }
+#ifdef HYDRA_WEB
+    EMSCRIPTEN_MAINLOOP_END;
+#endif
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
