@@ -1,0 +1,2 @@
+/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/emar qc libfmt.a CMakeFiles/fmt.dir/src/format.cc.o CMakeFiles/fmt.dir/src/os.cc.o
+/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/emranlib libfmt.a

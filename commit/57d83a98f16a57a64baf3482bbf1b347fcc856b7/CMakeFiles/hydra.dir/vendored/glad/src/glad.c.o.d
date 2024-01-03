@@ -1,0 +1,24 @@
+CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o: \
+  /home/runner/work/hydra/hydra/vendored/glad/src/glad.c \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/stdio.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/wasi/api.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/stddef.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/__stddef_ptrdiff_t.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/__stddef_size_t.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/__stddef_wchar_t.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/__stddef_null.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/__stddef_max_align_t.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/__stddef_offsetof.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/stdint.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/stdint.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/bits/alltypes.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/bits/stdint.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/features.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/compat/stdlib.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/stdlib.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/alloca.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/compat/string.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/string.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/strings.h \
+  /home/runner/work/hydra/hydra/vendored/glad/include/glad/glad.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/KHR/khrplatform.h
