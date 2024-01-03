@@ -33,6 +33,9 @@ static void MainLoopForEmscripten()
 #define EMSCRIPTEN_MAINLOOP_END
 #endif
 
+extern unsigned int CourierPrime_compressed_size;
+extern unsigned int CourierPrime_compressed_data[44980 / 4];
+
 int imgui_main(int argc, char** argv)
 {
     // TODO: Joystick
@@ -90,6 +93,11 @@ int imgui_main(int argc, char** argv)
     ImGui_ImplSDL3_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
     Settings::InitCoreIcons();
+
+    ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(CourierPrime_compressed_data,
+                                                            CourierPrime_compressed_size, 16.0f);
+    ImGui::GetIO().Fonts->Build();
+    ImGui::GetIO().FontDefault = font;
 
     bool done = false;
     std::unique_ptr<MainWindow> main_window = std::make_unique<MainWindow>();

@@ -12,8 +12,7 @@ project(hydra
 
 add_executable(hydra)
 
-set(CMAKE_CXX_STANDARD 20 CACHE STRING "" FORCE)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+target_compile_features(hydra PRIVATE cxx_std_20)
 set(WITH_APPS OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF)
 set(BUILD_STATIC_LIBS ON)
@@ -177,6 +176,7 @@ set(HYDRA_COMMON_FILES
     vendored/stb_image_write.c
     vendored/glad/src/glad.c
     vendored/miniz/miniz.c
+    vendored/courier_prime.cxx
 )
 
 set(HYDRA_BOT_FILES

@@ -156,7 +156,7 @@ public:
         core_info_initialized() = true;
         if (Settings::Get("core_path").empty())
         {
-            Settings::Set("core_path", (std::filesystem::current_path()).string());
+            Settings::Set("core_path", Settings::GetSavePath() / "cores");
         }
 
         if (!std::filesystem::exists(Settings::Get("core_path")))
