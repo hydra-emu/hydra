@@ -71,8 +71,7 @@ int imgui_main(int argc, char* argv[])
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     uint32_t window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
-    SDL_Window* window =
-        SDL_CreateWindow("Dear ImGui SDL3+OpenGL3 example", 640, 480, window_flags);
+    SDL_Window* window = SDL_CreateWindow("hydra", 640, 480, window_flags);
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -81,7 +80,6 @@ int imgui_main(int argc, char* argv[])
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
-    SDL_GL_SetSwapInterval(1);
     SDL_ShowWindow(window);
 
     IMGUI_CHECKVERSION();
