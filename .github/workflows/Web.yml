@@ -24,6 +24,5 @@ jobs:
         with:
           branch: gh-pages
           folder: build
-          target-folder: latest
           force: false
-          clean: false
+          clean: true
