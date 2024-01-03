@@ -59,7 +59,7 @@ void MainWindow::update()
     ImGui::BeginGroup();
     ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddCircle(center, radius, 0xFFFFFFFF, 32, 2.0f);
+    draw_list->AddCircle(center, radius, 0xFFFFFFFF, 0, 2.0f);
 
     // We draw our own animated rectangle so disable these
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0, 0, 0, 0));
@@ -67,17 +67,29 @@ void MainWindow::update()
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0, 0, 0, 0));
     for (int i = 0; i < tab_count; i++)
     {
+        min.y =
+            i * tab_size.y + ImGui::GetStyle().WindowPadding.y + ImGui::GetStyle().ItemSpacing.y;
+        max.y = tab_size.y + min.y;
+        bool hovered = ImGui::IsMouseHoveringRect(min, max);
+        if (hovered)
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 1, 0.75));
         if (ImGui::Selectable(names[i], selected_tab == i, ImGuiSelectableFlags_SpanAllColumns,
                               tab_size))
         {
             selected_tab = i;
         }
+        if (hovered)
+            ImGui::PopStyleColor();
     }
     ImGui::PopStyleColor(3);
     ImGui::PopStyleVar();
     ImGui::EndGroup();
-    ImGui::SameLine();
+    ImGui::SameLine(0, ImGui::GetStyle().ItemSpacing.x * 2);
     ImGui::BeginGroup();
+    float cursor_x = ImGui::GetCursorPosX() - ImGui::GetStyle().ItemSpacing.x;
+    draw_list->AddLine(ImVec2(cursor_x, ImGui::GetStyle().WindowPadding.y),
+                       ImVec2(cursor_x, screen_height - ImGui::GetStyle().WindowPadding.y),
+                       0x80FFFFFF, 0.5f);
     ImGui::BeginChild("##main", ImVec2(0, ImGui::GetWindowHeight() * 0.90f));
     switch (selected_tab)
     {
