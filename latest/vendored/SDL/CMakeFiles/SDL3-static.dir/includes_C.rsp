@@ -1,0 +1,1 @@
+-I"/home/runner/work/hydra/hydra/build/vendored/SDL/include-config-" -I/home/runner/work/hydra/hydra/build/vendored/SDL/include -I/home/runner/work/hydra/hydra/vendored/SDL/include -I/home/runner/work/hydra/hydra/vendored/SDL/src -I/home/runner/work/hydra/hydra/vendored/SDL/include/SDL3
