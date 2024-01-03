@@ -24,6 +24,6 @@ jobs:
         with:
           branch: gh-pages
           folder: build
-          target-folder: commit/${{ github.sha }}
+          target-folder: latest
           force: false
           clean: false
