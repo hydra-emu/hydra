@@ -44,17 +44,22 @@ public:
     {
         map().clear();
         save_path() = path;
-        std::ifstream ifs(save_path());
-        if (ifs.good())
+        std::string data = hydra::fread(path);
+        if (data.empty())
         {
-            json j_map;
-            ifs >> j_map;
-            map() = j_map.get<std::map<std::string, std::string>>();
+            return;
         }
-        else
+
+        json j_map;
+        try
         {
-            throw std::runtime_error("Failed to open settings");
+            j_map = json::parse(data);
+        } catch (std::exception& e)
+        {
+            hydra::log("Failed to parse settings file: {}", e.what());
+            return;
         }
+        map() = j_map.get<std::map<std::string, std::string>>();
     }
 
     static std::string Get(const std::string& key)
@@ -71,9 +76,9 @@ public:
     static void Set(const std::string& key, const std::string& value)
     {
         map()[key] = value;
-        std::ofstream ofs(save_path(), std::ios::trunc);
         json j_map(map());
-        ofs << j_map << std::endl;
+        std::string data = j_map.dump(4);
+        hydra::fwrite(save_path(), std::span<const uint8_t>((uint8_t*)data.data(), data.size()));
     }
 
     static bool IsEmpty()
@@ -98,6 +103,8 @@ public:
             std::string applicationName;
             std::getline(cmdline, applicationName, '\0');
             dir = std::filesystem::path("/data") / "data" / applicationName / "files";
+#elif defined(HYDRA_WEB)
+            dir = std::filesystem::path("/hydra");
 #endif
             if (dir.empty())
             {
@@ -156,12 +163,12 @@ public:
         core_info_initialized() = true;
         if (Settings::Get("core_path").empty())
         {
-            Settings::Set("core_path", Settings::GetSavePath() / "cores");
+            Settings::Set("core_path", (Settings::GetSavePath() / "cores").string());
         }
 
         if (!std::filesystem::exists(Settings::Get("core_path")))
         {
-            printf("Failed to find initialize core info\n");
+            printf("Failed to find core info: %s\n", Settings::Get("core_path").c_str());
             return;
         }
 

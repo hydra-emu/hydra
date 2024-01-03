@@ -19,7 +19,7 @@ set(BUILD_STATIC_LIBS ON)
 set(DPP_BUILD_TEST OFF)
 
 if (WIN32)
-    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_WINDOWS WIN32_LEAN_AND_MEAN)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_WINDOWS WIN32_LEAN_AND_MEAN NOMINMAX)
     set(HYDRA_WINDOWS 1)
 elseif(APPLE)
     set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_MACOS)
@@ -49,11 +49,7 @@ if(HYDRA_WINDOWS)
 elseif(HYDRA_MACOS)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version" FORCE)
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES}
-        # "-framework QuartzCore"
-        # "-framework Cocoa"
-        # "-framework MetalKit"
-        # "-framework AudioToolbox"
-        # "-framework Metal"
+        "-framework OpenGL"
     )
 elseif(HYDRA_LINUX)
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} OpenGL::GL)
@@ -71,18 +67,12 @@ elseif(HYDRA_IOS)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -x objective-c")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -x objective-c++")
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES}
-        # "-framework Foundation"
-        # "-framework UIKit"
-        # "-framework AudioToolbox"
-        # "-framework AVFoundation"
-        # "-framework GameController"
+        "-framework OpenGL"
     )
 elseif(HYDRA_WEB)
     set(LONG_INT 8) # for openssl
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -sEXPORTED_RUNTIME_METHODS=ccall")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sEXPORTED_RUNTIME_METHODS=ccall")
-    set_target_properties(hydra PROPERTIES LINK_FLAGS "-sALLOW_MEMORY_GROWTH -s TOTAL_MEMORY=192MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
+    set_target_properties(hydra PROPERTIES LINK_FLAGS "-sEXPORTED_FUNCTIONS=[_main_impl,_main] -sEXPORTED_RUNTIME_METHODS=ccall -sNO_DISABLE_EXCEPTION_CATCHING -sASSERTIONS -sALLOW_MEMORY_GROWTH -s TOTAL_MEMORY=192MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
 else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
@@ -91,12 +81,9 @@ endif()
 if (MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0")
-elseif(NOT HYDRA_WEB)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O3")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG") # it's best to strip out debug symbols for web builds
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG")     # to reduce the binary size
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3") # TODO: it's best to strip out debug symbols for web builds
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O3")     # to reduce the binary size
 endif()
 
 option(BUILD_QT "Build the Qt frontend" OFF)
@@ -105,6 +92,7 @@ option(BUILD_DISCORD_BOT "Build with discord bot support" OFF)
 
 add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendored/SDL)
 
 set(HYDRA_INCLUDES ${HYDRA_INCLUDES}
@@ -139,6 +127,13 @@ endif()
 
 if(NOT HYDRA_IOS AND NOT HYDRA_WEB)
     find_package(OpenGL REQUIRED)
+endif()
+
+if(HYDRA_MACOS AND HYDRA_IOS)
+    set_target_properties(hydra PROPERTIES
+        MACOSX_BUNDLE ON
+        MACOSX_BUNDLE_BUNDLE_NAME hydra
+        MACOSX_BUNDLE_BUNDLE_IDENTIFIER "com.hydra.hydra_emu")
 endif()
 
 set(HYDRA_QT_FILES

@@ -36,7 +36,7 @@ static void MainLoopForEmscripten()
 extern unsigned int CourierPrime_compressed_size;
 extern unsigned int CourierPrime_compressed_data[44980 / 4];
 
-int imgui_main(int argc, char** argv)
+int imgui_main(int argc, char* argv[])
 {
     // TODO: Joystick
     if (SDL_Init(SDL_INIT_VIDEO) != 0)

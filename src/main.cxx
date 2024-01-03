@@ -9,6 +9,10 @@
 #endif
 #include <settings.hxx>
 
+#ifdef HYDRA_WEB
+#include <emscripten.h>
+#endif
+
 // clang-format off
 
 const char* options =
@@ -110,11 +114,33 @@ int bot_main_cb(struct argparse*, const struct argparse_option*)
 #endif
 }
 
-int main(int argc, char* argv[])
+#if defined(HYDRA_WEB)
+// Setup the offline file system
+EM_JS(void, em_init_fs, (),{
+        FS.mkdir('/hydra');
+        // Then mount with IDBFS type
+        FS.mount(IDBFS, {}, '/hydra');
+        FS.mkdir('/hydra/cores');
+        FS.mount(IDBFS, {}, '/hydra/cores');
+        FS.mkdir('/hydra/cache');
+        FS.mount(IDBFS, {}, '/hydra/cache');
+        // Then sync
+        FS.syncfs(true, function (err) {
+            Module.ccall('main_impl');
+        });
+  });
+#endif
+
+extern "C" int main_impl(int argc, char* argv[])
 {
+    printf("hydra version %s\n", HYDRA_VERSION);
     auto settings_path = Settings::GetSavePath() / "settings.json";
     Settings::Open(settings_path);
     Settings::InitCoreInfo();
+
+#ifdef HYDRA_WEB
+    return imgui_main(argc, argv);
+#endif
 
     if (argc == 1)
     {
@@ -143,4 +169,13 @@ int main(int argc, char* argv[])
     argparse_describe(&argparse, "\nThe hydra emulator", nullptr);
     argparse_parse(&argparse, argc, const_cast<const char**>(argv));
     return 0;
+}
+
+int main(int argc, char* argv[])
+{
+#ifdef HYDRA_WEB
+    em_init_fs();
+#else
+    return main_impl(argc, argv);
+#endif
 }

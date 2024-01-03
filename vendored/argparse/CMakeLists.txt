@@ -11,7 +11,7 @@ endif()
 
 set(sources argparse.c)
 
-option(ARGPARSE_SHARED "Build shared library" ON)
+option(ARGPARSE_SHARED "Build shared library" OFF)
 option(ARGPARSE_STATIC "Build static library" ON)
 
 if(ARGPARSE_SHARED)
