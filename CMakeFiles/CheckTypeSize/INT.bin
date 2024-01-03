@@ -469,7 +469,7 @@ var isFileURI = (filename) => filename.startsWith('file://');
 // include: runtime_exceptions.js
 // end include: runtime_exceptions.js
 var wasmBinaryFile;
-  wasmBinaryFile = 'cmTC_2e97c.wasm';
+  wasmBinaryFile = 'cmTC_f771c.wasm';
   if (!isDataURI(wasmBinaryFile)) {
     wasmBinaryFile = locateFile(wasmBinaryFile);
   }
