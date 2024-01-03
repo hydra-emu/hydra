@@ -1,1 +1,0 @@
- vendored/openssl/ssl/libssl.a vendored/openssl/crypto/libcrypto.a vendored/SDL/libSDL3.a vendored/fmt/libfmt.a libhydra_images.a libhydra_other.a -ldl -lm 
