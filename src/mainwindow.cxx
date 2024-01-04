@@ -65,6 +65,9 @@ void MainWindow::update()
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0, 0, 0, 0));
+    float scale = ImGui::GetFont()->Scale;
+    ImGui::GetFont()->Scale *= 1.5f;
+    ImGui::PushFont(ImGui::GetFont());
     for (int i = 0; i < tab_count; i++)
     {
         min.y =
@@ -81,6 +84,8 @@ void MainWindow::update()
         if (hovered)
             ImGui::PopStyleColor();
     }
+    ImGui::GetFont()->Scale = scale;
+    ImGui::PopFont();
     ImGui::PopStyleColor(3);
     ImGui::PopStyleVar();
     ImGui::EndGroup();
@@ -139,6 +144,10 @@ void MainWindow::draw_cores()
     // Calculate the height of the above text and the input text below
     float widget_height = ImGui::CalcTextSize("").y * 2 + ImGui::GetStyle().FramePadding.y * 2.0f +
                           ImGui::GetStyle().ItemSpacing.y * 2.0f;
+#ifdef HYDRA_WEB
+    widget_height =
+        ImGui::GetStyle().FramePadding.y * 2.0f + ImGui::GetStyle().ItemSpacing.y * 2.0f;
+#endif
     ImGui::BeginChild("##cores", ImVec2(0, ImGui::GetWindowHeight() - widget_height),
                       ImGuiChildFlags_Border);
     float image_width = ImGui::GetWindowWidth() * 0.1f;
@@ -181,6 +190,7 @@ void MainWindow::draw_cores()
     }
     ImGui::EndChild();
 
+#ifndef HYDRA_WEB
     float button_width = ImGui::GetWindowWidth() * 0.2f;
     button_width = std::min(button_width, 128.0f);
     button_width = std::max(button_width, 64.0f);
@@ -192,6 +202,7 @@ void MainWindow::draw_cores()
     if (ImGui::Button("Browse", ImVec2(button_width, 0)))
     {
     }
+#endif
 }
 
 void MainWindow::draw_about() {}
@@ -209,7 +220,12 @@ void MainWindow::draw_settings()
 void MainWindow::draw_stars(ImVec2 center, float radius)
 {
     if (!fancy_gui)
+    {
+        ImVec2 min(center.x - radius, center.y - radius);
+        ImVec2 max(center.x + radius, center.y + radius);
+        ImGui::GetWindowDrawList()->AddRectFilled(min, max, ImGui::GetColorU32(ImGuiCol_Button));
         return;
+    }
 
     ImVec2 min(center.x - radius, center.y - radius);
     ImVec2 max(center.x + radius, center.y + radius);

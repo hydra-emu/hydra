@@ -93,7 +93,7 @@ int imgui_main(int argc, char* argv[])
     Settings::InitCoreIcons();
 
     ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(CourierPrime_compressed_data,
-                                                            CourierPrime_compressed_size, 16.0f);
+                                                            CourierPrime_compressed_size, 32.0f);
     ImGui::GetIO().Fonts->Build();
     ImGui::GetIO().FontDefault = font;
 
