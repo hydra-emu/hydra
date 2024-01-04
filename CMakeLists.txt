@@ -74,7 +74,7 @@ elseif(HYDRA_IOS)
 elseif(HYDRA_WEB)
     set(LONG_INT 8) # for openssl
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    set_target_properties(hydra PROPERTIES LINK_FLAGS "-sEXPORTED_FUNCTIONS=[_main_impl,_main] -sEXPORTED_RUNTIME_METHODS=ccall -sNO_DISABLE_EXCEPTION_CATCHING -sASSERTIONS -sALLOW_MEMORY_GROWTH -s TOTAL_MEMORY=192MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
+    set_target_properties(hydra PROPERTIES LINK_FLAGS "-sEXPORTED_FUNCTIONS=[_main_impl,_main] -sEXPORTED_RUNTIME_METHODS=ccall -sNO_DISABLE_EXCEPTION_CATCHING -sASSERTIONS -sALLOW_MEMORY_GROWTH -s TOTAL_MEMORY=192MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 --shell-file ${PROJECT_SOURCE_DIR}/data/shell.html -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
 else()
     message(FATAL_ERROR "Unsupported platform")
 endif()

@@ -59,7 +59,7 @@ void MainWindow::update()
     ImGui::BeginGroup();
     ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddCircle(center, radius, 0xFFFFFFFF, 0, 2.0f);
+    // draw_list->AddCircle(center, radius, 0xFFFFFFFF, 0, 2.0f);
 
     // We draw our own animated rectangle so disable these
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0, 0, 0, 0));
