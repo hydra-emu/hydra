@@ -2,6 +2,7 @@
 #include <SDL3/SDL_misc.h>
 
 #include <cmrc/cmrc.hpp>
+#include <IconsMaterialDesign.h>
 #include <imgui/imgui.h>
 #include <imgui_url.hxx>
 #include <numbers>
@@ -9,8 +10,12 @@
 
 CMRC_DECLARE(hydra);
 
+extern ImFont* small_font;
+extern ImFont* big_font;
+
 constexpr int tab_count = 3;
 constexpr const char* names[tab_count] = {"Cores", "Settings", "About"};
+constexpr const char* icons[tab_count] = {ICON_MD_MEMORY, ICON_MD_SETTINGS, ICON_MD_INFO};
 
 MainWindow::MainWindow()
 {
@@ -65,9 +70,12 @@ void MainWindow::update()
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0, 0, 0, 0));
-    float scale = ImGui::GetFont()->Scale;
-    ImGui::GetFont()->Scale *= 1.5f;
-    ImGui::PushFont(ImGui::GetFont());
+    ImGui::PushFont(big_font);
+    if (biggest_tab_size == 0)
+    {
+        biggest_tab_size = ImGui::CalcTextSize("Settings").x;
+    }
+    bool use_icons = biggest_tab_size > tab_size.x;
     for (int i = 0; i < tab_count; i++)
     {
         min.y =
@@ -76,15 +84,14 @@ void MainWindow::update()
         bool hovered = ImGui::IsMouseHoveringRect(min, max);
         if (hovered)
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 1, 0.75));
-        if (ImGui::Selectable(names[i], selected_tab == i, ImGuiSelectableFlags_SpanAllColumns,
-                              tab_size))
+        if (ImGui::Selectable(use_icons ? icons[i] : names[i], selected_tab == i,
+                              ImGuiSelectableFlags_SpanAllColumns, tab_size))
         {
             selected_tab = i;
         }
         if (hovered)
             ImGui::PopStyleColor();
     }
-    ImGui::GetFont()->Scale = scale;
     ImGui::PopFont();
     ImGui::PopStyleColor(3);
     ImGui::PopStyleVar();

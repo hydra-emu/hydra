@@ -23,6 +23,7 @@ private:
 
     float selected_y = 0.0f;
     int selected_tab = 0;
+    int biggest_tab_size = 0;
     std::string core_directory;
     std::array<Star, 50> stars;
     bool fancy_gui;

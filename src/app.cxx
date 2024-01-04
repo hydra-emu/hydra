@@ -4,6 +4,7 @@
 #include "SDL_render.h"
 #include <cstdio>
 #include <cstdlib>
+#include <IconsMaterialDesign.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/backends/imgui_impl_sdl3.h>
 #include <imgui/imgui.h>
@@ -13,6 +14,9 @@
 #include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_video.h>
 #include <settings.hxx>
+
+ImFont* small_font = nullptr;
+ImFont* big_font = nullptr;
 
 #ifdef HYDRA_WEB
 #include <emscripten.h>
@@ -35,6 +39,8 @@ static void MainLoopForEmscripten()
 
 extern unsigned int CourierPrime_compressed_size;
 extern unsigned int CourierPrime_compressed_data[44980 / 4];
+extern unsigned int MaterialIcons_compressed_size;
+extern unsigned int MaterialIcons_compressed_data[246308 / 4];
 
 int imgui_main(int argc, char* argv[])
 {
@@ -92,10 +98,29 @@ int imgui_main(int argc, char* argv[])
     ImGui_ImplOpenGL3_Init(glsl_version);
     Settings::InitCoreIcons();
 
-    ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(CourierPrime_compressed_data,
-                                                            CourierPrime_compressed_size, 32.0f);
+    float small_size = 16.0f;
+    float big_size = 40.0f;
+
+    small_font = io.Fonts->AddFontFromMemoryCompressedTTF(CourierPrime_compressed_data,
+                                                          CourierPrime_compressed_size, small_size);
     ImGui::GetIO().Fonts->Build();
-    ImGui::GetIO().FontDefault = font;
+    ImGui::GetIO().FontDefault = small_font;
+
+    ImWchar icon_ranges[] = {ICON_MIN_MD, ICON_MAX_MD, 0};
+    ImFontConfig config;
+    config.MergeMode = true;
+    config.GlyphMinAdvanceX = small_size;
+    io.Fonts->AddFontFromMemoryCompressedTTF(MaterialIcons_compressed_data,
+                                             MaterialIcons_compressed_size, small_size, &config,
+                                             icon_ranges);
+
+    config.GlyphMinAdvanceX = big_size;
+    config.GlyphOffset = ImVec2(0, 16);
+    big_font = io.Fonts->AddFontFromMemoryCompressedTTF(CourierPrime_compressed_data,
+                                                        CourierPrime_compressed_size, big_size);
+    io.Fonts->AddFontFromMemoryCompressedTTF(MaterialIcons_compressed_data,
+                                             MaterialIcons_compressed_size, big_size, &config,
+                                             icon_ranges);
 
     bool done = false;
     std::unique_ptr<MainWindow> main_window = std::make_unique<MainWindow>();

@@ -174,6 +174,7 @@ set(HYDRA_COMMON_FILES
     vendored/glad/src/glad.c
     vendored/miniz/miniz.c
     vendored/courier_prime.cxx
+    vendored/material_icons.cxx
 )
 
 set(HYDRA_BOT_FILES
