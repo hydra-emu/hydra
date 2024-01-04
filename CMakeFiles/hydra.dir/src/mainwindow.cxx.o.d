@@ -773,6 +773,7 @@ CMakeFiles/hydra.dir/src/mainwindow.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/list \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/map \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__tree \
+  /home/runner/work/hydra/hydra/vendored/IconsMaterialDesign.h \
   /home/runner/work/hydra/hydra/include/imgui_url.hxx \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/numbers \
   /home/runner/work/hydra/hydra/include/settings.hxx \

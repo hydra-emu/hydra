@@ -29,6 +29,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o.d"
   "CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o"
   "CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o.d"
+  "CMakeFiles/hydra.dir/vendored/material_icons.cxx.o"
+  "CMakeFiles/hydra.dir/vendored/material_icons.cxx.o.d"
   "CMakeFiles/hydra.dir/vendored/miniaudio.c.o"
   "CMakeFiles/hydra.dir/vendored/miniaudio.c.o.d"
   "CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o"

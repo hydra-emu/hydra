@@ -793,6 +793,7 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_pen.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_quit.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_touch.h \
+  /home/runner/work/hydra/hydra/vendored/IconsMaterialDesign.h \
   /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_opengl3.h \
   /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_sdl3.h \
   /home/runner/work/hydra/hydra/include/sanity.hxx \

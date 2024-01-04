@@ -754,6 +754,30 @@ vendored/imgui/imgui_widgets.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.s
 .PHONY : vendored/imgui/imgui_widgets.cpp.s
 
+vendored/material_icons.o: vendored/material_icons.cxx.o
+.PHONY : vendored/material_icons.o
+
+# target to build an object file
+vendored/material_icons.cxx.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/vendored/material_icons.cxx.o
+.PHONY : vendored/material_icons.cxx.o
+
+vendored/material_icons.i: vendored/material_icons.cxx.i
+.PHONY : vendored/material_icons.i
+
+# target to preprocess a source file
+vendored/material_icons.cxx.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/vendored/material_icons.cxx.i
+.PHONY : vendored/material_icons.cxx.i
+
+vendored/material_icons.s: vendored/material_icons.cxx.s
+.PHONY : vendored/material_icons.s
+
+# target to generate assembly for a file
+vendored/material_icons.cxx.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/vendored/material_icons.cxx.s
+.PHONY : vendored/material_icons.cxx.s
+
 vendored/miniaudio.o: vendored/miniaudio.c.o
 .PHONY : vendored/miniaudio.o
 
@@ -906,6 +930,9 @@ help:
 	@echo "... vendored/imgui/imgui_widgets.o"
 	@echo "... vendored/imgui/imgui_widgets.i"
 	@echo "... vendored/imgui/imgui_widgets.s"
+	@echo "... vendored/material_icons.o"
+	@echo "... vendored/material_icons.i"
+	@echo "... vendored/material_icons.s"
 	@echo "... vendored/miniaudio.o"
 	@echo "... vendored/miniaudio.i"
 	@echo "... vendored/miniaudio.s"
