@@ -26,7 +26,6 @@ struct CoreInfo
     std::string license;
     std::string url;
     int max_players;
-    std::vector<std::string> firmware_files;
     std::vector<std::string> extensions;
     unsigned int icon_texture = 0;
 };
@@ -219,7 +218,6 @@ public:
                 info.extensions = hydra::split(get_info_p(hydra::InfoType::Extensions), ',');
                 info.url = get_info_p(hydra::InfoType::Website);
                 info.license = get_info_p(hydra::InfoType::License);
-                info.firmware_files = hydra::split(get_info_p(hydra::InfoType::Firmware), ',');
                 info.max_players = 1;
 
                 bool one_active = false;
