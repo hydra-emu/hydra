@@ -1,6 +1,7 @@
 #include "corewrapper.hxx"
 #include "hydra/core.hxx"
 #include "mainwindow.hxx"
+#include "SDL_events.h"
 #include "SDL_render.h"
 #include <cstdio>
 #include <cstdlib>
@@ -115,7 +116,6 @@ int imgui_main(int argc, char* argv[])
                                              icon_ranges);
 
     config.GlyphMinAdvanceX = big_size;
-    config.GlyphOffset = ImVec2(0, 16);
     big_font = io.Fonts->AddFontFromMemoryCompressedTTF(CourierPrime_compressed_data,
                                                         CourierPrime_compressed_size, big_size);
     io.Fonts->AddFontFromMemoryCompressedTTF(MaterialIcons_compressed_data,
@@ -146,6 +146,31 @@ int imgui_main(int argc, char* argv[])
                         done = true;
                     }
                     break;
+                case SDL_EVENT_DROP_FILE:
+                {
+                    std::filesystem::path path(event.drop.data);
+                    if (path.extension().string() == hydra::dynlib_get_extension())
+                    {
+                        std::filesystem::path core_path = Settings::Get("core_path");
+                        std::filesystem::path out_path = core_path / path.filename();
+                        int copy = 1;
+                        while (std::filesystem::exists(out_path))
+                        {
+                            out_path =
+                                core_path / (path.stem().string() + " (" + std::to_string(copy) +
+                                             ")" + path.extension().string());
+                            copy++;
+                        }
+                        std::filesystem::copy(path, out_path);
+                        printf("Copied %s to %s\n", path.string().c_str(),
+                               out_path.string().c_str());
+                    }
+                    else
+                    {
+                        main_window->loadRom(path);
+                    }
+                    break;
+                }
             }
         }
 

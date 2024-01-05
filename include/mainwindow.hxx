@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include <array>
+#include <filesystem>
 #include <string>
 
 struct Star
@@ -14,8 +15,10 @@ struct MainWindow
 {
     MainWindow();
     void update();
+    void loadRom(const std::filesystem::path& path);
 
 private:
+    void draw_games();
     void draw_cores();
     void draw_about();
     void draw_settings();
@@ -27,4 +30,6 @@ private:
     std::string core_directory;
     std::array<Star, 50> stars;
     bool fancy_gui;
+    float text_height = 0;
+    float icon_width = 0;
 };

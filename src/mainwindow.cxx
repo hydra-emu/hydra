@@ -7,15 +7,17 @@
 #include <imgui_url.hxx>
 #include <numbers>
 #include <settings.hxx>
+#include <strings.hxx>
 
 CMRC_DECLARE(hydra);
 
 extern ImFont* small_font;
 extern ImFont* big_font;
 
-constexpr int tab_count = 3;
-constexpr const char* names[tab_count] = {"Cores", "Settings", "About"};
-constexpr const char* icons[tab_count] = {ICON_MD_MEMORY, ICON_MD_SETTINGS, ICON_MD_INFO};
+constexpr size_t tab_count = 4;
+constexpr const char* names[tab_count] = {"Games", "Cores", "Settings", "About"};
+constexpr const char* icons[tab_count] = {ICON_MD_GAMES, ICON_MD_MEMORY, ICON_MD_SETTINGS,
+                                          ICON_MD_INFO};
 
 MainWindow::MainWindow()
 {
@@ -48,8 +50,14 @@ MainWindow::MainWindow()
 
 void MainWindow::update()
 {
+    if (icon_width == 0)
+    {
+        icon_width = ImGui::CalcTextSize(ICON_MD_INFO).x;
+        text_height = ImGui::CalcTextSize("Test").y;
+    }
+
     ImGui::GetStyle().WindowRounding = 0.0f;
-    float screen_height = ImGui::GetIO().DisplaySize.y;
+    float screen_height = ImGui::GetIO().DisplaySize.y - ImGui::GetStyle().WindowPadding.y * 2;
     float screen_width = ImGui::GetIO().DisplaySize.x;
     float spacing = ImGui::GetStyle().WindowPadding.y * 2 + ImGui::GetStyle().ItemSpacing.y * 2;
     ImVec2 tab_size = ImVec2(screen_width * 0.2f, (screen_height - spacing) / tab_count);
@@ -102,16 +110,19 @@ void MainWindow::update()
     draw_list->AddLine(ImVec2(cursor_x, ImGui::GetStyle().WindowPadding.y),
                        ImVec2(cursor_x, screen_height - ImGui::GetStyle().WindowPadding.y),
                        0x80FFFFFF, 0.5f);
-    ImGui::BeginChild("##main", ImVec2(0, ImGui::GetWindowHeight() * 0.90f));
+    ImGui::BeginChild("##main", ImVec2(0, 0));
     switch (selected_tab)
     {
         case 0:
-            draw_cores();
+            draw_games();
             break;
         case 1:
-            draw_settings();
+            draw_cores();
             break;
         case 2:
+            draw_settings();
+            break;
+        case 3:
             draw_about();
             break;
     }
@@ -144,13 +155,27 @@ void MainWindow::update()
     ImGui::EndGroup();
 }
 
+void MainWindow::loadRom(const std::filesystem::path& path) {}
+
+void MainWindow::draw_games() {}
+
 void MainWindow::draw_cores()
 {
+    auto& style = ImGui::GetStyle();
+
+    float core_text_width =
+        ImGui::CalcTextSize(HS_ADD_CORES, nullptr, false, ImGui::GetWindowWidth()).y;
+
     ImGui::Text("Cores");
+    ImGui::SameLine(ImGui::GetWindowWidth() - icon_width * 2 - style.FramePadding.x * 4 -
+                    style.ItemSpacing.x);
+    ImGui::Button(ICON_MD_ADD);
+    ImGui::SameLine();
+    ImGui::Button(ICON_MD_REMOVE);
     auto& cores = Settings::GetCoreInfo();
-    // Calculate the height of the above text and the input text below
-    float widget_height = ImGui::CalcTextSize("").y * 2 + ImGui::GetStyle().FramePadding.y * 2.0f +
-                          ImGui::GetStyle().ItemSpacing.y * 2.0f;
+    float widget_height = text_height * 2 + core_text_width +
+                          ImGui::GetStyle().FramePadding.y * 4.0f +
+                          ImGui::GetStyle().ItemSpacing.y * 3.0f;
 #ifdef HYDRA_WEB
     widget_height =
         ImGui::GetStyle().FramePadding.y * 2.0f + ImGui::GetStyle().ItemSpacing.y * 2.0f;
@@ -209,6 +234,7 @@ void MainWindow::draw_cores()
     if (ImGui::Button("Browse", ImVec2(button_width, 0)))
     {
     }
+    ImGui::TextWrapped(HS_ADD_CORES);
 #endif
 }
 
