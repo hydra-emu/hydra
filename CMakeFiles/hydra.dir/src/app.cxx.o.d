@@ -763,13 +763,12 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/assert.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_render.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_events.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_audio.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_stdinc.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_events.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_audio.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_endian.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_error.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_mutex.h \
@@ -793,6 +792,7 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_pen.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_quit.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_touch.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_render.h \
   /home/runner/work/hydra/hydra/vendored/IconsMaterialDesign.h \
   /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_opengl3.h \
   /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_sdl3.h \

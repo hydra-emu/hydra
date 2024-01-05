@@ -189,9 +189,9 @@ vendored/openssl/ssl/clean: vendored/openssl/ssl/CMakeFiles/ssl.dir/clean
 # All Build rule for target.
 CMakeFiles/hydra.dir/all: CMakeFiles/hydra_images.dir/all
 CMakeFiles/hydra.dir/all: CMakeFiles/hydra_other.dir/all
-CMakeFiles/hydra.dir/all: vendored/fmt/CMakeFiles/fmt.dir/all
 CMakeFiles/hydra.dir/all: vendored/SDL/CMakeFiles/SDL3-static.dir/all
 CMakeFiles/hydra.dir/all: vendored/openssl/crypto/CMakeFiles/crypto.dir/all
+CMakeFiles/hydra.dir/all: vendored/fmt/CMakeFiles/fmt.dir/all
 CMakeFiles/hydra.dir/all: vendored/openssl/ssl/CMakeFiles/ssl.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/build
