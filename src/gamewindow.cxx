@@ -30,8 +30,8 @@ GameWindow::GameWindow()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 240, 160, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -62,7 +62,6 @@ void GameWindow::update()
                 velocity_y = -20.0f;
             position_x += velocity_x;
             position_y += velocity_y;
-            snapped = false;
         }
         else
         {
@@ -172,11 +171,45 @@ void GameWindow::update()
     bool clicked = ImGui::IsMouseDown(ImGuiMouseButton_Left);
     if (hovering && clicked)
     {
-        held = true;
+        if (!held)
+        {
+            start_drag = ImVec2(mouse_x, mouse_y);
+            held = true;
+        }
     }
     else
     {
-        held = false;
+        if (held)
+        {
+            held = false;
+            ImVec2 end_drag = ImVec2(mouse_x, mouse_y);
+            float minimum_x = 0.1f * io.DisplaySize.x;
+            float minimum_y = 0.1f * io.DisplaySize.y;
+            if (end_drag.x - start_drag.x > minimum_x)
+            {
+                horizontal_snap = 1;
+            }
+            else if (end_drag.x - start_drag.x < -minimum_x)
+            {
+                horizontal_snap = -1;
+            }
+            else
+            {
+                horizontal_snap = 0;
+            }
+            if (end_drag.y - start_drag.y > minimum_y)
+            {
+                vertical_snap = 1;
+            }
+            else if (end_drag.y - start_drag.y < -minimum_y)
+            {
+                vertical_snap = -1;
+            }
+            else
+            {
+                vertical_snap = 0;
+            }
+        }
     }
 
     static bool fullscreen_hovered = false;

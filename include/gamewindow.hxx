@@ -1,5 +1,6 @@
 #pragma once
 
+#include "imgui.h"
 #include <corewrapper.hxx>
 #include <SDL3/SDL_opengl.h>
 
@@ -25,11 +26,11 @@ private:
     int vertical_snap = -1;
     float snap_x = 0.0f;
     float snap_y = 0.0f;
-    bool snapped = false;
     bool held = false;
     bool fullscreen = false;
     bool animating = false;
     GLuint texture = 0;
+    ImVec2 start_drag;
 
     std::unique_ptr<hydra::EmulatorWrapper> emulator;
 };
