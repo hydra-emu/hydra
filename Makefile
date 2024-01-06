@@ -826,6 +826,30 @@ vendored/miniz/miniz.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/vendored/miniz/miniz.c.s
 .PHONY : vendored/miniz/miniz.c.s
 
+vendored/stb_image.o: vendored/stb_image.c.o
+.PHONY : vendored/stb_image.o
+
+# target to build an object file
+vendored/stb_image.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/vendored/stb_image.c.o
+.PHONY : vendored/stb_image.c.o
+
+vendored/stb_image.i: vendored/stb_image.c.i
+.PHONY : vendored/stb_image.i
+
+# target to preprocess a source file
+vendored/stb_image.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/vendored/stb_image.c.i
+.PHONY : vendored/stb_image.c.i
+
+vendored/stb_image.s: vendored/stb_image.c.s
+.PHONY : vendored/stb_image.s
+
+# target to generate assembly for a file
+vendored/stb_image.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/vendored/stb_image.c.s
+.PHONY : vendored/stb_image.c.s
+
 vendored/stb_image_write.o: vendored/stb_image_write.c.o
 .PHONY : vendored/stb_image_write.o
 
@@ -939,6 +963,9 @@ help:
 	@echo "... vendored/miniz/miniz.o"
 	@echo "... vendored/miniz/miniz.i"
 	@echo "... vendored/miniz/miniz.s"
+	@echo "... vendored/stb_image.o"
+	@echo "... vendored/stb_image.i"
+	@echo "... vendored/stb_image.s"
 	@echo "... vendored/stb_image_write.o"
 	@echo "... vendored/stb_image_write.i"
 	@echo "... vendored/stb_image_write.s"

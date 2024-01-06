@@ -218,7 +218,7 @@ CMakeFiles/hydra.dir/all: vendored/openssl/ssl/CMakeFiles/ssl.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/hydra.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/hydra/hydra/build/CMakeFiles 100
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/hydra/hydra/build/CMakeFiles 99
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/hydra.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/hydra/hydra/build/CMakeFiles 0
 .PHONY : CMakeFiles/hydra.dir/rule
@@ -317,12 +317,12 @@ vendored/fmt/CMakeFiles/fmt.dir/clean:
 vendored/argparse/CMakeFiles/argparse.dir/all:
 	$(MAKE) $(MAKESILENT) -f vendored/argparse/CMakeFiles/argparse.dir/build.make vendored/argparse/CMakeFiles/argparse.dir/depend
 	$(MAKE) $(MAKESILENT) -f vendored/argparse/CMakeFiles/argparse.dir/build.make vendored/argparse/CMakeFiles/argparse.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num= "Built target argparse"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=19 "Built target argparse"
 .PHONY : vendored/argparse/CMakeFiles/argparse.dir/all
 
 # Build rule for subdir invocation for target.
 vendored/argparse/CMakeFiles/argparse.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/hydra/hydra/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/hydra/hydra/build/CMakeFiles 1
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vendored/argparse/CMakeFiles/argparse.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/hydra/hydra/build/CMakeFiles 0
 .PHONY : vendored/argparse/CMakeFiles/argparse.dir/rule
@@ -343,12 +343,12 @@ vendored/argparse/CMakeFiles/argparse.dir/clean:
 vendored/SDL/CMakeFiles/SDL3-static.dir/all:
 	$(MAKE) $(MAKESILENT) -f vendored/SDL/CMakeFiles/SDL3-static.dir/build.make vendored/SDL/CMakeFiles/SDL3-static.dir/depend
 	$(MAKE) $(MAKESILENT) -f vendored/SDL/CMakeFiles/SDL3-static.dir/build.make vendored/SDL/CMakeFiles/SDL3-static.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 "Built target SDL3-static"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 "Built target SDL3-static"
 .PHONY : vendored/SDL/CMakeFiles/SDL3-static.dir/all
 
 # Build rule for subdir invocation for target.
 vendored/SDL/CMakeFiles/SDL3-static.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/hydra/hydra/build/CMakeFiles 19
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/hydra/hydra/build/CMakeFiles 18
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vendored/SDL/CMakeFiles/SDL3-static.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/hydra/hydra/build/CMakeFiles 0
 .PHONY : vendored/SDL/CMakeFiles/SDL3-static.dir/rule

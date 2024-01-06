@@ -35,6 +35,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hydra.dir/vendored/miniaudio.c.o.d"
   "CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o"
   "CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o.d"
+  "CMakeFiles/hydra.dir/vendored/stb_image.c.o"
+  "CMakeFiles/hydra.dir/vendored/stb_image.c.o.d"
   "CMakeFiles/hydra.dir/vendored/stb_image_write.c.o"
   "CMakeFiles/hydra.dir/vendored/stb_image_write.c.o.d"
   "hydra.html"

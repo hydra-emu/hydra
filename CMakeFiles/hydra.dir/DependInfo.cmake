@@ -12,6 +12,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/runner/work/hydra/hydra/vendored/glad/src/glad.c" "CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o" "gcc" "CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o.d"
   "/home/runner/work/hydra/hydra/vendored/miniaudio.c" "CMakeFiles/hydra.dir/vendored/miniaudio.c.o" "gcc" "CMakeFiles/hydra.dir/vendored/miniaudio.c.o.d"
   "/home/runner/work/hydra/hydra/vendored/miniz/miniz.c" "CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o" "gcc" "CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o.d"
+  "/home/runner/work/hydra/hydra/vendored/stb_image.c" "CMakeFiles/hydra.dir/vendored/stb_image.c.o" "gcc" "CMakeFiles/hydra.dir/vendored/stb_image.c.o.d"
   "/home/runner/work/hydra/hydra/vendored/stb_image_write.c" "CMakeFiles/hydra.dir/vendored/stb_image_write.c.o" "gcc" "CMakeFiles/hydra.dir/vendored/stb_image_write.c.o.d"
   "/home/runner/work/hydra/hydra/src/app.cxx" "CMakeFiles/hydra.dir/src/app.cxx.o" "gcc" "CMakeFiles/hydra.dir/src/app.cxx.o.d"
   "/home/runner/work/hydra/hydra/src/corewrapper.cxx" "CMakeFiles/hydra.dir/src/corewrapper.cxx.o" "gcc" "CMakeFiles/hydra.dir/src/corewrapper.cxx.o.d"

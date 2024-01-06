@@ -799,6 +799,13 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/vendored/stb_image_write.h \
   /home/runner/work/hydra/hydra/core/include/hydra/core.hxx \
   /home/runner/work/hydra/hydra/include/mainwindow.hxx \
+  /home/runner/work/hydra/hydra/include/gamewindow.hxx \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl_glext.h \
   /home/runner/work/hydra/hydra/vendored/imgui/imgui.h \
   /home/runner/work/hydra/hydra/vendored/imgui/imconfig.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/float.h \
@@ -808,9 +815,6 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_events.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_audio.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_stdinc.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_endian.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_error.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_mutex.h \
@@ -857,15 +861,12 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_messagebox.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_metal.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_misc.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_power.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_system.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_timer.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_version.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_video_capture.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_oldnames.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl_glext.h \
   /home/runner/work/hydra/hydra/include/settings.hxx \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/fstream \
   /home/runner/work/hydra/hydra/include/hsystem.hxx \
