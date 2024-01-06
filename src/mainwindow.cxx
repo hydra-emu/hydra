@@ -15,6 +15,10 @@ extern ImFont* small_font;
 extern ImFont* big_font;
 
 constexpr size_t tab_count = 4;
+constexpr size_t games_tab = 0;
+constexpr size_t cores_tab = 1;
+constexpr size_t settings_tab = 2;
+constexpr size_t about_tab = 3;
 constexpr const char* names[tab_count] = {"Games", "Cores", "Settings", "About"};
 constexpr const char* icons[tab_count] = {ICON_MD_GAMES, ICON_MD_MEMORY, ICON_MD_SETTINGS,
                                           ICON_MD_INFO};
@@ -107,26 +111,27 @@ void MainWindow::update()
     ImGui::SameLine(0, ImGui::GetStyle().ItemSpacing.x * 2);
     ImGui::BeginGroup();
     float cursor_x = ImGui::GetCursorPosX() - ImGui::GetStyle().ItemSpacing.x;
-    draw_list->AddLine(ImVec2(cursor_x, ImGui::GetStyle().WindowPadding.y),
-                       ImVec2(cursor_x, screen_height - ImGui::GetStyle().WindowPadding.y),
-                       0x80FFFFFF, 0.5f);
-    ImGui::BeginChild("##main", ImVec2(0, 0));
+    draw_list->AddLine(
+        ImVec2(cursor_x, ImGui::GetStyle().WindowPadding.y),
+        ImVec2(cursor_x, ImGui::GetIO().DisplaySize.y - ImGui::GetStyle().WindowPadding.y),
+        0x80FFFFFF, 0.5f);
+    ImGui::BeginGroup();
     switch (selected_tab)
     {
-        case 0:
+        case games_tab:
             draw_games();
             break;
-        case 1:
+        case cores_tab:
             draw_cores();
             break;
-        case 2:
+        case settings_tab:
             draw_settings();
             break;
-        case 3:
+        case about_tab:
             draw_about();
             break;
     }
-    ImGui::EndChild();
+    ImGui::EndGroup();
 #if defined(HYDRA_WEB) || defined(HYDRA_ANDROID) || defined(HYDRA_IOS)
     static bool dragging = false;
     bool clicked = ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered();
@@ -163,62 +168,74 @@ void MainWindow::draw_cores()
 {
     auto& style = ImGui::GetStyle();
 
-    float core_text_width =
-        ImGui::CalcTextSize(HS_ADD_CORES, nullptr, false, ImGui::GetWindowWidth()).y;
+    float core_text_height =
+        ImGui::CalcTextSize(HS_ADD_CORES, nullptr, false, ImGui::GetContentRegionAvail().x).y;
 
-    ImGui::Text("Cores");
-    ImGui::SameLine(ImGui::GetWindowWidth() - icon_width * 2 - style.FramePadding.x * 4 -
+    ImGui::Text(ICON_MD_MEMORY " Cores");
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - icon_width * 2 - style.FramePadding.x * 4 -
                     style.ItemSpacing.x);
     ImGui::Button(ICON_MD_ADD);
     ImGui::SameLine();
     ImGui::Button(ICON_MD_REMOVE);
     auto& cores = Settings::GetCoreInfo();
-    float widget_height = text_height * 2 + core_text_width +
+    float widget_height = text_height * 2 + core_text_height +
                           ImGui::GetStyle().FramePadding.y * 4.0f +
-                          ImGui::GetStyle().ItemSpacing.y * 3.0f;
+                          ImGui::GetStyle().ItemSpacing.y * 3.0f + 15;
 #ifdef HYDRA_WEB
     widget_height =
         ImGui::GetStyle().FramePadding.y * 2.0f + ImGui::GetStyle().ItemSpacing.y * 2.0f;
 #endif
     ImGui::BeginChild("##cores", ImVec2(0, ImGui::GetWindowHeight() - widget_height),
-                      ImGuiChildFlags_Border);
+                      ImGuiChildFlags_Border, ImGuiWindowFlags_NoScrollbar);
     float image_width = ImGui::GetWindowWidth() * 0.1f;
     image_width = std::min(image_width, 128.0f);
     image_width = std::max(image_width, 64.0f);
     for (size_t i = 0; i < cores.size(); i++)
     {
+        ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x - 20);
         ImGui::PushID(i);
-        ImGui::BeginChild("##core", ImVec2(0, 128 + ImGui::GetStyle().ItemSpacing.y * 4),
-                          ImGuiChildFlags_Border);
+        ImGui::BeginGroup();
+        float padding = 15.0f;
+        ImGui::SetCursorPos(
+            ImVec2(ImGui::GetCursorPos().x + padding, ImGui::GetCursorPos().y + padding));
         ImGui::Image((ImTextureID)(intptr_t)cores[i].icon_texture,
                      ImVec2(image_width, image_width));
         ImGui::SameLine();
         ImGui::BeginGroup();
         ImGui::Text("%s %s (%s)\n", cores[i].core_name.c_str(), cores[i].version.c_str(),
                     cores[i].system_name.c_str());
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - style.FramePadding.x * 2 - icon_width -
+                        padding);
+        if (ImGui::Button(ICON_MD_SETTINGS))
+        {
+            selected_tab = settings_tab;
+            open_core_settings = i;
+        }
         ImGui::Separator();
-        ImGui::Text("Author: %s\n", cores[i].author.c_str());
+        ImGui::TextWrapped("Author: %s\n", cores[i].author.c_str());
         ImGui::Text("License: %s\n", cores[i].license.c_str());
         ImGui::Text("Description: %s\n", cores[i].description.c_str());
-        ImGui::Text("Supported files: ");
+        ImGui::Text("Supported formats: ");
         ImGui::SameLine(0, 0);
+        std::string formats;
         for (size_t j = 0; j < cores[i].extensions.size(); j++)
         {
-            ImGui::Text("*.%s", cores[i].extensions[j].c_str());
-            if (j < cores[i].extensions.size() - 1)
+            formats += cores[i].extensions[j];
+            if (j != cores[i].extensions.size() - 1)
             {
-                ImGui::SameLine(0, 0);
-                ImGui::Text(", ");
-                ImGui::SameLine(0, 0);
+                formats += ", ";
             }
         }
-        ImGui::Text("Website: ");
-        ImGui::SameLine(0, 0);
+        ImGui::Text("%s\n", formats.c_str());
+        ImGui::PopTextWrapPos();
         hydra::Url::draw(cores[i].url.c_str());
+        ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x, padding));
         ImGui::EndGroup();
-
-        ImGui::EndChild();
         ImGui::PopID();
+        ImGui::EndGroup();
+        ImVec2 max = ImGui::GetItemRectMax();
+        max.x = std::min(max.x, ImGui::GetContentRegionAvail().x + ImGui::GetItemRectMin().x);
+        ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), max, 0x80FFFFFF, 0, 0, 0.2f);
     }
     ImGui::EndChild();
 
@@ -242,12 +259,47 @@ void MainWindow::draw_about() {}
 
 void MainWindow::draw_settings()
 {
-    ImGui::Text("Settings");
+    ImGui::Text(ICON_MD_SETTINGS " Settings");
     if (ImGui::Checkbox("Enable fancy GUI", &fancy_gui))
     {
         Settings::Set("fancy_gui", fancy_gui ? "true" : "false");
     }
     ImGui::SetItemTooltip("Enable fancy GUI features that may hinder performance");
+
+    auto& cores = Settings::GetCoreInfo();
+    ImGui::SeparatorText("Core specific settings");
+    for (size_t i = 0; i < cores.size(); i++)
+    {
+        if (open_core_settings != -1)
+        {
+            if (open_core_settings == i)
+            {
+                ImGui::SetNextItemOpen(true);
+            }
+            else
+            {
+                ImGui::SetNextItemOpen(false);
+            }
+        }
+
+        ImGui::PushID(i);
+        if (ImGui::CollapsingHeader(cores[i].core_name.c_str()))
+        {
+            if (settings_functions.find(cores[i].core_name) != settings_functions.end())
+            {
+                for (auto& func : settings_functions[cores[i].core_name])
+                {
+                    func();
+                }
+            }
+            else
+            {
+                ImGui::Text("This core has no settings");
+            }
+        }
+        ImGui::PopID();
+    }
+    open_core_settings = -1;
 }
 
 void MainWindow::draw_stars(ImVec2 center, float radius)

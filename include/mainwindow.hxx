@@ -3,7 +3,9 @@
 #include "imgui.h"
 #include <array>
 #include <filesystem>
+#include <functional>
 #include <string>
+#include <vector>
 
 struct Star
 {
@@ -16,6 +18,12 @@ struct MainWindow
     MainWindow();
     void update();
     void loadRom(const std::filesystem::path& path);
+
+    void setSettingsFunctions(
+        const std::unordered_map<std::string, std::vector<std::function<void()>>>& functions)
+    {
+        settings_functions = functions;
+    }
 
 private:
     void draw_games();
@@ -32,4 +40,6 @@ private:
     bool fancy_gui;
     float text_height = 0;
     float icon_width = 0;
+    size_t open_core_settings = -1;
+    std::unordered_map<std::string, std::vector<std::function<void()>>> settings_functions;
 };

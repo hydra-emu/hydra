@@ -252,6 +252,7 @@ public:
         core_info_initialized() = false;
         GetCoreInfo().clear();
         InitCoreInfo();
+        ReinitCoresFrontend();
     }
 
     static std::string Print()
@@ -269,7 +270,7 @@ public:
         return c;
     }
 
-    static void InitCoreIcons();
+    static void ReinitCoresFrontend();
 
 private:
     static std::map<std::string, std::string>& map()

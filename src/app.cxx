@@ -1,3 +1,4 @@
+#include "compatibility.hxx"
 #include "corewrapper.hxx"
 #include "hydra/core.hxx"
 #include "mainwindow.hxx"
@@ -9,12 +10,16 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/backends/imgui_impl_sdl3.h>
 #include <imgui/imgui.h>
+#include <map>
 #include <memory>
 #include <sanity.hxx>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_video.h>
 #include <settings.hxx>
+#include <toml11/toml.hpp>
+#include <unordered_map>
+#include <vector>
 
 ImFont* small_font = nullptr;
 ImFont* big_font = nullptr;
@@ -42,6 +47,8 @@ extern unsigned int CourierPrime_compressed_size;
 extern unsigned int CourierPrime_compressed_data[44980 / 4];
 extern unsigned int MaterialIcons_compressed_size;
 extern unsigned int MaterialIcons_compressed_data[246308 / 4];
+
+std::unique_ptr<MainWindow> main_window;
 
 int imgui_main(int argc, char* argv[])
 {
@@ -78,7 +85,7 @@ int imgui_main(int argc, char* argv[])
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     uint32_t window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
-    SDL_Window* window = SDL_CreateWindow("hydra", 640, 480, window_flags);
+    SDL_Window* window = SDL_CreateWindow("hydra", 1024, 768, window_flags);
     if (window == nullptr)
     {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -92,20 +99,22 @@ int imgui_main(int argc, char* argv[])
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = nullptr;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
     ImGui::StyleColorsDark();
     ImGui_ImplSDL3_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
-    Settings::InitCoreIcons();
+    main_window = std::make_unique<MainWindow>();
+    Settings::ReinitCoresFrontend();
 
     float small_size = 16.0f;
     float big_size = 40.0f;
 
     small_font = io.Fonts->AddFontFromMemoryCompressedTTF(CourierPrime_compressed_data,
                                                           CourierPrime_compressed_size, small_size);
-    ImGui::GetIO().Fonts->Build();
-    ImGui::GetIO().FontDefault = small_font;
+    io.Fonts->Build();
+    io.FontDefault = small_font;
 
     ImWchar icon_ranges[] = {ICON_MIN_MD, ICON_MAX_MD, 0};
     ImFontConfig config;
@@ -123,9 +132,7 @@ int imgui_main(int argc, char* argv[])
                                              icon_ranges);
 
     bool done = false;
-    std::unique_ptr<MainWindow> main_window = std::make_unique<MainWindow>();
 #ifdef HYDRA_WEB
-    io.IniFilename = nullptr;
     EMSCRIPTEN_MAINLOOP_BEGIN
 #else
     while (!done)
@@ -162,6 +169,7 @@ int imgui_main(int argc, char* argv[])
                             copy++;
                         }
                         std::filesystem::copy(path, out_path);
+                        Settings::ReinitCoreInfo();
                         printf("Copied %s to %s\n", path.string().c_str(),
                                out_path.string().c_str());
                     }
@@ -183,11 +191,9 @@ int imgui_main(int argc, char* argv[])
         ImGui::Begin("##Hydra", nullptr,
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
-                         ImGuiWindowFlags_NoBringToFrontOnFocus);
-        bool draw_main_window =
-            true; //! game_window || (game_window && !game_window->isFullscreen());
-        if (draw_main_window)
-            main_window->update();
+                         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar |
+                         ImGuiWindowFlags_NoScrollWithMouse);
+        main_window->update();
         ImGui::End();
         ImGui::Render();
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
@@ -210,9 +216,10 @@ int imgui_main(int argc, char* argv[])
     return 0;
 }
 
-void Settings::InitCoreIcons()
+void Settings::ReinitCoresFrontend()
 {
     auto& cores = Settings::GetCoreInfo();
+    std::unordered_map<std::string, std::vector<std::function<void()>>> functions;
     for (size_t i = 0; i < cores.size(); i++)
     {
         if (cores[i].icon_texture)
@@ -244,7 +251,154 @@ void Settings::InitCoreIcons()
                         glBindTexture(GL_TEXTURE_2D, 0);
                     }
                 }
+
+                const char* toml = get_info_p(hydra::InfoType::Settings);
+                if (toml && std::string(toml).size() > 0)
+                {
+                    struct Widget
+                    {
+                        std::string key;
+                        std::string name;
+                        std::string description;
+                        std::string category;
+                        std::string type;
+                        std::string default_;
+                        bool required = false;
+                    };
+
+                    std::string toml_s(toml);
+                    std::istringstream ifs(toml_s, std::ios_base::binary | std::ios_base::in);
+                    toml::value toml11 = toml::parse(ifs);
+                    if (!toml11.is_table())
+                    {
+                        printf("Error: Settings for core %s is not a table\n",
+                               cores[i].core_name.c_str());
+                        continue;
+                    }
+
+                    std::map<std::string, std::vector<Widget>> widgets;
+                    for (const auto& [table_name, table] : toml11.as_table())
+                    {
+                        std::string setting_key = cores[i].core_name + "_" + table_name;
+                        Widget widget;
+                        widget.key = setting_key;
+                        for (const auto& [key, value] : table.as_table())
+                        {
+#define cs(x)                                                       \
+    if (!value.is_##x())                                            \
+    {                                                               \
+        printf("Error: Setting %s is not a %s\n", key.c_str(), #x); \
+        continue;                                                   \
+    }
+                            switch (hydra::str_hash(key.c_str()))
+                            {
+                                case hydra::str_hash("name"):
+                                    cs(string) widget.name = value.as_string();
+                                    break;
+                                case hydra::str_hash("description"):
+                                    cs(string) widget.description = value.as_string();
+                                    break;
+                                case hydra::str_hash("category"):
+                                    cs(string) widget.category = value.as_string();
+                                    break;
+                                case hydra::str_hash("type"):
+                                    cs(string) widget.type = value.as_string();
+                                    break;
+                                case hydra::str_hash("default"):
+                                    if (value.is_boolean())
+                                    {
+                                        widget.default_ = value.as_boolean() ? "true" : "false";
+                                    }
+                                    else if (value.is_integer())
+                                    {
+                                        widget.default_ = std::to_string(value.as_integer());
+                                    }
+                                    else if (value.is_floating())
+                                    {
+                                        widget.default_ = std::to_string(value.as_floating());
+                                    }
+                                    else if (value.is_string())
+                                    {
+                                        widget.default_ = value.as_string();
+                                    }
+                                    else
+                                    {
+                                        printf("Error: Setting %s is not a valid type\n",
+                                               key.c_str());
+                                        continue;
+                                    }
+                                    break;
+                                case hydra::str_hash("required"):
+                                    cs(boolean) widget.required = value.as_boolean();
+                                    break;
+                            }
+#undef cs
+                        }
+
+                        if (widget.category.empty())
+                        {
+                            widgets["#__root__"].push_back(widget);
+                        }
+                        else
+                        {
+                            widgets[widget.category].push_back(widget);
+                        }
+                    }
+
+                    std::string core_name = cores[i].core_name;
+                    auto& core_functions = functions[core_name];
+                    int widget_id = 0;
+                    for (const auto& [category, widget_list] : widgets)
+                    {
+                        if (category != "#__root__")
+                        {
+                            core_functions.push_back([category]() {
+                                ImGui::Text("%s", category.c_str());
+                                ImGui::Separator();
+                                ImGui::Indent();
+                            });
+                        }
+
+                        for (const auto& widget : widget_list)
+                        {
+                            switch (hydra::str_hash(widget.type))
+                            {
+                                case hydra::str_hash("checkbox"):
+                                {
+                                    if (!widget.default_.empty() &&
+                                        Settings::Get(widget.key).empty())
+                                    {
+                                        Settings::Set(widget.key, widget.default_);
+                                    }
+                                    bool value = Settings::Get(widget.key) == "true";
+                                    int current_id = widget_id++;
+                                    std::string name = widget.name;
+                                    std::string key = widget.key;
+                                    std::string description = widget.description;
+                                    core_functions.push_back(
+                                        [name, key, description, value, current_id]() mutable {
+                                            ImGui::PushID(current_id);
+                                            if (ImGui::Checkbox(name.c_str(), &value))
+                                            {
+                                                Settings::Set(key, value ? "true" : "false");
+                                            }
+                                            if (!description.empty())
+                                                ImGui::SetItemTooltip("%s", description.c_str());
+                                            ImGui::PopID();
+                                        });
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (category != "#__root__")
+                        {
+                            core_functions.push_back([]() { ImGui::Unindent(); });
+                        }
+                    }
+                }
             }
         }
     }
+    main_window->setSettingsFunctions(functions);
 }

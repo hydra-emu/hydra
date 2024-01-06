@@ -13,6 +13,7 @@ project(hydra
 add_executable(hydra)
 
 target_compile_features(hydra PRIVATE cxx_std_20)
+set(CMAKE_CXX_STANDARD 20)
 set(WITH_APPS OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF)
 set(BUILD_STATIC_LIBS ON)
@@ -94,6 +95,7 @@ option(BUILD_DISCORD_BOT "Build with discord bot support" OFF)
 
 add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
+add_subdirectory(vendored/toml11)
 set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendored/SDL)
 
@@ -197,6 +199,7 @@ set(HYDRA_LIBRARIES
     ${HYDRA_LIBRARIES}
     SDL3-static
     fmt
+    toml11
 )
 
 cmrc_add_resource_library(hydra_images ALIAS hydra::images NAMESPACE hydra
