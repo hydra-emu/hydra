@@ -1,6 +1,6 @@
 /* auto-generated for crypto/cversion.c */
 #define CFLAGS "compiler: Clang  -g -O3"
 #define PLATFORM "platform: Emscripten"
-#define DATE "built on: 2024-01-06 18:17:54 UTC"
+#define DATE "built on: 2024-01-06 18:30:23 UTC"
 static const char *compiler_flags = CFLAGS;
 
