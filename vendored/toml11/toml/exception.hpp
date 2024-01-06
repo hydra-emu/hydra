@@ -41,8 +41,8 @@ inline std::string str_error(int errnum)
     constexpr std::size_t bufsize = 256;
     std::array<char, bufsize> buf;
     buf.fill('\0');
-    const char* result = strerror_r(errnum, buf.data(), bufsize);
-    return std::string(result);
+    // const char* result = strerror_r(errnum, buf.data(), bufsize);
+    return std::string("toml11 error - hydra patch");
 #elif (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600) || ( defined(__DARWIN_C_LEVEL) && __DARWIN_C_LEVEL >= 200112L ) // macOS 
     constexpr std::size_t bufsize = 256;
     std::array<char, bufsize> buf;

@@ -260,6 +260,8 @@ void MainWindow::draw_about() {}
 void MainWindow::draw_settings()
 {
     ImGui::Text(ICON_MD_SETTINGS " Settings");
+    ImGui::BeginChild("##settings", ImVec2(0, 0), ImGuiChildFlags_Border,
+                      ImGuiWindowFlags_NoScrollbar);
     if (ImGui::Checkbox("Enable fancy GUI", &fancy_gui))
     {
         Settings::Set("fancy_gui", fancy_gui ? "true" : "false");
@@ -301,6 +303,7 @@ void MainWindow::draw_settings()
         ImGui::PopID();
     }
     open_core_settings = -1;
+    ImGui::EndChild();
 }
 
 void MainWindow::draw_stars(ImVec2 center, float radius)

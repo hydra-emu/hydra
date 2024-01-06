@@ -120,11 +120,13 @@ int imgui_main(int argc, char* argv[])
     ImFontConfig config;
     config.MergeMode = true;
     config.GlyphMinAdvanceX = small_size;
+    config.GlyphOffset.y = small_size / 4;
     io.Fonts->AddFontFromMemoryCompressedTTF(MaterialIcons_compressed_data,
                                              MaterialIcons_compressed_size, small_size, &config,
                                              icon_ranges);
 
     config.GlyphMinAdvanceX = big_size;
+    config.GlyphOffset.y = big_size / 4;
     big_font = io.Fonts->AddFontFromMemoryCompressedTTF(CourierPrime_compressed_data,
                                                         CourierPrime_compressed_size, big_size);
     io.Fonts->AddFontFromMemoryCompressedTTF(MaterialIcons_compressed_data,
@@ -350,10 +352,11 @@ void Settings::ReinitCoresFrontend()
                     int widget_id = 0;
                     for (const auto& [category, widget_list] : widgets)
                     {
-                        if (category != "#__root__")
+                        std::string category_string = category;
+                        if (category_string != "#__root__")
                         {
-                            core_functions.push_back([category]() {
-                                ImGui::Text("%s", category.c_str());
+                            core_functions.push_back([category_string]() {
+                                ImGui::Text("%s", category_string.c_str());
                                 ImGui::Separator();
                                 ImGui::Indent();
                             });
