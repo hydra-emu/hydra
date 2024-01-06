@@ -800,18 +800,18 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/core/include/hydra/core.hxx \
   /home/runner/work/hydra/hydra/include/mainwindow.hxx \
   /home/runner/work/hydra/hydra/include/gamewindow.hxx \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl_glext.h \
   /home/runner/work/hydra/hydra/vendored/imgui/imgui.h \
   /home/runner/work/hydra/hydra/vendored/imgui/imconfig.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/assert.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl_glext.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_events.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_audio.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_stdinc.h \

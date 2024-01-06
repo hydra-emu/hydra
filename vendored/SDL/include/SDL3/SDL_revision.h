@@ -31,9 +31,9 @@
 /* #undef SDL_VENDOR_INFO */
 
 #ifdef SDL_VENDOR_INFO
-#define SDL_REVISION "SDL-1ed9ef1 (" SDL_VENDOR_INFO ")"
+#define SDL_REVISION "SDL-231920c (" SDL_VENDOR_INFO ")"
 #else
-#define SDL_REVISION "SDL-1ed9ef1"
+#define SDL_REVISION "SDL-231920c"
 #endif
 
 #endif /* SDL_revision_h_ */
