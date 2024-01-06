@@ -267,7 +267,8 @@ void MainWindow::draw_settings()
     ImGui::SetItemTooltip("Enable fancy GUI features that may hinder performance");
 
     auto& cores = Settings::GetCoreInfo();
-    ImGui::SeparatorText("Core specific settings");
+    if (cores.size() > 0)
+        ImGui::SeparatorText("Core specific settings");
     for (size_t i = 0; i < cores.size(); i++)
     {
         if (open_core_settings != -1)
