@@ -50,6 +50,8 @@ MainWindow::MainWindow()
         Settings::Set("fancy_gui", "true");
     }
     fancy_gui = Settings::Get("fancy_gui") == "true";
+
+    game_window = std::make_unique<GameWindow>();
 }
 
 void MainWindow::update()
@@ -158,6 +160,8 @@ void MainWindow::update()
     }
 #endif
     ImGui::EndGroup();
+
+    game_window->update();
 }
 
 void MainWindow::loadRom(const std::filesystem::path& path) {}

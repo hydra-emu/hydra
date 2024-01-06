@@ -32,8 +32,6 @@
 #include "../../core/linux/SDL_udev.h"
 #include <limits.h>      /* INT_MAX */
 
-#define DEBUG_VIDEO_CAPTURE_CAPTURE 1
-
 #if defined(__linux__) && !defined(__ANDROID__)
 
 

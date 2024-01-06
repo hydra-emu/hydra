@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gamewindow.hxx"
 #include "imgui.h"
 #include <array>
 #include <filesystem>
@@ -43,4 +44,5 @@ private:
     float icon_width = 0;
     size_t open_core_settings = -1;
     std::unordered_map<std::string, std::vector<std::function<void()>>> settings_functions;
+    std::unique_ptr<GameWindow> game_window;
 };

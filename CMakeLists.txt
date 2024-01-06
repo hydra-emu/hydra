@@ -172,6 +172,7 @@ set(HYDRA_COMMON_FILES
     src/main.cxx
     vendored/argparse/argparse.c
     vendored/miniaudio.c
+    vendored/stb_image.c
     vendored/stb_image_write.c
     vendored/glad/src/glad.c
     vendored/miniz/miniz.c
