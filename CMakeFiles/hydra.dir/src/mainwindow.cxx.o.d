@@ -734,13 +734,6 @@ CMakeFiles/hydra.dir/src/mainwindow.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/path_iterator.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/recursive_directory_iterator.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/u8path.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_misc.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_stdinc.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
-  /home/runner/work/hydra/hydra/build/_cmrc/include/cmrc/cmrc.hpp \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/cassert \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/functional \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/binary_negate.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/bind.h \
@@ -792,6 +785,13 @@ CMakeFiles/hydra.dir/src/mainwindow.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/pointer_to_binary_function.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/pointer_to_unary_function.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/unary_negate.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_misc.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_stdinc.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
+  /home/runner/work/hydra/hydra/build/_cmrc/include/cmrc/cmrc.hpp \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/cassert \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/list \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/map \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__tree \

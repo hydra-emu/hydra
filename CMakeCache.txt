@@ -45,6 +45,9 @@ CMAKE_CROSSCOMPILING_EMULATOR:UNINITIALIZED=/home/runner/work/hydra/hydra/emsdk-
 //`clang-scan-deps` dependency scanner
 CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS:FILEPATH=CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND
 
+//Boolean specifying whether compiler specific extensions are requested.
+CMAKE_CXX_EXTENSIONS:BOOL=OFF
+
 //Flags used by the CXX compiler during all build types.
 CMAKE_CXX_FLAGS:STRING=
 
@@ -59,6 +62,9 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 
 //Flags used by the CXX compiler during RELWITHDEBINFO builds.
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
+
+//Boolean describing whether the value of CXX_STANDARD is a requirement.
+CMAKE_CXX_STANDARD_REQUIRED:BOOL=ON
 
 //`clang-scan-deps` dependency scanner
 CMAKE_C_COMPILER_CLANG_SCAN_DEPS:FILEPATH=CMAKE_C_COMPILER_CLANG_SCAN_DEPS-NOTFOUND
@@ -665,6 +671,9 @@ SDL_X11_XSHAPE:BOOL=ON
 //Use Xinput for Windows
 SDL_XINPUT:BOOL=OFF
 
+//use features in toml-lang/toml master while testing
+TOML11_USE_UNRELEASED_TOML_FEATURES:BOOL=OFF
+
 //Build applications
 WITH_APPS:BOOL=OFF
 
@@ -700,6 +709,27 @@ openssl_SOURCE_DIR:STATIC=/home/runner/work/hydra/hydra/vendored/openssl
 
 //Dependencies for the target
 ssl_LIB_DEPENDS:STATIC=general;crypto;
+
+//Value Computed by CMake
+toml11_BINARY_DIR:STATIC=/home/runner/work/hydra/hydra/build/vendored/toml11
+
+//Build toml tests
+toml11_BUILD_TEST:BOOL=OFF
+
+//Install CMake targets during install step.
+toml11_INSTALL:BOOL=ON
+
+//Value Computed by CMake
+toml11_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+toml11_SOURCE_DIR:STATIC=/home/runner/work/hydra/hydra/vendored/toml11
+
+//use LLVM address sanitizer
+toml11_TEST_WITH_ASAN:BOOL=OFF
+
+//use LLVM undefined behavior sanitizer
+toml11_TEST_WITH_UBSAN:BOOL=OFF
 
 
 ########################
@@ -838,7 +868,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO
 CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=7
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

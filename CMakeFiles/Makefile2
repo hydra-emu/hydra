@@ -68,6 +68,7 @@ all: CMakeFiles/hydra_images.dir/all
 all: CMakeFiles/hydra_other.dir/all
 all: vendored/fmt/all
 all: vendored/argparse/all
+all: vendored/toml11/all
 all: vendored/SDL/all
 all: vendored/openssl/all
 .PHONY : all
@@ -75,6 +76,7 @@ all: vendored/openssl/all
 # The main recursive "preinstall" target.
 preinstall: vendored/fmt/preinstall
 preinstall: vendored/argparse/preinstall
+preinstall: vendored/toml11/preinstall
 preinstall: vendored/SDL/preinstall
 preinstall: vendored/openssl/preinstall
 .PHONY : preinstall
@@ -85,6 +87,7 @@ clean: CMakeFiles/hydra_images.dir/clean
 clean: CMakeFiles/hydra_other.dir/clean
 clean: vendored/fmt/clean
 clean: vendored/argparse/clean
+clean: vendored/toml11/clean
 clean: vendored/SDL/clean
 clean: vendored/openssl/clean
 .PHONY : clean
@@ -184,14 +187,29 @@ vendored/openssl/ssl/clean: vendored/openssl/ssl/CMakeFiles/ssl.dir/clean
 .PHONY : vendored/openssl/ssl/clean
 
 #=============================================================================
+# Directory level rules for directory vendored/toml11
+
+# Recursive "all" directory target.
+vendored/toml11/all:
+.PHONY : vendored/toml11/all
+
+# Recursive "preinstall" directory target.
+vendored/toml11/preinstall:
+.PHONY : vendored/toml11/preinstall
+
+# Recursive "clean" directory target.
+vendored/toml11/clean:
+.PHONY : vendored/toml11/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/hydra.dir
 
 # All Build rule for target.
+CMakeFiles/hydra.dir/all: CMakeFiles/hydra_images.dir/all
+CMakeFiles/hydra.dir/all: CMakeFiles/hydra_other.dir/all
 CMakeFiles/hydra.dir/all: vendored/fmt/CMakeFiles/fmt.dir/all
 CMakeFiles/hydra.dir/all: vendored/SDL/CMakeFiles/SDL3-static.dir/all
 CMakeFiles/hydra.dir/all: vendored/openssl/crypto/CMakeFiles/crypto.dir/all
-CMakeFiles/hydra.dir/all: CMakeFiles/hydra_images.dir/all
-CMakeFiles/hydra.dir/all: CMakeFiles/hydra_other.dir/all
 CMakeFiles/hydra.dir/all: vendored/openssl/ssl/CMakeFiles/ssl.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/build
