@@ -1,9 +1,11 @@
+#include "gamewindow.hxx"
 #include <mainwindow.hxx>
 #include <SDL3/SDL_misc.h>
 
 #include <cmrc/cmrc.hpp>
 #include <IconsMaterialDesign.h>
 #include <imgui/imgui.h>
+#include <imgui_helper.hxx>
 #include <imgui_url.hxx>
 #include <numbers>
 #include <settings.hxx>
@@ -50,18 +52,10 @@ MainWindow::MainWindow()
         Settings::Set("fancy_gui", "true");
     }
     fancy_gui = Settings::Get("fancy_gui") == "true";
-
-    game_window = std::make_unique<GameWindow>();
 }
 
-void MainWindow::update()
+void MainWindow::update_impl()
 {
-    if (icon_width == 0)
-    {
-        icon_width = ImGui::CalcTextSize(ICON_MD_INFO).x;
-        text_height = ImGui::CalcTextSize("Test").y;
-    }
-
     ImGui::GetStyle().WindowRounding = 0.0f;
     float screen_height = ImGui::GetIO().DisplaySize.y - ImGui::GetStyle().WindowPadding.y * 2;
     float screen_width = ImGui::GetIO().DisplaySize.x;
@@ -95,7 +89,10 @@ void MainWindow::update()
         min.y =
             i * tab_size.y + ImGui::GetStyle().WindowPadding.y + ImGui::GetStyle().ItemSpacing.y;
         max.y = tab_size.y + min.y;
-        bool hovered = ImGui::IsMouseHoveringRect(min, max);
+        bool hovered = ImGui::IsMouseHoveringRect(min, max) && ImGui::IsWindowHovered();
+#if defined(HYDRA_WEB) || defined(HYDRA_ANDROID) || defined(HYDRA_IOS)
+        hovered &= ImGui::IsMouseDown(ImGuiMouseButton_Left);
+#endif
         if (hovered)
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 1, 0.75));
         if (ImGui::Selectable(use_icons ? icons[i] : names[i], selected_tab == i,
@@ -134,34 +131,21 @@ void MainWindow::update()
             break;
     }
     ImGui::EndGroup();
-#if defined(HYDRA_WEB) || defined(HYDRA_ANDROID) || defined(HYDRA_IOS)
-    static bool dragging = false;
-    bool clicked = ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered();
-    if (clicked)
+    ImGui::EndGroup();
+}
+
+void MainWindow::update()
+{
+    if (!game_window || !game_window->isFullscreen())
+        update_impl();
+    if (game_window)
     {
-        if (!dragging)
+        UpdateResult result = game_window->update();
+        if (result == UpdateResult::Quit)
         {
-            float mouse_delta_x = ImGui::GetIO().MouseDelta.x;
-            if (mouse_delta_x > 2.0f)
-            {
-                selected_tab = (selected_tab - 1 + tab_count) % tab_count;
-                dragging = true;
-            }
-            else if (mouse_delta_x < -2.0f)
-            {
-                selected_tab = (selected_tab + 1) % tab_count;
-                dragging = true;
-            }
+            game_window.reset();
         }
     }
-    else
-    {
-        dragging = false;
-    }
-#endif
-    ImGui::EndGroup();
-
-    game_window->update();
 }
 
 void MainWindow::loadRom(const std::filesystem::path& path) {}
@@ -176,13 +160,13 @@ void MainWindow::draw_cores()
         ImGui::CalcTextSize(HS_ADD_CORES, nullptr, false, ImGui::GetContentRegionAvail().x).y;
 
     ImGui::Text(ICON_MD_MEMORY " Cores");
-    ImGui::SameLine(ImGui::GetContentRegionAvail().x - icon_width * 2 - style.FramePadding.x * 4 -
-                    style.ItemSpacing.x);
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - hydra::ImGuiHelper::IconWidth() * 2 -
+                    style.FramePadding.x * 4 - style.ItemSpacing.x);
     ImGui::Button(ICON_MD_ADD);
     ImGui::SameLine();
     ImGui::Button(ICON_MD_REMOVE);
     auto& cores = Settings::GetCoreInfo();
-    float widget_height = text_height * 2 + core_text_height +
+    float widget_height = hydra::ImGuiHelper::TextHeight() * 2 + core_text_height +
                           ImGui::GetStyle().FramePadding.y * 4.0f +
                           ImGui::GetStyle().ItemSpacing.y * 3.0f + 15;
 #ifdef HYDRA_WEB
@@ -208,8 +192,8 @@ void MainWindow::draw_cores()
         ImGui::BeginGroup();
         ImGui::Text("%s %s (%s)\n", cores[i].core_name.c_str(), cores[i].version.c_str(),
                     cores[i].system_name.c_str());
-        ImGui::SameLine(ImGui::GetContentRegionAvail().x - style.FramePadding.x * 2 - icon_width -
-                        padding);
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - style.FramePadding.x * 2 -
+                        hydra::ImGuiHelper::IconWidth() - padding);
         if (ImGui::Button(ICON_MD_SETTINGS))
         {
             selected_tab = settings_tab;

@@ -2,13 +2,19 @@
 
 #include "imgui.h"
 #include <corewrapper.hxx>
-#include <SDL3/SDL_opengl.h>
+#include <glad/glad.h>
+
+enum class UpdateResult
+{
+    None,
+    Quit,
+};
 
 class GameWindow
 {
 public:
-    GameWindow();
-    void update();
+    GameWindow(const std::string& core_path, const std::string& game_path);
+    UpdateResult update();
 
     bool isFullscreen()
     {
@@ -30,7 +36,8 @@ private:
     bool fullscreen = false;
     bool animating = false;
     GLuint texture = 0;
+    GLuint fbo = 0;
     ImVec2 start_drag;
 
-    std::unique_ptr<hydra::EmulatorWrapper> emulator;
+    std::shared_ptr<hydra::EmulatorWrapper> emulator;
 };

@@ -1,17 +1,17 @@
 #include "gamewindow.hxx"
+#include "corewrapper.hxx"
 #include "IconsMaterialDesign.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
-#include <SDL3/SDL_opengl.h>
+#include <imgui_helper.hxx>
 #include <stb_image.h>
-#include <test_image.h>
 #include <vector>
 
 constexpr float boundary = 40.0f;
 constexpr float rounding = 10.0f;
 extern ImFont* big_font;
 
-GameWindow::GameWindow()
+GameWindow::GameWindow(const std::string& core_path, const std::string& game_path)
 {
     ImGuiIO& io = ImGui::GetIO();
     size_x = io.DisplaySize.x / 3.0f;
@@ -19,26 +19,32 @@ GameWindow::GameWindow()
     snap_x = io.DisplaySize.x - size_x - boundary;
     snap_y = io.DisplaySize.y - size_y - boundary;
 
-    std::vector<uint8_t> pixels(240 * 160 * 4);
-    int x, y, z;
-    auto image = stbi_load_from_memory(screen, screen_size, &x, &y, &z, 4);
-    memcpy(pixels.data(), image, 240 * 160 * 4);
-    stbi_image_free(image);
+    emulator = hydra::EmulatorFactory::Create(core_path);
 
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 240, 160, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 240, 160, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        printf("Framebuffer error: %d\n", status);
+    }
 }
 
-void GameWindow::update()
+UpdateResult GameWindow::update()
 {
-    // if (!emulator)
-    //     return;
+    UpdateResult result = UpdateResult::None;
 
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
     ImGuiIO& io = ImGui::GetIO();
@@ -193,10 +199,6 @@ void GameWindow::update()
             {
                 horizontal_snap = -1;
             }
-            else
-            {
-                horizontal_snap = 0;
-            }
             if (end_drag.y - start_drag.y > minimum_y)
             {
                 vertical_snap = 1;
@@ -205,14 +207,11 @@ void GameWindow::update()
             {
                 vertical_snap = -1;
             }
-            else
-            {
-                vertical_snap = 0;
-            }
         }
     }
 
     static bool fullscreen_hovered = false;
+    static bool exit_hovered = false;
     float ratio = 160.0f / 240.0f;
     float width = ImGui::GetWindowWidth();
     float height = ratio * width;
@@ -257,7 +256,18 @@ void GameWindow::update()
     if (fullscreen_hovered)
         ImGui::PopStyleColor();
     fullscreen_hovered = ImGui::IsItemHovered();
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 16 - hydra::ImGuiHelper::IconWidth(),
+                               16)); // TODO: global icon width value
+    if (exit_hovered)
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0, 0, 0.75));
+    ImGui::Text(ICON_MD_EXIT_TO_APP);
+    if (ImGui::IsItemClicked())
+        result = UpdateResult::Quit;
+    if (exit_hovered)
+        ImGui::PopStyleColor();
+    exit_hovered = ImGui::IsItemHovered();
     ImGui::PopFont();
     ImGui::End();
     ImGui::PopStyleColor();
+    return result;
 }

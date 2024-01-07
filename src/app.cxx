@@ -6,6 +6,7 @@
 #include "SDL_render.h"
 #include <cstdio>
 #include <cstdlib>
+#include <glad/glad.h>
 #include <IconsMaterialDesign.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/backends/imgui_impl_sdl3.h>
@@ -14,7 +15,6 @@
 #include <memory>
 #include <sanity.hxx>
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_video.h>
 #include <settings.hxx>
 #include <toml11/toml.hpp>
@@ -95,6 +95,20 @@ int imgui_main(int argc, char* argv[])
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_ShowWindow(window);
+
+#if !defined(HYDRA_WEB) && !defined(HYDRA_ANDROID) && !defined(HYDRA_IOS)
+    if (gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress) == 0)
+    {
+        printf("Failed to initialize OpenGL functions\n");
+        return 1;
+    }
+#else
+    if (gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress) == 0)
+    {
+        printf("Failed to initialize OpenGL functions!\n");
+        return 1;
+    }
+#endif
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

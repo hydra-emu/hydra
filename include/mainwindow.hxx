@@ -33,6 +33,7 @@ private:
     void draw_about();
     void draw_settings();
     void draw_stars(ImVec2 center, float radius);
+    void update_impl();
 
     float selected_y = 0.0f;
     int selected_tab = 0;
@@ -40,8 +41,6 @@ private:
     std::string core_directory;
     std::array<Star, 50> stars;
     bool fancy_gui;
-    float text_height = 0;
-    float icon_width = 0;
     size_t open_core_settings = -1;
     std::unordered_map<std::string, std::vector<std::function<void()>>> settings_functions;
     std::unique_ptr<GameWindow> game_window;
