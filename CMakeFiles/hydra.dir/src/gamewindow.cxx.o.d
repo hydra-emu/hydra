@@ -763,14 +763,10 @@ CMakeFiles/hydra.dir/src/gamewindow.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/recursive_directory_iterator.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/u8path.h \
   /home/runner/work/hydra/hydra/core/include/hydra/core.hxx \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl_glext.h \
+  /home/runner/work/hydra/hydra/vendored/glad/include/glad/glad.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/KHR/khrplatform.h \
   /home/runner/work/hydra/hydra/vendored/IconsMaterialDesign.h \
   /home/runner/work/hydra/hydra/vendored/imgui/imgui_internal.h \
   /home/runner/work/hydra/hydra/vendored/imgui/imstb_textedit.h \
-  /home/runner/work/hydra/hydra/vendored/stb_image.h \
-  /home/runner/work/hydra/hydra/include/test_image.h
+  /home/runner/work/hydra/hydra/include/imgui_helper.hxx \
+  /home/runner/work/hydra/hydra/vendored/stb_image.h

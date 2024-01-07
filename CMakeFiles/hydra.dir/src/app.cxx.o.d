@@ -806,15 +806,14 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/assert.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_opengl_glext.h \
+  /home/runner/work/hydra/hydra/vendored/glad/include/glad/glad.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/KHR/khrplatform.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_events.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_audio.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_stdinc.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_endian.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_error.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_mutex.h \
@@ -861,6 +860,7 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_messagebox.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_metal.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_misc.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_power.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_system.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_timer.h \
