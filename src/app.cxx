@@ -60,6 +60,8 @@ extern "C" void hydra_drop_file(const char* name, void* data, size_t size)
         std::filesystem::path out_path = cores / file;
         std::ofstream ofs(out_path, std::ios_base::binary | std::ios_base::out);
         ofs.write((const char*)data, size);
+        sync_fs();
+        Settings::ReinitCoreInfo();
     }
     else
     {
@@ -67,8 +69,8 @@ extern "C" void hydra_drop_file(const char* name, void* data, size_t size)
         std::filesystem::path out_path = cache / file;
         std::ofstream ofs(out_path, std::ios_base::binary | std::ios_base::out);
         ofs.write((const char*)data, size);
+        sync_fs();
     }
-    sync_fs();
 }
 
 #ifdef HYDRA_WEB

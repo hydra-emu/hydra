@@ -15,8 +15,9 @@ jobs:
           actions-cache-folder: 'emsdk-cache'
       - name: Build
         run: |
+          export EMCC_FORCE_STDLIBS=libc++,libc++abi
           emcmake cmake -B build
-          cmake --build build --config Release
+          cmake --build build
           mv data/hydra.ico build/favicon.ico
           mv build/hydra.html build/index.html
       - name: Deploy

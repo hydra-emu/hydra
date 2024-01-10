@@ -78,7 +78,7 @@ elseif(HYDRA_WEB)
     set(CMAKE_CXX_FLAGS "-fPIC")
     set(LONG_INT 8) # for openssl
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    set_target_properties(hydra PROPERTIES LINK_FLAGS "-sASSERTIONS -sEXPORTED_FUNCTIONS=[_malloc,_free,_main,_main_impl] -sEXPORTED_RUNTIME_METHODS=ccall -sNO_DISABLE_EXCEPTION_CATCHING -sALLOW_MEMORY_GROWTH -sTOTAL_MEMORY=192MB -lidbfs.js -s ELIMINATE_DUPLICATE_FUNCTIONS=1 --shell-file ${PROJECT_SOURCE_DIR}/data/shell.html -flto -sMAIN_MODULE=1 -sUSE_CLOSURE_COMPILER=0 --closure 0")
+    set_target_properties(hydra PROPERTIES LINK_FLAGS "-sASSERTIONS -sEXPORT_ALL -sEXPORTED_FUNCTIONS=@${CMAKE_CURRENT_SOURCE_DIR}/exported.json -sEXPORTED_RUNTIME_METHODS=ccall -sNO_DISABLE_EXCEPTION_CATCHING -sALLOW_MEMORY_GROWTH -sTOTAL_MEMORY=192MB -lidbfs.js -s ELIMINATE_DUPLICATE_FUNCTIONS=1 --shell-file ${PROJECT_SOURCE_DIR}/data/shell.html -flto -sMAIN_MODULE=1 -sUSE_CLOSURE_COMPILER=0 --closure 0")
 else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
