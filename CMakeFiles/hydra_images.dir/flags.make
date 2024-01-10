@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = @CMakeFiles/hydra_images.dir/includes_CXX.rsp
 
-CXX_FLAGS =  -g -O3 -std=c++20
+CXX_FLAGS =  -g -O3 -std=c++20 -fsanitize=address
 
