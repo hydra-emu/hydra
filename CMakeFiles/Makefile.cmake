@@ -122,8 +122,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
   "CMakeFiles/3.28.1/CMakeCCompiler.cmake"
   "CMakeFiles/3.28.1/CMakeCXXCompiler.cmake"
   "_cmrc/include/cmrc/cmrc.hpp"
-  "__cmrc_hydra_images/lib_.cpp"
-  "__cmrc_hydra_other/lib_.cpp"
+  "__cmrc_hydra_data/lib_.cpp"
   "CMakeFiles/CMakeDirectoryInformation.cmake"
   "vendored/fmt/fmt-config-version.cmake"
   "vendored/fmt/fmt.pc"
@@ -159,8 +158,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/hydra.dir/DependInfo.cmake"
-  "CMakeFiles/hydra_images.dir/DependInfo.cmake"
-  "CMakeFiles/hydra_other.dir/DependInfo.cmake"
+  "CMakeFiles/hydra_data.dir/DependInfo.cmake"
   "vendored/fmt/CMakeFiles/fmt.dir/DependInfo.cmake"
   "vendored/argparse/CMakeFiles/argparse.dir/DependInfo.cmake"
   "vendored/SDL/CMakeFiles/SDL3-static.dir/DependInfo.cmake"

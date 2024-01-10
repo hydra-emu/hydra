@@ -420,8 +420,7 @@ hydra.html: vendored/openssl/ssl/libssl.a
 hydra.html: vendored/openssl/crypto/libcrypto.a
 hydra.html: vendored/SDL/libSDL3.a
 hydra.html: vendored/fmt/libfmt.a
-hydra.html: libhydra_images.a
-hydra.html: libhydra_other.a
+hydra.html: libhydra_data.a
 hydra.html: CMakeFiles/hydra.dir/linkLibs.rsp
 hydra.html: CMakeFiles/hydra.dir/objects1.rsp
 hydra.html: CMakeFiles/hydra.dir/link.txt

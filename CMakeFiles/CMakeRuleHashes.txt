@@ -1,6 +1,5 @@
 # Hashes of file build rules.
-93ec17e829bd964a7856b9f634af0868 __cmrc_hydra_images/intermediate/images/hydra.png.cpp
-f3da58ac4479ad1e6c66438cccb075f6 __cmrc_hydra_images/lib.cpp
-bdb9d10ce5e4e6bae44aa96b5f8bb604 __cmrc_hydra_other/intermediate/other/cacert.pem.cpp
-3afd995df21bc3e1f44617855faba3ed __cmrc_hydra_other/lib.cpp
+46fb4919f4b9f00d2956e29324d58aaa __cmrc_hydra_data/intermediate/data/cacert.pem.cpp
+edd95dc562699ff259e578b94575f08a __cmrc_hydra_data/intermediate/data/images/hydra.png.cpp
+22f88f9c8b1a4661c4c1d5925658e762 __cmrc_hydra_data/lib.cpp
 06b34c73fabcdb73a3f988272e2b6641 vendored/SDL/CMakeFiles/uninstall

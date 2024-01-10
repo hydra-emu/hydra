@@ -1,6 +1,5 @@
 /home/runner/work/hydra/hydra/build/CMakeFiles/hydra.dir
-/home/runner/work/hydra/hydra/build/CMakeFiles/hydra_images.dir
-/home/runner/work/hydra/hydra/build/CMakeFiles/hydra_other.dir
+/home/runner/work/hydra/hydra/build/CMakeFiles/hydra_data.dir
 /home/runner/work/hydra/hydra/build/CMakeFiles/package.dir
 /home/runner/work/hydra/hydra/build/CMakeFiles/package_source.dir
 /home/runner/work/hydra/hydra/build/CMakeFiles/edit_cache.dir

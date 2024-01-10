@@ -838,6 +838,7 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_quit.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_touch.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_render.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/fstream \
   /home/runner/work/hydra/hydra/vendored/IconsMaterialDesign.h \
   /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_opengl3.h \
   /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_sdl3.h \
@@ -868,7 +869,6 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_video_capture.h \
   /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_oldnames.h \
   /home/runner/work/hydra/hydra/include/settings.hxx \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/fstream \
   /home/runner/work/hydra/hydra/include/hsystem.hxx \
   /home/runner/work/hydra/hydra/vendored/json.hpp \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/numeric \

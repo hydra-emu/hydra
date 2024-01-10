@@ -195,30 +195,17 @@ hydra/fast:
 .PHONY : hydra/fast
 
 #=============================================================================
-# Target rules for targets named hydra_images
+# Target rules for targets named hydra_data
 
 # Build rule for target.
-hydra_images: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hydra_images
-.PHONY : hydra_images
+hydra_data: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hydra_data
+.PHONY : hydra_data
 
 # fast build rule for target.
-hydra_images/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_images.dir/build.make CMakeFiles/hydra_images.dir/build
-.PHONY : hydra_images/fast
-
-#=============================================================================
-# Target rules for targets named hydra_other
-
-# Build rule for target.
-hydra_other: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hydra_other
-.PHONY : hydra_other
-
-# fast build rule for target.
-hydra_other/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_other.dir/build.make CMakeFiles/hydra_other.dir/build
-.PHONY : hydra_other/fast
+hydra_data/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/build
+.PHONY : hydra_data/fast
 
 #=============================================================================
 # Target rules for targets named fmt
@@ -298,101 +285,77 @@ ssl/fast:
 	$(MAKE) $(MAKESILENT) -f vendored/openssl/ssl/CMakeFiles/ssl.dir/build.make vendored/openssl/ssl/CMakeFiles/ssl.dir/build
 .PHONY : ssl/fast
 
-__cmrc_hydra_images/intermediate/images/hydra.png.o: __cmrc_hydra_images/intermediate/images/hydra.png.cpp.o
-.PHONY : __cmrc_hydra_images/intermediate/images/hydra.png.o
+__cmrc_hydra_data/intermediate/data/cacert.pem.o: __cmrc_hydra_data/intermediate/data/cacert.pem.cpp.o
+.PHONY : __cmrc_hydra_data/intermediate/data/cacert.pem.o
 
 # target to build an object file
-__cmrc_hydra_images/intermediate/images/hydra.png.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_images.dir/build.make CMakeFiles/hydra_images.dir/__cmrc_hydra_images/intermediate/images/hydra.png.cpp.o
-.PHONY : __cmrc_hydra_images/intermediate/images/hydra.png.cpp.o
+__cmrc_hydra_data/intermediate/data/cacert.pem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/__cmrc_hydra_data/intermediate/data/cacert.pem.cpp.o
+.PHONY : __cmrc_hydra_data/intermediate/data/cacert.pem.cpp.o
 
-__cmrc_hydra_images/intermediate/images/hydra.png.i: __cmrc_hydra_images/intermediate/images/hydra.png.cpp.i
-.PHONY : __cmrc_hydra_images/intermediate/images/hydra.png.i
+__cmrc_hydra_data/intermediate/data/cacert.pem.i: __cmrc_hydra_data/intermediate/data/cacert.pem.cpp.i
+.PHONY : __cmrc_hydra_data/intermediate/data/cacert.pem.i
 
 # target to preprocess a source file
-__cmrc_hydra_images/intermediate/images/hydra.png.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_images.dir/build.make CMakeFiles/hydra_images.dir/__cmrc_hydra_images/intermediate/images/hydra.png.cpp.i
-.PHONY : __cmrc_hydra_images/intermediate/images/hydra.png.cpp.i
+__cmrc_hydra_data/intermediate/data/cacert.pem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/__cmrc_hydra_data/intermediate/data/cacert.pem.cpp.i
+.PHONY : __cmrc_hydra_data/intermediate/data/cacert.pem.cpp.i
 
-__cmrc_hydra_images/intermediate/images/hydra.png.s: __cmrc_hydra_images/intermediate/images/hydra.png.cpp.s
-.PHONY : __cmrc_hydra_images/intermediate/images/hydra.png.s
+__cmrc_hydra_data/intermediate/data/cacert.pem.s: __cmrc_hydra_data/intermediate/data/cacert.pem.cpp.s
+.PHONY : __cmrc_hydra_data/intermediate/data/cacert.pem.s
 
 # target to generate assembly for a file
-__cmrc_hydra_images/intermediate/images/hydra.png.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_images.dir/build.make CMakeFiles/hydra_images.dir/__cmrc_hydra_images/intermediate/images/hydra.png.cpp.s
-.PHONY : __cmrc_hydra_images/intermediate/images/hydra.png.cpp.s
+__cmrc_hydra_data/intermediate/data/cacert.pem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/__cmrc_hydra_data/intermediate/data/cacert.pem.cpp.s
+.PHONY : __cmrc_hydra_data/intermediate/data/cacert.pem.cpp.s
 
-__cmrc_hydra_images/lib.o: __cmrc_hydra_images/lib.cpp.o
-.PHONY : __cmrc_hydra_images/lib.o
+__cmrc_hydra_data/intermediate/data/images/hydra.png.o: __cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.o
+.PHONY : __cmrc_hydra_data/intermediate/data/images/hydra.png.o
 
 # target to build an object file
-__cmrc_hydra_images/lib.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_images.dir/build.make CMakeFiles/hydra_images.dir/__cmrc_hydra_images/lib.cpp.o
-.PHONY : __cmrc_hydra_images/lib.cpp.o
+__cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/__cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.o
+.PHONY : __cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.o
 
-__cmrc_hydra_images/lib.i: __cmrc_hydra_images/lib.cpp.i
-.PHONY : __cmrc_hydra_images/lib.i
+__cmrc_hydra_data/intermediate/data/images/hydra.png.i: __cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.i
+.PHONY : __cmrc_hydra_data/intermediate/data/images/hydra.png.i
 
 # target to preprocess a source file
-__cmrc_hydra_images/lib.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_images.dir/build.make CMakeFiles/hydra_images.dir/__cmrc_hydra_images/lib.cpp.i
-.PHONY : __cmrc_hydra_images/lib.cpp.i
+__cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/__cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.i
+.PHONY : __cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.i
 
-__cmrc_hydra_images/lib.s: __cmrc_hydra_images/lib.cpp.s
-.PHONY : __cmrc_hydra_images/lib.s
+__cmrc_hydra_data/intermediate/data/images/hydra.png.s: __cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.s
+.PHONY : __cmrc_hydra_data/intermediate/data/images/hydra.png.s
 
 # target to generate assembly for a file
-__cmrc_hydra_images/lib.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_images.dir/build.make CMakeFiles/hydra_images.dir/__cmrc_hydra_images/lib.cpp.s
-.PHONY : __cmrc_hydra_images/lib.cpp.s
+__cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/__cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.s
+.PHONY : __cmrc_hydra_data/intermediate/data/images/hydra.png.cpp.s
 
-__cmrc_hydra_other/intermediate/other/cacert.pem.o: __cmrc_hydra_other/intermediate/other/cacert.pem.cpp.o
-.PHONY : __cmrc_hydra_other/intermediate/other/cacert.pem.o
+__cmrc_hydra_data/lib.o: __cmrc_hydra_data/lib.cpp.o
+.PHONY : __cmrc_hydra_data/lib.o
 
 # target to build an object file
-__cmrc_hydra_other/intermediate/other/cacert.pem.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_other.dir/build.make CMakeFiles/hydra_other.dir/__cmrc_hydra_other/intermediate/other/cacert.pem.cpp.o
-.PHONY : __cmrc_hydra_other/intermediate/other/cacert.pem.cpp.o
+__cmrc_hydra_data/lib.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/__cmrc_hydra_data/lib.cpp.o
+.PHONY : __cmrc_hydra_data/lib.cpp.o
 
-__cmrc_hydra_other/intermediate/other/cacert.pem.i: __cmrc_hydra_other/intermediate/other/cacert.pem.cpp.i
-.PHONY : __cmrc_hydra_other/intermediate/other/cacert.pem.i
-
-# target to preprocess a source file
-__cmrc_hydra_other/intermediate/other/cacert.pem.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_other.dir/build.make CMakeFiles/hydra_other.dir/__cmrc_hydra_other/intermediate/other/cacert.pem.cpp.i
-.PHONY : __cmrc_hydra_other/intermediate/other/cacert.pem.cpp.i
-
-__cmrc_hydra_other/intermediate/other/cacert.pem.s: __cmrc_hydra_other/intermediate/other/cacert.pem.cpp.s
-.PHONY : __cmrc_hydra_other/intermediate/other/cacert.pem.s
-
-# target to generate assembly for a file
-__cmrc_hydra_other/intermediate/other/cacert.pem.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_other.dir/build.make CMakeFiles/hydra_other.dir/__cmrc_hydra_other/intermediate/other/cacert.pem.cpp.s
-.PHONY : __cmrc_hydra_other/intermediate/other/cacert.pem.cpp.s
-
-__cmrc_hydra_other/lib.o: __cmrc_hydra_other/lib.cpp.o
-.PHONY : __cmrc_hydra_other/lib.o
-
-# target to build an object file
-__cmrc_hydra_other/lib.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_other.dir/build.make CMakeFiles/hydra_other.dir/__cmrc_hydra_other/lib.cpp.o
-.PHONY : __cmrc_hydra_other/lib.cpp.o
-
-__cmrc_hydra_other/lib.i: __cmrc_hydra_other/lib.cpp.i
-.PHONY : __cmrc_hydra_other/lib.i
+__cmrc_hydra_data/lib.i: __cmrc_hydra_data/lib.cpp.i
+.PHONY : __cmrc_hydra_data/lib.i
 
 # target to preprocess a source file
-__cmrc_hydra_other/lib.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_other.dir/build.make CMakeFiles/hydra_other.dir/__cmrc_hydra_other/lib.cpp.i
-.PHONY : __cmrc_hydra_other/lib.cpp.i
+__cmrc_hydra_data/lib.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/__cmrc_hydra_data/lib.cpp.i
+.PHONY : __cmrc_hydra_data/lib.cpp.i
 
-__cmrc_hydra_other/lib.s: __cmrc_hydra_other/lib.cpp.s
-.PHONY : __cmrc_hydra_other/lib.s
+__cmrc_hydra_data/lib.s: __cmrc_hydra_data/lib.cpp.s
+.PHONY : __cmrc_hydra_data/lib.s
 
 # target to generate assembly for a file
-__cmrc_hydra_other/lib.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_other.dir/build.make CMakeFiles/hydra_other.dir/__cmrc_hydra_other/lib.cpp.s
-.PHONY : __cmrc_hydra_other/lib.cpp.s
+__cmrc_hydra_data/lib.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra_data.dir/build.make CMakeFiles/hydra_data.dir/__cmrc_hydra_data/lib.cpp.s
+.PHONY : __cmrc_hydra_data/lib.cpp.s
 
 src/app.o: src/app.cxx.o
 .PHONY : src/app.o
@@ -894,21 +857,17 @@ help:
 	@echo "... crypto"
 	@echo "... fmt"
 	@echo "... hydra"
-	@echo "... hydra_images"
-	@echo "... hydra_other"
+	@echo "... hydra_data"
 	@echo "... ssl"
-	@echo "... __cmrc_hydra_images/intermediate/images/hydra.png.o"
-	@echo "... __cmrc_hydra_images/intermediate/images/hydra.png.i"
-	@echo "... __cmrc_hydra_images/intermediate/images/hydra.png.s"
-	@echo "... __cmrc_hydra_images/lib.o"
-	@echo "... __cmrc_hydra_images/lib.i"
-	@echo "... __cmrc_hydra_images/lib.s"
-	@echo "... __cmrc_hydra_other/intermediate/other/cacert.pem.o"
-	@echo "... __cmrc_hydra_other/intermediate/other/cacert.pem.i"
-	@echo "... __cmrc_hydra_other/intermediate/other/cacert.pem.s"
-	@echo "... __cmrc_hydra_other/lib.o"
-	@echo "... __cmrc_hydra_other/lib.i"
-	@echo "... __cmrc_hydra_other/lib.s"
+	@echo "... __cmrc_hydra_data/intermediate/data/cacert.pem.o"
+	@echo "... __cmrc_hydra_data/intermediate/data/cacert.pem.i"
+	@echo "... __cmrc_hydra_data/intermediate/data/cacert.pem.s"
+	@echo "... __cmrc_hydra_data/intermediate/data/images/hydra.png.o"
+	@echo "... __cmrc_hydra_data/intermediate/data/images/hydra.png.i"
+	@echo "... __cmrc_hydra_data/intermediate/data/images/hydra.png.s"
+	@echo "... __cmrc_hydra_data/lib.o"
+	@echo "... __cmrc_hydra_data/lib.i"
+	@echo "... __cmrc_hydra_data/lib.s"
 	@echo "... src/app.o"
 	@echo "... src/app.i"
 	@echo "... src/app.s"

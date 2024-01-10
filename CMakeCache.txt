@@ -193,6 +193,8 @@ CMAKE_OBJDUMP:FILEPATH=/usr/bin/objdump
 
 CMAKE_OSX_ARCHITECTURES:STRING=arm64;x86_64
 
+CMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
+
 //Value Computed by CMake
 CMAKE_PROJECT_DESCRIPTION:STATIC=A multi-system, multi-platform emulator frontend
 
@@ -594,7 +596,7 @@ SDL_STATIC:BOOL=ON
 
 //Static version of the library should be built with Position Independent
 // Code
-SDL_STATIC_PIC:BOOL=OFF
+SDL_STATIC_PIC:BOOL=ON
 
 //Use iconv() from system-installed libraries
 SDL_SYSTEM_ICONV:BOOL=ON
