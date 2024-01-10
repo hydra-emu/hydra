@@ -6,7 +6,7 @@ C_DEFINES = -DSDL_BUILD_MAJOR_VERSION=3 -DSDL_BUILD_MICRO_VERSION=0 -DSDL_BUILD_
 
 C_INCLUDES = @CMakeFiles/SDL3-static.dir/includes_C.rsp
 
-C_FLAGS = -fPIC -g -O2 -fPIC -Wall -Wundef -fno-strict-aliasing -Wdocumentation -Wdocumentation-unknown-command -fcomment-block-commands=threadsafety -Wshadow -Wno-unused-local-typedefs -fcolor-diagnostics -idirafter/home/runner/work/hydra/hydra/vendored/SDL/src/video/khronos -Wno-warn-absolute-paths
+C_FLAGS = -fPIC -g -O3 -fPIC -Wall -Wundef -fno-strict-aliasing -Wdocumentation -Wdocumentation-unknown-command -fcomment-block-commands=threadsafety -Wshadow -Wno-unused-local-typedefs -fcolor-diagnostics -idirafter/home/runner/work/hydra/hydra/vendored/SDL/src/video/khronos -Wno-warn-absolute-paths
 
 # PCH options: vendored/SDL/CMakeFiles/SDL3-static.dir/cmake_pch.h.pch_OPTIONS = -Winvalid-pch;-fpch-instantiate-templates;-Xclang;-emit-pch;-Xclang;-include;-Xclang;/home/runner/work/hydra/hydra/build/vendored/SDL/CMakeFiles/SDL3-static.dir/cmake_pch.h;-x;c-header
 

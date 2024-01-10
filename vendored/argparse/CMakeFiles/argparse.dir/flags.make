@@ -6,5 +6,5 @@ C_DEFINES =
 
 C_INCLUDES = @CMakeFiles/argparse.dir/includes_C.rsp
 
-C_FLAGS = -fPIC -g -O2 -fPIC
+C_FLAGS = -fPIC -g -O3 -fPIC
 

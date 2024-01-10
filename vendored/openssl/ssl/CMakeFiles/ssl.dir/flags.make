@@ -6,5 +6,5 @@ C_DEFINES = -DENGINESDIR=\"/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/
 
 C_INCLUDES = @CMakeFiles/ssl.dir/includes_C.rsp
 
-C_FLAGS = -fPIC -g -O2 -fPIC
+C_FLAGS = -fPIC -g -O3 -fPIC
 
