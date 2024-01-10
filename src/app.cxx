@@ -6,6 +6,7 @@
 #include "SDL_render.h"
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <glad/glad.h>
 #include <IconsMaterialDesign.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
@@ -50,6 +51,26 @@ extern unsigned int MaterialIcons_compressed_data[246308 / 4];
 
 std::unique_ptr<MainWindow> main_window;
 
+extern "C" void hydra_drop_file(const char* name, void* data, size_t size)
+{
+    std::filesystem::path file = name;
+    if (file.extension() == hydra::dynlib_get_extension())
+    {
+        std::filesystem::path cores = Settings::Get("core_path");
+        std::filesystem::path out_path = cores / file;
+        std::ofstream ofs(out_path, std::ios_base::binary | std::ios_base::out);
+        ofs.write((const char*)data, size);
+    }
+    else
+    {
+        std::filesystem::path cache = Settings::GetCachePath();
+        std::filesystem::path out_path = cache / file;
+        std::ofstream ofs(out_path, std::ios_base::binary | std::ios_base::out);
+        ofs.write((const char*)data, size);
+    }
+    sync_fs();
+}
+
 #ifdef HYDRA_WEB
 EM_JS(void, add_drag_drop_listeners, (), {
           var canvas = document.getElementById("canvas");
@@ -80,27 +101,27 @@ EM_JS(void, add_drag_drop_listeners, (), {
                   e.preventDefault();
                   e.stopPropagation();
                   var files = e.dataTransfer.files;
-                  if (files.length > 0)
+                  for (var i = 0, f; f = files[i]; i++)
                   {
-                      var file = files[0];
                       var reader = new FileReader();
-                      reader.onload = function(e)
-                      {
-                          var data = e.target.result;
-                          var ptr = Module._malloc(data.byteLength);
-                          Module.HEAPU8.set(new Uint8Array(data), ptr);
-                          var path = allocate(intArrayFromString(file.name), 'i8', ALLOC_STACK);
-                          _hydra_drop_file(ptr, path);
-                          Module._free(ptr);
-                      };
-                      reader.readAsArrayBuffer(file);
+                      reader.onload = (function(file) {
+                          return function(e)
+                          {
+                              var ptr = Module._malloc(file.size);
+                              Module.HEAPU8.set(new Uint8Array(e.target.result), ptr);
+                              Module.ccall('hydra_drop_file', 'void',
+                                           [ 'string', 'number', 'number' ],
+                                           [ file.name, ptr, file.size ]);
+                              Module._free(ptr);
+                          };
+                      })(f);
+                      reader.readAsArrayBuffer(f);
                   }
               },
               false);
 
 });
 #endif
-// FIXME FINISH THIS ^^^
 
 int imgui_main(int argc, char* argv[])
 {

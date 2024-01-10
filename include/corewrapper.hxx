@@ -60,8 +60,10 @@ namespace hydra
 
     inline std::string dynlib_get_extension()
     {
-#if defined(HYDRA_LINUX) || defined(HYDRA_ANDROID) || defined(HYDRA_FREEBSD) || defined(HYDRA_WEB)
+#if defined(HYDRA_LINUX) || defined(HYDRA_ANDROID) || defined(HYDRA_FREEBSD)
         return ".so";
+#elif defined(HYDRA_WEB)
+        return ".wasm";
 #elif defined(HYDRA_MACOS)
         return ".dylib";
 #elif defined(HYDRA_WINDOWS)

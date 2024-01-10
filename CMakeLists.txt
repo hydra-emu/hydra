@@ -73,9 +73,12 @@ elseif(HYDRA_IOS)
         "-framework OpenGL"
     )
 elseif(HYDRA_WEB)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "" FORCE)
+    set(CMAKE_C_FLAGS "-fPIC")
+    set(CMAKE_CXX_FLAGS "-fPIC")
     set(LONG_INT 8) # for openssl
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    set_target_properties(hydra PROPERTIES LINK_FLAGS "-sEXPORTED_FUNCTIONS=[_main_impl,_main] -sEXPORTED_RUNTIME_METHODS=ccall -sNO_DISABLE_EXCEPTION_CATCHING -sASSERTIONS -sALLOW_MEMORY_GROWTH -s TOTAL_MEMORY=192MB -lidbfs.js -s ELIMINATE\_DUPLICATE\_FUNCTIONS=1 --shell-file ${PROJECT_SOURCE_DIR}/data/shell.html -flto -s USE_CLOSURE_COMPILER=0 --closure 0")
+    set_target_properties(hydra PROPERTIES LINK_FLAGS "-sASSERTIONS -sEXPORTED_FUNCTIONS=[_malloc,_free,_main,_main_impl] -sEXPORTED_RUNTIME_METHODS=ccall -sNO_DISABLE_EXCEPTION_CATCHING -sALLOW_MEMORY_GROWTH -sTOTAL_MEMORY=192MB -lidbfs.js -s ELIMINATE_DUPLICATE_FUNCTIONS=1 --shell-file ${PROJECT_SOURCE_DIR}/data/shell.html -flto -sMAIN_MODULE=1 -sUSE_CLOSURE_COMPILER=0 --closure 0")
 else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
@@ -97,6 +100,7 @@ add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
 add_subdirectory(vendored/toml11)
 set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC_PIC ON CACHE BOOL "" FORCE)
 add_subdirectory(vendored/SDL)
 
 set(HYDRA_INCLUDES ${HYDRA_INCLUDES}
@@ -139,9 +143,6 @@ if(HYDRA_MACOS OR HYDRA_IOS)
         MACOSX_BUNDLE_BUNDLE_NAME hydra
         MACOSX_BUNDLE_BUNDLE_IDENTIFIER "com.hydra.hydra_emu")
 endif()
-
-add_compile_options(-fsanitize=address)
-add_link_options(-fsanitize=address)
 
 set(HYDRA_QT_FILES
     data/resources.qrc
@@ -206,19 +207,12 @@ set(HYDRA_LIBRARIES
     toml11
 )
 
-cmrc_add_resource_library(hydra_images ALIAS hydra::images NAMESPACE hydra
-    WHENCE data/images
-    PREFIX images
+cmrc_add_resource_library(hydra_data ALIAS hydra::data NAMESPACE hydra
     data/images/hydra.png
-)
-
-cmrc_add_resource_library(hydra_other ALIAS hydra::other NAMESPACE hydra
-    WHENCE data
-    PREFIX other
     data/cacert.pem
 )
 
-set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} hydra::images hydra::other)
+set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} hydra::data)
 
 if (BUILD_QT)
     set(CMAKE_AUTOUIC ON)

@@ -155,8 +155,9 @@ void MainWindow::draw_games()
 {
     if (ImGui::Button(ICON_MD_FOLDER " Load ROM"))
     {
-        game_window = std::make_unique<GameWindow>("/home/offtkp/cores/libhydra-core.so",
-                                                   "/home/offtkp/Roms/GBA/emerald.gba");
+        Settings::Set("NanoBoyAdvance_bios", "/hydra/cache/gba_bios.bin");
+        game_window = std::make_unique<GameWindow>("/hydra/cores/libNanoBoyAdvance-hydra.wasm",
+                                                   "/hydra/cache/emerald.gba");
         if (!game_window->isLoaded())
         {
             game_window.reset();
