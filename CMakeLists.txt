@@ -140,6 +140,9 @@ if(HYDRA_MACOS OR HYDRA_IOS)
         MACOSX_BUNDLE_BUNDLE_IDENTIFIER "com.hydra.hydra_emu")
 endif()
 
+add_compile_options(-fsanitize=address)
+add_link_options(-fsanitize=address)
+
 set(HYDRA_QT_FILES
     data/resources.qrc
     qt/mainwindow.cxx

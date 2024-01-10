@@ -25,8 +25,10 @@ struct CoreInfo
     std::string description;
     std::string license;
     std::string url;
+    std::time_t last_played;
     int max_players;
     std::vector<std::string> extensions;
+    std::vector<std::string> required_files;
     unsigned int icon_texture = 0;
 };
 

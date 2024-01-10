@@ -20,7 +20,7 @@ namespace hydra
     inline dynlib_handle_t dynlib_open(const char* path)
     {
 #if defined(HYDRA_LIBDL)
-        return dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+        return dlopen(path, RTLD_LAZY);
 #elif defined(HYDRA_WINDOWS)
         std::wstring wpath = std::wstring(path, path + std::strlen(path));
         printf("Trying to convert string to wstring to load library with loadlibraryw, this is "
@@ -120,14 +120,21 @@ namespace hydra
         void (*destroy_function)(IBase*);
         const char* (*get_info_function)(hydra::InfoType);
         std::string game_hash_;
+        std::filesystem::path core_path_;
+        std::string core_name_;
 
         EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*dfunc)(IBase*),
-                        const char* (*gfunc)(hydra::InfoType));
+                        const char* (*gfunc)(hydra::InfoType), const std::filesystem::path& path);
 
         void init_cheats();
         void save_cheats();
 
+        static const char* get_setting_wrapper(const char* setting);
+        static void set_setting_wrapper(const char* setting, const char* value);
+
         std::vector<CheatMetadata> cheats_;
+
+        static EmulatorWrapper* instance;
 
         EmulatorWrapper(const EmulatorWrapper&) = delete;
         friend struct EmulatorFactory;
@@ -173,7 +180,7 @@ namespace hydra
             }
 
             auto emulator = std::shared_ptr<EmulatorWrapper>(
-                new EmulatorWrapper(create_emu_p(), handle, destroy_emu_p, get_info_p));
+                new EmulatorWrapper(create_emu_p(), handle, destroy_emu_p, get_info_p, path));
             return emulator;
         }
 

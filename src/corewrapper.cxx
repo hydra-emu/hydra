@@ -8,10 +8,21 @@
 
 namespace hydra
 {
+    EmulatorWrapper* EmulatorWrapper::instance = nullptr;
+
     EmulatorWrapper::EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*dfunc)(IBase*),
-                                     const char* (*gfunc)(hydra::InfoType))
-        : shell(shl), handle(hdl), destroy_function(dfunc), get_info_function(gfunc)
+                                     const char* (*gfunc)(hydra::InfoType),
+                                     const std::filesystem::path& core_path)
+        : shell(shl), handle(hdl), destroy_function(dfunc), get_info_function(gfunc),
+          core_path_(core_path)
     {
+        instance = this;
+        if (shell->hasInterface(hydra::InterfaceType::IConfigurable))
+        {
+            IConfigurable* config_interface = shell->asIConfigurable();
+            config_interface->setGetCallback(get_setting_wrapper);
+            config_interface->setSetCallback(set_setting_wrapper);
+        }
     }
 
     EmulatorWrapper::~EmulatorWrapper()
@@ -40,6 +51,40 @@ namespace hydra
             md5stream << std::setw(2) << (int)byte;
         }
         game_hash_ = md5stream.str();
+
+        auto& cores = Settings::GetCoreInfo();
+        bool found = false;
+        for (auto& core : cores)
+        {
+            if (core.path == core_path_)
+            {
+                found = true;
+                core_name_ = core.core_name;
+                core.last_played = std::time(nullptr);
+                if (!core.required_files.empty())
+                {
+                    for (auto& required_file : core.required_files)
+                    {
+                        std::filesystem::path path =
+                            Settings::Get(core.core_name + "_" + required_file);
+                        if (!std::filesystem::exists(path))
+                        {
+                            printf("Required file %s does not exist at path %s\n",
+                                   required_file.c_str(), path.string().c_str());
+                            return false;
+                        }
+
+                        shell->asIBase()->loadFile(required_file.c_str(), path.string().c_str());
+                    }
+                }
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            return false;
+        }
 
         bool ret = shell->asIBase()->loadFile("rom", path.string().c_str());
 
@@ -218,5 +263,21 @@ namespace hydra
                 return;
             }
         }
+    }
+
+    // We don't just direct to Settings::Get/Set because if we didn't prepend the core name
+    // cores could access each other's settings which sounds like a security issue
+    const char* EmulatorWrapper::get_setting_wrapper(const char* setting)
+    {
+        static std::string buffer;
+        std::string setting_key = instance->core_name_ + "_" + setting;
+        buffer = Settings::Get(setting_key);
+        return buffer.c_str();
+    }
+
+    void EmulatorWrapper::set_setting_wrapper(const char* setting, const char* value)
+    {
+        std::string setting_key = instance->core_name_ + "_" + setting;
+        Settings::Set(setting_key, value);
     }
 } // namespace hydra

@@ -50,6 +50,58 @@ extern unsigned int MaterialIcons_compressed_data[246308 / 4];
 
 std::unique_ptr<MainWindow> main_window;
 
+#ifdef HYDRA_WEB
+EM_JS(void, add_drag_drop_listeners, (), {
+          var canvas = document.getElementById("canvas");
+          canvas.addEventListener(
+              "dragenter",
+              function(e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+              },
+              false);
+          canvas.addEventListener(
+              "dragover",
+              function(e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+              },
+              false);
+          canvas.addEventListener(
+              "dragleave",
+              function(e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+              },
+              false);
+          canvas.addEventListener(
+              "drop",
+              function(e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  var files = e.dataTransfer.files;
+                  if (files.length > 0)
+                  {
+                      var file = files[0];
+                      var reader = new FileReader();
+                      reader.onload = function(e)
+                      {
+                          var data = e.target.result;
+                          var ptr = Module._malloc(data.byteLength);
+                          Module.HEAPU8.set(new Uint8Array(data), ptr);
+                          var path = allocate(intArrayFromString(file.name), 'i8', ALLOC_STACK);
+                          _hydra_drop_file(ptr, path);
+                          Module._free(ptr);
+                      };
+                      reader.readAsArrayBuffer(file);
+                  }
+              },
+              false);
+
+});
+#endif
+// FIXME FINISH THIS ^^^
+
 int imgui_main(int argc, char* argv[])
 {
     // TODO: Joystick
@@ -108,6 +160,10 @@ int imgui_main(int argc, char* argv[])
         printf("Failed to initialize OpenGL functions!\n");
         return 1;
     }
+#endif
+
+#ifdef HYDRA_WEB
+    add_drag_drop_listeners();
 #endif
 
     IMGUI_CHECKVERSION();
@@ -243,6 +299,7 @@ void Settings::ReinitCoresFrontend()
             glDeleteTextures(1, &cores[i].icon_texture);
             cores[i].icon_texture = 0;
         }
+        cores[i].required_files.clear();
 
         void* handle = hydra::dynlib_open(cores[i].path.c_str());
         if (handle)
@@ -351,6 +408,11 @@ void Settings::ReinitCoresFrontend()
 #undef cs
                         }
 
+                        if (widget.required)
+                        {
+                            cores[i].required_files.push_back(table_name);
+                        }
+
                         if (widget.category.empty())
                         {
                             widgets["#__root__"].push_back(widget);
@@ -378,20 +440,19 @@ void Settings::ReinitCoresFrontend()
 
                         for (const auto& widget : widget_list)
                         {
+                            if (!widget.default_.empty() && Settings::Get(widget.key).empty())
+                            {
+                                Settings::Set(widget.key, widget.default_);
+                            }
+                            int current_id = widget_id++;
+                            std::string name = widget.name;
+                            std::string key = widget.key;
+                            std::string description = widget.description;
                             switch (hydra::str_hash(widget.type))
                             {
                                 case hydra::str_hash("checkbox"):
                                 {
-                                    if (!widget.default_.empty() &&
-                                        Settings::Get(widget.key).empty())
-                                    {
-                                        Settings::Set(widget.key, widget.default_);
-                                    }
-                                    bool value = Settings::Get(widget.key) == "true";
-                                    int current_id = widget_id++;
-                                    std::string name = widget.name;
-                                    std::string key = widget.key;
-                                    std::string description = widget.description;
+                                    bool value = Settings::Get(key) == "true";
                                     core_functions.push_back(
                                         [name, key, description, value, current_id]() mutable {
                                             ImGui::PushID(current_id);
@@ -405,6 +466,35 @@ void Settings::ReinitCoresFrontend()
                                         });
                                     break;
                                 }
+                                case hydra::str_hash("filepicker"):
+                                {
+                                    std::string value = Settings::Get(widget.key);
+                                    value.resize(1024);
+                                    core_functions.push_back([name, key, description, value,
+                                                              current_id]() mutable {
+                                        ImGui::PushID(current_id);
+                                        ImGui::InputText(name.c_str(), value.data(), value.size(),
+                                                         ImGuiInputTextFlags_ReadOnly);
+                                        if (!description.empty())
+                                            ImGui::SetItemTooltip("%s", description.c_str());
+                                        ImGui::SameLine();
+                                        if (ImGui::Button(ICON_MD_FOLDER " Browse"))
+                                        {
+                                            std::string path = hydra::file_picker();
+                                            if (!path.empty())
+                                            {
+                                                Settings::Set(key, path);
+                                                if (path.size() > 1024)
+                                                {
+                                                    value.resize(path.size());
+                                                }
+                                                std::memcpy(value.data(), path.data(), path.size());
+                                            }
+                                        }
+                                        ImGui::PopID();
+                                    });
+                                    break;
+                                }
                             }
                         }
 
@@ -415,6 +505,7 @@ void Settings::ReinitCoresFrontend()
                     }
                 }
             }
+            hydra::dynlib_close(handle);
         }
     }
     main_window->setSettingsFunctions(functions);

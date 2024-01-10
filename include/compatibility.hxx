@@ -102,4 +102,9 @@ namespace hydra
         sync_fs();
     }
 
+    inline std::string file_picker()
+    {
+        return "";
+    }
+
 } // namespace hydra

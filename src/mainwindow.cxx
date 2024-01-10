@@ -1,4 +1,4 @@
-#include "gamewindow.hxx"
+#include <gamewindow.hxx>
 #include <mainwindow.hxx>
 #include <SDL3/SDL_misc.h>
 
@@ -7,6 +7,7 @@
 #include <imgui/imgui.h>
 #include <imgui_helper.hxx>
 #include <imgui_url.hxx>
+#include <memory>
 #include <numbers>
 #include <settings.hxx>
 #include <strings.hxx>
@@ -150,7 +151,18 @@ void MainWindow::update()
 
 void MainWindow::loadRom(const std::filesystem::path& path) {}
 
-void MainWindow::draw_games() {}
+void MainWindow::draw_games()
+{
+    if (ImGui::Button(ICON_MD_FOLDER " Load ROM"))
+    {
+        game_window = std::make_unique<GameWindow>("/home/offtkp/cores/libhydra-core.so",
+                                                   "/home/offtkp/Roms/GBA/emerald.gba");
+        if (!game_window->isLoaded())
+        {
+            game_window.reset();
+        }
+    }
+}
 
 void MainWindow::draw_cores()
 {
