@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = @CMakeFiles/hydra_data.dir/includes_CXX.rsp
 
-CXX_FLAGS = -fPIC -g -O3 -std=c++20 -fPIC
+CXX_FLAGS = -fPIC -g -O2 -std=c++20 -fPIC
 

@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = @CMakeFiles/fmt.dir/includes_CXX.rsp
 
-CXX_FLAGS = -fPIC -g -O3 -std=gnu++20 -fPIC
+CXX_FLAGS = -fPIC -g -O2 -std=gnu++20 -fPIC
 
