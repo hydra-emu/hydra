@@ -60,21 +60,28 @@ extern "C" void hydra_drop_file(const char* name, void* data, size_t size)
         std::filesystem::path out_path = cores / file;
         std::ofstream ofs(out_path, std::ios_base::binary | std::ios_base::out);
         ofs.write((const char*)data, size);
-        sync_fs();
-        Settings::ReinitCoreInfo();
+        sync_fs([] { Settings::ReinitCoreInfo(); });
     }
     else
     {
         std::filesystem::path cache = Settings::GetCachePath();
         std::filesystem::path out_path = cache / file;
-        std::ofstream ofs(out_path, std::ios_base::binary | std::ios_base::out);
-        ofs.write((const char*)data, size);
-        sync_fs();
+        hydra::fwrite(out_path, std::span<uint8_t>((uint8_t*)data, size));
+    }
+}
+
+extern "C" void callback_wrapper(void* callback)
+{
+    if (callback)
+    {
+        std::function<void()>* func = (std::function<void()>*)callback;
+        (*func)();
+        delete func;
     }
 }
 
 #ifdef HYDRA_WEB
-EM_JS(void, add_drag_drop_listeners, (), {
+EM_JS(void, hydra_web_initialize, (), {
           var canvas = document.getElementById("canvas");
           canvas.addEventListener(
               "dragenter",
@@ -186,7 +193,7 @@ int imgui_main(int argc, char* argv[])
 #endif
 
 #ifdef HYDRA_WEB
-    add_drag_drop_listeners();
+    hydra_web_initialize();
 #endif
 
     IMGUI_CHECKVERSION();

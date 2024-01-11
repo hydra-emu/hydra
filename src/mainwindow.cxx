@@ -27,6 +27,7 @@ constexpr const char* icons[tab_count] = {ICON_MD_GAMES, ICON_MD_MEMORY, ICON_MD
                                           ICON_MD_INFO};
 
 MainWindow::MainWindow()
+    : rom_picker("rom_picker", "Load ROM", "", {}, [this](const char* path) { loadRom(path); })
 {
     selected_y = ImGui::GetStyle().WindowPadding.y + ImGui::GetStyle().ItemSpacing.y;
     core_directory.resize(4096);
@@ -149,20 +150,33 @@ void MainWindow::update()
     }
 }
 
-void MainWindow::loadRom(const std::filesystem::path& path) {}
+void MainWindow::loadRom(const std::filesystem::path& path)
+{
+    game_window = std::make_unique<GameWindow>("/hydra/cores/libNanoBoyAdvance-hydra.wasm",
+                                               "/hydra/cache/emerald.gba");
+    if (!game_window->isLoaded())
+    {
+        game_window.reset();
+    }
+}
 
 void MainWindow::draw_games()
 {
-    if (ImGui::Button(ICON_MD_FOLDER " Load ROM"))
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 min = ImGui::GetCursorPos();
+    ImVec2 max = ImVec2(ImGui::GetCursorPos().x + ImGui::GetContentRegionAvail().x,
+                        ImGui::GetCursorPos().y + ImGui::GetContentRegionAvail().y * 0.1f);
+    uint32_t color = ImGui::GetColorU32(ImGuiCol_Button);
+    if (ImGui::IsMouseHoveringRect(min, max))
     {
-        Settings::Set("NanoBoyAdvance_bios", "/hydra/cache/gba_bios.bin");
-        game_window = std::make_unique<GameWindow>("/hydra/cores/libNanoBoyAdvance-hydra.wasm",
-                                                   "/hydra/cache/emerald.gba");
-        if (!game_window->isLoaded())
-        {
-            game_window.reset();
-        }
+        color = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
     }
+    draw_list->AddRectFilled(min, max, color, 0, 0);
+    rom_picker.update(min, max);
+    min.x += ImGui::GetStyle().ItemSpacing.x;
+    min.y += ImGui::GetContentRegionAvail().y * 0.05f - hydra::ImGuiHelper::TextHeight() * 0.5f;
+    ImGui::SetCursorPos(min);
+    ImGui::Text(ICON_MD_FOLDER " Load ROM");
 }
 
 void MainWindow::draw_cores()

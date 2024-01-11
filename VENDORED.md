@@ -1,6 +1,7 @@
 ### Hydra vendored libraries
 - [OpenSSL 1.1.1w](https://github.com/janbar/openssl-cmake)
 - [CURL 8.5.0](https://github.com/curl/curl)
+- [DPP](https://github.com/brainboxdotcc/DPP)
 - [sol 3.2.3](https://github.com/ThePhD/sol2)
 - [miniaudio 0.11.21](https://github.com/mackron/miniaudio)
 - [stb_image 2.28](https://github.com/nothings/stb)
@@ -11,3 +12,5 @@
 - [glad gl=4.6, gles1=1.0, gles2=3.2](https://github.com/Dav1dde/glad)
 - [miniz 3.0.0](https://github.com/richgel999/miniz)
 - [fmt](https://github.com/fmtlib/fmt/)
+- [nativefiledialog 1.1.1](https://github.com/btzy/nativefiledialog-extended)
+- [toml11 3.8.1](https://github.com/ToruNiina/toml11)

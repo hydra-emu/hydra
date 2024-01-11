@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <log.hxx>
 #include <span>
 #include <sstream>
@@ -12,16 +13,23 @@
 #include <emscripten.h>
 #endif
 
-static void sync_fs()
+static void sync_fs(std::function<void()> callback = nullptr)
 {
 #ifdef HYDRA_WEB
-    EM_ASM(
+    std::function<void()>* func = nullptr;
+    if (callback)
+    {
+        func = new std::function<void()>(callback);
+    }
+    EM_ASM({
         FS.syncfs(false, function (err) {
             if (err) {
                 console.log("Failed to sync FS: " + err);
+            } else {
+                Module.ccall('callback_wrapper', null, ['number'], [$0]);
             }
         });
-    );
+    }, func);
 #endif
 }
 

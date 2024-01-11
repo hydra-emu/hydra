@@ -19,7 +19,7 @@ set(BUILD_SHARED_LIBS OFF)
 set(BUILD_STATIC_LIBS ON)
 set(DPP_BUILD_TEST OFF)
 
-if (WIN32)
+if(WIN32)
     set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_WINDOWS WIN32_LEAN_AND_MEAN NOMINMAX)
     set(HYDRA_WINDOWS 1)
 elseif(APPLE)
@@ -84,7 +84,7 @@ else()
 endif()
 
 # Thanks SkyEmu for most of these configurations
-if (MSVC)
+if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT /Ox /Ob2 /Oi /Ot /GT /GF /GS- /fp:fast /fp:except- /MP /sdl- /EHsc /D_SECURE_SCL=0 /D_SCL_SECURE_NO_WARNINGS /D_ITERATOR_DEBUG_LEVEL=0 /D_HAS_ITERATOR_DEBUGGING=0")
 else()
@@ -112,6 +112,11 @@ set_property(TARGET ssl PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
 set_property(TARGET crypto PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
 set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} ssl crypto)
 
+if(HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_MACOS OR HYDRA_WINDOWS)
+    set(HYDRA_DESKTOP 1)
+    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_DESKTOP)
+endif()
+
 if(NOT HYDRA_WEB)
     set(CURL_USE_LIBSSH2 OFF)
     set(CURL_USE_LIBPSL OFF)
@@ -121,7 +126,7 @@ if(NOT HYDRA_WEB)
     set(CURL_ENABLE_EXPORT_TARGET OFF)
     set(BUILD_TESTING OFF)
     set(BUILD_CURL_EXE OFF)
-    if (WIN32)
+    if(WIN32)
         set(CURL_STATIC_CRT ON)
     endif()
     add_definitions(-DCURL_STATICLIB)
@@ -135,6 +140,14 @@ endif()
 
 if(HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_WINDOWS)
     find_package(OpenGL REQUIRED)
+endif()
+
+if(HYDRA_DESKTOP)
+    add_subdirectory(vendored/nativefiledialog)
+    set(HYDRA_INCLUDES ${HYDRA_INCLUDES}
+        vendored/nativefiledialog/src/include
+    )
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} nfd)
 endif()
 
 if(HYDRA_MACOS OR HYDRA_IOS)
@@ -162,6 +175,7 @@ set(HYDRA_IMGUI_FILES
     src/app.cxx
     src/gamewindow.cxx
     src/mainwindow.cxx
+    src/filepicker.cxx
     vendored/imgui/backends/imgui_impl_sdl3.cpp
     vendored/imgui/backends/imgui_impl_opengl3.cpp
     vendored/imgui/imgui.cpp
@@ -214,7 +228,7 @@ cmrc_add_resource_library(hydra_data ALIAS hydra::data NAMESPACE hydra
 
 set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} hydra::data)
 
-if (BUILD_QT)
+if(BUILD_QT)
     set(CMAKE_AUTOUIC ON)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
@@ -224,14 +238,14 @@ if (BUILD_QT)
     set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_QT_FILES})
 endif()
 
-if (BUILD_DISCORD_BOT)
+if(BUILD_DISCORD_BOT)
     add_subdirectory(vendored/DPP)
     add_definitions(-DHYDRA_DISCORD_BOT)
     set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_BOT_FILES})
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} dpp)
 endif()
 
-if (BUILD_LUA)
+if(BUILD_LUA)
     find_package(Lua REQUIRED)
     set(HYDRA_INCLUDES
         ${HYDRA_INCLUDES}
@@ -266,6 +280,6 @@ target_include_directories(hydra PRIVATE ${HYDRA_INCLUDES})
 target_compile_definitions(hydra PRIVATE HYDRA_VERSION="${PROJECT_VERSION}")
 target_compile_definitions(hydra PRIVATE ${HYDRA_DEFINITIONS})
 
-if (HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_MACOS OR HYDRA_ANDROID OR HYDRA_WEB)
+if(HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_MACOS OR HYDRA_ANDROID OR HYDRA_WEB)
     target_compile_definitions(hydra PRIVATE HYDRA_LIBDL)
 endif()

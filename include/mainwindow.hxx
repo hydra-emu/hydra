@@ -1,10 +1,11 @@
 #pragma once
 
+#include "filepicker.hxx"
 #include "gamewindow.hxx"
-#include "imgui.h"
 #include <array>
 #include <filesystem>
 #include <functional>
+#include <imgui/imgui.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -44,4 +45,6 @@ private:
     size_t open_core_settings = -1;
     std::unordered_map<std::string, std::vector<std::function<void()>>> settings_functions;
     std::unique_ptr<GameWindow> game_window;
+
+    FilePicker rom_picker;
 };
