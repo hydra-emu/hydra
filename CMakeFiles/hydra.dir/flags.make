@@ -7,11 +7,11 @@ C_DEFINES = -DHYDRA_LIBDL -DHYDRA_VERSION=\"0.2.0\" -DHYDRA_WEB
 
 C_INCLUDES = @CMakeFiles/hydra.dir/includes_C.rsp
 
-C_FLAGS = -fPIC -g -O3 -idirafter/home/runner/work/hydra/hydra/vendored/SDL/src/video/khronos
+C_FLAGS = -fPIC -O3 -DNDEBUG -idirafter/home/runner/work/hydra/hydra/vendored/SDL/src/video/khronos
 
 CXX_DEFINES = -DHYDRA_LIBDL -DHYDRA_VERSION=\"0.2.0\" -DHYDRA_WEB
 
 CXX_INCLUDES = @CMakeFiles/hydra.dir/includes_CXX.rsp
 
-CXX_FLAGS = -fPIC -g -O3 -std=gnu++20 -idirafter/home/runner/work/hydra/hydra/vendored/SDL/src/video/khronos
+CXX_FLAGS = -fPIC -O3 -DNDEBUG -std=gnu++20 -idirafter/home/runner/work/hydra/hydra/vendored/SDL/src/video/khronos
 
