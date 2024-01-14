@@ -6,6 +6,20 @@
 #ifdef HYDRA_WEB
 int html_id_last = 0;
 #include <emscripten.h>
+EM_JS(void, filepicker_move, (const char* id, int x, int y, int x2, int y2), {
+    var element = document.getElementById(UTF8ToString(id));
+    element.style.left = x + 'px';
+    element.style.top = y + 'px';
+    element.style.width = (x2 - x) + 'px';
+    element.style.height = (y2 - y) + 'px';
+    element.style.visibility = 'visible';
+});
+
+extern "C" void filepicker_callback(void* id, const char* path)
+{
+    FilePicker* picker = (FilePicker*)(id);
+    picker->callback(path);
+}
 #else
 #include <ImGuiFileDialog/ImGuiFileDialog.h>
 #ifdef HYDRA_NATIVE_FILE_DIALOG
@@ -25,9 +39,9 @@ FilePicker::FilePicker(const std::string& id, const std::string& name,
     html_id = "filepicker_" + std::to_string(html_id_last++);
     EM_ASM({
         var input = document.createElement('input');
-        input.type = 'file';
-        input.id = $0;
+        input.id = UTF8ToString($0);
         input.value = '';
+        input.type = 'file';
         document.body.appendChild(input);
         input.onmousemove =  input.onmouseover =  function(e) {
             const mouseMoveEvent = new MouseEvent('mousemove', {
@@ -52,18 +66,53 @@ FilePicker::~FilePicker()
 #endif
 }
 
+void FilePicker::hide()
+{
+#ifdef HYDRA_WEB
+    EM_ASM({
+        var element = document.getElementById(UTF8ToString($0));
+        element.style.visibility = 'hidden';
+    }, html_id.c_str());
+#endif
+}
+
 void FilePicker::update(ImVec2 start, ImVec2 end, const FilePickerFilters& filters)
 {
+#ifdef HYDRA_WEB
+    filepicker_move(html_id.c_str(), start.x, start.y, end.x, end.y);
+    EM_ASM({
+        var element = document.getElementById(UTF8ToString($0));
+        if (element.value !== '') {
+            var reader = new FileReader();
+            var file = element.files[0];
+            function print_file(e){
+                var result = reader.result;
+                var filename = file.name;
+                const uint8_view = new Uint8Array(result);
+                var out_file = '/hydra/cache/' + filename;
+                if(FS.analyzePath(out_file)["exists"])FS.unlink(out_file);
+                FS.writeFile(out_file, uint8_view);
+                FS.syncfs(function (err) {
+                    Module.ccall('filepicker_callback', 'void', ['number', 'string'], [$1, out_file]);
+                });
+            }
+            reader.addEventListener('loadend', print_file);
+            reader.readAsArrayBuffer(file);
+            element.value = '';
+        }
+    }, html_id.c_str(), this);
+#endif
+
     bool hovered = ImGui::IsMouseHoveringRect(start, end);
     if (hovered && ImGui::IsMouseClicked(0))
     {
+#ifdef HYDRA_DESKTOP
         std::string default_path = Settings::Get("last_path");
         if (default_path.empty())
         {
             default_path = ".";
             Settings::Set("last_path", default_path);
         }
-#ifdef HYDRA_DESKTOP
 #ifdef HYDRA_NATIVE_FILE_DIALOG
         if (!nfd_errors)
         {

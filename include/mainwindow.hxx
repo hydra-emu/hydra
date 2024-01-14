@@ -55,7 +55,6 @@ private:
     std::unordered_map<std::string, std::vector<std::function<void()>>> settings_functions;
     std::unique_ptr<GameWindow> game_window;
     std::deque<std::filesystem::path> recent_roms;
-    std::vector<ImVec2> recent_roms_offsets;
 
     bool pending_rom_load = false;
     std::filesystem::path pending_rom_path;

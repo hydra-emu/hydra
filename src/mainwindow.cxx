@@ -28,7 +28,13 @@ constexpr const char* icons[tab_count] = {ICON_MD_GAMES, ICON_MD_MEMORY, ICON_MD
                                           ICON_MD_INFO};
 
 MainWindow::MainWindow()
-    : rom_picker("rom_picker", "Load ROM", [this](const char* path) { loadRom(path); })
+    : rom_picker("rom_picker", "Load ROM", [this](const char* path) {
+          if (std::find(recent_roms.begin(), recent_roms.end(), path) != recent_roms.end())
+          {
+              recent_roms.erase(std::find(recent_roms.begin(), recent_roms.end(), path));
+          }
+          loadRom(path);
+      })
 {
     selected_y = ImGui::GetStyle().WindowPadding.y + ImGui::GetStyle().ItemSpacing.y;
     core_directory.resize(4096);
@@ -151,6 +157,7 @@ void MainWindow::update_impl()
 
 void MainWindow::update()
 {
+    rom_picker.hide();
     if (!game_window || !game_window->isFullscreen())
         update_impl();
     if (game_window)
@@ -240,12 +247,16 @@ void MainWindow::load_rom_impl(const std::filesystem::path& core_path,
     {
         game_window.reset();
     }
+
+    if (std::find(recent_roms.begin(), recent_roms.end(), rom_path) != recent_roms.end())
+    {
+        return;
+    }
     recent_roms.push_front(rom_path);
     if (recent_roms.size() > recent_max)
     {
         recent_roms.pop_back();
     }
-    save_recents();
 }
 
 void MainWindow::save_recents()
@@ -270,24 +281,8 @@ void MainWindow::draw_games()
     }
 
     static bool removing_recent = false;
-    bool update_positions = false;
-    if (removing_recent)
-    {
-        static std::chrono::time_point<std::chrono::steady_clock> start =
-            std::chrono::steady_clock::now();
-        if (std::chrono::steady_clock::now() - start > std::chrono::milliseconds(60))
-        {
-            update_positions = true;
-            start = std::chrono::steady_clock::now();
-        }
-    }
     auto [_, min, max] = draw_custom_button(ICON_MD_FOLDER " Click here to load a ROM");
     rom_picker.update(min, max, Settings::GetCoreFilters());
-    int to_remove = -1;
-    if (recent_roms_offsets.size() != recent_roms.size())
-    {
-        recent_roms_offsets.resize(recent_roms.size());
-    }
     if (recent_roms.size() == 0)
     {
         return;
@@ -298,45 +293,46 @@ void MainWindow::draw_games()
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - hydra::ImGuiHelper::IconWidth() * 2.0f -
                     ImGui::GetStyle().FramePadding.x * 2.0f);
     ImGui::Checkbox(ICON_MD_EDIT, &removing_recent);
-    for (size_t i = 0; i < recent_roms.size(); i++)
+    int j = 0;
+    for (auto it = recent_roms.begin(); it != recent_roms.end();)
     {
-        ImGui::PushID(i);
+        ImGui::PushID(j++);
         if (!removing_recent)
         {
-            auto [clicked, min, max] = draw_custom_button(recent_roms[i].filename().string());
+            auto [clicked, min, max] = draw_custom_button(it->filename().string());
             if (clicked)
             {
-                loadRom(recent_roms[i]);
+                auto path = *it;
+                it = recent_roms.erase(it);
+                loadRom(path);
+                save_recents();
+            }
+            else
+            {
+                ++it;
             }
         }
         else
         {
-            float shake_x = recent_roms_offsets[i].x;
-            float shake_y = recent_roms_offsets[i].y;
-            if (update_positions)
-            {
-                shake_x = (rand() % 10 - 5) / 40.0f;
-                shake_y = (rand() % 10 - 5) / 40.0f;
-                recent_roms_offsets[i].x = shake_x;
-                recent_roms_offsets[i].y = shake_y;
-            }
+            float shake_x = (rand() % 10 - 5) / 40.0f;
+            float shake_y = (rand() % 10 - 5) / 40.0f;
             ImGui::SetCursorPos(
                 ImVec2(ImGui::GetCursorPos().x + shake_x, ImGui::GetCursorPos().y + shake_y));
             auto [clicked, min, max] = draw_custom_button(
-                ICON_MD_DELETE " " + recent_roms[i].filename().string(), 0x40000040, 0x80000080);
+                ICON_MD_DELETE " " + it->filename().string(), 0x40000040, 0x80000080);
             if (clicked)
             {
-                to_remove = i;
+                it = recent_roms.erase(it);
+                save_recents();
+            }
+            else
+            {
+                ++it;
             }
         }
         ImGui::PopID();
     }
     ImGui::PopFont();
-    if (to_remove != -1)
-    {
-        recent_roms.erase(recent_roms.begin() + to_remove);
-        save_recents();
-    }
 }
 
 std::tuple<bool, ImVec2, ImVec2> MainWindow::draw_custom_button(const std::string& text,

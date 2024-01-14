@@ -64,9 +64,7 @@ extern "C" void hydra_drop_file(const char* name, void* data, size_t size)
     }
     else
     {
-        std::filesystem::path cache = Settings::GetCachePath();
-        std::filesystem::path out_path = cache / file;
-        hydra::fwrite(out_path, std::span<uint8_t>((uint8_t*)data, size));
+        main_window->loadRom(file);
     }
 }
 

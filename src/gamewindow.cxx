@@ -386,7 +386,11 @@ GLenum GameWindow::get_gl_format(hydra::PixelFormat format)
         }
         case hydra::PixelFormat::BGRA:
         {
+#ifdef HYDRA_WEB
+            return GL_RGBA;
+#else
             return GL_BGRA;
+#endif
         }
         default:
         {
