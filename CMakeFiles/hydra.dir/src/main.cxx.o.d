@@ -730,13 +730,7 @@ CMakeFiles/hydra.dir/src/main.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/u8path.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/iostream \
   /home/runner/work/hydra/hydra/include/settings.hxx \
-  /home/runner/work/hydra/hydra/include/compatibility.hxx \
-  /home/runner/work/hydra/hydra/include/log.hxx \
-  /home/runner/work/hydra/hydra/vendored/fmt/include/fmt/format.h \
-  /home/runner/work/hydra/hydra/vendored/fmt/include/fmt/core.h \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/span \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__fwd/span.h \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/array \
+  /home/runner/work/hydra/hydra/include/filepicker.hxx \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/functional \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/binary_negate.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/bind.h \
@@ -746,6 +740,7 @@ CMakeFiles/hydra.dir/src/main.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/binder1st.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/binder2nd.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/boyer_moore_searcher.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/array \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/unordered_map \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/is_transparent.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__hash_table \
@@ -788,6 +783,18 @@ CMakeFiles/hydra.dir/src/main.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/pointer_to_binary_function.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/pointer_to_unary_function.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/unary_negate.h \
+  /home/runner/work/hydra/hydra/vendored/imgui/imgui.h \
+  /home/runner/work/hydra/hydra/vendored/imgui/imconfig.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/float.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/float.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/float.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/assert.h \
+  /home/runner/work/hydra/hydra/include/compatibility.hxx \
+  /home/runner/work/hydra/hydra/include/log.hxx \
+  /home/runner/work/hydra/hydra/vendored/fmt/include/fmt/format.h \
+  /home/runner/work/hydra/hydra/vendored/fmt/include/fmt/core.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/span \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__fwd/span.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/sstream \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/emscripten.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/emscripten/emscripten.h \
@@ -824,7 +831,6 @@ CMakeFiles/hydra.dir/src/main.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__tree \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/valarray \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/cassert \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/assert.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/ranges \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__ranges/all.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__ranges/owning_view.h \

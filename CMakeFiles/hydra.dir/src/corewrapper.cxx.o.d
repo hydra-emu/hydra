@@ -788,6 +788,13 @@ CMakeFiles/hydra.dir/src/corewrapper.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/pointer_to_unary_function.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/unary_negate.h \
   /home/runner/work/hydra/hydra/include/settings.hxx \
+  /home/runner/work/hydra/hydra/include/filepicker.hxx \
+  /home/runner/work/hydra/hydra/vendored/imgui/imgui.h \
+  /home/runner/work/hydra/hydra/vendored/imgui/imconfig.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/float.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/float.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/float.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/assert.h \
   /home/runner/work/hydra/hydra/include/compatibility.hxx \
   /home/runner/work/hydra/hydra/include/log.hxx \
   /home/runner/work/hydra/hydra/vendored/fmt/include/fmt/format.h \
@@ -826,7 +833,6 @@ CMakeFiles/hydra.dir/src/corewrapper.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__tree \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/valarray \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/cassert \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/assert.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/ranges \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__ranges/all.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__ranges/owning_view.h \

@@ -405,6 +405,30 @@ src/corewrapper.cxx.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/src/corewrapper.cxx.s
 .PHONY : src/corewrapper.cxx.s
 
+src/filepicker.o: src/filepicker.cxx.o
+.PHONY : src/filepicker.o
+
+# target to build an object file
+src/filepicker.cxx.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/src/filepicker.cxx.o
+.PHONY : src/filepicker.cxx.o
+
+src/filepicker.i: src/filepicker.cxx.i
+.PHONY : src/filepicker.i
+
+# target to preprocess a source file
+src/filepicker.cxx.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/src/filepicker.cxx.i
+.PHONY : src/filepicker.cxx.i
+
+src/filepicker.s: src/filepicker.cxx.s
+.PHONY : src/filepicker.s
+
+# target to generate assembly for a file
+src/filepicker.cxx.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/src/filepicker.cxx.s
+.PHONY : src/filepicker.cxx.s
+
 src/gamewindow.o: src/gamewindow.cxx.o
 .PHONY : src/gamewindow.o
 
@@ -874,6 +898,9 @@ help:
 	@echo "... src/corewrapper.o"
 	@echo "... src/corewrapper.i"
 	@echo "... src/corewrapper.s"
+	@echo "... src/filepicker.o"
+	@echo "... src/filepicker.i"
+	@echo "... src/filepicker.s"
 	@echo "... src/gamewindow.o"
 	@echo "... src/gamewindow.i"
 	@echo "... src/gamewindow.s"

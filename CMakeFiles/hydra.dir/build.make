@@ -114,11 +114,26 @@ CMakeFiles/hydra.dir/src/mainwindow.cxx.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hydra.dir/src/mainwindow.cxx.s"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/hydra/hydra/src/mainwindow.cxx -o CMakeFiles/hydra.dir/src/mainwindow.cxx.s
 
+CMakeFiles/hydra.dir/src/filepicker.cxx.o: CMakeFiles/hydra.dir/flags.make
+CMakeFiles/hydra.dir/src/filepicker.cxx.o: CMakeFiles/hydra.dir/includes_CXX.rsp
+CMakeFiles/hydra.dir/src/filepicker.cxx.o: /home/runner/work/hydra/hydra/src/filepicker.cxx
+CMakeFiles/hydra.dir/src/filepicker.cxx.o: CMakeFiles/hydra.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/hydra.dir/src/filepicker.cxx.o"
+	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/src/filepicker.cxx.o -MF CMakeFiles/hydra.dir/src/filepicker.cxx.o.d -o CMakeFiles/hydra.dir/src/filepicker.cxx.o -c /home/runner/work/hydra/hydra/src/filepicker.cxx
+
+CMakeFiles/hydra.dir/src/filepicker.cxx.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hydra.dir/src/filepicker.cxx.i"
+	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/hydra/hydra/src/filepicker.cxx > CMakeFiles/hydra.dir/src/filepicker.cxx.i
+
+CMakeFiles/hydra.dir/src/filepicker.cxx.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hydra.dir/src/filepicker.cxx.s"
+	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/hydra/hydra/src/filepicker.cxx -o CMakeFiles/hydra.dir/src/filepicker.cxx.s
+
 CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o: CMakeFiles/hydra.dir/flags.make
 CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o: /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_sdl3.cpp
 CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o -MF CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o.d -o CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o -c /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_sdl3.cpp
 
 CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.i: cmake_force
@@ -133,7 +148,7 @@ CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o: CMakeFile
 CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o: /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_opengl3.cpp
 CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o -MF CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o.d -o CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o -c /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_opengl3.cpp
 
 CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.i: cmake_force
@@ -148,7 +163,7 @@ CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o: CMakeFiles/hydra.dir/flags.make
 CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o: /home/runner/work/hydra/hydra/vendored/imgui/imgui.cpp
 CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o -MF CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o.d -o CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o -c /home/runner/work/hydra/hydra/vendored/imgui/imgui.cpp
 
 CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.i: cmake_force
@@ -163,7 +178,7 @@ CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.o: CMakeFiles/hydra.dir/flags
 CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.o: /home/runner/work/hydra/hydra/vendored/imgui/imgui_demo.cpp
 CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.o -MF CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.o.d -o CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.o -c /home/runner/work/hydra/hydra/vendored/imgui/imgui_demo.cpp
 
 CMakeFiles/hydra.dir/vendored/imgui/imgui_demo.cpp.i: cmake_force
@@ -178,7 +193,7 @@ CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.o: CMakeFiles/hydra.dir/flags
 CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.o: /home/runner/work/hydra/hydra/vendored/imgui/imgui_draw.cpp
 CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.o -MF CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.o.d -o CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.o -c /home/runner/work/hydra/hydra/vendored/imgui/imgui_draw.cpp
 
 CMakeFiles/hydra.dir/vendored/imgui/imgui_draw.cpp.i: cmake_force
@@ -193,7 +208,7 @@ CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o: CMakeFiles/hydra.dir/fl
 CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o: /home/runner/work/hydra/hydra/vendored/imgui/imgui_widgets.cpp
 CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o -MF CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o.d -o CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.o -c /home/runner/work/hydra/hydra/vendored/imgui/imgui_widgets.cpp
 
 CMakeFiles/hydra.dir/vendored/imgui/imgui_widgets.cpp.i: cmake_force
@@ -208,7 +223,7 @@ CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o: CMakeFiles/hydra.dir/fla
 CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o: /home/runner/work/hydra/hydra/vendored/imgui/imgui_tables.cpp
 CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o -MF CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o.d -o CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.o -c /home/runner/work/hydra/hydra/vendored/imgui/imgui_tables.cpp
 
 CMakeFiles/hydra.dir/vendored/imgui/imgui_tables.cpp.i: cmake_force
@@ -223,7 +238,7 @@ CMakeFiles/hydra.dir/src/corewrapper.cxx.o: CMakeFiles/hydra.dir/flags.make
 CMakeFiles/hydra.dir/src/corewrapper.cxx.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/src/corewrapper.cxx.o: /home/runner/work/hydra/hydra/src/corewrapper.cxx
 CMakeFiles/hydra.dir/src/corewrapper.cxx.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/hydra.dir/src/corewrapper.cxx.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/hydra.dir/src/corewrapper.cxx.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/src/corewrapper.cxx.o -MF CMakeFiles/hydra.dir/src/corewrapper.cxx.o.d -o CMakeFiles/hydra.dir/src/corewrapper.cxx.o -c /home/runner/work/hydra/hydra/src/corewrapper.cxx
 
 CMakeFiles/hydra.dir/src/corewrapper.cxx.i: cmake_force
@@ -238,7 +253,7 @@ CMakeFiles/hydra.dir/src/main.cxx.o: CMakeFiles/hydra.dir/flags.make
 CMakeFiles/hydra.dir/src/main.cxx.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/src/main.cxx.o: /home/runner/work/hydra/hydra/src/main.cxx
 CMakeFiles/hydra.dir/src/main.cxx.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/hydra.dir/src/main.cxx.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/hydra.dir/src/main.cxx.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/src/main.cxx.o -MF CMakeFiles/hydra.dir/src/main.cxx.o.d -o CMakeFiles/hydra.dir/src/main.cxx.o -c /home/runner/work/hydra/hydra/src/main.cxx
 
 CMakeFiles/hydra.dir/src/main.cxx.i: cmake_force
@@ -253,7 +268,7 @@ CMakeFiles/hydra.dir/vendored/argparse/argparse.c.o: CMakeFiles/hydra.dir/flags.
 CMakeFiles/hydra.dir/vendored/argparse/argparse.c.o: CMakeFiles/hydra.dir/includes_C.rsp
 CMakeFiles/hydra.dir/vendored/argparse/argparse.c.o: /home/runner/work/hydra/hydra/vendored/argparse/argparse.c
 CMakeFiles/hydra.dir/vendored/argparse/argparse.c.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building C object CMakeFiles/hydra.dir/vendored/argparse/argparse.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building C object CMakeFiles/hydra.dir/vendored/argparse/argparse.c.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/emcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/argparse/argparse.c.o -MF CMakeFiles/hydra.dir/vendored/argparse/argparse.c.o.d -o CMakeFiles/hydra.dir/vendored/argparse/argparse.c.o -c /home/runner/work/hydra/hydra/vendored/argparse/argparse.c
 
 CMakeFiles/hydra.dir/vendored/argparse/argparse.c.i: cmake_force
@@ -268,7 +283,7 @@ CMakeFiles/hydra.dir/vendored/miniaudio.c.o: CMakeFiles/hydra.dir/flags.make
 CMakeFiles/hydra.dir/vendored/miniaudio.c.o: CMakeFiles/hydra.dir/includes_C.rsp
 CMakeFiles/hydra.dir/vendored/miniaudio.c.o: /home/runner/work/hydra/hydra/vendored/miniaudio.c
 CMakeFiles/hydra.dir/vendored/miniaudio.c.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building C object CMakeFiles/hydra.dir/vendored/miniaudio.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building C object CMakeFiles/hydra.dir/vendored/miniaudio.c.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/emcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/miniaudio.c.o -MF CMakeFiles/hydra.dir/vendored/miniaudio.c.o.d -o CMakeFiles/hydra.dir/vendored/miniaudio.c.o -c /home/runner/work/hydra/hydra/vendored/miniaudio.c
 
 CMakeFiles/hydra.dir/vendored/miniaudio.c.i: cmake_force
@@ -283,7 +298,7 @@ CMakeFiles/hydra.dir/vendored/stb_image.c.o: CMakeFiles/hydra.dir/flags.make
 CMakeFiles/hydra.dir/vendored/stb_image.c.o: CMakeFiles/hydra.dir/includes_C.rsp
 CMakeFiles/hydra.dir/vendored/stb_image.c.o: /home/runner/work/hydra/hydra/vendored/stb_image.c
 CMakeFiles/hydra.dir/vendored/stb_image.c.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building C object CMakeFiles/hydra.dir/vendored/stb_image.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building C object CMakeFiles/hydra.dir/vendored/stb_image.c.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/emcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/stb_image.c.o -MF CMakeFiles/hydra.dir/vendored/stb_image.c.o.d -o CMakeFiles/hydra.dir/vendored/stb_image.c.o -c /home/runner/work/hydra/hydra/vendored/stb_image.c
 
 CMakeFiles/hydra.dir/vendored/stb_image.c.i: cmake_force
@@ -298,7 +313,7 @@ CMakeFiles/hydra.dir/vendored/stb_image_write.c.o: CMakeFiles/hydra.dir/flags.ma
 CMakeFiles/hydra.dir/vendored/stb_image_write.c.o: CMakeFiles/hydra.dir/includes_C.rsp
 CMakeFiles/hydra.dir/vendored/stb_image_write.c.o: /home/runner/work/hydra/hydra/vendored/stb_image_write.c
 CMakeFiles/hydra.dir/vendored/stb_image_write.c.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building C object CMakeFiles/hydra.dir/vendored/stb_image_write.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building C object CMakeFiles/hydra.dir/vendored/stb_image_write.c.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/emcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/stb_image_write.c.o -MF CMakeFiles/hydra.dir/vendored/stb_image_write.c.o.d -o CMakeFiles/hydra.dir/vendored/stb_image_write.c.o -c /home/runner/work/hydra/hydra/vendored/stb_image_write.c
 
 CMakeFiles/hydra.dir/vendored/stb_image_write.c.i: cmake_force
@@ -313,7 +328,7 @@ CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o: CMakeFiles/hydra.dir/flags.make
 CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o: CMakeFiles/hydra.dir/includes_C.rsp
 CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o: /home/runner/work/hydra/hydra/vendored/glad/src/glad.c
 CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building C object CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building C object CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/emcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o -MF CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o.d -o CMakeFiles/hydra.dir/vendored/glad/src/glad.c.o -c /home/runner/work/hydra/hydra/vendored/glad/src/glad.c
 
 CMakeFiles/hydra.dir/vendored/glad/src/glad.c.i: cmake_force
@@ -328,7 +343,7 @@ CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o: CMakeFiles/hydra.dir/flags.make
 CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o: CMakeFiles/hydra.dir/includes_C.rsp
 CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o: /home/runner/work/hydra/hydra/vendored/miniz/miniz.c
 CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building C object CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building C object CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/emcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o -MF CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o.d -o CMakeFiles/hydra.dir/vendored/miniz/miniz.c.o -c /home/runner/work/hydra/hydra/vendored/miniz/miniz.c
 
 CMakeFiles/hydra.dir/vendored/miniz/miniz.c.i: cmake_force
@@ -343,7 +358,7 @@ CMakeFiles/hydra.dir/vendored/courier_prime.cxx.o: CMakeFiles/hydra.dir/flags.ma
 CMakeFiles/hydra.dir/vendored/courier_prime.cxx.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/vendored/courier_prime.cxx.o: /home/runner/work/hydra/hydra/vendored/courier_prime.cxx
 CMakeFiles/hydra.dir/vendored/courier_prime.cxx.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/hydra.dir/vendored/courier_prime.cxx.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/hydra.dir/vendored/courier_prime.cxx.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/courier_prime.cxx.o -MF CMakeFiles/hydra.dir/vendored/courier_prime.cxx.o.d -o CMakeFiles/hydra.dir/vendored/courier_prime.cxx.o -c /home/runner/work/hydra/hydra/vendored/courier_prime.cxx
 
 CMakeFiles/hydra.dir/vendored/courier_prime.cxx.i: cmake_force
@@ -358,7 +373,7 @@ CMakeFiles/hydra.dir/vendored/material_icons.cxx.o: CMakeFiles/hydra.dir/flags.m
 CMakeFiles/hydra.dir/vendored/material_icons.cxx.o: CMakeFiles/hydra.dir/includes_CXX.rsp
 CMakeFiles/hydra.dir/vendored/material_icons.cxx.o: /home/runner/work/hydra/hydra/vendored/material_icons.cxx
 CMakeFiles/hydra.dir/vendored/material_icons.cxx.o: CMakeFiles/hydra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/hydra.dir/vendored/material_icons.cxx.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/hydra.dir/vendored/material_icons.cxx.o"
 	/home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hydra.dir/vendored/material_icons.cxx.o -MF CMakeFiles/hydra.dir/vendored/material_icons.cxx.o.d -o CMakeFiles/hydra.dir/vendored/material_icons.cxx.o -c /home/runner/work/hydra/hydra/vendored/material_icons.cxx
 
 CMakeFiles/hydra.dir/vendored/material_icons.cxx.i: cmake_force
@@ -374,6 +389,7 @@ hydra_OBJECTS = \
 "CMakeFiles/hydra.dir/src/app.cxx.o" \
 "CMakeFiles/hydra.dir/src/gamewindow.cxx.o" \
 "CMakeFiles/hydra.dir/src/mainwindow.cxx.o" \
+"CMakeFiles/hydra.dir/src/filepicker.cxx.o" \
 "CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o" \
 "CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o" \
 "CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o" \
@@ -398,6 +414,7 @@ hydra_EXTERNAL_OBJECTS =
 hydra.html: CMakeFiles/hydra.dir/src/app.cxx.o
 hydra.html: CMakeFiles/hydra.dir/src/gamewindow.cxx.o
 hydra.html: CMakeFiles/hydra.dir/src/mainwindow.cxx.o
+hydra.html: CMakeFiles/hydra.dir/src/filepicker.cxx.o
 hydra.html: CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_sdl3.cpp.o
 hydra.html: CMakeFiles/hydra.dir/vendored/imgui/backends/imgui_impl_opengl3.cpp.o
 hydra.html: CMakeFiles/hydra.dir/vendored/imgui/imgui.cpp.o
@@ -424,7 +441,7 @@ hydra.html: libhydra_data.a
 hydra.html: CMakeFiles/hydra.dir/linkLibs.rsp
 hydra.html: CMakeFiles/hydra.dir/objects1.rsp
 hydra.html: CMakeFiles/hydra.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Linking CXX executable hydra.html"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/runner/work/hydra/hydra/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Linking CXX executable hydra.html"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hydra.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -727,12 +727,6 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/path_iterator.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/recursive_directory_iterator.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__filesystem/u8path.h \
-  /home/runner/work/hydra/hydra/include/log.hxx \
-  /home/runner/work/hydra/hydra/vendored/fmt/include/fmt/format.h \
-  /home/runner/work/hydra/hydra/vendored/fmt/include/fmt/core.h \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/span \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__fwd/span.h \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/array \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/functional \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/binary_negate.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/bind.h \
@@ -742,6 +736,7 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/binder1st.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/binder2nd.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/boyer_moore_searcher.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/array \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/unordered_map \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/is_transparent.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__hash_table \
@@ -784,6 +779,11 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/pointer_to_binary_function.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/pointer_to_unary_function.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__functional/unary_negate.h \
+  /home/runner/work/hydra/hydra/include/log.hxx \
+  /home/runner/work/hydra/hydra/vendored/fmt/include/fmt/format.h \
+  /home/runner/work/hydra/hydra/vendored/fmt/include/fmt/core.h \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/span \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__fwd/span.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/sstream \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/emscripten.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/emscripten/emscripten.h \
@@ -799,76 +799,18 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/vendored/stb_image_write.h \
   /home/runner/work/hydra/hydra/core/include/hydra/core.hxx \
   /home/runner/work/hydra/hydra/include/mainwindow.hxx \
-  /home/runner/work/hydra/hydra/include/gamewindow.hxx \
+  /home/runner/work/hydra/hydra/include/filepicker.hxx \
   /home/runner/work/hydra/hydra/vendored/imgui/imgui.h \
   /home/runner/work/hydra/hydra/vendored/imgui/imconfig.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/assert.h \
+  /home/runner/work/hydra/hydra/include/gamewindow.hxx \
   /home/runner/work/hydra/hydra/vendored/glad/include/glad/glad.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/KHR/khrplatform.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_events.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_audio.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_stdinc.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_endian.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_error.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_mutex.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_properties.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_rwops.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_thread.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_atomic.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_gamepad.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_joystick.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_guid.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_sensor.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_keyboard.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_keycode.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_scancode.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_video.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_pixels.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_rect.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_surface.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_blendmode.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_mouse.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_pen.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_quit.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_touch.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_render.h \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/fstream \
-  /home/runner/work/hydra/hydra/vendored/IconsMaterialDesign.h \
-  /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_opengl3.h \
-  /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_sdl3.h \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/map \
-  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__tree \
-  /home/runner/work/hydra/hydra/include/sanity.hxx \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_assert.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_bits.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_clipboard.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_cpuinfo.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_filesystem.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_haptic.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_hidapi.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_hints.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_init.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_loadso.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_locale.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_log.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_messagebox.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_metal.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_misc.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_power.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_system.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_timer.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_version.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_video_capture.h \
-  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_oldnames.h \
   /home/runner/work/hydra/hydra/include/settings.hxx \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/fstream \
   /home/runner/work/hydra/hydra/include/hsystem.hxx \
   /home/runner/work/hydra/hydra/vendored/json.hpp \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/numeric \
@@ -886,6 +828,8 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__numeric/transform_exclusive_scan.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__numeric/transform_inclusive_scan.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/forward_list \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/map \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__tree \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/valarray \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/cassert \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/ranges \
@@ -921,6 +865,64 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__ranges/zip_view.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/__ranges/istream_view.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/any \
+  /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/c++/v1/deque \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_events.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_audio.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_stdinc.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform_defines.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_begin_code.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_close_code.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_endian.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_error.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_mutex.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_properties.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_rwops.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_thread.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_atomic.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_gamepad.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_joystick.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_guid.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_sensor.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_keyboard.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_keycode.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_scancode.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_video.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_pixels.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_rect.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_surface.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_blendmode.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_mouse.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_pen.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_quit.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_touch.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_render.h \
+  /home/runner/work/hydra/hydra/vendored/IconsMaterialDesign.h \
+  /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_opengl3.h \
+  /home/runner/work/hydra/hydra/vendored/imgui/backends/imgui_impl_sdl3.h \
+  /home/runner/work/hydra/hydra/include/sanity.hxx \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_assert.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_bits.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_clipboard.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_cpuinfo.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_filesystem.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_haptic.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_hidapi.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_hints.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_init.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_loadso.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_locale.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_log.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_messagebox.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_metal.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_misc.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_platform.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_power.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_system.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_timer.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_version.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_video_capture.h \
+  /home/runner/work/hydra/hydra/vendored/SDL/include/SDL3/SDL_oldnames.h \
   /home/runner/work/hydra/hydra/vendored/toml11/toml.hpp \
   /home/runner/work/hydra/hydra/vendored/toml11/toml/parser.hpp \
   /home/runner/work/hydra/hydra/vendored/toml11/toml/combinator.hpp \

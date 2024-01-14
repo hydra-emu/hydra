@@ -3,6 +3,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/hydra.dir/src/app.cxx.o.d"
   "CMakeFiles/hydra.dir/src/corewrapper.cxx.o"
   "CMakeFiles/hydra.dir/src/corewrapper.cxx.o.d"
+  "CMakeFiles/hydra.dir/src/filepicker.cxx.o"
+  "CMakeFiles/hydra.dir/src/filepicker.cxx.o.d"
   "CMakeFiles/hydra.dir/src/gamewindow.cxx.o"
   "CMakeFiles/hydra.dir/src/gamewindow.cxx.o.d"
   "CMakeFiles/hydra.dir/src/main.cxx.o"
