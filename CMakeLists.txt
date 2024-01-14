@@ -143,11 +143,10 @@ if(HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_WINDOWS)
 endif()
 
 if(HYDRA_DESKTOP)
+    set(NFD_PORTAL ON) # use xdg-desktop-portal for file dialogs
     add_subdirectory(vendored/nativefiledialog)
-    set(HYDRA_INCLUDES ${HYDRA_INCLUDES}
-        vendored/nativefiledialog/src/include
-    )
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} nfd)
+    set(HYDRA_SOURCES ${HYDRA_SOURCES} vendored/ImGuiFileDialog/ImGuiFileDialog.cpp)
 endif()
 
 if(HYDRA_MACOS OR HYDRA_IOS)

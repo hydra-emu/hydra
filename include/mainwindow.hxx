@@ -60,6 +60,7 @@ private:
     bool pending_rom_load = false;
     std::filesystem::path pending_rom_path;
     std::vector<CoreInfo> pending_available_cores;
+    std::vector<std::string> filters;
 
     FilePicker rom_picker;
 };

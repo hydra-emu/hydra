@@ -6,7 +6,6 @@
 #include <IconsMaterialDesign.h>
 #include <imgui/imgui.h>
 #include <imgui_helper.hxx>
-#include <imgui_url.hxx>
 #include <memory>
 #include <numbers>
 #include <settings.hxx>
@@ -29,7 +28,7 @@ constexpr const char* icons[tab_count] = {ICON_MD_GAMES, ICON_MD_MEMORY, ICON_MD
                                           ICON_MD_INFO};
 
 MainWindow::MainWindow()
-    : rom_picker("rom_picker", "Load ROM", "", {}, [this](const char* path) { loadRom(path); })
+    : rom_picker("rom_picker", "Load ROM", [this](const char* path) { loadRom(path); })
 {
     selected_y = ImGui::GetStyle().WindowPadding.y + ImGui::GetStyle().ItemSpacing.y;
     core_directory.resize(4096);
@@ -283,7 +282,7 @@ void MainWindow::draw_games()
         }
     }
     auto [_, min, max] = draw_custom_button(ICON_MD_FOLDER " Click here to load a ROM");
-    rom_picker.update(min, max);
+    rom_picker.update(min, max, Settings::GetCoreFilters());
     int to_remove = -1;
     if (recent_roms_offsets.size() != recent_roms.size())
     {
@@ -354,9 +353,13 @@ std::tuple<bool, ImVec2, ImVec2> MainWindow::draw_custom_button(const std::strin
     ImVec2 max = ImVec2(ImGui::GetCursorPos().x + ImGui::GetContentRegionAvail().x,
                         ImGui::GetCursorPos().y + text_height + ImGui::GetStyle().ItemSpacing.y);
     uint32_t color = default_color;
-    if (ImGui::IsMouseHoveringRect(min, max))
+    bool hovered = ImGui::IsMouseHoveringRect(min, max) && ImGui::IsWindowHovered();
+    bool clicked = false;
+    if (hovered)
     {
         color = hover_color;
+        clicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+        ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
     }
     draw_list->AddRectFilled(min, max, color, 0, 0);
     ImVec2 min_text =
@@ -364,12 +367,6 @@ std::tuple<bool, ImVec2, ImVec2> MainWindow::draw_custom_button(const std::strin
     ImGui::SetCursorPos(min_text);
     ImGui::TextWrapped("%s", text.c_str());
     ImGui::PopFont();
-    bool clicked = false;
-    if (ImGui::IsMouseHoveringRect(min, max))
-    {
-        clicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
-        ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-    }
     return {clicked, min, max};
 }
 

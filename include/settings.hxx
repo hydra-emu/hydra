@@ -1,5 +1,6 @@
 #pragma once
 
+#include "filepicker.hxx"
 #include <compatibility.hxx>
 #include <corewrapper.hxx>
 #include <filesystem>
@@ -257,6 +258,20 @@ public:
 
             ++it;
         }
+
+        auto& filters = GetCoreFilters();
+        filters.clear();
+        for (auto& core : GetCoreInfo())
+        {
+            const auto& extensions = core.extensions;
+            std::string filter;
+            for (const auto& extension : extensions)
+            {
+                filter += "." + extension + ",";
+            }
+            filter.pop_back();
+            filters.push_back({core.core_name, filter});
+        }
     }
 
     static void ReinitCoreInfo()
@@ -280,6 +295,12 @@ public:
     {
         static std::vector<struct CoreInfo> c;
         return c;
+    }
+
+    static FilePickerFilters& GetCoreFilters()
+    {
+        static FilePickerFilters f;
+        return f;
     }
 
     static void ReinitCoresFrontend();

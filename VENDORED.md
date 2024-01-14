@@ -13,4 +13,5 @@
 - [miniz 3.0.0](https://github.com/richgel999/miniz)
 - [fmt](https://github.com/fmtlib/fmt/)
 - [nativefiledialog 1.1.1](https://github.com/btzy/nativefiledialog-extended)
+- [ImGuiFileDialog 0.6.6.1](https://github.com/aiekick/ImGuiFileDialog)
 - [toml11 3.8.1](https://github.com/ToruNiina/toml11)

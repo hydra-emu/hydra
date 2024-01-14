@@ -3,6 +3,7 @@
 #include "glad/glad.h"
 #include "hydra/core.hxx"
 #include "IconsMaterialDesign.h"
+#include "log.hxx"
 #include <fstream>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -26,6 +27,7 @@ GameWindow::GameWindow(const std::string& core_path, const std::string& game_pat
     GameWindow::instance = this;
     emulator = hydra::EmulatorFactory::Create(core_path);
     texture_size = emulator->shell->getNativeSize();
+    gl_format = GL_RGBA;
 
     if (emulator->shell->hasInterface(hydra::InterfaceType::ISoftwareRendered))
     {
@@ -33,6 +35,14 @@ GameWindow::GameWindow(const std::string& core_path, const std::string& game_pat
         gl_format = get_gl_format(pixel_format);
         hydra::ISoftwareRendered* shell_sw = emulator->shell->asISoftwareRendered();
         shell_sw->setVideoCallback(video_callback);
+    }
+
+    if (emulator->shell->hasInterface(hydra::InterfaceType::IInput))
+    {
+        hydra::IInput* shell_input = emulator->shell->asIInput();
+        shell_input->setPollInputCallback([]() {});
+        shell_input->setCheckButtonCallback(
+            [](uint32_t player, hydra::ButtonType button) { return 0; });
     }
 
     glGenTextures(1, &texture);
@@ -48,12 +58,26 @@ GameWindow::GameWindow(const std::string& core_path, const std::string& game_pat
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
     {
         printf("Framebuffer error: %d\n", status);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    if (emulator->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
+    {
+        hydra::IOpenGlRendered* shell_gl = emulator->shell->asIOpenGlRendered();
+        shell_gl->setGetProcAddress((void*)SDL_GL_GetProcAddress);
+        shell_gl->resetContext();
+        shell_gl->setFbo(fbo);
+        auto error = glGetError();
+        if (error != GL_NO_ERROR)
+        {
+            hydra::log("OpenGL error during rom load: {:x}\n", error);
+            loaded = false;
+            return;
+        }
     }
 
     loaded = emulator->LoadGame(game_path);
@@ -81,14 +105,21 @@ void GameWindow::video_callback(void* data, hydra::Size size)
 
 UpdateResult GameWindow::update()
 {
+    bool flip_y = false;
+    if (emulator->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
+    {
+        hydra::IOpenGlRendered* shell_gl = emulator->shell->asIOpenGlRendered();
+        shell_gl->setFbo(fbo);
+        flip_y = true;
+    }
     if (emulator->shell->hasInterface(hydra::InterfaceType::IFrontendDriven))
     {
         hydra::IFrontendDriven* shell = emulator->shell->asIFrontendDriven();
         shell->runFrame();
     }
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     UpdateResult result = UpdateResult::None;
-
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
     ImGuiIO& io = ImGui::GetIO();
 
@@ -272,20 +303,33 @@ UpdateResult GameWindow::update()
         offset_y = (ImGui::GetWindowHeight() - height) / 2.0f;
     }
 
+    ImVec2 uv_min = ImVec2(0.0f, 0.0f);
+    ImVec2 uv_max = ImVec2(1.0f, 1.0f);
+    if (flip_y)
+    {
+        uv_min.y = 1.0f;
+        uv_max.y = 0.0f;
+    }
+
+    // We don't want transparent parts of the texture to be transparent in the window
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->AddCallback(
+        [](const ImDrawList* parent_list, const ImDrawCmd* cmd) { glDisable(GL_BLEND); }, nullptr);
     if (!fullscreen)
     {
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
         offset_x += ImGui::GetWindowPos().x;
         offset_y += ImGui::GetWindowPos().y;
         draw_list->AddImageRounded((ImTextureID)(intptr_t)texture, ImVec2(offset_x, offset_y),
-                                   ImVec2(offset_x + width, offset_y + height), ImVec2(0, 0),
-                                   ImVec2(1, 1), ImColor(255, 255, 255, 255), rounding);
+                                   ImVec2(offset_x + width, offset_y + height), uv_min, uv_max,
+                                   ImColor(255, 255, 255, 255), rounding);
     }
     else
     {
         ImGui::SetCursorPos(ImVec2(offset_x, offset_y));
-        ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2(width, height));
+        ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2(width, height), uv_min, uv_max);
     }
+    draw_list->AddCallback(
+        [](const ImDrawList* parent_list, const ImDrawCmd* cmd) { glEnable(GL_BLEND); }, nullptr);
     ImGui::SetCursorPos(ImVec2(16, 16));
     ImGui::PushFont(big_font);
     if (fullscreen_hovered)

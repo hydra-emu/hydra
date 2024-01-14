@@ -132,6 +132,15 @@ EM_JS(void, hydra_web_initialize, (), {
 });
 #endif
 
+#ifdef HYDRA_DESKTOP
+void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                                GLsizei length, const GLchar* message, const void* userParam)
+{
+    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
+}
+#endif
+
 int imgui_main(int argc, char* argv[])
 {
     // TODO: Joystick
@@ -158,8 +167,8 @@ int imgui_main(int argc, char* argv[])
     const char* glsl_version = "#version 130";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #endif
 
     SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
@@ -178,6 +187,9 @@ int imgui_main(int argc, char* argv[])
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_ShowWindow(window);
 
+    glGetString = (PFNGLGETSTRINGPROC)SDL_GL_GetProcAddress("glGetString");
+    printf("OpenGL version: %s\n", glGetString(GL_VERSION));
+
 #if !defined(HYDRA_WEB) && !defined(HYDRA_ANDROID) && !defined(HYDRA_IOS)
     if (gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress) == 0)
     {
@@ -190,6 +202,11 @@ int imgui_main(int argc, char* argv[])
         printf("Failed to initialize OpenGL functions!\n");
         return 1;
     }
+#endif
+
+#ifdef HYDRA_DESKTOP
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(MessageCallback, 0);
 #endif
 
 #ifdef HYDRA_WEB
