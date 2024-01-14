@@ -1,3 +1,4 @@
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW) # set can overwrite option
 include(vendored/CMakeRC.cmake)
 
 cmake_minimum_required(VERSION 3.20)
