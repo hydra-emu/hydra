@@ -14,7 +14,7 @@ enum class UpdateResult
 class GameWindow
 {
 public:
-    GameWindow(const std::string& core_path, const std::string& game_path);
+    GameWindow(const std::filesystem::path& core_path, const std::filesystem::path& game_path);
     UpdateResult update();
 
     bool isFullscreen()

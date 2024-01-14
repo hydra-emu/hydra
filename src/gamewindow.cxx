@@ -16,7 +16,8 @@ constexpr float rounding = 10.0f;
 extern ImFont* big_font;
 GameWindow* GameWindow::instance = nullptr;
 
-GameWindow::GameWindow(const std::string& core_path, const std::string& game_path)
+GameWindow::GameWindow(const std::filesystem::path& core_path,
+                       const std::filesystem::path& game_path)
 {
     ImGuiIO& io = ImGui::GetIO();
     size_x = io.DisplaySize.x / 3.0f;
@@ -80,7 +81,7 @@ GameWindow::GameWindow(const std::string& core_path, const std::string& game_pat
         }
     }
 
-    loaded = emulator->LoadGame(game_path);
+    loaded = emulator->LoadGame(game_path.string());
 }
 
 void GameWindow::video_callback(void* data, hydra::Size size)
