@@ -26,12 +26,18 @@ GameWindow::GameWindow(const std::string& core_path, const std::string& game_pat
     GameWindow::instance = this;
     emulator = hydra::EmulatorFactory::Create(core_path);
     texture_size = emulator->shell->getNativeSize();
-    pixel_format = emulator->shell->asISoftwareRendered()->getPixelFormat();
-    gl_format = get_gl_format(pixel_format);
+
+    if (emulator->shell->hasInterface(hydra::InterfaceType::ISoftwareRendered))
+    {
+        pixel_format = emulator->shell->asISoftwareRendered()->getPixelFormat();
+        gl_format = get_gl_format(pixel_format);
+        hydra::ISoftwareRendered* shell_sw = emulator->shell->asISoftwareRendered();
+        shell_sw->setVideoCallback(video_callback);
+    }
 
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_size.width, texture_size.height, 0, GL_RGBA,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_size.width, texture_size.height, 0, gl_format,
                  GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -48,12 +54,6 @@ GameWindow::GameWindow(const std::string& core_path, const std::string& game_pat
     if (status != GL_FRAMEBUFFER_COMPLETE)
     {
         printf("Framebuffer error: %d\n", status);
-    }
-
-    if (emulator->shell->hasInterface(hydra::InterfaceType::ISoftwareRendered))
-    {
-        hydra::ISoftwareRendered* shell_sw = emulator->shell->asISoftwareRendered();
-        shell_sw->setVideoCallback(video_callback);
     }
 
     loaded = emulator->LoadGame(game_path);

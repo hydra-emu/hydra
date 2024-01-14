@@ -74,12 +74,22 @@ public:
         return map()[key];
     }
 
-    static void Set(const std::string& key, const std::string& value)
+    static void Save()
     {
-        map()[key] = value;
         json j_map(map());
         std::string data = j_map.dump(4);
         hydra::fwrite(save_path(), std::span<const uint8_t>((uint8_t*)data.data(), data.size()));
+    }
+
+    static void SetNoSave(const std::string& key, const std::string& value)
+    {
+        map()[key] = value;
+    }
+
+    static void Set(const std::string& key, const std::string& value)
+    {
+        SetNoSave(key, value);
+        Save();
     }
 
     static bool IsEmpty()

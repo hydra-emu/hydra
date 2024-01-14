@@ -22,6 +22,8 @@ constexpr size_t games_tab = 0;
 constexpr size_t cores_tab = 1;
 constexpr size_t settings_tab = 2;
 constexpr size_t about_tab = 3;
+
+constexpr size_t recent_max = 50;
 constexpr const char* names[tab_count] = {"Games", "Cores", "Settings", "About"};
 constexpr const char* icons[tab_count] = {ICON_MD_GAMES, ICON_MD_MEMORY, ICON_MD_SETTINGS,
                                           ICON_MD_INFO};
@@ -54,6 +56,19 @@ MainWindow::MainWindow()
         Settings::Set("fancy_gui", "true");
     }
     fancy_gui = Settings::Get("fancy_gui") == "true";
+
+    for (size_t i = 0; i < recent_max; i++)
+    {
+        std::string recent = Settings::Get("recent_" + std::to_string(i));
+        if (!recent.empty())
+        {
+            recent_roms.push_back(recent);
+        }
+        else
+        {
+            break;
+        }
+    }
 }
 
 void MainWindow::update_impl()
@@ -73,8 +88,6 @@ void MainWindow::update_impl()
     draw_stars(center, radius);
     ImGui::BeginGroup();
     ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    // draw_list->AddCircle(center, radius, 0xFFFFFFFF, 0, 2.0f);
 
     // We draw our own animated rectangle so disable these
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0, 0, 0, 0));
@@ -112,6 +125,7 @@ void MainWindow::update_impl()
     ImGui::SameLine(0, ImGui::GetStyle().ItemSpacing.x * 2);
     ImGui::BeginGroup();
     float cursor_x = ImGui::GetCursorPosX() - ImGui::GetStyle().ItemSpacing.x;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
     draw_list->AddLine(
         ImVec2(cursor_x, ImGui::GetStyle().WindowPadding.y),
         ImVec2(cursor_x, ImGui::GetIO().DisplaySize.y - ImGui::GetStyle().WindowPadding.y),
@@ -152,31 +166,243 @@ void MainWindow::update()
 
 void MainWindow::loadRom(const std::filesystem::path& path)
 {
-    game_window = std::make_unique<GameWindow>("/hydra/cores/libNanoBoyAdvance-hydra.wasm",
-                                               "/hydra/cache/emerald.gba");
+    if (pending_rom_load)
+    {
+        hydra::log("Pending ROM load while loadRom is called, shouldn't happen");
+        return;
+    }
+
+    // Find a core for this extension
+    std::string extension = path.extension().string();
+    if (extension.size() > 0)
+    {
+        extension = extension.substr(1);
+    }
+    else
+    {
+        hydra::log("No extension found for file: {}", path.string());
+        return;
+    }
+
+    auto& cores = Settings::GetCoreInfo();
+    std::vector<CoreInfo> available_cores;
+    for (size_t i = 0; i < cores.size(); i++)
+    {
+        for (size_t j = 0; j < cores[i].extensions.size(); j++)
+        {
+            if (cores[i].extensions[j] == extension)
+            {
+                available_cores.push_back(cores[i]);
+            }
+        }
+    }
+
+    if (available_cores.size() > 1)
+    {
+        std::string preference = Settings::Get(extension + "_preference");
+        if (!preference.empty())
+        {
+            for (size_t i = 0; i < available_cores.size(); i++)
+            {
+                if (available_cores[i].core_name == preference)
+                {
+                    load_rom_impl(available_cores[i].path, path);
+                    return;
+                }
+            }
+
+            // Preference must've been removed
+            Settings::Set(extension + "_preference", "");
+        }
+        else
+        {
+            // Open a picker
+            pending_rom_load = true;
+            pending_rom_path = path;
+            pending_available_cores = available_cores;
+        }
+    }
+    else if (available_cores.size() == 1)
+    {
+        // Only 1 core available, our life is easy
+        load_rom_impl(available_cores[0].path, path);
+    }
+    else
+    {
+        hydra::log("No core available for extension: {}", extension);
+    }
+}
+
+void MainWindow::load_rom_impl(const std::filesystem::path& core_path,
+                               const std::filesystem::path& rom_path)
+{
+    game_window = std::make_unique<GameWindow>(core_path, rom_path);
     if (!game_window->isLoaded())
     {
         game_window.reset();
     }
+    recent_roms.push_front(rom_path);
+    if (recent_roms.size() > recent_max)
+    {
+        recent_roms.pop_back();
+    }
+    save_recents();
+}
+
+void MainWindow::save_recents()
+{
+    for (size_t i = 0; i < recent_roms.size(); i++)
+    {
+        Settings::SetNoSave("recent_" + std::to_string(i), recent_roms[i].string());
+    }
+    for (size_t i = recent_roms.size(); i < recent_max; i++)
+    {
+        Settings::SetNoSave("recent_" + std::to_string(i), "");
+    }
+    Settings::Save();
 }
 
 void MainWindow::draw_games()
 {
+    if (pending_rom_load)
+    {
+        draw_pending_rom_load();
+        return;
+    }
+
+    static bool removing_recent = false;
+    bool update_positions = false;
+    if (removing_recent)
+    {
+        static std::chrono::time_point<std::chrono::steady_clock> start =
+            std::chrono::steady_clock::now();
+        if (std::chrono::steady_clock::now() - start > std::chrono::milliseconds(60))
+        {
+            update_positions = true;
+            start = std::chrono::steady_clock::now();
+        }
+    }
+    auto [_, min, max] = draw_custom_button(ICON_MD_FOLDER " Click here to load a ROM");
+    rom_picker.update(min, max);
+    int to_remove = -1;
+    if (recent_roms_offsets.size() != recent_roms.size())
+    {
+        recent_roms_offsets.resize(recent_roms.size());
+    }
+    if (recent_roms.size() == 0)
+    {
+        return;
+    }
+    ImGui::Separator();
+    ImGui::PushFont(big_font);
+    ImGui::Text(ICON_MD_HISTORY " Recent ROMs");
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - hydra::ImGuiHelper::IconWidth() * 2.0f -
+                    ImGui::GetStyle().FramePadding.x * 2.0f);
+    ImGui::Checkbox(ICON_MD_EDIT, &removing_recent);
+    for (size_t i = 0; i < recent_roms.size(); i++)
+    {
+        ImGui::PushID(i);
+        if (!removing_recent)
+        {
+            auto [clicked, min, max] = draw_custom_button(recent_roms[i].filename().string());
+            if (clicked)
+            {
+                loadRom(recent_roms[i]);
+            }
+        }
+        else
+        {
+            float shake_x = recent_roms_offsets[i].x;
+            float shake_y = recent_roms_offsets[i].y;
+            if (update_positions)
+            {
+                shake_x = (rand() % 10 - 5) / 40.0f;
+                shake_y = (rand() % 10 - 5) / 40.0f;
+                recent_roms_offsets[i].x = shake_x;
+                recent_roms_offsets[i].y = shake_y;
+            }
+            ImGui::SetCursorPos(
+                ImVec2(ImGui::GetCursorPos().x + shake_x, ImGui::GetCursorPos().y + shake_y));
+            auto [clicked, min, max] = draw_custom_button(
+                ICON_MD_DELETE " " + recent_roms[i].filename().string(), 0x40000040, 0x80000080);
+            if (clicked)
+            {
+                to_remove = i;
+            }
+        }
+        ImGui::PopID();
+    }
+    ImGui::PopFont();
+    if (to_remove != -1)
+    {
+        recent_roms.erase(recent_roms.begin() + to_remove);
+        save_recents();
+    }
+}
+
+std::tuple<bool, ImVec2, ImVec2> MainWindow::draw_custom_button(const std::string& text,
+                                                                uint32_t default_color,
+                                                                uint32_t hover_color)
+{
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImGui::PushFont(big_font);
+    float text_height =
+        ImGui::CalcTextSize(text.c_str(), nullptr, false,
+                            ImGui::GetContentRegionAvail().x - ImGui::GetStyle().FramePadding.x * 2)
+            .y;
     ImVec2 min = ImGui::GetCursorPos();
     ImVec2 max = ImVec2(ImGui::GetCursorPos().x + ImGui::GetContentRegionAvail().x,
-                        ImGui::GetCursorPos().y + ImGui::GetContentRegionAvail().y * 0.1f);
-    uint32_t color = ImGui::GetColorU32(ImGuiCol_Button);
+                        ImGui::GetCursorPos().y + text_height + ImGui::GetStyle().ItemSpacing.y);
+    uint32_t color = default_color;
     if (ImGui::IsMouseHoveringRect(min, max))
     {
-        color = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+        color = hover_color;
     }
     draw_list->AddRectFilled(min, max, color, 0, 0);
-    rom_picker.update(min, max);
-    min.x += ImGui::GetStyle().ItemSpacing.x;
-    min.y += ImGui::GetContentRegionAvail().y * 0.05f - hydra::ImGuiHelper::TextHeight() * 0.5f;
-    ImGui::SetCursorPos(min);
-    ImGui::Text(ICON_MD_FOLDER " Load ROM");
+    ImVec2 min_text =
+        ImVec2(min.x + ImGui::GetStyle().ItemSpacing.x, min.y + ImGui::GetStyle().ItemSpacing.y);
+    ImGui::SetCursorPos(min_text);
+    ImGui::TextWrapped("%s", text.c_str());
+    ImGui::PopFont();
+    bool clicked = false;
+    if (ImGui::IsMouseHoveringRect(min, max))
+    {
+        clicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+        ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+    }
+    return {clicked, min, max};
+}
+
+void MainWindow::draw_pending_rom_load()
+{
+    static bool remember_rom_choice = true;
+    ImGui::PushFont(big_font);
+    ImGui::TextWrapped(ICON_MD_WARNING " Multiple cores available for this ROM");
+    ImGui::Separator();
+    for (auto& core : pending_available_cores)
+    {
+        auto [clicked, min, max] = draw_custom_button(core.core_name + " " + core.version);
+        if (clicked)
+        {
+            load_rom_impl(core.path, pending_rom_path);
+            if (remember_rom_choice)
+            {
+                Settings::Set(pending_rom_path.extension().string() + "_preference",
+                              core.core_name);
+            }
+            pending_rom_load = false;
+            pending_available_cores.clear();
+            pending_rom_path.clear();
+            return;
+        }
+    }
+    ImVec2 pos = ImGui::GetCursorPos();
+    pos.y += ImGui::GetContentRegionAvail().y - ImGui::GetStyle().ItemSpacing.y * 2.0f -
+             hydra::ImGuiHelper::BigTextHeight();
+    ImGui::SetCursorPos(pos);
+    ImGui::Separator();
+    ImGui::Checkbox("Remember my choice", &remember_rom_choice);
+    ImGui::PopFont();
 }
 
 void MainWindow::draw_cores()
