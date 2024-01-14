@@ -54,4 +54,5 @@ private:
     static GameWindow* instance;
     static void video_callback(void* data, hydra::Size size);
     static GLenum get_gl_format(hydra::PixelFormat format);
+    static void platform_specific_changes(void* data, hydra::Size size);
 };

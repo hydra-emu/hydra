@@ -54,6 +54,7 @@ elseif(HYDRA_MACOS)
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES}
         "-framework OpenGL"
     )
+    enable_language(OBJC)
 elseif(HYDRA_LINUX)
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} OpenGL::GL)
 elseif(HYDRA_FREEBSD)
@@ -103,6 +104,7 @@ endif()
 option(BUILD_QT "Build the Qt frontend" OFF)
 option(BUILD_LUA "Build with lua for script support" OFF)
 option(BUILD_DISCORD_BOT "Build with discord bot support" OFF)
+option(USE_NATIVE_FILE_DIALOGS "Use native file dialogs" OFF)
 
 add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
@@ -151,7 +153,7 @@ if(HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_WINDOWS)
 endif()
 
 if(HYDRA_DESKTOP)
-    if (NOT HYDRA_FREEBSD) # TODO: fix this
+    if (NOT HYDRA_FREEBSD AND SE_NATIVE_FILE_DIALOGS) # TODO: fix FreeBSD
         set(NFD_PORTAL ON) # use xdg-desktop-portal for file dialogs
         add_subdirectory(vendored/nativefiledialog)
         set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} nfd)

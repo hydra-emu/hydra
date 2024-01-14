@@ -84,8 +84,24 @@ GameWindow::GameWindow(const std::filesystem::path& core_path,
     loaded = emulator->LoadGame(game_path.string());
 }
 
+void GameWindow::platform_specific_changes(void* data, hydra::Size size)
+{
+    // TODO: do this with shaders?
+#ifdef HYDRA_WEB
+    auto gl_format = get_gl_format(GameWindow::instance->pixel_format);
+    if (gl_format == GL_BGRA)
+    {
+        for (int i = 0; i < size.width * size.height * 4; i += 4)
+        {
+            std::swap(((uint8_t*)data)[i], ((uint8_t*)data)[i + 2]);
+        }
+    }
+#endif
+}
+
 void GameWindow::video_callback(void* data, hydra::Size size)
 {
+    platform_specific_changes(data, size);
     glBindTexture(GL_TEXTURE_2D, GameWindow::instance->texture);
     hydra::Size texture_size = GameWindow::instance->texture_size;
     hydra::PixelFormat pixel_format =
@@ -370,11 +386,7 @@ GLenum GameWindow::get_gl_format(hydra::PixelFormat format)
         }
         case hydra::PixelFormat::BGRA:
         {
-#ifdef HYDRA_WEB
-            return GL_RGBA;
-#else
             return GL_BGRA;
-#endif
         }
         default:
         {
