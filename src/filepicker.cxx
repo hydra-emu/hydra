@@ -8,8 +8,12 @@ int html_id_last = 0;
 #include <emscripten.h>
 #else
 #include <ImGuiFileDialog/ImGuiFileDialog.h>
+#ifdef HYDRA_NATIVE_FILE_DIALOG
 #include <nfd.h>
 bool nfd_errors = false;
+#else
+bool nfd_errors = true;
+#endif
 #endif
 
 FilePicker::FilePicker(const std::string& id, const std::string& name,
@@ -60,6 +64,7 @@ void FilePicker::update(ImVec2 start, ImVec2 end, const FilePickerFilters& filte
             Settings::Set("last_path", default_path);
         }
 #ifdef HYDRA_DESKTOP
+#ifdef HYDRA_NATIVE_FILE_DIALOG
         if (!nfd_errors)
         {
             NFD_Init();
@@ -90,6 +95,7 @@ void FilePicker::update(ImVec2 start, ImVec2 end, const FilePickerFilters& filte
             NFD_Quit();
         }
         else
+#endif
         {
         imgui_replacement:
             std::string filter_str;
