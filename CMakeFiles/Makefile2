@@ -203,10 +203,10 @@ vendored/toml11/clean:
 # Target rules for target CMakeFiles/hydra.dir
 
 # All Build rule for target.
-CMakeFiles/hydra.dir/all: CMakeFiles/hydra_data.dir/all
 CMakeFiles/hydra.dir/all: vendored/fmt/CMakeFiles/fmt.dir/all
 CMakeFiles/hydra.dir/all: vendored/SDL/CMakeFiles/SDL3-static.dir/all
 CMakeFiles/hydra.dir/all: vendored/openssl/crypto/CMakeFiles/crypto.dir/all
+CMakeFiles/hydra.dir/all: CMakeFiles/hydra_data.dir/all
 CMakeFiles/hydra.dir/all: vendored/openssl/ssl/CMakeFiles/ssl.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hydra.dir/build.make CMakeFiles/hydra.dir/build

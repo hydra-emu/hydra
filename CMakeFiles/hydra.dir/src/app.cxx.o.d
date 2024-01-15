@@ -798,7 +798,6 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/dlfcn.h \
   /home/runner/work/hydra/hydra/vendored/stb_image_write.h \
   /home/runner/work/hydra/hydra/core/include/hydra/core.hxx \
-  /home/runner/work/hydra/hydra/include/mainwindow.hxx \
   /home/runner/work/hydra/hydra/include/filepicker.hxx \
   /home/runner/work/hydra/hydra/vendored/imgui/imgui.h \
   /home/runner/work/hydra/hydra/vendored/imgui/imconfig.h \
@@ -806,6 +805,7 @@ CMakeFiles/hydra.dir/src/app.cxx.o: \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/lib/clang/18/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/float.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/assert.h \
+  /home/runner/work/hydra/hydra/include/mainwindow.hxx \
   /home/runner/work/hydra/hydra/include/gamewindow.hxx \
   /home/runner/work/hydra/hydra/vendored/glad/include/glad/glad.h \
   /home/runner/work/hydra/hydra/emsdk-cache/emsdk-main/upstream/emscripten/cache/sysroot/include/KHR/khrplatform.h \
