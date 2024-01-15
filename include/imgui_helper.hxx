@@ -54,6 +54,19 @@ namespace hydra
             return icon_width;
         }
 
+        static float BigIconWidth()
+        {
+            static float icon_width = 0;
+            if (icon_width == 0)
+            {
+                ImGui::PushFont(big_font);
+                icon_width = ImGui::CalcTextSize(ICON_MD_10K).x;
+                ImGui::PopFont();
+            }
+
+            return icon_width;
+        }
+
         static float TextHeight()
         {
             static float text_height = ImGui::CalcTextSize("A").y;

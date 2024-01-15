@@ -1,5 +1,6 @@
 #include "compatibility.hxx"
 #include "corewrapper.hxx"
+#include "filepicker.hxx"
 #include "hydra/core.hxx"
 #include "mainwindow.hxx"
 #include "SDL_events.h"
@@ -310,6 +311,7 @@ int imgui_main(int argc, char* argv[])
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
                          ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar |
                          ImGuiWindowFlags_NoScrollWithMouse);
+        FilePicker::hideAll();
         main_window->update();
         ImGui::End();
         ImGui::Render();
@@ -515,8 +517,17 @@ void Settings::ReinitCoresFrontend()
                                 {
                                     std::string value = Settings::Get(widget.key);
                                     value.resize(1024);
+                                    std::shared_ptr<FilePicker> picker;
                                     core_functions.push_back([name, key, description, value,
-                                                              current_id]() mutable {
+                                                              current_id, picker]() mutable {
+                                        if (!picker)
+                                        {
+                                            picker = std::make_shared<FilePicker>(
+                                                key, name, [key, &value](const char* path) {
+                                                    value = path;
+                                                    Settings::Set(key, path);
+                                                });
+                                        }
                                         ImGui::PushID(current_id);
                                         ImGui::InputText(name.c_str(), value.data(), value.size(),
                                                          ImGuiInputTextFlags_ReadOnly);
@@ -536,6 +547,9 @@ void Settings::ReinitCoresFrontend()
                                                 std::memcpy(value.data(), path.data(), path.size());
                                             }
                                         }
+                                        picker->update(ImGui::GetItemRectMin(),
+                                                       ImGui::GetItemRectMax(),
+                                                       {{"All files", "*"}});
                                         ImGui::PopID();
                                     });
                                     break;

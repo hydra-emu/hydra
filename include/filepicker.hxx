@@ -15,7 +15,7 @@ public:
                std::function<void(const char*)> callback);
     ~FilePicker();
     void update(ImVec2 start, ImVec2 end, const FilePickerFilters& filters);
-    void hide();
+    static void hideAll();
     std::function<void(const char*)> callback;
 
 private:

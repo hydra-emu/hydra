@@ -157,7 +157,6 @@ void MainWindow::update_impl()
 
 void MainWindow::update()
 {
-    rom_picker.hide();
     if (!game_window || !game_window->isFullscreen())
         update_impl();
     if (game_window)
@@ -257,6 +256,7 @@ void MainWindow::load_rom_impl(const std::filesystem::path& core_path,
     {
         recent_roms.pop_back();
     }
+    save_recents();
 }
 
 void MainWindow::save_recents()
@@ -290,7 +290,7 @@ void MainWindow::draw_games()
     ImGui::Separator();
     ImGui::PushFont(big_font);
     ImGui::Text(ICON_MD_HISTORY " Recent ROMs");
-    ImGui::SameLine(ImGui::GetContentRegionAvail().x - hydra::ImGuiHelper::IconWidth() * 2.0f -
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - hydra::ImGuiHelper::BigIconWidth() * 2.0f -
                     ImGui::GetStyle().FramePadding.x * 2.0f);
     ImGui::Checkbox(ICON_MD_EDIT, &removing_recent);
     int j = 0;
@@ -305,7 +305,6 @@ void MainWindow::draw_games()
                 auto path = *it;
                 it = recent_roms.erase(it);
                 loadRom(path);
-                save_recents();
             }
             else
             {

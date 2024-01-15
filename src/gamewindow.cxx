@@ -88,8 +88,7 @@ void GameWindow::platform_specific_changes(void* data, hydra::Size size)
 {
     // TODO: do this with shaders?
 #ifdef HYDRA_WEB
-    auto gl_format = get_gl_format(GameWindow::instance->pixel_format);
-    if (gl_format == GL_BGRA)
+    if (GameWindow::instance->pixel_format == hydra::PixelFormat::BGRA)
     {
         for (int i = 0; i < size.width * size.height * 4; i += 4)
         {

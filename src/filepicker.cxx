@@ -6,6 +6,7 @@
 #ifdef HYDRA_WEB
 int html_id_last = 0;
 #include <emscripten.h>
+std::vector<FilePicker*> pickers;
 EM_JS(void, filepicker_move, (const char* id, int x, int y, int x2, int y2), {
     var element = document.getElementById(UTF8ToString(id));
     element.style.left = x + 'px';
@@ -53,6 +54,7 @@ FilePicker::FilePicker(const std::string& id, const std::string& name,
             document.getElementById('canvas').dispatchEvent(mouseMoveEvent);
         };
     }, html_id.c_str());
+    pickers.push_back(this);
 #endif
 }
 
@@ -63,16 +65,20 @@ FilePicker::~FilePicker()
         var element = document.getElementById($0);
         element.parentNode.removeChild(element);
     }, html_id.c_str());
+    pickers.erase(std::remove(pickers.begin(), pickers.end(), this), pickers.end());
 #endif
 }
 
-void FilePicker::hide()
+void FilePicker::hideAll()
 {
 #ifdef HYDRA_WEB
-    EM_ASM({
-        var element = document.getElementById(UTF8ToString($0));
-        element.style.visibility = 'hidden';
-    }, html_id.c_str());
+    for (auto picker : pickers)
+    {
+        EM_ASM({
+            var element = document.getElementById(UTF8ToString($0));
+            element.style.visibility = 'hidden';
+        }, picker->html_id.c_str());
+    }
 #endif
 }
 
