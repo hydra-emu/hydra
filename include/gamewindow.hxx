@@ -1,9 +1,10 @@
 #pragma once
 
-#include "hydra/core.hxx"
-#include "imgui.h"
+#include <bot.hxx>
 #include <corewrapper.hxx>
 #include <glad/glad.h>
+#include <hydra/core.hxx>
+#include <imgui.h>
 
 enum class UpdateResult
 {
@@ -27,6 +28,10 @@ public:
         return loaded;
     }
 
+    GLuint fbo = 0;
+    std::shared_ptr<hydra::EmulatorWrapper> emulator;
+    std::unique_ptr<Bot> bot;
+
 private:
     float velocity_x = 0.0f;
     float velocity_y = 0.0f;
@@ -43,13 +48,10 @@ private:
     bool animating = false;
     bool loaded = false;
     GLuint texture = 0;
-    GLuint fbo = 0;
     ImVec2 start_drag;
     hydra::Size texture_size;
     hydra::PixelFormat pixel_format;
     GLenum gl_format;
-
-    std::shared_ptr<hydra::EmulatorWrapper> emulator;
 
     static GameWindow* instance;
     static void video_callback(void* data, hydra::Size size);

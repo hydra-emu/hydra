@@ -221,16 +221,26 @@ public:
                     ++it;
                     continue;
                 }
+
+                auto get_info_w = [get_info_p](hydra::InfoType type) {
+                    const char* info = get_info_p(type);
+                    if (!info)
+                    {
+                        return std::string();
+                    }
+                    return std::string(info);
+                };
+
                 struct CoreInfo info;
                 info.path = it->path().string();
-                info.core_name = get_info_p(hydra::InfoType::CoreName);
-                info.system_name = get_info_p(hydra::InfoType::SystemName);
-                info.version = get_info_p(hydra::InfoType::Version);
-                info.author = get_info_p(hydra::InfoType::Author);
-                info.description = get_info_p(hydra::InfoType::Description);
-                info.extensions = hydra::split(get_info_p(hydra::InfoType::Extensions), ',');
-                info.url = get_info_p(hydra::InfoType::Website);
-                info.license = get_info_p(hydra::InfoType::License);
+                info.core_name = get_info_w(hydra::InfoType::CoreName);
+                info.system_name = get_info_w(hydra::InfoType::SystemName);
+                info.version = get_info_w(hydra::InfoType::Version);
+                info.author = get_info_w(hydra::InfoType::Author);
+                info.description = get_info_w(hydra::InfoType::Description);
+                info.extensions = hydra::split(get_info_w(hydra::InfoType::Extensions), ',');
+                info.url = get_info_w(hydra::InfoType::Website);
+                info.license = get_info_w(hydra::InfoType::License);
                 info.max_players = 1;
 
                 bool one_active = false;

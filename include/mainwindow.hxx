@@ -4,6 +4,7 @@
 #include "gamewindow.hxx"
 #include "settings.hxx"
 #include <array>
+#include <bot.hxx>
 #include <deque>
 #include <filesystem>
 #include <functional>
@@ -34,6 +35,7 @@ private:
     void draw_games();
     void draw_cores();
     void draw_about();
+    void draw_bot();
     void draw_settings();
     void draw_stars(ImVec2 center, float radius);
     void draw_pending_rom_load();
@@ -55,6 +57,7 @@ private:
     std::unordered_map<std::string, std::vector<std::function<void()>>> settings_functions;
     std::unique_ptr<GameWindow> game_window;
     std::deque<std::filesystem::path> recent_roms;
+    std::string bot_token;
 
     bool pending_rom_load = false;
     std::filesystem::path pending_rom_path;

@@ -549,7 +549,7 @@ void Settings::ReinitCoresFrontend()
                                         }
                                         picker->update(ImGui::GetItemRectMin(),
                                                        ImGui::GetItemRectMax(),
-                                                       {{"All files", "*"}});
+                                                       {{"All files", ".*"}});
                                         ImGui::PopID();
                                     });
                                     break;

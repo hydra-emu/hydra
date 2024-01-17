@@ -154,16 +154,24 @@ void FilePicker::update(ImVec2 start, ImVec2 end, const FilePickerFilters& filte
         {
         imgui_replacement:
             std::string filter_str;
-            for (size_t i = 0; i < filters.size(); ++i)
+            if (filters[0].second != "*.*")
             {
-                filter_str +=
-                    filters[i].first + '(' + filters[i].second + ") {" + filters[i].second + "},";
+                for (size_t i = 0; i < filters.size(); ++i)
+                {
+                    filter_str += filters[i].first + '(' + filters[i].second + ") {" +
+                                  filters[i].second + "},";
+                }
+                filter_str.pop_back();
             }
-            filter_str.pop_back();
-            IGFD::FileDialogConfig config;
-            config.path = default_path;
-            config.countSelectionMax = 1;
-            config.flags = ImGuiFileDialogFlags_Modal;
+            else
+            {
+            }
+
+            IGFD::FileDialogConfig config = {
+                .path = default_path,
+                .countSelectionMax = 1,
+                .flags = ImGuiFileDialogFlags_Modal,
+            };
             std::string sname = ICON_MD_FOLDER_OPEN + name;
             ImGuiFileDialog::Instance()->OpenDialog("dialog", sname, filter_str.c_str(), config);
         }

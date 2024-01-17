@@ -117,6 +117,8 @@ namespace hydra
         void EnableCheat(uint32_t handle);
         void DisableCheat(uint32_t handle);
 
+        void RunFrame();
+
     private:
         dynlib_handle_t handle;
         void (*destroy_function)(IBase*);

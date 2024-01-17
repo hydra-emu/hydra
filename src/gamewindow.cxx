@@ -122,18 +122,22 @@ void GameWindow::video_callback(void* data, hydra::Size size)
 UpdateResult GameWindow::update()
 {
     bool flip_y = false;
-    if (emulator->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
+    if (!bot)
     {
-        hydra::IOpenGlRendered* shell_gl = emulator->shell->asIOpenGlRendered();
-        shell_gl->setFbo(fbo);
-        flip_y = true;
+        if (emulator->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
+        {
+            hydra::IOpenGlRendered* shell_gl = emulator->shell->asIOpenGlRendered();
+            shell_gl->setFbo(fbo);
+            flip_y = true;
+        }
+        if (emulator->shell->hasInterface(hydra::InterfaceType::IFrontendDriven))
+        {
+            hydra::IFrontendDriven* shell = emulator->shell->asIFrontendDriven();
+            // If there's an active bot, it runs the frame instead of the frontend
+            shell->runFrame();
+        }
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     }
-    if (emulator->shell->hasInterface(hydra::InterfaceType::IFrontendDriven))
-    {
-        hydra::IFrontendDriven* shell = emulator->shell->asIFrontendDriven();
-        shell->runFrame();
-    }
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     UpdateResult result = UpdateResult::None;
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));

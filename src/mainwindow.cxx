@@ -16,16 +16,22 @@ CMRC_DECLARE(hydra);
 extern ImFont* small_font;
 extern ImFont* big_font;
 
-constexpr size_t tab_count = 4;
-constexpr size_t games_tab = 0;
-constexpr size_t cores_tab = 1;
-constexpr size_t settings_tab = 2;
-constexpr size_t about_tab = 3;
-
 constexpr size_t recent_max = 50;
-constexpr const char* names[tab_count] = {"Games", "Cores", "Settings", "About"};
-constexpr const char* icons[tab_count] = {ICON_MD_GAMES, ICON_MD_MEMORY, ICON_MD_SETTINGS,
-                                          ICON_MD_INFO};
+
+struct Tab
+{
+    std::string name;
+    std::string icon;
+};
+
+constexpr Tab tabs[] = {{"Games", ICON_MD_GAMES},
+                        {"Cores", ICON_MD_MEMORY},
+                        {"Settings", ICON_MD_SETTINGS},
+#ifdef HYDRA_DISCORD_BOT
+                        {"Bot", ICON_MD_CHAT_BUBBLE},
+#endif
+                        {"About", ICON_MD_INFO}};
+constexpr size_t tab_count = sizeof(tabs) / sizeof(Tab);
 
 MainWindow::MainWindow()
     : rom_picker("rom_picker", "Load ROM", [this](const char* path) {
@@ -115,8 +121,8 @@ void MainWindow::update_impl()
 #endif
         if (hovered)
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 1, 0.75));
-        if (ImGui::Selectable(use_icons ? icons[i] : names[i], selected_tab == i,
-                              ImGuiSelectableFlags_SpanAllColumns, tab_size))
+        if (ImGui::Selectable(use_icons ? tabs[i].icon.c_str() : tabs[i].name.c_str(),
+                              selected_tab == i, ImGuiSelectableFlags_SpanAllColumns, tab_size))
         {
             selected_tab = i;
         }
@@ -136,18 +142,21 @@ void MainWindow::update_impl()
         ImVec2(cursor_x, ImGui::GetIO().DisplaySize.y - ImGui::GetStyle().WindowPadding.y),
         0x80FFFFFF, 0.5f);
     ImGui::BeginGroup();
-    switch (selected_tab)
+    switch (hydra::str_hash(tabs[selected_tab].name))
     {
-        case games_tab:
+        case hydra::str_hash("Games"):
             draw_games();
             break;
-        case cores_tab:
+        case hydra::str_hash("Cores"):
             draw_cores();
             break;
-        case settings_tab:
+        case hydra::str_hash("Settings"):
             draw_settings();
             break;
-        case about_tab:
+        case hydra::str_hash("Bot"):
+            draw_bot();
+            break;
+        case hydra::str_hash("About"):
             draw_about();
             break;
     }
@@ -317,8 +326,9 @@ void MainWindow::draw_games()
             float shake_y = (rand() % 10 - 5) / 40.0f;
             ImGui::SetCursorPos(
                 ImVec2(ImGui::GetCursorPos().x + shake_x, ImGui::GetCursorPos().y + shake_y));
-            auto [clicked, min, max] = draw_custom_button(
-                ICON_MD_DELETE " " + it->filename().string(), 0x40000040, 0x80000080);
+            auto [clicked, min, max] =
+                draw_custom_button(ICON_MD_DELETE " " + it->filename().string(), 0x40000040,
+                                   0x80000080); // TODO: put all colors in a global header
             if (clicked)
             {
                 it = recent_roms.erase(it);
@@ -441,7 +451,14 @@ void MainWindow::draw_cores()
                         hydra::ImGuiHelper::IconWidth() - padding);
         if (ImGui::Button(ICON_MD_SETTINGS))
         {
-            selected_tab = settings_tab;
+            for (size_t j = 0; j < tab_count; j++)
+            {
+                if (hydra::str_hash(tabs[j].name) == hydra::str_hash("Settings"))
+                {
+                    selected_tab = j;
+                    break;
+                }
+            }
             open_core_settings = i;
         }
         ImGui::Separator();
@@ -489,6 +506,40 @@ void MainWindow::draw_cores()
 }
 
 void MainWindow::draw_about() {}
+
+void MainWindow::draw_bot()
+{
+#ifdef HYDRA_DISCORD_BOT
+    if (bot_token.size() == 0)
+    {
+        bot_token.resize(128);
+        std::string token = Settings::Get("bot_token");
+        strncpy(bot_token.data(), token.c_str(), bot_token.size());
+    }
+    if (!game_window)
+        ImGui::BeginDisabled();
+    ImGui::InputText("Token", bot_token.data(), bot_token.size());
+    ImGui::SameLine();
+    if (game_window && !game_window->bot)
+    {
+        if (ImGui::Button("Connect"))
+        {
+            Settings::Set("bot_token", bot_token);
+            game_window->bot =
+                std::make_unique<Bot>(game_window->emulator, game_window->fbo, bot_token, 10, 10);
+        }
+    }
+    else
+    {
+        if (ImGui::Button("Disconnect"))
+        {
+            game_window->bot.reset();
+        }
+    }
+    if (!game_window)
+        ImGui::EndDisabled();
+#endif
+}
 
 void MainWindow::draw_settings()
 {
