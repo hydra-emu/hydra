@@ -185,6 +185,7 @@ set(HYDRA_QT_FILES
 
 set(HYDRA_IMGUI_FILES
     src/app.cxx
+    src/input.cxx
     src/gamewindow.cxx
     src/mainwindow.cxx
     src/filepicker.cxx

@@ -509,7 +509,7 @@ void MainWindow::open_file_impl(const std::string& path)
     {
         if (info.path == core_path)
         {
-            info_ = std::make_unique<CoreInfo>(info);
+            info_ = std::make_unique<hydra::CoreInfo>(info);
             break;
         }
     }

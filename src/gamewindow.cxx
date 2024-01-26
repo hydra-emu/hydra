@@ -30,13 +30,9 @@ GameWindow::GameWindow(const std::filesystem::path& core_path,
     texture_size = emulator->shell->getNativeSize();
     gl_format = GL_RGBA;
 
-    if (emulator->shell->hasInterface(hydra::InterfaceType::ISoftwareRendered))
-    {
-        pixel_format = emulator->shell->asISoftwareRendered()->getPixelFormat();
-        gl_format = get_gl_format(pixel_format);
-        hydra::ISoftwareRendered* shell_sw = emulator->shell->asISoftwareRendered();
-        shell_sw->setVideoCallback(video_callback);
-    }
+    pixel_format = emulator->GetPixelFormat();
+    gl_format = get_gl_format(pixel_format);
+    emulator->SetVideoCallback(video_callback);
 
     if (emulator->shell->hasInterface(hydra::InterfaceType::IInput))
     {
@@ -66,19 +62,15 @@ GameWindow::GameWindow(const std::filesystem::path& core_path,
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    if (emulator->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
+    emulator->SetGetProcAddress((void*)SDL_GL_GetProcAddress);
+    emulator->ResetContext();
+    emulator->SetFbo(fbo);
+    auto error = glGetError();
+    if (error != GL_NO_ERROR)
     {
-        hydra::IOpenGlRendered* shell_gl = emulator->shell->asIOpenGlRendered();
-        shell_gl->setGetProcAddress((void*)SDL_GL_GetProcAddress);
-        shell_gl->resetContext();
-        shell_gl->setFbo(fbo);
-        auto error = glGetError();
-        if (error != GL_NO_ERROR)
-        {
-            hydra::log("OpenGL error during rom load: {:x}\n", error);
-            loaded = false;
-            return;
-        }
+        hydra::log("OpenGL error during rom load: {:x}\n", error);
+        loaded = false;
+        return;
     }
 
     loaded = emulator->LoadGame(game_path.string());
@@ -128,15 +120,10 @@ UpdateResult GameWindow::update()
         {
             hydra::IOpenGlRendered* shell_gl = emulator->shell->asIOpenGlRendered();
             shell_gl->setFbo(fbo);
-            flip_y = true;
+            flip_y = true; // TODO: I HATE OPENGL
         }
-        if (emulator->shell->hasInterface(hydra::InterfaceType::IFrontendDriven))
-        {
-            hydra::IFrontendDriven* shell = emulator->shell->asIFrontendDriven();
-            // If there's an active bot, it runs the frame instead of the frontend
-            shell->runFrame();
-        }
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        emulator->RunFrame();
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // TODO: REMOVE
     }
 
     UpdateResult result = UpdateResult::None;

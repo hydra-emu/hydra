@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #if defined(HYDRA_LIBDL)
 #include <dlfcn.h>
@@ -9,11 +10,31 @@
 #include <windows.h>
 #endif
 #include "stb_image_write.h"
+#include <array>
 #include <filesystem>
+#include <glad/glad.h>
 #include <hydra/core.hxx>
+#include <memory>
 
 namespace hydra
 {
+
+    struct CoreInfo
+    {
+        std::string path;
+        std::string core_name;
+        std::string system_name;
+        std::string author;
+        std::string version;
+        std::string description;
+        std::string license;
+        std::string url;
+        std::time_t last_played;
+        int max_players;
+        std::vector<std::string> extensions;
+        std::vector<std::string> required_files;
+        unsigned int icon_texture = 0;
+    };
 
     typedef void* dynlib_handle_t;
 
@@ -112,23 +133,30 @@ namespace hydra
         const std::vector<CheatMetadata>& GetCheats();
 
         bool LoadGame(const std::filesystem::path& path);
+
+        // IFrontendDriven
+        void RunFrame();
+        uint16_t GetFps();
+
+        // IOpenGlRendered
+        void ResetContext();
+        void DestroyContext();
+        void SetFbo(GLuint fbo);
+        void SetGetProcAddress(void* func);
+
+        // ISoftwareRendered
+        void SetVideoCallback(void (*callback)(void* data, hydra::Size size));
+        hydra::PixelFormat GetPixelFormat();
+
+        // ICheat
         uint32_t EditCheat(const CheatMetadata& cheat, uint32_t old_handle = hydra::BAD_CHEAT);
         void RemoveCheat(uint32_t handle);
         void EnableCheat(uint32_t handle);
         void DisableCheat(uint32_t handle);
 
-        void RunFrame();
-
     private:
-        dynlib_handle_t handle;
-        void (*destroy_function)(IBase*);
-        const char* (*get_info_function)(hydra::InfoType);
-        std::string game_hash_;
-        std::filesystem::path core_path_;
-        std::string core_name_;
-
         EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*dfunc)(IBase*),
-                        const char* (*gfunc)(hydra::InfoType), const std::filesystem::path& path);
+                        const char* (*gfunc)(hydra::InfoType), const hydra::CoreInfo& info);
 
         void init_cheats();
         void save_cheats();
@@ -136,7 +164,13 @@ namespace hydra
         static const char* get_setting_wrapper(const char* setting);
         static void set_setting_wrapper(const char* setting, const char* value);
 
+        dynlib_handle_t handle;
+        void (*destroy_function)(IBase*);
+        const char* (*get_info_function)(hydra::InfoType);
+        std::string game_hash_;
+        hydra::CoreInfo core_info_;
         std::vector<CheatMetadata> cheats_;
+        std::array<bool, (size_t)hydra::InterfaceType::InterfaceCount> has;
 
         static EmulatorWrapper* instance;
 
@@ -146,47 +180,7 @@ namespace hydra
 
     struct EmulatorFactory
     {
-        static std::shared_ptr<EmulatorWrapper> Create(const std::string& path)
-        {
-            dynlib_handle_t handle = dynlib_open(path.c_str());
-
-            if (!handle)
-            {
-                printf("Failed to load library %s: %s\n", path.c_str(), dynlib_get_error().c_str());
-                return nullptr;
-            }
-            auto create_emu_p =
-                (decltype(hydra::createEmulator)*)dynlib_get_symbol(handle, "createEmulator");
-            if (!create_emu_p)
-            {
-                printf("Failed to find createEmulator in %s\n", path.c_str());
-                dynlib_close(handle);
-                return nullptr;
-            }
-
-            auto destroy_emu_p =
-                (decltype(hydra::destroyEmulator)*)dynlib_get_symbol(handle, "destroyEmulator");
-
-            if (!destroy_emu_p)
-            {
-                printf("Failed to find destroyEmulator in %s\n", path.c_str());
-                dynlib_close(handle);
-                return nullptr;
-            }
-
-            auto get_info_p = (decltype(hydra::getInfo)*)dynlib_get_symbol(handle, "getInfo");
-
-            if (!get_info_p)
-            {
-                printf("Failed to find getInfo in %s\n", path.c_str());
-                dynlib_close(handle);
-                return nullptr;
-            }
-
-            auto emulator = std::shared_ptr<EmulatorWrapper>(
-                new EmulatorWrapper(create_emu_p(), handle, destroy_emu_p, get_info_p, path));
-            return emulator;
-        }
+        static std::shared_ptr<EmulatorWrapper> Create(const std::string& path);
 
         static std::shared_ptr<EmulatorWrapper> Create(const std::filesystem::path& path)
         {

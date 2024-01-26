@@ -24,9 +24,8 @@ struct Tab
     std::string icon;
 };
 
-constexpr Tab tabs[] = {{"Games", ICON_MD_GAMES},
-                        {"Cores", ICON_MD_MEMORY},
-                        {"Settings", ICON_MD_SETTINGS},
+constexpr Tab tabs[] = {{"Games", ICON_MD_GAMES},     {"Cores", ICON_MD_MEMORY},
+                        {"Input", ICON_MD_KEYBOARD},  {"Settings", ICON_MD_SETTINGS},
 #ifdef HYDRA_DISCORD_BOT
                         {"Bot", ICON_MD_CHAT_BUBBLE},
 #endif
@@ -150,6 +149,9 @@ void MainWindow::update_impl()
         case hydra::str_hash("Cores"):
             draw_cores();
             break;
+        case hydra::str_hash("Input"):
+            draw_input();
+            break;
         case hydra::str_hash("Settings"):
             draw_settings();
             break;
@@ -199,7 +201,7 @@ void MainWindow::loadRom(const std::filesystem::path& path)
     }
 
     auto& cores = Settings::GetCoreInfo();
-    std::vector<CoreInfo> available_cores;
+    std::vector<hydra::CoreInfo> available_cores;
     for (size_t i = 0; i < cores.size(); i++)
     {
         for (size_t j = 0; j < cores[i].extensions.size(); j++)
@@ -503,6 +505,14 @@ void MainWindow::draw_cores()
     }
     ImGui::TextWrapped(HS_ADD_CORES);
 #endif
+}
+
+void MainWindow::draw_input()
+{
+    ImGui::Text(ICON_MD_KEYBOARD " Input");
+    ImGui::BeginChild("##input", ImVec2(0, 0), ImGuiChildFlags_Border,
+                      ImGuiWindowFlags_NoScrollbar);
+    ImGui::EndChild();
 }
 
 void MainWindow::draw_about() {}

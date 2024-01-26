@@ -16,23 +16,6 @@
 #include <stdexcept>
 #include <string>
 
-struct CoreInfo
-{
-    std::string path;
-    std::string core_name;
-    std::string system_name;
-    std::string author;
-    std::string version;
-    std::string description;
-    std::string license;
-    std::string url;
-    std::time_t last_played;
-    int max_players;
-    std::vector<std::string> extensions;
-    std::vector<std::string> required_files;
-    unsigned int icon_texture = 0;
-};
-
 // Essentially a wrapper around a std::map<std::string, std::string> that locks a mutex
 // upon access and has a save function that saves as a json to file
 class Settings
@@ -231,7 +214,7 @@ public:
                     return std::string(info);
                 };
 
-                struct CoreInfo info;
+                struct hydra::CoreInfo info;
                 info.path = it->path().string();
                 info.core_name = get_info_w(hydra::InfoType::CoreName);
                 info.system_name = get_info_w(hydra::InfoType::SystemName);
@@ -301,9 +284,9 @@ public:
         return ret;
     }
 
-    static std::vector<CoreInfo>& GetCoreInfo()
+    static std::vector<hydra::CoreInfo>& GetCoreInfo()
     {
-        static std::vector<struct CoreInfo> c;
+        static std::vector<struct hydra::CoreInfo> c;
         return c;
     }
 

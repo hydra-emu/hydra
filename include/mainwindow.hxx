@@ -34,6 +34,7 @@ struct MainWindow
 private:
     void draw_games();
     void draw_cores();
+    void draw_input();
     void draw_about();
     void draw_bot();
     void draw_settings();
@@ -61,7 +62,7 @@ private:
 
     bool pending_rom_load = false;
     std::filesystem::path pending_rom_path;
-    std::vector<CoreInfo> pending_available_cores;
+    std::vector<hydra::CoreInfo> pending_available_cores;
     std::vector<std::string> filters;
 
     FilePicker rom_picker;

@@ -126,7 +126,7 @@ private:
 
     // Emulator
     std::shared_ptr<hydra::EmulatorWrapper> emulator_;
-    std::unique_ptr<CoreInfo> info_;
+    std::unique_ptr<hydra::CoreInfo> info_;
     std::string game_hash_;
     bool paused_ = false;
 
