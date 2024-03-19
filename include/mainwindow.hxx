@@ -4,7 +4,6 @@
 #include "gamewindow.hxx"
 #include "settings.hxx"
 #include <array>
-#include <bot.hxx>
 #include <deque>
 #include <filesystem>
 #include <functional>

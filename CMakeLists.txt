@@ -56,9 +56,9 @@ elseif(HYDRA_MACOS)
     )
     enable_language(OBJC)
 elseif(HYDRA_LINUX)
-    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} OpenGL::GL)
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} OpenGL::GL Vulkan::Vulkan)
 elseif(HYDRA_FREEBSD)
-    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} OpenGL::GL)
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} OpenGL::GL Vulkan::Vulkan)
 elseif(HYDRA_ANDROID)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} GLESv3 EGL OpenSLES log android)
@@ -108,8 +108,8 @@ endif()
 
 option(BUILD_QT "Build the Qt frontend" OFF)
 option(BUILD_LUA "Build with lua for script support" OFF)
-option(BUILD_DISCORD_BOT "Build with discord bot support" ON)
 option(USE_NATIVE_FILE_DIALOGS "Use native file dialogs" OFF)
+option(ENABLE_VULKAN_DEBUG "Enable Vulkan debug" ON)
 
 add_subdirectory(vendored/fmt)
 add_subdirectory(vendored/argparse)
@@ -152,6 +152,8 @@ if(HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_WINDOWS)
     find_package(OpenGL REQUIRED)
 endif()
 
+find_package(Vulkan REQUIRED)
+
 if(HYDRA_DESKTOP)
     if (NOT HYDRA_FREEBSD AND SE_NATIVE_FILE_DIALOGS) # TODO: fix FreeBSD
         set(NFD_PORTAL ON) # use xdg-desktop-portal for file dialogs
@@ -189,8 +191,10 @@ set(HYDRA_IMGUI_FILES
     src/gamewindow.cxx
     src/mainwindow.cxx
     src/filepicker.cxx
+    src/sdl3_vulkan.cxx # todo move
+    src/sdl3_common.cxx # todo move
     vendored/imgui/backends/imgui_impl_sdl3.cpp
-    vendored/imgui/backends/imgui_impl_opengl3.cpp
+    vendored/imgui/backends/imgui_impl_vulkan.cpp
     vendored/imgui/imgui.cpp
     vendored/imgui/imgui_demo.cpp
     vendored/imgui/imgui_draw.cpp
@@ -211,10 +215,6 @@ set(HYDRA_COMMON_FILES
     vendored/material_icons.cxx
 )
 
-set(HYDRA_BOT_FILES
-    discord/bot.cxx
-)
-
 set(HYDRA_INCLUDES
     ${HYDRA_INCLUDES}
     include
@@ -223,7 +223,6 @@ set(HYDRA_INCLUDES
     vendored/fmt/include
     vendored/glad/include
     vendored/imgui
-    discord/
     man/
 )
 
@@ -245,21 +244,10 @@ if(BUILD_QT)
     set(CMAKE_AUTOUIC ON)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
-    find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets OpenGLWidgets)
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGLWidgets)
+    find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets)
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
     set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_QT)
     set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_QT_FILES})
-endif()
-
-if(BUILD_DISCORD_BOT AND HYDRA_DESKTOP)
-    set(DPP_INSTALL OFF CACHE BOOL "" FORCE)
-    set(BUILD_VOICE_SUPPORT OFF CACHE BOOL "" FORCE)
-    set(OPENSSL_CRYPTO_LIBRARY crypto CACHE STRING "" FORCE)
-    set(OPENSSL_SSL_LIBRARY ssl CACHE STRING "" FORCE)
-    add_subdirectory(vendored/DPP)
-    set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_BOT_FILES})
-    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} dpp)
-    set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_DISCORD_BOT)
 endif()
 
 if(BUILD_LUA)
@@ -270,6 +258,8 @@ if(BUILD_LUA)
     )
     set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_LUA)
 endif()
+
+target_compile_definitions(hydra PRIVATE HYDRA_VULKAN_DEBUG=$<BOOL:ENABLE_VULKAN_DEBUG>)
 
 set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_IMGUI_FILES} ${HYDRA_COMMON_FILES})
 
@@ -295,7 +285,6 @@ endif()
 
 target_link_libraries(hydra PRIVATE ${HYDRA_LIBRARIES})
 target_include_directories(hydra PRIVATE ${HYDRA_INCLUDES})
-target_compile_definitions(hydra PRIVATE HYDRA_VERSION="${PROJECT_VERSION}")
 target_compile_definitions(hydra PRIVATE ${HYDRA_DEFINITIONS})
 
 if(HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_MACOS OR HYDRA_ANDROID OR HYDRA_WEB)

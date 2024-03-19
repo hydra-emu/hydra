@@ -1,3 +1,5 @@
+#include "hydra/core.hxx"
+#include "input.hxx"
 #include <gamewindow.hxx>
 #include <mainwindow.hxx>
 #include <SDL3/SDL_misc.h>
@@ -512,6 +514,37 @@ void MainWindow::draw_input()
     ImGui::Text(ICON_MD_KEYBOARD " Input");
     ImGui::BeginChild("##input", ImVec2(0, 0), ImGuiChildFlags_Border,
                       ImGuiWindowFlags_NoScrollbar);
+    const std::vector<std::string>& names = hydra::Input::GetMappingNames();
+    if (names.empty())
+    {
+        ImGui::EndChild();
+        return;
+    }
+    static int current_input = 0;
+    std::string combo_items;
+    for (auto& name : names)
+    {
+        combo_items += name + '\0';
+    }
+    combo_items += '\0';
+    ImGui::Combo("##input_combo", &current_input, combo_items.c_str());
+    if (ImGui::BeginTable("input_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+    {
+        ImGui::TableSetupColumn("Key");
+        ImGui::TableSetupColumn("Mapping");
+        ImGui::TableHeadersRow();
+
+        for (int i = 0; i < (int)hydra::ButtonType::InputCount; i++)
+        {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TextUnformatted(hydra::serialize((hydra::ButtonType)i));
+            ImGui::TableSetColumnIndex(1);
+            SDL_Scancode scancode = hydra::Input::GetMapping(names[current_input]).mappings[i];
+            ImGui::Button(SDL_GetScancodeName(scancode));
+        }
+        ImGui::EndTable();
+    }
     ImGui::EndChild();
 }
 

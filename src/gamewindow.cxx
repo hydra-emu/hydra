@@ -3,6 +3,7 @@
 #include "glad/glad.h"
 #include "hydra/core.hxx"
 #include "IconsMaterialDesign.h"
+#include "input.hxx"
 #include "log.hxx"
 #include <fstream>
 #include <imgui/imgui.h>
@@ -37,9 +38,10 @@ GameWindow::GameWindow(const std::filesystem::path& core_path,
     if (emulator->shell->hasInterface(hydra::InterfaceType::IInput))
     {
         hydra::IInput* shell_input = emulator->shell->asIInput();
-        shell_input->setPollInputCallback([]() {});
-        shell_input->setCheckButtonCallback(
-            [](uint32_t player, hydra::ButtonType button) { return 0; });
+        shell_input->setPollInputCallback(&hydra::Input::Poll);
+        shell_input->setCheckButtonCallback(&hydra::Input::Check);
+        printf("TODO: remove hardcoded input associate\n");
+        hydra::Input::Associate(0, "Default mappings");
     }
 
     glGenTextures(1, &texture);

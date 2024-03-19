@@ -1,5 +1,4 @@
 #include <argparse/argparse.h>
-#include <bot.hxx>
 #include <filesystem>
 #include <iostream>
 #ifdef HYDRA_FRONTEND_QT

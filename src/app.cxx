@@ -1,10 +1,10 @@
+#include "backends/imgui_impl_vulkan.h"
 #include "compatibility.hxx"
 #include "corewrapper.hxx"
 #include "filepicker.hxx"
 #include "hydra/core.hxx"
+#include "input.hxx"
 #include "mainwindow.hxx"
-#include "SDL_events.h"
-#include "SDL_render.h"
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -16,6 +16,7 @@
 #include <map>
 #include <memory>
 #include <sanity.hxx>
+#include <sdl3.hxx>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_video.h>
 #include <settings.hxx>
@@ -142,88 +143,19 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 
 int imgui_main(int argc, char* argv[])
 {
-    // TODO: Joystick
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-    {
-        printf("SDL_Init Error: %s\n", SDL_GetError());
-        return 1;
-    }
+    hydra::Input::Init();
+    void* ctx = hydra::SDL3::Renderer::Init();
+    main_window = std::make_unique<MainWindow>();
+    Settings::ReinitCoresFrontend();
 
-// TODO: silly example bloat, verify it's removable and remove
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-    const char* glsl_version = "#version 100";
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#elif defined(__APPLE__)
-    const char* glsl_version = "#version 150";
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#else
-    const char* glsl_version = "#version 130";
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-#endif
-
-    SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    uint32_t window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
-    SDL_Window* window = SDL_CreateWindow("hydra", 1024, 768, window_flags);
-    if (window == nullptr)
-    {
-        printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-        return -1;
-    }
-    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-    SDL_GL_MakeCurrent(window, gl_context);
-    SDL_ShowWindow(window);
-
-    glGetString = (PFNGLGETSTRINGPROC)SDL_GL_GetProcAddress("glGetString");
-    printf("OpenGL version: %s\n", glGetString(GL_VERSION));
-
-#if !defined(HYDRA_WEB) && !defined(HYDRA_ANDROID) && !defined(HYDRA_IOS)
-    if (gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress) == 0)
-    {
-        printf("Failed to initialize OpenGL functions\n");
-        return 1;
-    }
-#else
-    if (gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress) == 0)
-    {
-        printf("Failed to initialize OpenGL functions!\n");
-        return 1;
-    }
-#endif
-
-#ifdef HYDRA_DESKTOP
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(MessageCallback, 0);
-#endif
+    SDL_Window* window = hydra::SDL3::Renderer::GetWindow(ctx);
 
 #ifdef HYDRA_WEB
     hydra_web_initialize();
 #endif
+    // ImGui_ImplOpenGL3_Init(glsl_version);
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.IniFilename = nullptr;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-    ImGui::StyleColorsDark();
-    ImGui_ImplSDL3_InitForOpenGL(window, gl_context);
-    ImGui_ImplOpenGL3_Init(glsl_version);
-    main_window = std::make_unique<MainWindow>();
-    Settings::ReinitCoresFrontend();
-
     float small_size = 16.0f;
     float big_size = 40.0f;
 
@@ -249,60 +181,16 @@ int imgui_main(int argc, char* argv[])
                                              MaterialIcons_compressed_size, big_size, &config,
                                              icon_ranges);
 
-    bool done = false;
+    hydra::SDL3::EventResult result = hydra::SDL3::EventResult::Continue;
 #ifdef HYDRA_WEB
     EMSCRIPTEN_MAINLOOP_BEGIN
 #else
-    while (!done)
+    while (result != hydra::SDL3::EventResult::Quit)
 #endif
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            ImGui_ImplSDL3_ProcessEvent(&event);
-            switch (event.type)
-            {
-                case SDL_EVENT_QUIT:
-                    done = true;
-                    break;
-                case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-                    if (event.window.windowID == SDL_GetWindowID(window))
-                    {
-                        done = true;
-                    }
-                    break;
-                case SDL_EVENT_DROP_FILE:
-                {
-                    std::filesystem::path path(event.drop.data);
-                    if (path.extension().string() == hydra::dynlib_get_extension())
-                    {
-                        std::filesystem::path core_path = Settings::Get("core_path");
-                        std::filesystem::path out_path = core_path / path.filename();
-                        int copy = 1;
-                        while (std::filesystem::exists(out_path))
-                        {
-                            out_path =
-                                core_path / (path.stem().string() + " (" + std::to_string(copy) +
-                                             ")" + path.extension().string());
-                            copy++;
-                        }
-                        std::filesystem::copy(path, out_path);
-                        Settings::ReinitCoreInfo();
-                        printf("Copied %s to %s\n", path.string().c_str(),
-                               out_path.string().c_str());
-                    }
-                    else
-                    {
-                        main_window->loadRom(path);
-                    }
-                    break;
-                }
-            }
-        }
+        result = hydra::SDL3::Common::Poll(window);
+        hydra::SDL3::Renderer::StartFrame(ctx);
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
-        ImGui::NewFrame();
         ImGuiIO& io = ImGui::GetIO();
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(io.DisplaySize);
@@ -314,24 +202,14 @@ int imgui_main(int argc, char* argv[])
         FilePicker::hideAll();
         main_window->update();
         ImGui::End();
-        ImGui::Render();
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-        glClearColor(0, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        SDL_GL_SwapWindow(window);
+
+        hydra::SDL3::Renderer::EndFrame(ctx);
     }
 #ifdef HYDRA_WEB
     EMSCRIPTEN_MAINLOOP_END;
 #endif
 
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
-
-    SDL_GL_DeleteContext(gl_context);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    hydra::SDL3::Renderer::Shutdown(ctx);
     return 0;
 }
 
@@ -362,13 +240,14 @@ void Settings::ReinitCoresFrontend()
                     int height = std::atoi(get_info_p(hydra::InfoType::IconHeight));
                     if (width != 0 && height != 0)
                     {
-                        glGenTextures(1, &cores[i].icon_texture);
-                        glBindTexture(GL_TEXTURE_2D, cores[i].icon_texture);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                                     GL_UNSIGNED_BYTE, data);
-                        glBindTexture(GL_TEXTURE_2D, 0);
+                        printf("TODO: init icon\n");
+                        // glGenTextures(1, &cores[i].icon_texture);
+                        // glBindTexture(GL_TEXTURE_2D, cores[i].icon_texture);
+                        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                        //              GL_UNSIGNED_BYTE, data);
+                        // glBindTexture(GL_TEXTURE_2D, 0);
                     }
                 }
 

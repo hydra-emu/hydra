@@ -6,10 +6,12 @@
 namespace hydra
 {
 
-    const uint8_t* Input::keyboardState = nullptr;
-    int Input::keyboardStateSize = 0;
-    std::unordered_map<std::string, KeyMappings> Input::mappings;
-    std::vector<KeyMappings*> Input::playerMappings;
+    const uint8_t* keyboardState = nullptr;
+    int keyboardStateSize = 0;
+    std::unordered_map<std::string, KeyMappings> mappings;
+    std::vector<KeyMappings*> playerMappings;
+    std::vector<std::string> mappingNames;
+    bool mappingNamesDirty = true;
 
     void Input::Init()
     {
@@ -82,6 +84,8 @@ namespace hydra
         map(R2, SDL_SCANCODE_4);
         map(L3, SDL_SCANCODE_5);
         map(R3, SDL_SCANCODE_6);
+#undef map
+        Add("Default mappings", replacement_mappings);
     }
 
     void Input::Poll()
@@ -94,6 +98,7 @@ namespace hydra
     {
         if (playerMappings.size() <= player || playerMappings[player] == nullptr)
         {
+            printf("Returning 0 %d %p\n", player, playerMappings[player]);
             return 0;
         }
 
@@ -141,6 +146,33 @@ namespace hydra
 
         playerMappings[player] = &mappings[name];
         return true;
+    }
+
+    void Input::Unassociate()
+    {
+        playerMappings.clear();
+    }
+
+    const std::vector<std::string>& Input::GetMappingNames()
+    {
+        if (mappingNamesDirty)
+        {
+            mappingNamesDirty = false;
+            mappingNames.clear();
+            mappingNames.reserve(mappings.size());
+
+            for (auto& [name, _] : mappings)
+            {
+                mappingNames.push_back(name);
+            }
+        }
+
+        return mappingNames;
+    }
+
+    KeyMappings& Input::GetMapping(const std::string& name)
+    {
+        return mappings[name];
     }
 
 } // namespace hydra

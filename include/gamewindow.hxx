@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bot.hxx>
 #include <corewrapper.hxx>
 #include <glad/glad.h>
 #include <hydra/core.hxx>
