@@ -8,13 +8,12 @@
 #include "terminalwindow.hxx"
 #include <compatibility.hxx>
 #include <csignal>
-#include <error_factory.hxx>
 #include <fmt/format.h>
 #include <fstream>
 #include <hydra/core.hxx>
 #include <iostream>
 #include <json.hpp>
-#include <log.h>
+#include <log.hxx>
 #include <mutex>
 #include <QDesktopServices>
 #include <QFile>
@@ -97,13 +96,13 @@ MainWindow::MainWindow(QWidget* parent)
     create_actions();
     create_menus();
 
-    screen_ = new ScreenWidget(widget);
-    screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
-    screen_->SetMouseClickCallback([this](QMouseEvent* event) { on_mouse_click(event); });
-    screen_->SetMouseReleaseCallback([this](QMouseEvent* event) { on_mouse_release(event); });
-    screen_->setMouseTracking(true);
-    screen_->show();
-    layout->addWidget(screen_, Qt::AlignCenter);
+    // screen_ = new ScreenWidget(widget);
+    // screen_->SetMouseMoveCallback([this](QMouseEvent* event) { on_mouse_move(event); });
+    // screen_->SetMouseClickCallback([this](QMouseEvent* event) { on_mouse_click(event); });
+    // screen_->SetMouseReleaseCallback([this](QMouseEvent* event) { on_mouse_release(event); });
+    // screen_->setMouseTracking(true);
+    // screen_->show();
+    // layout->addWidget(screen_, Qt::AlignCenter);
 
     emulator_thread_state = EmulatorState::NOTRUNNING;
     init_audio();
@@ -161,7 +160,7 @@ void MainWindow::init_audio(hydra::SampleType sample_type, hydra::ChannelType ch
         context_config.threadPriority = ma_thread_priority_realtime;
         if (ma_context_init(NULL, 0, &context_config, &context) != MA_SUCCESS)
         {
-            log_fatal("Failed to initialize audio context");
+            hydra::panic("Failed to initialize audio context");
         }
     });
 
@@ -179,7 +178,7 @@ void MainWindow::init_audio(hydra::SampleType sample_type, hydra::ChannelType ch
             config.playback.format = ma_format_f32;
             break;
         default:
-            log_fatal("Unknown sample type");
+            hydra::panic("Unknown sample type");
             break;
     }
     config.playback.channels = static_cast<int>(channel_type);
@@ -189,7 +188,7 @@ void MainWindow::init_audio(hydra::SampleType sample_type, hydra::ChannelType ch
 
     if (ma_device_init(NULL, &config, audio_device_.get()) != MA_SUCCESS)
     {
-        log_fatal("Failed to open audio device");
+        hydra::panic("Failed to open audio device");
     }
 
     ma_device_start(audio_device_.get());
@@ -478,7 +477,7 @@ void MainWindow::open_file_impl(const std::string& path)
 
     if (!std::filesystem::is_regular_file(pathfs))
     {
-        log_warn(fmt::format("Failed to open file: {}", path).c_str());
+        hydra::log("Failed to open file: {}", path);
         return;
     }
 
@@ -501,7 +500,7 @@ void MainWindow::open_file_impl(const std::string& path)
     }
     if (core_path.empty())
     {
-        log_warn(fmt::format("Failed to find core for file: {}", path).c_str());
+        hydra::log("Failed to find core for file: {}", path);
         return;
     }
     info_.reset();
@@ -515,20 +514,18 @@ void MainWindow::open_file_impl(const std::string& path)
     }
     if (!info_)
     {
-        log_warn(
-            fmt::format("Failed to find core info for core {}... This shouldn't happen?", core_path)
-                .c_str());
+        hydra::log("Failed to find core info for core {}... This shouldn't happen?", core_path);
     }
 
     if (emulator_.use_count() != 0)
-        log_fatal("Emulator not reset properly?");
+        hydra::panic("Emulator not reset properly?");
 
     emulator_ = hydra::EmulatorFactory::Create(core_path);
     if (!emulator_)
-        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create emulator");
+        hydra::panic("Failed to create emulator");
     init_emulator();
     if (!emulator_->LoadGame(pathfs))
-        throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open file");
+        hydra::panic("Failed to load game");
     enable_emulation_actions(true);
     add_recent(path);
 
@@ -700,26 +697,27 @@ void MainWindow::run_script(const std::string& script, bool safe_mode)
 
 void MainWindow::screenshot()
 {
-    std::unique_lock<std::mutex> elock(emulator_mutex_);
-    std::filesystem::path screenshot_path = Settings::Get("screenshot_path");
-    if (screenshot_path.empty())
-    {
-        screenshot_path = std::filesystem::current_path();
-    }
+    // std::unique_lock<std::mutex> elock(emulator_mutex_);
+    // std::filesystem::path screenshot_path = Settings::Get("screenshot_path");
+    // if (screenshot_path.empty())
+    // {
+    //     screenshot_path = std::filesystem::current_path();
+    // }
 
-    int screenshot_index = 0;
-    std::string screenshot_name = "hydra_screenshot";
-    std::string screenshot_extension = ".png";
-    while (std::filesystem::exists(screenshot_path / (screenshot_name + screenshot_extension)))
-    {
-        screenshot_index++;
-        screenshot_name = "hydra_screenshot_" + std::to_string(screenshot_index);
-    }
+    // int screenshot_index = 0;
+    // std::string screenshot_name = "hydra_screenshot";
+    // std::string screenshot_extension = ".png";
+    // while (std::filesystem::exists(screenshot_path / (screenshot_name + screenshot_extension)))
+    // {
+    //     screenshot_index++;
+    //     screenshot_name = "hydra_screenshot_" + std::to_string(screenshot_index);
+    // }
 
-    std::filesystem::path screenshot_full_path =
-        screenshot_path / (screenshot_name + screenshot_extension);
-    QImage image = screen_->grabFramebuffer();
-    image.save(screenshot_full_path.string().c_str());
+    // std::filesystem::path screenshot_full_path =
+    //     screenshot_path / (screenshot_name + screenshot_extension);
+    // QImage image = screen_->grabFramebuffer();
+    // image.save(screenshot_full_path.string().c_str());
+    printf("Implement me\n");
 }
 
 void MainWindow::set_volume(int volume)
@@ -750,11 +748,10 @@ void MainWindow::enable_emulation_actions(bool should)
     terminal_act_->setEnabled(should);
     cheats_act_->setEnabled(should);
     if (should)
-        screen_->show();
+        printf("screen_->show();");
     else
     {
-        if (screen_->initialized_)
-            screen_->hide();
+        printf("screen_->hide();");
     }
 }
 
@@ -794,12 +791,12 @@ void MainWindow::init_emulator()
 {
     if (!emulator_->shell)
     {
-        log_fatal("Emulator not loaded correctly?");
+        hydra::panic("Emulator not loaded correctly?");
     }
 
     if (!emulator_->shell->hasInterface(hydra::InterfaceType::IBase))
     {
-        log_fatal("Emulator does not have base interface?");
+        hydra::panic("Emulator does not have base interface?");
     }
 
     // Initialize gl
@@ -810,15 +807,15 @@ void MainWindow::init_emulator()
         shell_gl->resetContext();
         // TODO: tf so ugly
         auto size = emulator_->shell->getNativeSize();
-        screen_->Resize(size.width, size.height);
+        // screen_->Resize(size.width, size.height);
         // TODO: better resizing!!
         resize(size.width, size.height);
-        if (screen_->GetFbo() == 0)
-        {
-            log_fatal("FBO not initialized correctly?");
-        }
-        shell_gl->setFbo(screen_->GetFbo());
-        emulator_->shell->setOutputSize(size);
+        // if (screen_->GetFbo() == 0)
+        // {
+        //     hydra::panic("FBO not initialized correctly?");
+        // }
+        // shell_gl->setFbo(screen_->GetFbo());
+        // emulator_->shell->setOutputSize(size);
     }
 
     // Initialize sw
@@ -855,7 +852,7 @@ void MainWindow::init_emulator()
             resampler_.reset(new ma_resampler);
             if (ma_resampler_init(&config, nullptr, resampler_.get()) != MA_SUCCESS)
             {
-                log_fatal("Failed to initialize resampler");
+                hydra::panic("Failed to initialize resampler");
             }
         }
     }
@@ -875,7 +872,7 @@ void MainWindow::init_emulator()
         shell_log->setLogCallback(hydra::LogTarget::Warning, TerminalWindow::log_warn);
         shell_log->setLogCallback(hydra::LogTarget::Info, TerminalWindow::log_info);
         shell_log->setLogCallback(hydra::LogTarget::Debug, TerminalWindow::log_debug);
-        shell_log->setLogCallback(hydra::LogTarget::Error, log_fatal);
+        shell_log->setLogCallback(hydra::LogTarget::Error, hydra::panic);
         terminal_act_->setEnabled(true);
     }
     else
@@ -907,7 +904,7 @@ void MainWindow::init_emulator()
         std::string path = Settings::Get(core_name + "_" + file);
         if (path.empty())
         {
-            log_fatal(fmt::format("Firmware file {} not set in settings", file).c_str());
+            hydra::panic(fmt::format("Firmware file {} not set in settings", file).c_str());
         }
         emulator_->shell->loadFile(file.c_str(), path.c_str());
     }
@@ -933,18 +930,18 @@ void MainWindow::emulator_frame()
     if (emulator_->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
     {
         hydra::IOpenGlRendered* shell_gl = emulator_->shell->asIOpenGlRendered();
-        shell_gl->setFbo(screen_->GetFbo());
-        auto size = emulator_->shell->getNativeSize();
-        screen_->Resize(size.width, size.height);
+        // shell_gl->setFbo(screen_->GetFbo());
+        // auto size = emulator_->shell->getNativeSize();
+        // screen_->Resize(size.width, size.height);
     }
     else if (emulator_->shell->hasInterface(hydra::InterfaceType::ISoftwareRendered))
     {
         // TODO: rename variables to something more meaningful
-        screen_->Resize(video_width_, video_height_);
-        screen_->Redraw(video_buffer_.data());
+        // screen_->Resize(video_width_, video_height_);
+        // screen_->Redraw(video_buffer_.data());
     }
     emulator_->shell->asIFrontendDriven()->runFrame();
-    screen_->update();
+    // screen_->update();
     std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time_));
     if (frame_count_ >= emulator_->shell->asIFrontendDriven()->getFps())
     {

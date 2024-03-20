@@ -116,17 +116,14 @@ void GameWindow::video_callback(void* data, hydra::Size size)
 UpdateResult GameWindow::update()
 {
     bool flip_y = false;
-    if (!bot)
+    if (emulator->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
     {
-        if (emulator->shell->hasInterface(hydra::InterfaceType::IOpenGlRendered))
-        {
-            hydra::IOpenGlRendered* shell_gl = emulator->shell->asIOpenGlRendered();
-            shell_gl->setFbo(fbo);
-            flip_y = true; // TODO: I HATE OPENGL
-        }
-        emulator->RunFrame();
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // TODO: REMOVE
+        hydra::IOpenGlRendered* shell_gl = emulator->shell->asIOpenGlRendered();
+        shell_gl->setFbo(fbo);
+        flip_y = true; // TODO: I HATE OPENGL
     }
+    emulator->RunFrame();
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // TODO: REMOVE
 
     UpdateResult result = UpdateResult::None;
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));

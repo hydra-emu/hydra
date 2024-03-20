@@ -1,12 +1,11 @@
 #include "backends/imgui_impl_sdl3.h"
 #include <filesystem>
-#include <sdl3.hxx>
+#include <hydra/sdl3/window.hxx>
 #include <SDL3/SDL.h>
-#include <settings.hxx>
 
 namespace hydra::SDL3::Common
 {
-    EventResult Poll(SDL_Window* window)
+    EventResult poll(Context* ctx)
     {
         EventResult result = EventResult::Continue;
         SDL_Event event;
@@ -23,7 +22,7 @@ namespace hydra::SDL3::Common
 
                 case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
                 {
-                    if (event.window.windowID == SDL_GetWindowID(window))
+                    if (event.window.windowID == SDL_GetWindowID(ctx->window))
                     {
                         result = EventResult::Quit;
                     }
@@ -33,9 +32,10 @@ namespace hydra::SDL3::Common
                 case SDL_EVENT_DROP_FILE:
                 {
                     std::filesystem::path path(event.drop.data);
-                    if (path.extension().string() == hydra::dynlib_get_extension())
+                    // if (path.extension().string() == hydra::dynlib_get_extension())
                     {
-                        std::filesystem::path core_path = Settings::Get("core_path");
+                        printf("FIXME\n");
+                        std::filesystem::path core_path; // = Settings::Get("core_path");
                         std::filesystem::path out_path = core_path / path.filename();
                         int copy = 1;
                         // TODO: we should replace cores instead (after prompting user)
@@ -47,11 +47,11 @@ namespace hydra::SDL3::Common
                             copy++;
                         }
                         std::filesystem::copy(path, out_path);
-                        Settings::ReinitCoreInfo();
+                        // Settings::ReinitCoreInfo();
                         printf("Copied %s to %s\n", path.string().c_str(),
                                out_path.string().c_str());
                     }
-                    else
+                    // else
                     {
                         // hydra::MainWindow::loadRom(path.string());
                     }

@@ -1,7 +1,5 @@
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_vulkan.h"
-#include <log.hxx>
-#include <sdl3.hxx>
 #include <SDL3/SDL.h>
 #include <SDL_vulkan.h>
 #include <vulkan/vulkan.h>
@@ -9,11 +7,12 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
-struct Context
+#include <hydra/common/log.hxx>
+#include <hydra/sdl3/window.hxx>
+
+struct InnerContext
 {
-    SDL_Window* window;
     VkInstance instance;
     VkAllocationCallbacks* allocator = nullptr;
     VkDebugReportCallbackEXT debugReport;
@@ -76,8 +75,9 @@ static void mustExtension(const std::vector<VkExtensionProperties>& haveExtensio
     }
 }
 
-static VkPhysicalDevice selectPhysicalDevice(Context* ctx)
+static VkPhysicalDevice selectPhysicalDevice(hydra::SDL3::Context* context)
 {
+    InnerContext* ctx = (InnerContext*)context->inner;
     // TODO: allow for choosing GPU
     uint32_t gpuCount = 0;
     VkResult result = vkEnumeratePhysicalDevices(ctx->instance, &gpuCount, nullptr);
@@ -107,8 +107,10 @@ static VkPhysicalDevice selectPhysicalDevice(Context* ctx)
     return VK_NULL_HANDLE;
 }
 
-static void setupVulkan(Context* ctx, std::vector<const char*>& wantInstanceExtensions)
+static void setupVulkan(hydra::SDL3::Context* context,
+                        std::vector<const char*>& wantInstanceExtensions)
 {
+    InnerContext* ctx = (InnerContext*)context->inner;
     VkResult result;
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -203,7 +205,7 @@ static void setupVulkan(Context* ctx, std::vector<const char*>& wantInstanceExte
     }
 
     // Get physical device
-    ctx->physicalDevice = selectPhysicalDevice(ctx);
+    ctx->physicalDevice = selectPhysicalDevice(context);
 
     uint32_t count;
     vkGetPhysicalDeviceQueueFamilyProperties(ctx->physicalDevice, &count, nullptr);
@@ -266,9 +268,10 @@ static void setupVulkan(Context* ctx, std::vector<const char*>& wantInstanceExte
     checkResult(result);
 }
 
-static void setupVulkanWindow(Context* ctx, ImGui_ImplVulkanH_Window* wd, VkSurfaceKHR surface,
-                              int width, int height)
+static void setupVulkanWindow(hydra::SDL3::Context* context, ImGui_ImplVulkanH_Window* wd,
+                              VkSurfaceKHR surface, int width, int height)
 {
+    InnerContext* ctx = (InnerContext*)context->inner;
     wd->Surface = surface;
 
     // Check for WSI support
@@ -306,40 +309,41 @@ static void setupVulkanWindow(Context* ctx, ImGui_ImplVulkanH_Window* wd, VkSurf
                                            minImageCount);
 }
 
-static void frameRender(Context* ctx, ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
+static void frameRender(hydra::SDL3::Context* context, ImGui_ImplVulkanH_Window* wd,
+                        ImDrawData* draw_data)
 {
-    VkResult err;
-
+    InnerContext* ctx = (InnerContext*)context->inner;
+    VkResult result;
     VkSemaphore image_acquired_semaphore =
         wd->FrameSemaphores[wd->SemaphoreIndex].ImageAcquiredSemaphore;
     VkSemaphore render_complete_semaphore =
         wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
-    err = vkAcquireNextImageKHR(ctx->device, wd->Swapchain, UINT64_MAX, image_acquired_semaphore,
-                                VK_NULL_HANDLE, &wd->FrameIndex);
-    if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
+    result = vkAcquireNextImageKHR(ctx->device, wd->Swapchain, UINT64_MAX, image_acquired_semaphore,
+                                   VK_NULL_HANDLE, &wd->FrameIndex);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
         ctx->swapchainRebuild = true;
         return;
     }
-    checkResult(err);
+    checkResult(result);
 
     ImGui_ImplVulkanH_Frame* fd = &wd->Frames[wd->FrameIndex];
     {
-        err = vkWaitForFences(ctx->device, 1, &fd->Fence, VK_TRUE,
-                              UINT64_MAX); // wait indefinitely instead of periodically checking
-        checkResult(err);
+        result = vkWaitForFences(ctx->device, 1, &fd->Fence, VK_TRUE,
+                                 UINT64_MAX); // wait indefinitely instead of periodically checking
+        checkResult(result);
 
-        err = vkResetFences(ctx->device, 1, &fd->Fence);
-        checkResult(err);
+        result = vkResetFences(ctx->device, 1, &fd->Fence);
+        checkResult(result);
     }
     {
-        err = vkResetCommandPool(ctx->device, fd->CommandPool, 0);
-        checkResult(err);
+        result = vkResetCommandPool(ctx->device, fd->CommandPool, 0);
+        checkResult(result);
         VkCommandBufferBeginInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        err = vkBeginCommandBuffer(fd->CommandBuffer, &info);
-        checkResult(err);
+        result = vkBeginCommandBuffer(fd->CommandBuffer, &info);
+        checkResult(result);
     }
     {
         VkRenderPassBeginInfo info = {};
@@ -370,15 +374,16 @@ static void frameRender(Context* ctx, ImGui_ImplVulkanH_Window* wd, ImDrawData* 
         info.signalSemaphoreCount = 1;
         info.pSignalSemaphores = &render_complete_semaphore;
 
-        err = vkEndCommandBuffer(fd->CommandBuffer);
-        checkResult(err);
-        err = vkQueueSubmit(ctx->queue, 1, &info, fd->Fence);
-        checkResult(err);
+        result = vkEndCommandBuffer(fd->CommandBuffer);
+        checkResult(result);
+        result = vkQueueSubmit(ctx->queue, 1, &info, fd->Fence);
+        checkResult(result);
     }
 }
 
-static void framePresent(Context* ctx, ImGui_ImplVulkanH_Window* wd)
+static void framePresent(hydra::SDL3::Context* context, ImGui_ImplVulkanH_Window* wd)
 {
+    InnerContext* ctx = (InnerContext*)context->inner;
     if (ctx->swapchainRebuild)
         return;
 
@@ -392,24 +397,26 @@ static void framePresent(Context* ctx, ImGui_ImplVulkanH_Window* wd)
     info.pSwapchains = &wd->Swapchain;
     info.pImageIndices = &wd->FrameIndex;
 
-    VkResult err = vkQueuePresentKHR(ctx->queue, &info);
-    if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
+    VkResult result = vkQueuePresentKHR(ctx->queue, &info);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
         ctx->swapchainRebuild = true;
         return;
     }
-    checkResult(err);
+    checkResult(result);
 
     wd->SemaphoreIndex =
         (wd->SemaphoreIndex + 1) % wd->ImageCount; // Now we can use the next set of semaphores
 }
 
-namespace hydra::SDL3::Renderer
+namespace hydra::SDL3::Vk
 {
 
-    void* Init()
+    Context* init()
     {
-        Context* ctx = new Context();
+        Context* context = new Context();
+        InnerContext* ctx = new InnerContext();
+        context->inner = ctx;
 
         if (SDL_Init(SDL_INIT_VIDEO) != 0)
         {
@@ -417,33 +424,33 @@ namespace hydra::SDL3::Renderer
         }
 
         uint32_t flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        ctx->window = SDL_CreateWindow("hydra", 1270, 720, flags);
+        context->window = SDL_CreateWindow("hydra", 1270, 720, flags);
 
-        if (!ctx->window)
+        if (!context->window)
         {
             hydra::panic("SDL_CreateWindow retuned null: {}", SDL_GetError());
         }
 
-        SDL_SetWindowPosition(ctx->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+        SDL_SetWindowPosition(context->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
         uint32_t neededExtensionCount = 0;
         const char* const* neededExtensions =
             SDL_Vulkan_GetInstanceExtensions(&neededExtensionCount);
         std::vector<const char*> neededInstanceExtensions(neededExtensions,
                                                           neededExtensions + neededExtensionCount);
-        setupVulkan(ctx, neededInstanceExtensions);
+        setupVulkan(context, neededInstanceExtensions);
 
         // Create Window Surface
         VkSurfaceKHR surface;
-        if (SDL_Vulkan_CreateSurface(ctx->window, ctx->instance, ctx->allocator, &surface) == 0)
+        if (SDL_Vulkan_CreateSurface(context->window, ctx->instance, ctx->allocator, &surface) == 0)
         {
             hydra::panic("SDL_Vulkan_CreateSurface: {}", SDL_GetError());
         }
 
         int w, h;
-        SDL_GetWindowSize(ctx->window, &w, &h);
+        SDL_GetWindowSize(context->window, &w, &h);
         ImGui_ImplVulkanH_Window* wd = &ctx->mainWindowData;
-        setupVulkanWindow(ctx, wd, surface, w, h);
+        setupVulkanWindow(context, wd, surface, w, h);
 
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
@@ -458,7 +465,7 @@ namespace hydra::SDL3::Renderer
         // ImGui::StyleColorsLight();
 
         // Setup Platform/Renderer backends
-        ImGui_ImplSDL3_InitForVulkan(ctx->window);
+        ImGui_ImplSDL3_InitForVulkan(context->window);
         ImGui_ImplVulkan_InitInfo initInfo = {};
         initInfo.Instance = ctx->instance;
         initInfo.PhysicalDevice = ctx->physicalDevice;
@@ -475,12 +482,12 @@ namespace hydra::SDL3::Renderer
         initInfo.CheckVkResultFn = checkResult;
         ImGui_ImplVulkan_Init(&initInfo, wd->RenderPass);
 
-        return ctx;
+        return context;
     }
 
-    void Shutdown(void* context)
+    void Shutdown(Context* context)
     {
-        Context* ctx = (Context*)context;
+        InnerContext* ctx = (InnerContext*)context->inner;
         VkResult result = vkDeviceWaitIdle(ctx->device);
         checkResult(result);
 
@@ -505,21 +512,21 @@ namespace hydra::SDL3::Renderer
         vkDestroyDevice(ctx->device, ctx->allocator);
         vkDestroyInstance(ctx->instance, ctx->allocator);
 
-        SDL_DestroyWindow(ctx->window);
+        SDL_DestroyWindow(context->window);
         SDL_Quit();
 
-        delete ctx;
+        delete (InnerContext*)ctx;
+        delete context;
     }
 
-    void StartFrame(void* context)
+    void startFrame(Context* context)
     {
-        Context* ctx = (Context*)context;
-
+        InnerContext* ctx = (InnerContext*)context->inner;
         // Resize swap chain?
         if (ctx->swapchainRebuild)
         {
             int width, height;
-            SDL_GetWindowSize(ctx->window, &width, &height);
+            SDL_GetWindowSize(context->window, &width, &height);
             if (width > 0 && height > 0)
             {
                 ImGui_ImplVulkan_SetMinImageCount(minImageCount);
@@ -536,9 +543,9 @@ namespace hydra::SDL3::Renderer
         ImGui::NewFrame();
     }
 
-    void EndFrame(void* context)
+    void endFrame(Context* context)
     {
-        Context* ctx = (Context*)context;
+        InnerContext* ctx = (InnerContext*)context->inner;
         ImGui::Render();
         ImDrawData* draw_data = ImGui::GetDrawData();
         const bool is_minimized =
@@ -551,15 +558,9 @@ namespace hydra::SDL3::Renderer
             wd->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
             wd->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
             wd->ClearValue.color.float32[3] = clear_color.w;
-            frameRender(ctx, wd, draw_data);
-            framePresent(ctx, wd);
+            frameRender(context, wd, draw_data);
+            framePresent(context, wd);
         }
     }
 
-    SDL_Window* GetWindow(void* context)
-    {
-        Context* ctx = (Context*)context;
-        return ctx->window;
-    }
-
-} // namespace hydra::SDL3::Renderer
+} // namespace hydra::SDL3::Vk

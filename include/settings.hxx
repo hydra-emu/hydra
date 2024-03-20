@@ -272,7 +272,6 @@ public:
         core_info_initialized() = false;
         GetCoreInfo().clear();
         InitCoreInfo();
-        ReinitCoresFrontend();
     }
 
     static std::string Print()

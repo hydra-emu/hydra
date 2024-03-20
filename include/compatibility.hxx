@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
-#include <log.hxx>
+#include <hydra/common/log.hxx>
 #include <span>
 #include <sstream>
 #include <string>

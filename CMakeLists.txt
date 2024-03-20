@@ -106,7 +106,7 @@ if(HYDRA_LINUX OR HYDRA_FREEBSD OR HYDRA_MACOS OR HYDRA_WINDOWS)
     set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_DESKTOP)
 endif()
 
-option(BUILD_QT "Build the Qt frontend" OFF)
+option(BUILD_QT "Build the Qt frontend" ON)
 option(BUILD_LUA "Build with lua for script support" OFF)
 option(USE_NATIVE_FILE_DIALOGS "Use native file dialogs" OFF)
 option(ENABLE_VULKAN_DEBUG "Enable Vulkan debug" ON)
@@ -172,27 +172,12 @@ if(HYDRA_MACOS OR HYDRA_IOS)
 endif()
 
 set(HYDRA_QT_FILES
-    data/resources.qrc
-    qt/mainwindow.cxx
-    qt/screenwidget.cxx
-    qt/settingswindow.cxx
-    qt/shadereditor.cxx
-    qt/scripteditor.cxx
-    qt/aboutwindow.cxx
-    qt/keypicker.cxx
-    qt/terminalwindow.cxx
-    qt/downloaderwindow.cxx
-    qt/cheatswindow.cxx
+    src/hydra/qt/main_window.cxx
 )
 
 set(HYDRA_IMGUI_FILES
-    src/app.cxx
-    src/input.cxx
-    src/gamewindow.cxx
-    src/mainwindow.cxx
-    src/filepicker.cxx
-    src/sdl3_vulkan.cxx # todo move
-    src/sdl3_common.cxx # todo move
+    src/hydra/sdl3/vulkan.cxx
+    src/hydra/sdl3/common.cxx
     vendored/imgui/backends/imgui_impl_sdl3.cpp
     vendored/imgui/backends/imgui_impl_vulkan.cpp
     vendored/imgui/imgui.cpp
@@ -203,8 +188,9 @@ set(HYDRA_IMGUI_FILES
 )
 
 set(HYDRA_COMMON_FILES
-    src/corewrapper.cxx
     src/main.cxx
+    src/hydra/common/version.cxx
+    src/hydra/common/settings.cxx
     vendored/argparse/argparse.c
     vendored/miniaudio.c
     vendored/stb_image.c
@@ -241,13 +227,10 @@ cmrc_add_resource_library(hydra_data ALIAS hydra::data NAMESPACE hydra
 set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} hydra::data)
 
 if(BUILD_QT)
-    set(CMAKE_AUTOUIC ON)
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_AUTORCC ON)
-    find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets)
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets)
     set(HYDRA_DEFINITIONS ${HYDRA_DEFINITIONS} HYDRA_QT)
     set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_QT_FILES})
+    set(HYDRA_LIBRARIES ${HYDRA_LIBRARIES} Qt6::Widgets)
 endif()
 
 if(BUILD_LUA)
@@ -263,8 +246,14 @@ target_compile_definitions(hydra PRIVATE HYDRA_VULKAN_DEBUG=$<BOOL:ENABLE_VULKAN
 
 set(HYDRA_SOURCES ${HYDRA_SOURCES} ${HYDRA_IMGUI_FILES} ${HYDRA_COMMON_FILES})
 
+qt_wrap_cpp(MOC_SOURCES
+    include/hydra/qt/main_window.hxx
+    TARGET hydra
+)
+
 target_sources(hydra PRIVATE
     ${HYDRA_SOURCES}
+    ${MOC_SOURCES}
 )
 
 if(BUILD_QT)
@@ -280,7 +269,7 @@ if(BUILD_QT)
             MACOSX_BUNDLE TRUE
         )
     endif()
-    set(${QT_LIBS} Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGLWidgets)
+    set(${QT_LIBS} Qt6::Widgets)
 endif()
 
 target_link_libraries(hydra PRIVATE ${HYDRA_LIBRARIES})

@@ -1,12 +1,11 @@
+#include "hydra/common/settings.hxx"
+#include "hydra/common/version.hxx"
 #include <argparse/argparse.h>
 #include <filesystem>
+#include <hydra/qt/main_window.hxx>
 #include <iostream>
-#ifdef HYDRA_FRONTEND_QT
-#include "mainwindow.hxx"
 #include <QApplication>
 #include <QSurfaceFormat>
-#endif
-#include <settings.hxx>
 
 #ifdef HYDRA_WEB
 #include <emscripten.h>
@@ -22,14 +21,9 @@ const char* options =
 
 // clang-format on
 
-// Configurable options
-const char* frontend = "imgui";
 const char* rom_path = nullptr;
 const char* core_name = nullptr;
 
-int imgui_main(int argc, char* argv[]);
-
-#ifdef HYDRA_FRONTEND_QT
 int qt_main(int argc, char* argv[])
 {
     QSurfaceFormat format;
@@ -41,46 +35,16 @@ int qt_main(int argc, char* argv[])
 
     QSurfaceFormat::setDefaultFormat(format);
     QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
 
-    if (argc > 1)
-    {
-        w.OpenFile(argv[1]);
-    }
+    hydra::qt::MainWindow w;
+    w.show();
 
     return a.exec();
 }
-#endif
 
 int version_cb(struct argparse*, const struct argparse_option*)
 {
-    std::cout << "hydra version " << HYDRA_VERSION << std::endl;
-    return 0;
-}
-
-int start_frontend_cb(struct argparse* self, const struct argparse_option*)
-{
-    std::string frontend_str(frontend);
-    if (frontend_str == "qt")
-    {
-#ifdef HYDRA_FRONTEND_QT
-        return qt_main(self->argc, const_cast<char**>(self->argv));
-#else
-        std::cout << "This build of hydra does not support the qt frontend" << std::endl;
-        return 1;
-#endif
-    }
-    else
-    {
-        std::cout << "Unknown frontend: " << frontend << std::endl;
-        return 1;
-    }
-}
-
-int print_settings_cb(struct argparse*, const struct argparse_option*)
-{
-    std::cout << Settings::Print() << std::endl;
+    std::cout << hydra::common::version() << std::endl;
     return 0;
 }
 
@@ -89,28 +53,6 @@ int help_cb(struct argparse* self, const struct argparse_option* option)
     version_cb(self, option);
     std::cout << "A multi-system emulator frontend\n\n" << options << std::endl;
     return 0;
-}
-
-int list_cores_cb(struct argparse*, const struct argparse_option*)
-{
-    Settings::InitCoreInfo();
-    for (auto& info : Settings::GetCoreInfo())
-    {
-        std::string filename = std::filesystem::path(info.path).filename().string();
-        std::cout << fmt::format("{} - {}\n", filename, info.core_name);
-    }
-    std::cout << std::flush;
-    return 0;
-}
-
-int bot_main_cb(struct argparse*, const struct argparse_option*)
-{
-#ifdef HYDRA_DISCORD_BOT
-    return bot_main();
-#else
-    hydra::log("This build of hydra does not support the discord bot");
-    return 1;
-#endif
 }
 
 #if defined(HYDRA_WEB)
@@ -132,34 +74,21 @@ EM_JS(void, em_init_fs, (),{
 
 extern "C" int main_impl(int argc, char* argv[])
 {
-    printf("hydra version %s\n", HYDRA_VERSION);
-    auto settings_path = Settings::GetSavePath() / "settings.json";
-    Settings::Open(settings_path);
-    Settings::InitCoreInfo();
+    printf("%s\n", hydra::common::version().c_str());
+    hydra::settings::init();
+    // Settings::InitCoreInfo();
 
-#ifdef HYDRA_WEB
-    return imgui_main(argc, argv);
-#endif
-
-    if (argc == 1)
-    {
-        return imgui_main(argc, argv);
-    }
+    return qt_main(argc, argv);
 
     static const char* const usages[] = {
         "hydra [args]",
         nullptr,
     };
+
     struct argparse_option options[] = {
         OPT_BOOLEAN('h', "help", NULL, nullptr, help_cb, 0, OPT_NONEG),
         OPT_GROUP("Options"),
-        OPT_BOOLEAN('b', "discord-bot", nullptr, nullptr, bot_main_cb),
-        OPT_STRING('o', "open-file", &rom_path, nullptr, nullptr),
-        OPT_STRING('c', "use-core", &core_name, nullptr, nullptr),
-        OPT_BOOLEAN('l', "list-cores", nullptr, nullptr, list_cores_cb),
         OPT_BOOLEAN('v', "version", nullptr, nullptr, version_cb),
-        OPT_STRING('p', "print-settings", nullptr, nullptr, print_settings_cb),
-        OPT_STRING('f', "frontend", &frontend, nullptr, start_frontend_cb),
         OPT_END(),
     };
 

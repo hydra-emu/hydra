@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ringbuffer.hxx"
-#include "screenwidget.hxx"
 #include "settings.hxx"
 #include "update.hxx"
 #include <array>
@@ -116,7 +115,6 @@ private:
     QAction* terminal_act_;
     QAction* recent_act_;
     QTimer* emulator_timer_;
-    ScreenWidget* screen_;
 
     // Common
     std::mutex emulator_mutex_;

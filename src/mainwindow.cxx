@@ -26,11 +26,10 @@ struct Tab
     std::string icon;
 };
 
-constexpr Tab tabs[] = {{"Games", ICON_MD_GAMES},     {"Cores", ICON_MD_MEMORY},
-                        {"Input", ICON_MD_KEYBOARD},  {"Settings", ICON_MD_SETTINGS},
-#ifdef HYDRA_DISCORD_BOT
-                        {"Bot", ICON_MD_CHAT_BUBBLE},
-#endif
+constexpr Tab tabs[] = {{"Games", ICON_MD_GAMES},
+                        {"Cores", ICON_MD_MEMORY},
+                        {"Input", ICON_MD_KEYBOARD},
+                        {"Settings", ICON_MD_SETTINGS},
                         {"About", ICON_MD_INFO}};
 constexpr size_t tab_count = sizeof(tabs) / sizeof(Tab);
 
@@ -156,9 +155,6 @@ void MainWindow::update_impl()
             break;
         case hydra::str_hash("Settings"):
             draw_settings();
-            break;
-        case hydra::str_hash("Bot"):
-            draw_bot();
             break;
         case hydra::str_hash("About"):
             draw_about();
@@ -549,40 +545,6 @@ void MainWindow::draw_input()
 }
 
 void MainWindow::draw_about() {}
-
-void MainWindow::draw_bot()
-{
-#ifdef HYDRA_DISCORD_BOT
-    if (bot_token.size() == 0)
-    {
-        bot_token.resize(128);
-        std::string token = Settings::Get("bot_token");
-        strncpy(bot_token.data(), token.c_str(), bot_token.size());
-    }
-    if (!game_window)
-        ImGui::BeginDisabled();
-    ImGui::InputText("Token", bot_token.data(), bot_token.size());
-    ImGui::SameLine();
-    if (game_window && !game_window->bot)
-    {
-        if (ImGui::Button("Connect"))
-        {
-            Settings::Set("bot_token", bot_token);
-            game_window->bot =
-                std::make_unique<Bot>(game_window->emulator, game_window->fbo, bot_token, 10, 10);
-        }
-    }
-    else
-    {
-        if (ImGui::Button("Disconnect"))
-        {
-            game_window->bot.reset();
-        }
-    }
-    if (!game_window)
-        ImGui::EndDisabled();
-#endif
-}
 
 void MainWindow::draw_settings()
 {

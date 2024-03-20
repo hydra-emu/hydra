@@ -29,7 +29,6 @@ public:
 
     GLuint fbo = 0;
     std::shared_ptr<hydra::EmulatorWrapper> emulator;
-    std::unique_ptr<Bot> bot;
 
 private:
     float velocity_x = 0.0f;
