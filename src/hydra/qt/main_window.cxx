@@ -1,3 +1,5 @@
+#include "hydra/core.h"
+#include "hydra/core/wrapper.hxx"
 #include <hydra/common/settings.hxx>
 #include <hydra/common/translate.hxx>
 #include <hydra/common/version.hxx>
@@ -38,16 +40,22 @@ namespace hydra::qt
         resize(settings::Config::get().windowWidth, settings::Config::get().windowHeight);
 
         std::thread t([this] {
-            SDL3::Context* ctx = hydra::SDL3::Vk::init();
-            while (1)
+            printf("TODO: check if self driven\n");
+            hydra::core::Wrapper wrapper(
+                "/home/offtkp/other/hydra_examples/build/libhydra_triangle_selfdriven_gl.so");
+            HcVideoInfo videoInfo{};
+            HcAudioInfo audioInfo{};
+            HcEnvironmentInfo environmentInfo{};
+            environmentInfo.video = &videoInfo;
+            environmentInfo.audio = &audioInfo;
+            wrapper.hcCreate(&environmentInfo);
+            SDL3::Context* ctx = hydra::SDL3::init(&environmentInfo);
+            SDL3::EventResult result = SDL3::EventResult::Continue;
+            while (result != SDL3::EventResult::Quit)
             {
-                hydra::SDL3::Common::poll(ctx);
-                hydra::SDL3::Vk::startFrame(ctx);
-                ImGui::Begin("Hello, world!");
-                ImGui::Button("Hello, world!");
-                ImGui::End();
-                hydra::SDL3::Vk::endFrame(ctx);
+                result = hydra::SDL3::poll(ctx);
             }
+            hydra::SDL3::shutdown(ctx);
         });
         t.detach();
     }

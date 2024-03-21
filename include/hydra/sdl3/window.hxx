@@ -1,5 +1,6 @@
 #pragma once
 
+#include <hydra/core.h>
 #include <SDL3/SDL.h>
 
 namespace hydra
@@ -8,35 +9,35 @@ namespace hydra
     {
         struct Context
         {
+            HcRendererType rendererType;
             SDL_Window* window;
             void* inner;
         };
 
+        Context* init(const HcEnvironmentInfo* createInfo);
+        void present(Context* context);
+        void shutdown(Context* context);
+
         namespace Vk
         {
-            Context* init();
+            Context* init(const HcEnvironmentInfo* createInfo);
+            void present(Context* context);
             void shutdown(Context* context);
-            void startFrame(Context* context);
-            void endFrame(Context* context);
         } // namespace Vk
 
         namespace Gl
         {
-            Context* init();
+            Context* init(const HcEnvironmentInfo* createInfo);
+            void present(Context* context);
             void shutdown(Context* context);
-            void startFrame(Context* context);
-            void endFrame(Context* context);
         } // namespace Gl
 
-        namespace Common
+        enum class EventResult
         {
-            enum class EventResult
-            {
-                Continue,
-                Quit
-            };
+            Continue,
+            Quit
+        };
 
-            EventResult poll(Context* context);
-        } // namespace Common
-    }     // namespace SDL3
+        EventResult poll(Context* context);
+    } // namespace SDL3
 } // namespace hydra

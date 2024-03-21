@@ -188,7 +188,7 @@ int imgui_main(int argc, char* argv[])
     while (result != hydra::SDL3::EventResult::Quit)
 #endif
     {
-        result = hydra::SDL3::Common::Poll(window);
+        result = hydra::SDL3::Poll(window);
         hydra::SDL3::Renderer::StartFrame(ctx);
 
         ImGuiIO& io = ImGui::GetIO();

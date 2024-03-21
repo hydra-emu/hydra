@@ -176,6 +176,7 @@ set(HYDRA_QT_FILES
 )
 
 set(HYDRA_IMGUI_FILES
+    src/hydra/sdl3/opengl.cxx
     src/hydra/sdl3/vulkan.cxx
     src/hydra/sdl3/common.cxx
     vendored/imgui/backends/imgui_impl_sdl3.cpp
@@ -189,6 +190,8 @@ set(HYDRA_IMGUI_FILES
 
 set(HYDRA_COMMON_FILES
     src/main.cxx
+    src/hydra/core/wrapper.cxx
+    src/hydra/core/imports.cxx
     src/hydra/common/version.cxx
     src/hydra/common/settings.cxx
     vendored/argparse/argparse.c

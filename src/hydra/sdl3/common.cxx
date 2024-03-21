@@ -1,10 +1,99 @@
 #include "backends/imgui_impl_sdl3.h"
 #include <filesystem>
+#include <hydra/common/log.hxx>
 #include <hydra/sdl3/window.hxx>
 #include <SDL3/SDL.h>
 
-namespace hydra::SDL3::Common
+namespace hydra::SDL3
 {
+    Context* init(const HcEnvironmentInfo* environmentInfo)
+    {
+        if (!environmentInfo || !environmentInfo->video)
+        {
+            hydra::panic("Invalid environment info");
+            return nullptr;
+        }
+
+        if (SDL_Init(SDL_INIT_VIDEO) != 0)
+        {
+            hydra::panic("SDL_Init: {}", SDL_GetError());
+        }
+
+        SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+
+        switch (environmentInfo->video->rendererType)
+        {
+            case HC_RENDERER_TYPE_OPENGL:
+            {
+                return Gl::init(environmentInfo);
+            }
+            case HC_RENDERER_TYPE_VULKAN:
+            {
+                return Vk::init(environmentInfo);
+            }
+            default:
+            {
+                hydra::panic("Unknown renderer type: {}",
+                             (int)environmentInfo->video->rendererType);
+                return nullptr;
+            }
+        }
+    }
+
+    void present(Context* context)
+    {
+        if (!context || !context->window)
+        {
+            hydra::panic("Invalid context");
+            return;
+        }
+
+        switch (context->rendererType)
+        {
+            case HC_RENDERER_TYPE_OPENGL:
+            {
+                Gl::present(context);
+                break;
+            }
+            case HC_RENDERER_TYPE_VULKAN:
+            {
+                Vk::present(context);
+                break;
+            }
+            default:
+            {
+                hydra::panic("Unknown renderer type: {}", (int)context->rendererType);
+            }
+        }
+    }
+
+    void shutdown(Context* context)
+    {
+        if (!context || !context->window)
+        {
+            hydra::panic("Invalid context");
+            return;
+        }
+
+        switch (context->rendererType)
+        {
+            case HC_RENDERER_TYPE_OPENGL:
+            {
+                Gl::shutdown(context);
+                break;
+            }
+            case HC_RENDERER_TYPE_VULKAN:
+            {
+                Vk::shutdown(context);
+                break;
+            }
+            default:
+            {
+                hydra::panic("Unknown renderer type: {}", (int)context->rendererType);
+            }
+        }
+    }
+
     EventResult poll(Context* ctx)
     {
         EventResult result = EventResult::Continue;
@@ -62,4 +151,4 @@ namespace hydra::SDL3::Common
 
         return result;
     }
-} // namespace hydra::SDL3::Common
+} // namespace hydra::SDL3

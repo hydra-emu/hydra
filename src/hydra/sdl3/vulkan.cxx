@@ -1,5 +1,7 @@
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_vulkan.h"
+#include "hydra/common/version.hxx"
+#include "hydra/core.h"
 #include <SDL3/SDL.h>
 #include <SDL_vulkan.h>
 #include <vulkan/vulkan.h>
@@ -412,19 +414,14 @@ static void framePresent(hydra::SDL3::Context* context, ImGui_ImplVulkanH_Window
 namespace hydra::SDL3::Vk
 {
 
-    Context* init()
+    Context* init(const HcEnvironmentInfo* info)
     {
         Context* context = new Context();
         InnerContext* ctx = new InnerContext();
         context->inner = ctx;
 
-        if (SDL_Init(SDL_INIT_VIDEO) != 0)
-        {
-            hydra::panic("SDL_Init: {}", SDL_GetError());
-        }
-
         uint32_t flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        context->window = SDL_CreateWindow("hydra", 1270, 720, flags);
+        context->window = SDL_CreateWindow(hydra::common::version().c_str(), 1280, 720, flags);
 
         if (!context->window)
         {
@@ -485,7 +482,7 @@ namespace hydra::SDL3::Vk
         return context;
     }
 
-    void Shutdown(Context* context)
+    void shutdown(Context* context)
     {
         InnerContext* ctx = (InnerContext*)context->inner;
         VkResult result = vkDeviceWaitIdle(ctx->device);
@@ -519,7 +516,7 @@ namespace hydra::SDL3::Vk
         delete context;
     }
 
-    void startFrame(Context* context)
+    void present(Context* context)
     {
         InnerContext* ctx = (InnerContext*)context->inner;
         // Resize swap chain?
@@ -541,11 +538,6 @@ namespace hydra::SDL3::Vk
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
-    }
-
-    void endFrame(Context* context)
-    {
-        InnerContext* ctx = (InnerContext*)context->inner;
         ImGui::Render();
         ImDrawData* draw_data = ImGui::GetDrawData();
         const bool is_minimized =
