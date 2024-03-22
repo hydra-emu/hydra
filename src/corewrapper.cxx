@@ -1,15 +1,38 @@
 #include "hydra/core.hxx"
+#include <cstdint>
 #define OPENSSL_API_COMPAT 10101
 #include <corewrapper.hxx>
+#include <filesystem>
 #include <openssl/md5.h>
+#include <scopeguard.hxx>
 #include <settings.hxx>
+
+std::unordered_map<std::string, std::string> cached_settings;
+#define has_i(x) (has[(size_t)hydra::InterfaceType::x])
 
 namespace hydra
 {
+    EmulatorWrapper* EmulatorWrapper::instance = nullptr;
+
     EmulatorWrapper::EmulatorWrapper(IBase* shl, dynlib_handle_t hdl, void (*dfunc)(IBase*),
-                                     const char* (*gfunc)(hydra::InfoType))
-        : shell(shl), handle(hdl), destroy_function(dfunc), get_info_function(gfunc)
+                                     const char* (*gfunc)(hydra::InfoType),
+                                     const hydra::CoreInfo& core_info)
+        : shell(shl), handle(hdl), destroy_function(dfunc), get_info_function(gfunc),
+          core_info_(core_info)
     {
+        instance = this;
+
+        for (size_t i = 0; i < (size_t)hydra::InterfaceType::InterfaceCount; i++)
+        {
+            has[i] = shell->hasInterface((hydra::InterfaceType)i);
+        }
+
+        if (has_i(IConfigurable))
+        {
+            IConfigurable* config_interface = shell->asIConfigurable();
+            config_interface->setGetCallback(get_setting_wrapper);
+            config_interface->setSetCallback(set_setting_wrapper);
+        }
     }
 
     EmulatorWrapper::~EmulatorWrapper()
@@ -39,9 +62,42 @@ namespace hydra
         }
         game_hash_ = md5stream.str();
 
+        auto& cores = Settings::GetCoreInfo();
+        bool found = false;
+        for (auto& core : cores)
+        {
+            if (core_info_.path == core.path)
+            {
+                found = true;
+                std::string core_name = core.core_name;
+                core.last_played = std::time(nullptr);
+                if (!core.required_files.empty())
+                {
+                    for (auto& required_file : core.required_files)
+                    {
+                        std::filesystem::path path = Settings::Get(core_name + "_" + required_file);
+                        if (!std::filesystem::exists(path))
+                        {
+                            printf("Required file %s does not exist at path %s\n",
+                                   required_file.c_str(), path.string().c_str());
+                            return false;
+                        }
+
+                        shell->asIBase()->loadFile(required_file.c_str(), path.string().c_str());
+                    }
+                }
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            return false;
+        }
+
         bool ret = shell->asIBase()->loadFile("rom", path.string().c_str());
 
-        if (shell->hasInterface(hydra::InterfaceType::ICheat))
+        if (has_i(ICheat))
         {
             init_cheats();
         }
@@ -114,6 +170,72 @@ namespace hydra
         cheat_file << cheat_json.dump(4);
     }
 
+    void EmulatorWrapper::ResetContext()
+    {
+        if (has_i(IOpenGlRendered))
+        {
+            shell->asIOpenGlRendered()->resetContext();
+        }
+    }
+
+    void EmulatorWrapper::DestroyContext()
+    {
+        if (has_i(IOpenGlRendered))
+        {
+            shell->asIOpenGlRendered()->destroyContext();
+        }
+    }
+
+    void EmulatorWrapper::SetFbo(GLuint fbo)
+    {
+        if (has_i(IOpenGlRendered))
+        {
+            shell->asIOpenGlRendered()->setFbo(fbo);
+        }
+    }
+
+    void EmulatorWrapper::SetGetProcAddress(void* func)
+    {
+        if (has_i(IOpenGlRendered))
+        {
+            shell->asIOpenGlRendered()->setGetProcAddress(func);
+        }
+    }
+
+    void EmulatorWrapper::RunFrame()
+    {
+        if (has_i(IFrontendDriven))
+        {
+            shell->asIFrontendDriven()->runFrame();
+        }
+    }
+
+    uint16_t EmulatorWrapper::GetFps()
+    {
+        if (has_i(IFrontendDriven))
+        {
+            return shell->asIFrontendDriven()->getFps();
+        }
+        return 0;
+    }
+
+    void EmulatorWrapper::SetVideoCallback(void (*callback)(void* data, hydra::Size size))
+    {
+        if (has_i(ISoftwareRendered))
+        {
+            shell->asISoftwareRendered()->setVideoCallback(callback);
+        }
+    }
+
+    hydra::PixelFormat EmulatorWrapper::GetPixelFormat()
+    {
+        if (has_i(ISoftwareRendered))
+        {
+            return shell->asISoftwareRendered()->getPixelFormat();
+        }
+        return hydra::PixelFormat::Invalid;
+    }
+
     const CheatMetadata& EmulatorWrapper::GetCheat(uint32_t handle)
     {
         for (auto& cheat : cheats_)
@@ -134,7 +256,7 @@ namespace hydra
 
     uint32_t EmulatorWrapper::EditCheat(const CheatMetadata& cheat, uint32_t old_handle)
     {
-        hydra::ScopeGuard guard([this]() { save_cheats(); });
+        hydra::scope_guard guard([this]() { save_cheats(); });
 
         if (old_handle == hydra::BAD_CHEAT)
         {
@@ -216,5 +338,75 @@ namespace hydra
                 return;
             }
         }
+    }
+
+    // We don't just direct to Settings::Get/Set because if we didn't prepend the core name
+    // cores could access each other's settings which sounds like a security issue
+    const char* EmulatorWrapper::get_setting_wrapper(const char* setting)
+    {
+        std::string setting_key = instance->core_info_.core_name + "_" + setting;
+        if (cached_settings.find(setting_key) == cached_settings.end())
+        {
+            cached_settings[setting_key] = Settings::Get(setting_key);
+        }
+        return cached_settings[setting_key].c_str();
+    }
+
+    void EmulatorWrapper::set_setting_wrapper(const char* setting, const char* value)
+    {
+        std::string setting_key = instance->core_info_.core_name + "_" + setting;
+        Settings::Set(setting_key, value);
+        cached_settings[setting_key] = value;
+    }
+
+    std::shared_ptr<EmulatorWrapper> EmulatorFactory::Create(const std::string& path)
+    {
+        dynlib_handle_t handle = dynlib_open(path.c_str());
+
+        if (!handle)
+        {
+            printf("Failed to load library %s: %s\n", path.c_str(), dynlib_get_error().c_str());
+            return nullptr;
+        }
+        auto create_emu_p =
+            (decltype(hydra::createEmulator)*)dynlib_get_symbol(handle, "createEmulator");
+        if (!create_emu_p)
+        {
+            printf("Failed to find createEmulator in %s\n", path.c_str());
+            dynlib_close(handle);
+            return nullptr;
+        }
+
+        auto destroy_emu_p =
+            (decltype(hydra::destroyEmulator)*)dynlib_get_symbol(handle, "destroyEmulator");
+
+        if (!destroy_emu_p)
+        {
+            printf("Failed to find destroyEmulator in %s\n", path.c_str());
+            dynlib_close(handle);
+            return nullptr;
+        }
+
+        auto get_info_p = (decltype(hydra::getInfo)*)dynlib_get_symbol(handle, "getInfo");
+
+        if (!get_info_p)
+        {
+            printf("Failed to find getInfo in %s\n", path.c_str());
+            dynlib_close(handle);
+            return nullptr;
+        }
+
+        const hydra::CoreInfo* info = nullptr;
+        for (const auto& core : Settings::GetCoreInfo())
+        {
+            if (core.path == path)
+            {
+                info = &core;
+            }
+        }
+
+        auto emulator = std::shared_ptr<EmulatorWrapper>(
+            new EmulatorWrapper(create_emu_p(), handle, destroy_emu_p, get_info_p, *info));
+        return emulator;
     }
 } // namespace hydra

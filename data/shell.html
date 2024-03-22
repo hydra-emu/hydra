@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <!-- hack for ios 14.6 to get around indexeddb bug -->
+    <script type="text/javascript">window.indexedDB;</script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="target-densitydpi=device-dpi, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="hydra">
+    <meta name="application-name" content="hydra">
+    <title>hydra</title>
+    <style>
+        body { margin: 0; background-color: black }
+        .emscripten {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            margin: 0px;
+            border: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: block;
+            image-rendering: optimizeSpeed;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -o-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            -ms-interpolation-mode: nearest-neighbor;
+        }
+        input[type="file"] {
+          display: block !important;
+          opacity: 0% !important;
+          overflow: hidden !important;
+          z-index: 100 !important;
+          margin-top: 0px;
+          padding-top: 0px;
+          position: absolute;
+          visibility: hidden;
+        }
+    </style>
+  </head>
+  <body>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <script type='text/javascript'>
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function() {
+            return function(text) {
+                text = Array.prototype.slice.call(arguments).join(' ');
+                console.log(text);
+            };
+        })(),
+        printErr: function(text) {
+            text = Array.prototype.slice.call(arguments).join(' ');
+            console.error(text);
+        },
+        canvas: (function() {
+            var canvas = document.getElementById('canvas');
+            canvas.addEventListener("webglcontextlost", function(e) { alert('FIXME: WebGL context lost, please reload the page'); e.preventDefault(); }, false);
+            return canvas;
+        })(),
+        setStatus: function(text) {},
+        monitorRunDependencies: function(left) {
+            // no run dependencies to log
+        }
+      };
+      window.onerror = function() {
+        console.log("onerror: " + event);
+      };
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>

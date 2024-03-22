@@ -1,134 +1,100 @@
 #pragma once
 
-#include "error_factory.hxx"
-#include <filesystem>
-#include <fstream>
+#include <array>
+#include <cstdint>
 #include <hydra/core.hxx>
-#include <json.hpp>
-#include <map>
-#include <QKeySequence>
+#include <SDL3/SDL_keyboard.h>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace hydra
 {
-
-    using KeyMappings = std::array<QKeySequence, (int)hydra::ButtonType::InputCount>;
-
-    class Input
+    struct KeyMappings
     {
-        using json = nlohmann::json;
-        Input() = delete;
-        ~Input() = delete;
-
-    public:
-        static QKeySequence StringToKey(const std::string& str)
-        {
-            if (str.empty())
-                return QKeySequence();
-            QKeySequence key(str.c_str());
-            if (key.isEmpty())
-            {
-                throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                       "Invalid key sequence: " + str);
-            }
-            return key;
-        }
-
-        static std::string KeyToString(const QKeySequence& key)
-        {
-            return key.toString().toStdString();
-        }
-
-        static KeyMappings Load(const std::string& data)
-        {
-            KeyMappings mappings;
-            std::map<std::string, std::string> map;
-            json j_map = json::parse(data);
-            map = j_map.get<std::map<std::string, std::string>>();
-
-            for (auto& [key, value] : map)
-            {
-                int button_type = 0;
-
-                try
-                {
-                    button_type = std::stoi(key);
-                } catch (std::exception& e)
-                {
-                    throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                           "Invalid button type");
-                }
-                if (button_type < 0 || button_type >= (int)hydra::ButtonType::InputCount)
-                {
-                    throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                           "Invalid button range");
-                }
-
-                mappings[button_type] = StringToKey(value);
-            }
-
-            return mappings;
-        }
-
-        static KeyMappings Open(const std::filesystem::path& path)
-        {
-            if (!std::filesystem::exists(path))
-            {
-                throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                       "Input file does not exist");
-            }
-
-            std::ifstream ifs(path);
-            if (!ifs.good())
-            {
-                throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                       "Failed to open input file");
-            }
-
-            return Load(std::string((std::istreambuf_iterator<char>(ifs)),
-                                    std::istreambuf_iterator<char>()));
-        }
-
-        static void Save(const std::filesystem::path& path, const KeyMappings& mappings)
-        {
-            std::map<std::string, std::string> map;
-
-            for (int key = 0; key < (int)hydra::ButtonType::InputCount; ++key)
-            {
-                map[std::to_string(key)] = KeyToString(mappings[key]);
-            }
-
-            if (!std::filesystem::create_directories(path.parent_path()))
-            {
-                if (!std::filesystem::exists(path.parent_path()))
-                {
-                    throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                           "Failed to create input directory");
-                }
-            }
-
-            json j_map = map;
-            std::ofstream ofs(path);
-            ofs << j_map.dump(4);
-        }
-
-        static std::vector<std::filesystem::path> Scan(const std::filesystem::path& root,
-                                                       const std::string& ext)
-        {
-            std::vector<std::filesystem::path> paths;
-
-            if (std::filesystem::exists(root) && std::filesystem::is_directory(root))
-            {
-                for (const auto& entry : std::filesystem::recursive_directory_iterator(root))
-                {
-                    if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ext)
-                        paths.emplace_back(entry.path());
-                }
-            }
-
-            return paths;
-        }
+        std::array<SDL_Scancode, (int)hydra::ButtonType::InputCount> mappings;
     };
 
+    struct Input
+    {
+        static void Init();
+        static void Poll();
+        static int32_t Check(uint32_t player, hydra::ButtonType button);
+        static bool Add(const std::string& name, const KeyMappings& mapping);
+        static bool Remove(const std::string& name);
+        static bool IsAssociated(const std::string& name);
+        static bool Associate(uint32_t player, const std::string& name);
+        static void Unassociate();
+        static const std::vector<std::string>& GetMappingNames();
+        static KeyMappings& GetMapping(const std::string& name);
+    };
+
+    constexpr const char* serialize(hydra::ButtonType input)
+    {
+        switch (input)
+        {
+            case hydra::ButtonType::Keypad1Up:
+                return "Left Keypad - Up button";
+            case hydra::ButtonType::Keypad1Down:
+                return "Left Keypad - Down button";
+            case hydra::ButtonType::Keypad1Left:
+                return "Left Keypad - Left button";
+            case hydra::ButtonType::Keypad1Right:
+                return "Left Keypad - Right button";
+            case hydra::ButtonType::Keypad2Up:
+                return "Right Keypad - Up button";
+            case hydra::ButtonType::Keypad2Down:
+                return "Right Keypad - Down button";
+            case hydra::ButtonType::Keypad2Left:
+                return "Right Keypad - Left button";
+            case hydra::ButtonType::Keypad2Right:
+                return "Right Keypad - Right button";
+            case hydra::ButtonType::A:
+                return "A button";
+            case hydra::ButtonType::B:
+                return "B button";
+            case hydra::ButtonType::X:
+                return "X button";
+            case hydra::ButtonType::Y:
+                return "Y button";
+            case hydra::ButtonType::Z:
+                return "Z button";
+            case hydra::ButtonType::L1:
+                return "L1 button";
+            case hydra::ButtonType::R1:
+                return "R1 button";
+            case hydra::ButtonType::L2:
+                return "L2 button";
+            case hydra::ButtonType::R2:
+                return "R2 button";
+            case hydra::ButtonType::L3:
+                return "L3 button";
+            case hydra::ButtonType::R3:
+                return "R3 button";
+            case hydra::ButtonType::Start:
+                return "Start button";
+            case hydra::ButtonType::Select:
+                return "Select button";
+            case hydra::ButtonType::Touch:
+                return "Touch";
+            case hydra::ButtonType::Analog1Up:
+                return "Left Analog Stick - Up";
+            case hydra::ButtonType::Analog1Down:
+                return "Left Analog Stick - Down";
+            case hydra::ButtonType::Analog1Left:
+                return "Left Analog Stick - Left";
+            case hydra::ButtonType::Analog1Right:
+                return "Left Analog Stick - Right";
+            case hydra::ButtonType::Analog2Up:
+                return "Right Analog Stick - Up";
+            case hydra::ButtonType::Analog2Down:
+                return "Right Analog Stick - Down";
+            case hydra::ButtonType::Analog2Left:
+                return "Right Analog Stick - Left";
+            case hydra::ButtonType::Analog2Right:
+                return "Right Analog Stick - Right";
+            default:
+                return "Unknown";
+        }
+    }
 } // namespace hydra

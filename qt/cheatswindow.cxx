@@ -65,7 +65,6 @@ public:
 
         QLineEdit* txt_name = new QLineEdit;
         txt_name->setText(metadata.name.c_str());
-        txt_name->setPlaceholderText(tr("Cheat name"));
         layout->addWidget(txt_name);
 
         QTextEdit* txt_code = new QTextEdit;

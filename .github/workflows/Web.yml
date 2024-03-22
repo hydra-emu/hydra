@@ -1,0 +1,29 @@
+name: Build Web & Deploy to GH
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Setup emsdk                 
+        uses: mymindstorm/setup-emsdk@v10
+        with:
+          version: 3.1.50
+          actions-cache-folder: 'emsdk-cache'
+      - name: Build
+        run: |
+          export EMCC_FORCE_STDLIBS=libc++,libc++abi
+          emcmake cmake -B build
+          cmake --build build
+          mv data/hydra.ico build/favicon.ico
+          mv build/hydra.html build/index.html
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: build
+          force: false
+          clean: false

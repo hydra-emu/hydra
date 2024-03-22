@@ -1,12 +1,15 @@
-#include "mainwindow.hxx"
+#include "hydra/common/settings.hxx"
+#include "hydra/common/version.hxx"
 #include <argparse/argparse.h>
-#include <bot.hxx>
 #include <filesystem>
-#include <log.h>
+#include <hydra/qt/main_window.hxx>
+#include <iostream>
 #include <QApplication>
 #include <QSurfaceFormat>
-#include <settings.hxx>
-#include <update.hxx>
+
+#ifdef HYDRA_WEB
+#include <emscripten.h>
+#endif
 
 // clang-format off
 
@@ -18,12 +21,10 @@ const char* options =
 
 // clang-format on
 
-// Configurable options
-const char* frontend = "qt";
 const char* rom_path = nullptr;
 const char* core_name = nullptr;
 
-int main_qt(int argc, char* argv[])
+int qt_main(int argc, char* argv[])
 {
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
@@ -34,41 +35,16 @@ int main_qt(int argc, char* argv[])
 
     QSurfaceFormat::setDefaultFormat(format);
     QApplication a(argc, argv);
-    MainWindow w;
+
+    hydra::qt::MainWindow w;
     w.show();
 
-    if (argc > 1)
-    {
-        w.OpenFile(argv[1]);
-    }
-
     return a.exec();
-    ;
 }
 
 int version_cb(struct argparse*, const struct argparse_option*)
 {
-    std::cout << "hydra version " << HYDRA_VERSION << std::endl;
-    return 0;
-}
-
-int start_frontend_cb(struct argparse* self, const struct argparse_option*)
-{
-    std::string frontend_str(frontend);
-    if (frontend_str == "qt")
-    {
-        return main_qt(self->argc, const_cast<char**>(self->argv));
-    }
-    else
-    {
-        std::cout << "Unknown frontend: " << frontend << std::endl;
-        return 1;
-    }
-}
-
-int print_settings_cb(struct argparse*, const struct argparse_option*)
-{
-    std::cout << Settings::Print() << std::endl;
+    std::cout << hydra::common::version() << std::endl;
     return 0;
 }
 
@@ -79,48 +55,40 @@ int help_cb(struct argparse* self, const struct argparse_option* option)
     return 0;
 }
 
-int list_cores_cb(struct argparse*, const struct argparse_option*)
-{
-    Settings::InitCoreInfo();
-    for (auto& info : Settings::CoreInfo())
-    {
-        std::string filename = std::filesystem::path(info.path).filename().string();
-        std::cout << fmt::format("{} - {}\n", filename, info.core_name);
-    }
-    std::cout << std::flush;
-    return 0;
-}
+#if defined(HYDRA_WEB)
+// Setup the offline file system
+EM_JS(void, em_init_fs, (),{
+        FS.mkdir('/hydra');
+        // Then mount with IDBFS type
+        FS.mount(IDBFS, {}, '/hydra');
+        FS.mkdir('/hydra/cores');
+        FS.mount(IDBFS, {}, '/hydra/cores');
+        FS.mkdir('/hydra/cache');
+        FS.mount(IDBFS, {}, '/hydra/cache');
+        // Then sync
+        FS.syncfs(true, function (err) {
+            Module.ccall('main_impl');
+        });
+  });
+#endif
 
-int bot_main_cb(struct argparse*, const struct argparse_option*)
+extern "C" int main_impl(int argc, char* argv[])
 {
-    return bot_main();
-}
+    printf("%s\n", hydra::common::version().c_str());
+    hydra::settings::init();
+    // Settings::InitCoreInfo();
 
-int main(int argc, char* argv[])
-{
-    auto settings_path = Settings::GetSavePath() / "settings.json";
-    Settings::Open(settings_path);
-    Settings::InitCoreInfo();
-
-    if (argc == 1)
-    {
-        return main_qt(argc, argv);
-    }
+    return qt_main(argc, argv);
 
     static const char* const usages[] = {
         "hydra [args]",
         nullptr,
     };
+
     struct argparse_option options[] = {
         OPT_BOOLEAN('h', "help", NULL, nullptr, help_cb, 0, OPT_NONEG),
         OPT_GROUP("Options"),
-        OPT_BOOLEAN('b', "discord-bot", nullptr, nullptr, bot_main_cb),
-        OPT_STRING('o', "open-file", &rom_path, nullptr, nullptr),
-        OPT_STRING('c', "use-core", &core_name, nullptr, nullptr),
-        OPT_BOOLEAN('l', "list-cores", nullptr, nullptr, list_cores_cb),
         OPT_BOOLEAN('v', "version", nullptr, nullptr, version_cb),
-        OPT_STRING('p', "print-settings", nullptr, nullptr, print_settings_cb),
-        OPT_STRING('f', "frontend", &frontend, nullptr, start_frontend_cb),
         OPT_END(),
     };
 
@@ -129,4 +97,13 @@ int main(int argc, char* argv[])
     argparse_describe(&argparse, "\nThe hydra emulator", nullptr);
     argparse_parse(&argparse, argc, const_cast<const char**>(argv));
     return 0;
+}
+
+int main(int argc, char* argv[])
+{
+#ifdef HYDRA_WEB
+    em_init_fs();
+#else
+    return main_impl(argc, argv);
+#endif
 }

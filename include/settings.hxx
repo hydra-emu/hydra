@@ -1,33 +1,20 @@
 #pragma once
 
-#include "log.h"
+#include "filepicker.hxx"
 #include <compatibility.hxx>
 #include <corewrapper.hxx>
-#include <error_factory.hxx>
 #include <filesystem>
 #include <fmt/format.h>
 #include <fstream>
+#include <hsystem.hxx>
 #include <hydra/core.hxx>
 #include <json.hpp>
+#include <log.hxx>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <string>
-
-struct EmulatorInfo
-{
-    std::string path;
-    std::string core_name;
-    std::string system_name;
-    std::string author;
-    std::string version;
-    std::string description;
-    std::string license;
-    std::string url;
-    int max_players;
-    std::vector<std::string> firmware_files;
-    std::vector<std::string> extensions;
-};
 
 // Essentially a wrapper around a std::map<std::string, std::string> that locks a mutex
 // upon access and has a save function that saves as a json to file
@@ -42,17 +29,22 @@ public:
     {
         map().clear();
         save_path() = path;
-        std::ifstream ifs(save_path());
-        if (ifs.good())
+        std::string data = hydra::fread(path);
+        if (data.empty())
         {
-            json j_map;
-            ifs >> j_map;
-            map() = j_map.get<std::map<std::string, std::string>>();
+            return;
         }
-        else
+
+        json j_map;
+        try
         {
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to open settings");
+            j_map = json::parse(data);
+        } catch (std::exception& e)
+        {
+            hydra::log("Failed to parse settings file: {}", e.what());
+            return;
         }
+        map() = j_map.get<std::map<std::string, std::string>>();
     }
 
     static std::string Get(const std::string& key)
@@ -66,12 +58,22 @@ public:
         return map()[key];
     }
 
-    static void Set(const std::string& key, const std::string& value)
+    static void Save()
+    {
+        json j_map(map());
+        std::string data = j_map.dump(4);
+        hydra::fwrite(save_path(), std::span<const uint8_t>((uint8_t*)data.data(), data.size()));
+    }
+
+    static void SetNoSave(const std::string& key, const std::string& value)
     {
         map()[key] = value;
-        std::ofstream ofs(save_path(), std::ios::trunc);
-        json j_map(map());
-        ofs << j_map << std::endl;
+    }
+
+    static void Set(const std::string& key, const std::string& value)
+    {
+        SetNoSave(key, value);
+        Save();
     }
 
     static bool IsEmpty()
@@ -96,11 +98,12 @@ public:
             std::string applicationName;
             std::getline(cmdline, applicationName, '\0');
             dir = std::filesystem::path("/data") / "data" / applicationName / "files";
+#elif defined(HYDRA_WEB)
+            dir = std::filesystem::path("/hydra");
 #endif
             if (dir.empty())
             {
-                throw ErrorFactory::generate_exception(
-                    __func__, __LINE__, "GetSavePath was not defined for this environment");
+                throw std::runtime_error("GetSavePath was not defined for this environment");
             }
 
             if (!std::filesystem::create_directories(dir))
@@ -109,8 +112,7 @@ public:
                 {
                     return dir;
                 }
-                throw ErrorFactory::generate_exception(__func__, __LINE__,
-                                                       "Failed to create directories");
+                throw std::runtime_error("Failed to create directories");
             }
         }
         return dir;
@@ -127,15 +129,14 @@ public:
             dir = std::filesystem::path(getenv("APPDATA")) / "hydra" / "cache";
 #elif defined(HYDRA_MACOS)
             dir = std::filesystem::path(getenv("HOME")) / "Library" / "Caches" / "hydra" / "cache";
-#elif defined(HYDRA_ANDROID)
+#else
             dir = GetSavePath() / "cache";
 #endif
         }
 
         if (dir.empty())
         {
-            throw ErrorFactory::generate_exception(
-                __func__, __LINE__, "GetCachePath was not defined for this environment");
+            throw std::runtime_error("GetCachePath was not defined for this environment");
         }
 
         if (!std::filesystem::create_directories(dir))
@@ -144,7 +145,7 @@ public:
             {
                 return dir;
             }
-            throw ErrorFactory::generate_exception(__func__, __LINE__, "Failed to create cache");
+            throw std::runtime_error("Failed to create cache");
         }
 
         return dir;
@@ -157,12 +158,12 @@ public:
         core_info_initialized() = true;
         if (Settings::Get("core_path").empty())
         {
-            Settings::Set("core_path", (std::filesystem::current_path()).string());
+            Settings::Set("core_path", (Settings::GetSavePath() / "cores").string());
         }
 
         if (!std::filesystem::exists(Settings::Get("core_path")))
         {
-            printf("Failed to find initialize core info\n");
+            printf("Failed to find core info: %s\n", Settings::Get("core_path").c_str());
             return;
         }
 
@@ -198,23 +199,31 @@ public:
                     (decltype(hydra::getInfo)*)hydra::dynlib_get_symbol(handle, "getInfo");
                 if (!get_info_p)
                 {
-                    log_warn(
-                        fmt::format("Could not find symbol getInfo in core {}", it->path().string())
-                            .c_str());
+                    hydra::log("Could not find symbol getInfo in core {}",
+                               it->path().string().c_str());
                     ++it;
                     continue;
                 }
-                EmulatorInfo info;
+
+                auto get_info_w = [get_info_p](hydra::InfoType type) {
+                    const char* info = get_info_p(type);
+                    if (!info)
+                    {
+                        return std::string();
+                    }
+                    return std::string(info);
+                };
+
+                struct hydra::CoreInfo info;
                 info.path = it->path().string();
-                info.core_name = get_info_p(hydra::InfoType::CoreName);
-                info.system_name = get_info_p(hydra::InfoType::SystemName);
-                info.version = get_info_p(hydra::InfoType::Version);
-                info.author = get_info_p(hydra::InfoType::Author);
-                info.description = get_info_p(hydra::InfoType::Description);
-                info.extensions = hydra::split(get_info_p(hydra::InfoType::Extensions), ',');
-                info.url = get_info_p(hydra::InfoType::Website);
-                info.license = get_info_p(hydra::InfoType::License);
-                info.firmware_files = hydra::split(get_info_p(hydra::InfoType::Firmware), ',');
+                info.core_name = get_info_w(hydra::InfoType::CoreName);
+                info.system_name = get_info_w(hydra::InfoType::SystemName);
+                info.version = get_info_w(hydra::InfoType::Version);
+                info.author = get_info_w(hydra::InfoType::Author);
+                info.description = get_info_w(hydra::InfoType::Description);
+                info.extensions = hydra::split(get_info_w(hydra::InfoType::Extensions), ',');
+                info.url = get_info_w(hydra::InfoType::Website);
+                info.license = get_info_w(hydra::InfoType::License);
                 info.max_players = 1;
 
                 bool one_active = false;
@@ -237,17 +246,31 @@ public:
                 {
                     Settings::Set(info.core_name + "_controller_1_active", "true");
                 }
-                CoreInfo().push_back(info);
+                GetCoreInfo().push_back(info);
             }
 
             ++it;
+        }
+
+        auto& filters = GetCoreFilters();
+        filters.clear();
+        for (auto& core : GetCoreInfo())
+        {
+            const auto& extensions = core.extensions;
+            std::string filter;
+            for (const auto& extension : extensions)
+            {
+                filter += "." + extension + ",";
+            }
+            filter.pop_back();
+            filters.push_back({core.core_name, filter});
         }
     }
 
     static void ReinitCoreInfo()
     {
         core_info_initialized() = false;
-        CoreInfo().clear();
+        GetCoreInfo().clear();
         InitCoreInfo();
     }
 
@@ -260,11 +283,19 @@ public:
         return ret;
     }
 
-    static std::vector<EmulatorInfo>& CoreInfo()
+    static std::vector<hydra::CoreInfo>& GetCoreInfo()
     {
-        static std::vector<EmulatorInfo> c;
+        static std::vector<struct hydra::CoreInfo> c;
         return c;
     }
+
+    static FilePickerFilters& GetCoreFilters()
+    {
+        static FilePickerFilters f;
+        return f;
+    }
+
+    static void ReinitCoresFrontend();
 
 private:
     static std::map<std::string, std::string>& map()

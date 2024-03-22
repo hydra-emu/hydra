@@ -1,0 +1,25 @@
+name: Build FreeBSD
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Build
+        id: test
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y cmake libX11 libXi libXrandr libXinerama libXcursor libglvnd alsa-lib
+          run: |
+            cmake -B build
+            cmake --build build --config Release
+      - name: Release
+        uses: actions/upload-artifact@v2
+        with:
+           name: FreeBSDRelease
+           path: build/

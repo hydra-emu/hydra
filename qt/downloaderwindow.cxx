@@ -1,6 +1,5 @@
 #include "downloaderwindow.hxx"
 #include "download.hxx"
-#include "hsystem.hxx"
 #include "observer.hxx"
 #include "update.hxx"
 #include <cstdint>

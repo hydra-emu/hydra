@@ -3,11 +3,11 @@
 namespace hydra
 {
 
-    struct ScopeGuard
+    struct scope_guard
     {
-        ScopeGuard(std::function<void()> f) : f_(f) {}
+        scope_guard(std::function<void()> f) : f_(f) {}
 
-        ~ScopeGuard()
+        ~scope_guard()
         {
             f_();
         }
@@ -15,10 +15,10 @@ namespace hydra
     private:
         std::function<void()> f_;
 
-        ScopeGuard(const ScopeGuard&) = delete;
-        ScopeGuard& operator=(const ScopeGuard&) = delete;
-        ScopeGuard(ScopeGuard&&) = delete;
-        ScopeGuard& operator=(ScopeGuard&&) = delete;
+        scope_guard(const scope_guard&) = delete;
+        scope_guard& operator=(const scope_guard&) = delete;
+        scope_guard(scope_guard&&) = delete;
+        scope_guard& operator=(scope_guard&&) = delete;
     };
 
 } // namespace hydra
