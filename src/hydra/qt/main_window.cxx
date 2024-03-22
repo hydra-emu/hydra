@@ -50,6 +50,7 @@ namespace hydra::qt
             environmentInfo.audio = &audioInfo;
             wrapper.hcCreate(&environmentInfo);
             SDL3::Context* ctx = hydra::SDL3::init(&environmentInfo);
+            printf("TODO: delete ctx\n");
             SDL3::EventResult result = SDL3::EventResult::Continue;
             while (result != SDL3::EventResult::Quit)
             {

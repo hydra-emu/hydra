@@ -72,7 +72,8 @@ namespace hydra::core
 
     bool Wrapper::okay() const
     {
-        return handle != nullptr;
+        return handle && hcGetCoreInfo && hcCreate && hcDestroy && hcReset && hcSetRunState &&
+               hcLoadContent && hcGetError;
     }
 
 } // namespace hydra::core

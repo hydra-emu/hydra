@@ -106,6 +106,7 @@ namespace hydra::settings
         Saveable<int, "General", "Height"> windowHeight{};
         Saveable<std::vector<std::string>, "General", "LastContentPaths"> lastContentPaths{};
         Saveable<std::vector<std::string>, "General", "GameDirectories"> gameDirectories{};
+        Saveable<bool, "Core", "StartPaused"> startPaused{};
 
         static Config& get()
         {

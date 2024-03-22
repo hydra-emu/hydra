@@ -179,6 +179,7 @@ set(HYDRA_IMGUI_FILES
     src/hydra/sdl3/opengl.cxx
     src/hydra/sdl3/vulkan.cxx
     src/hydra/sdl3/common.cxx
+    src/hydra/imgui/imgui.cxx
     vendored/imgui/backends/imgui_impl_sdl3.cpp
     vendored/imgui/backends/imgui_impl_vulkan.cpp
     vendored/imgui/imgui.cpp
@@ -192,8 +193,10 @@ set(HYDRA_COMMON_FILES
     src/main.cxx
     src/hydra/core/wrapper.cxx
     src/hydra/core/imports.cxx
+    src/hydra/core/thread.cxx
     src/hydra/common/version.cxx
     src/hydra/common/settings.cxx
+    src/hydra/common/system.cxx
     vendored/argparse/argparse.c
     vendored/miniaudio.c
     vendored/stb_image.c

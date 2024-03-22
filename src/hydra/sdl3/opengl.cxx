@@ -1,19 +1,28 @@
 #include "backends/imgui_impl_sdl3.h"
-#include "hydra/core.h"
-#include "SDL_video.h"
+#include "hydra/imgui/imgui.hxx"
 
+#include <glad/glad.h>
 #include <SDL3/SDL.h>
-#include <SDL_opengl.h>
 
 #include <hydra/common/log.hxx>
 #include <hydra/common/version.hxx>
+#include <hydra/core.h>
 #include <hydra/sdl3/window.hxx>
+
+struct InnerContext
+{
+    SDL_GLContext glContext;
+};
 
 namespace hydra::SDL3::Gl
 {
 
     Context* init(const HcEnvironmentInfo* environmentInfo)
     {
+        Context* ctx = new Context();
+        InnerContext* inner = new InnerContext();
+        ctx->inner = inner;
+
         if (!environmentInfo || !environmentInfo->video)
         {
             hydra::panic("Invalid environment info");
@@ -93,8 +102,6 @@ namespace hydra::SDL3::Gl
                 return nullptr;
         }
 
-        Context* ctx = new Context();
-
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -108,6 +115,23 @@ namespace hydra::SDL3::Gl
 
         SDL_SetWindowPosition(ctx->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
+        inner->glContext = SDL_GL_CreateContext(ctx->window);
+        if (!inner->glContext)
+        {
+            hydra::panic("Failed to create OpenGL context: {}", SDL_GetError());
+            return nullptr;
+        }
+
+        if (gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress) == 0)
+        {
+            hydra::panic("Failed to load OpenGL functions: {}", SDL_GetError());
+            return nullptr;
+        }
+
+        hydra::imgui::init();
+
+        ImGui_ImplSDL3_InitForOpenGL(ctx->window, inner->glContext);
+
         return ctx;
     }
 
@@ -118,7 +142,33 @@ namespace hydra::SDL3::Gl
 
     void shutdown(Context* context)
     {
-        printf("TODO: shutdown\n");
+        if (!context || !context->window)
+        {
+            hydra::panic("Invalid context");
+            return;
+        }
+
+        ImGui_ImplSDL3_Shutdown();
+        hydra::imgui::shutdown();
+
+        InnerContext* inner = (InnerContext*)context->inner;
+        if (!inner || !inner->glContext)
+        {
+            hydra::panic("Invalid inner context");
+            return;
+        }
+        else
+        {
+            SDL_GL_DeleteContext(inner->glContext);
+        }
+
+        if (context->window)
+        {
+            SDL_DestroyWindow(context->window);
+        }
+
+        delete inner;
+        delete context;
     }
 
 } // namespace hydra::SDL3::Gl

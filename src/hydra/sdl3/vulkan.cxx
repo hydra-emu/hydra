@@ -1,7 +1,5 @@
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_vulkan.h"
-#include "hydra/common/version.hxx"
-#include "hydra/core.h"
 #include <SDL3/SDL.h>
 #include <SDL_vulkan.h>
 #include <vulkan/vulkan.h>
@@ -11,6 +9,9 @@
 #include <vector>
 
 #include <hydra/common/log.hxx>
+#include <hydra/common/version.hxx>
+#include <hydra/core.h>
+#include <hydra/imgui/imgui.hxx>
 #include <hydra/sdl3/window.hxx>
 
 struct InnerContext
@@ -449,17 +450,7 @@ namespace hydra::SDL3::Vk
         ImGui_ImplVulkanH_Window* wd = &ctx->mainWindowData;
         setupVulkanWindow(context, wd, surface, w, h);
 
-        // Setup Dear ImGui context
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        (void)io;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-
-        // Setup Dear ImGui style
-        ImGui::StyleColorsDark();
-        // ImGui::StyleColorsLight();
+        hydra::imgui::init();
 
         // Setup Platform/Renderer backends
         ImGui_ImplSDL3_InitForVulkan(context->window);
@@ -490,7 +481,7 @@ namespace hydra::SDL3::Vk
 
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplSDL3_Shutdown();
-        ImGui::DestroyContext();
+        hydra::imgui::shutdown();
 
         ImGui_ImplVulkanH_DestroyWindow(ctx->instance, ctx->device, &ctx->mainWindowData,
                                         ctx->allocator);
